@@ -44,21 +44,40 @@ export async function getOrders(): Promise<Order[]> {
   }
 
   return (data || []).map((order) => ({
-    id: order.id,
-    customer: order.customer || {
-      name: "",
-      phone: "",
-      email: "",
-      address: "",
-      notes: "",
+    id: String(order.order_number || order.id),
+
+    customer: {
+      name: order.customer_name || "",
+      phone: order.customer_phone || "",
+      email: order.customer_email || "",
+      address: order.customer_address || "",
+      notes: order.customer_notes || "",
     },
-    location: order.location || null,
-    distanceKm: Number(order.distance_km || 0),
+
+    location:
+      order.latitude !== null &&
+      order.longitude !== null
+        ? {
+            latitude: Number(order.latitude),
+            longitude: Number(order.longitude),
+          }
+        : null,
+
+    distanceKm:
+      order.distance_km !== null
+        ? Number(order.distance_km)
+        : null,
+
     deliveryFee: Number(order.delivery_fee || 0),
-    items: order.items || [],
+
+    items: Array.isArray(order.items) ? order.items : [],
+
     subtotal: Number(order.subtotal || 0),
+
     total: Number(order.total || 0),
+
     status: order.status || "Pending",
+
     createdAt: order.created_at,
   }));
 }
@@ -70,7 +89,7 @@ export async function updateOrderStatus(
   const { error } = await supabase
     .from("orders")
     .update({ status })
-    .eq("id", id);
+    .eq("order_number", id);
 
   if (error) {
     console.error("Failed to update order:", error);
@@ -82,7 +101,7 @@ export async function deleteOrder(id: string) {
   const { error } = await supabase
     .from("orders")
     .delete()
-    .eq("id", id);
+    .eq("order_number", id);
 
   if (error) {
     console.error("Failed to delete order:", error);

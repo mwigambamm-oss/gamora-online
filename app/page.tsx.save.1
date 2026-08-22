@@ -1,0 +1,428 @@
+"use client";
+import { useEffect, useState } from "react";
+const categories = [
+  { name: "Women", icon: "👗" },
+  { name: "Men", icon: "👔" },
+  { name: "Shoes", icon: "👟" },
+  { name: "Home & Kitchen", icon: "🏠" },
+];
+
+
+export default function Home() {
+  const [products, setProducts] = useState<any[]>([]);
+
+  useEffect(() => {
+    const savedProducts = localStorage.getItem("gamora_products");
+
+    if (savedProducts) {
+      setProducts(JSON.parse(savedProducts));
+    }
+  }, []);  return (
+    <main className="min-h-screen bg-gray-100">
+
+      {/* TOP BAR */}
+      <div className="bg-gray-900 px-4 py-2 text-center text-sm text-white">
+        🚚 Fast Delivery • Secure Shopping • Great Prices
+      </div>
+
+      {/* HEADER */}
+      <header className="sticky top-0 z-50 bg-white shadow-md">
+
+        <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-4">
+
+          {/* LOGO */}
+          <div className="min-w-fit">
+            <h1 className="text-2xl font-black text-orange-600">
+              GAMORA
+            </h1>
+
+            <p className="text-xs font-semibold tracking-widest text-gray-500">
+              ONLINE
+            </p>
+          </div>
+
+          {/* SEARCH */}
+          <div className="flex flex-1 items-center rounded-md border border-gray-300 bg-gray-50 px-4">
+
+            <span className="mr-2 text-xl">🔎</span>
+
+            <input
+              type="text"
+              placeholder="Search for products..."
+              className="w-full bg-transparent py-3 outline-none"
+            />
+
+            <button className="rounded-md bg-orange-600 px-5 py-2 font-semibold text-white hover:bg-orange-700">
+              Search
+            </button>
+
+          </div>
+
+          {/* CART */}
+          <button className="relative rounded-md px-3 py-2 text-2xl hover:bg-gray-100">
+            🛒
+            <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-orange-600 text-xs text-white">
+              0
+            </span>
+          </button>
+
+          {/* ACCOUNT */}
+          <button className="hidden rounded-md px-3 py-2 text-sm font-semibold hover:bg-gray-100 md:block">
+            👤 Account
+          </button>
+
+        </div>
+
+        {/* CATEGORY NAV */}
+        <nav className="border-t bg-gray-900">
+
+          <div className="mx-auto flex max-w-7xl items-center gap-8 overflow-x-auto px-4 py-3 text-sm font-semibold text-white">
+
+            <button className="whitespace-nowrap hover:text-orange-400">
+              ☰ Categories
+            </button>
+
+            <button className="whitespace-nowrap hover:text-orange-400">
+              Women's Fashion
+            </button>
+
+            <button className="whitespace-nowrap hover:text-orange-400">
+              Men's Fashion
+            </button>
+
+            <button className="whitespace-nowrap hover:text-orange-400">
+              Shoes
+            </button>
+
+            <button className="whitespace-nowrap hover:text-orange-400">
+              Home & Kitchen
+            </button>
+
+            <button className="whitespace-nowrap hover:text-orange-400">
+              🔥 Flash Deals
+            </button>
+
+          </div>
+
+        </nav>
+
+      </header>
+
+      {/* HERO */}
+      <section className="mx-auto max-w-7xl px-4 py-5">
+
+        <div className="overflow-hidden rounded-xl bg-gradient-to-r from-orange-600 via-orange-500 to-yellow-400">
+
+          <div className="grid items-center gap-8 px-8 py-14 md:grid-cols-2 md:px-16">
+
+            <div className="text-white">
+
+              <span className="rounded-full bg-white/20 px-4 py-2 text-sm font-semibold">
+                🔥 BIG ONLINE DEALS
+              </span>
+
+              <h2 className="mt-5 text-4xl font-black leading-tight md:text-6xl">
+                Shop Everything
+                <br />
+                You Love
+              </h2>
+
+              <p className="mt-4 max-w-lg text-lg text-white/90">
+                Discover fashion, shoes, home essentials and more at amazing
+                prices.
+              </p>
+
+              <button className="mt-7 rounded-lg bg-gray-900 px-8 py-4 font-bold text-white shadow-lg hover:bg-black">
+                SHOP NOW →
+              </button>
+
+            </div>
+
+            <div className="hidden text-center md:block">
+
+              <div className="text-[150px] drop-shadow-xl">
+                🛍️
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+      {/* CATEGORIES */}
+      <section className="mx-auto max-w-7xl px-4 py-5">
+
+        <div className="mb-5 flex items-center justify-between">
+
+          <h2 className="text-2xl font-black text-gray-900">
+            Shop by Category
+          </h2>
+
+          <button className="font-semibold text-orange-600">
+            View All →
+          </button>
+
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+
+          {categories.map((category) => (
+
+            <button
+              key={category.name}
+              className="group rounded-xl bg-white p-6 text-center shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+            >
+
+              <div className="text-5xl transition group-hover:scale-110">
+                {category.icon}
+              </div>
+
+              <h3 className="mt-3 font-bold text-gray-800">
+                {category.name}
+              </h3>
+
+              <p className="mt-1 text-sm text-gray-500">
+                Shop Now →
+              </p>
+
+            </button>
+
+          ))}
+
+        </div>
+
+      </section>
+
+      {/* FLASH DEALS */}
+      <section className="mx-auto max-w-7xl px-4 py-5">
+
+        <div className="rounded-xl bg-white p-5 shadow-sm">
+
+          <div className="mb-6 flex items-center justify-between">
+
+            <div>
+
+              <h2 className="text-2xl font-black text-gray-900">
+                🔥 Flash Deals
+              </h2>
+
+              <p className="text-sm text-gray-500">
+                Limited-time offers
+              </p>
+
+            </div>
+
+            <div className="rounded-md bg-gray-900 px-4 py-2 text-sm font-bold text-white">
+              Ends Soon
+            </div>
+
+          </div>
+
+          {/* PRODUCTS */}
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+
+            {products.map((product) => (
+
+              <article
+                key={product.name}
+                className="group overflow-hidden rounded-lg border bg-white transition hover:-translate-y-1 hover:shadow-xl"
+              >
+
+{/* PRODUCT IMAGE */}
+
+<div className="relative flex h-48 items-center justify-center bg-gray-100">
+
+  {product.image ? (
+    <img
+      src={product.image}
+      alt={product.name}
+      className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+    />
+  ) : (
+    <span className="text-7xl transition duration-300 group-hover:scale-110">
+      🛍️
+    </span>
+  )}
+
+  {product.oldPrice > product.price && (
+    <span className="absolute left-2 top-2 rounded-full bg-red-500 px-3 py-1 text-xs font-bold text-white">
+      SALE
+    </span>
+  )}
+
+</div>
+</div>
+
+                <div className="p-4">
+
+                  <h3 className="line-clamp-2 min-h-12 font-semibold text-gray-800">
+                    {product.name}
+                  </h3>
+
+                  <div className="mt-2 flex items-center gap-2">
+
+                    <span className="text-lg font-black text-orange-600">
+                      TZS {product.price.toLocaleString()}
+                    </span>
+
+                  </div>
+
+                  <div className="text-sm text-gray-400 line-through">
+                    TZS {product.oldPrice.toLocaleString()}
+                  </div>
+
+                  <div className="mt-2 text-sm text-yellow-500">
+                    ⭐⭐⭐⭐⭐
+                  </div>
+
+<button
+  onClick={() => {
+    const cart = JSON.parse(
+      localStorage.getItem("gamora_cart") || "[]"
+    );
+
+    cart.push({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.image,
+      quantity: 1,
+    });
+
+    localStorage.setItem(
+      "gamora_cart",
+      JSON.stringify(cart)
+    );
+
+    alert(`${product.name} added to cart!`);
+  }}
+  className="mt-4 w-full rounded-md bg-orange-600 px-4 py-3 font-bold text-white transition hover:bg-orange-700"
+>
+  Add to Cart
+</button>                    Add to Cart
+                  </button>
+
+                </div>
+
+              </article>
+
+            ))}
+
+          </div>
+
+        </div>
+
+      </section>
+
+      {/* TRUST SECTION */}
+      <section className="mx-auto max-w-7xl px-4 py-8">
+
+        <div className="grid gap-4 md:grid-cols-4">
+
+          <div className="rounded-lg bg-white p-5 text-center shadow-sm">
+            <div className="text-3xl">🚚</div>
+            <h3 className="mt-2 font-bold">Fast Delivery</h3>
+            <p className="text-sm text-gray-500">
+              Delivery to your location
+            </p>
+          </div>
+
+          <div className="rounded-lg bg-white p-5 text-center shadow-sm">
+            <div className="text-3xl">🔒</div>
+            <h3 className="mt-2 font-bold">Secure Shopping</h3>
+            <p className="text-sm text-gray-500">
+              Your information is protected
+            </p>
+          </div>
+
+          <div className="rounded-lg bg-white p-5 text-center shadow-sm">
+            <div className="text-3xl">💰</div>
+            <h3 className="mt-2 font-bold">Best Prices</h3>
+            <p className="text-sm text-gray-500">
+              Great deals every day
+            </p>
+          </div>
+
+          <div className="rounded-lg bg-white p-5 text-center shadow-sm">
+            <div className="text-3xl">💬</div>
+            <h3 className="mt-2 font-bold">Customer Support</h3>
+            <p className="text-sm text-gray-500">
+              We're here to help
+            </p>
+          </div>
+
+        </div>
+
+      </section>
+
+      {/* FOOTER */}
+      <footer className="mt-8 bg-gray-900 text-white">
+
+        <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 md:grid-cols-4">
+
+          <div>
+
+            <h2 className="text-2xl font-black text-orange-500">
+              GAMORA ONLINE
+            </h2>
+
+            <p className="mt-3 text-sm text-gray-400">
+              Your trusted online marketplace for everyday products.
+            </p>
+
+          </div>
+
+          <div>
+
+            <h3 className="font-bold">Shop</h3>
+
+            <ul className="mt-3 space-y-2 text-sm text-gray-400">
+              <li>Women's Fashion</li>
+              <li>Men's Fashion</li>
+              <li>Shoes</li>
+              <li>Home & Kitchen</li>
+            </ul>
+
+          </div>
+
+          <div>
+
+            <h3 className="font-bold">Customer Service</h3>
+
+            <ul className="mt-3 space-y-2 text-sm text-gray-400">
+              <li>Contact Us</li>
+              <li>Delivery Information</li>
+              <li>Returns</li>
+              <li>Terms & Conditions</li>
+            </ul>
+
+          </div>
+
+          <div>
+
+            <h3 className="font-bold">Contact</h3>
+
+            <p className="mt-3 text-sm text-gray-400">
+              📱 WhatsApp
+            </p>
+
+            <p className="mt-2 text-sm text-gray-400">
+              📧 Email Support
+            </p>
+
+          </div>
+
+        </div>
+
+        <div className="border-t border-gray-800 py-5 text-center text-sm text-gray-500">
+          © 2026 GAMORA ONLINE. All rights reserved.
+        </div>
+
+      </footer>
+
+    </main>
+  );
+}

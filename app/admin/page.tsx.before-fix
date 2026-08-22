@@ -1,0 +1,1488 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+
+type CartItem = {
+  id: number;
+  name: string;
+  price: number;
+  quantity: number;
+  image?: string;
+};
+
+type Order = {
+  id: string;
+  customer: {
+    name: string;
+    phone: string;
+    email: string;
+    address: string;
+    notes: string;
+  };
+  location: {
+    latitude: number;
+    longitude: number;
+  } | null;
+  distanceKm: number | null;
+  deliveryFee: number;
+  items: CartItem[];
+  subtotal: number;
+  total: number;
+  status: string;
+  createdAt: string;
+};
+
+const STATUS_OPTIONS = [
+  "Pending",
+  "Confirmed",
+  "Processing",
+  "Out for Delivery",
+  "Delivered",
+  "Cancelled",
+];
+
+export default function AdminDashboard() {
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [language, setLanguage] = useState<"sw" | "en">("sw");
+
+  function loadOrders() {
+    try {
+      const saved = localStorage.getItem("gamora_orders");
+
+      if (!saved) {
+        setOrders([]);
+        return;
+      }
+
+      const parsed = JSON.parse(saved);
+
+      if (Array.isArray(parsed)) {
+        setOrders(parsed);
+      } else {
+        setOrders([]);
+      }
+    } catch {
+      setOrders([]);
+    }
+  }
+
+  useEffect(() => {
+    loadOrders();
+
+    const interval = setInterval(loadOrders, 3000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  function updateOrderStatus(orderId: string, status: string) {
+    const updated = orders.map((order) =>
+      order.id === orderId
+        ? {
+            ...order,
+            status,
+          }
+        : order
+    );
+
+    setOrders(updated);
+    localStorage.setItem("gamora_orders", JSON.stringify(updated));
+
+    if (selectedOrder?.id === orderId) {
+      setSelectedOrder({
+        ...selectedOrder,
+        status,
+      });
+    }
+  }
+
+  function formatMoney(amount: number) {
+    return `TZS ${Number(amount || 0).toLocaleString()}`;
+  }
+
+  function formatDate(date: string) {
+    try {
+      return new Date(date).toLocaleString("en-TZ", {
+        dateStyle: "medium",
+        timeStyle: "short",
+      });
+    } catch {
+      return date;
+    }
+  }
+
+  const filteredOrders = useMemo(() => {
+    return orders.filter((order) => {
+      const searchText = search.toLowerCase();
+
+      const matchesSearch =
+        order.id.toLowerCase().includes(searchText) ||
+        order.customer.name.toLowerCase().includes(searchText) ||
+        order.customer.phone.toLowerCase().includes(searchText) ||
+        order.customer.address.toLowerCase().includes(searchText);
+
+      const matchesStatus =
+        statusFilter === "All" ||
+        order.status === statusFilter;
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [orders, search, statusFilter]);
+
+  const totalRevenue = useMemo(() => {
+    return orders
+      .filter((order) => order.status !== "Cancelled")
+      .reduce((sum, order) => sum + Number(order.total || 0), 0);
+  }, [orders]);
+
+  const pendingOrders = orders.filter(
+    (order) => order.status === "Pending"
+  ).length;
+
+  const processingOrders = orders.filter(
+    (order) =>
+      order.status === "Confirmed" ||
+      order.status === "Processing" ||
+      order.status === "Out for Delivery"
+  ).length;
+
+  const deliveredOrders = orders.filter(
+    (order) => order.status === "Delivered"
+  ).length;
+
+  const customers = new Set(
+    orders.map((order) => order.customer.phone)
+  ).size;
+
+  const sw = {
+    dashboard: "Dashboard",
+    overview: "Muhtasari wa Store",
+    totalOrders: "Orders Zote",
+    customers: "Wateja",
+    revenue: "Mapato",
+    pending: "Pending",
+    processing: "Processing",
+    delivered: "Delivered",
+    orders: "Orders",
+    search: "Tafuta order, jina, simu au eneo...",
+    all: "Zote",
+    customer: "Mteja",
+    amount: "Kiasi",
+    status: "Status",
+    date: "Tarehe",
+    action: "Action",
+    view: "Angalia",
+    noOrders: "Hakuna orders bado.",
+    orderDetails: "Maelezo ya Order",
+    phone: "Simu",
+    email: "Email",
+    address: "Address",
+    notes: "Maelezo",
+    distance: "Distance",
+    delivery: "Delivery",
+    subtotal: "Jumla ya Bidhaa",
+    total: "Jumla",
+    products: "Bidhaa",
+    close: "Funga",
+    store: "Angalia Store",
+    refresh: "Refresh",
+  };
+
+  const en = {
+    dashboard: "Dashboard",
+    overview: "Store Overview",
+    totalOrders: "Total Orders",
+    customers: "Customers",
+    revenue: "Revenue",
+    pending: "Pending",
+    processing: "Processing",
+    delivered: "Delivered",
+    orders: "Orders",
+    search: "Search order, name, phone or area...",
+    all: "All",
+    customer: "Customer",
+    amount: "Amount",
+    status: "Status",
+    date: "Date",
+    action: "Action",
+    view: "View",
+    noOrders: "No orders yet.",
+    orderDetails: "Order Details",
+    phone: "Phone",
+    email: "Email",
+    address: "Address",
+    notes: "Notes",
+    distance: "Distance",
+    delivery: "Delivery",
+    subtotal: "Subtotal",
+    total: "Total",
+    products: "Products",
+    close: "Close",
+    store: "View Store",
+    refresh: "Refresh",
+  };
+
+  const t = language === "sw" ? sw : en;
+
+  function statusClass(status: string) {
+    switch (status) {
+      case "Delivered":
+        return "bg-green-100 text-green-700";
+
+      case "Cancelled":
+        return "bg-red-100 text-red-700";
+
+      case "Processing":
+        return "bg-blue-100 text-blue-700";
+
+      case "Confirmed":
+        return "bg-indigo-100 text-indigo-700";
+
+      case "Out for Delivery":
+        return "bg-purple-100 text-purple-700";
+
+      default:
+        return "bg-yellow-100 text-yellow-700";
+    }
+  }
+
+  return (
+    <main className="min-h-screen bg-slate-100 text-slate-900">
+
+      {/* SIDEBAR */}
+
+      <aside className="fixed left-0 top-0 hidden h-screen w-64 bg-slate-950 text-white md:block">
+
+        <div className="border-b border-slate-800 px-6 py-6">
+
+          <h1 className="text-2xl font-black text-sky-400">
+            GAMORA
+          </h1>
+
+          <p className="text-xs font-bold tracking-[0.3em] text-slate-500">
+            ONLINE
+          </p>
+
+          <p className="mt-4 text-xs text-slate-400">
+            ADMIN PANEL
+          </p>
+
+        </div>
+
+        <nav className="p-4">
+
+          <a
+            href="/admin"
+            className="mb-2 flex items-center gap-3 rounded-lg bg-sky-700 px-4 py-3 font-bold"
+          >
+            📊 {t.dashboard}
+          </a>
+
+          <a
+            href="#orders"
+            className="mb-2 flex items-center gap-3 rounded-lg px-4 py-3 text-slate-300 hover:bg-slate-800"
+          >
+            🛍️ {t.orders}
+          </a>
+
+          <a
+            href="/admin/products"
+            className="mb-2 flex items-center gap-3 rounded-lg px-4 py-3 text-slate-300 hover:bg-slate-800"
+          >
+            📦 Products
+          </a>
+
+          <a
+            href="#customers"
+            className="mb-2 flex items-center gap-3 rounded-lg px-4 py-3 text-slate-300 hover:bg-slate-800"
+          >
+            👥 {t.customers}
+          </a>
+
+        </nav>
+
+        <div className="absolute bottom-0 w-full border-t border-slate-800 p-4">
+
+          <a
+            href="/"
+            className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm text-slate-400 hover:bg-slate-800 hover:text-white"
+          >
+            ← {t.store}
+          </a>
+
+        </div>
+
+      </aside>
+
+      {/* MAIN */}
+
+      <section className="md:ml-64">
+
+        {/* HEADER */}
+
+        <header className="sticky top-0 z-40 border-b bg-white px-4 py-4 shadow-sm md:px-8">
+
+          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+
+            <div>
+
+              <h2 className="text-2xl font-black">
+                {t.dashboard}
+              </h2>
+
+              <p className="text-sm text-slate-500">
+                {t.overview}
+              </p>
+
+            </div>
+
+            <div className="flex items-center gap-2">
+
+              <button
+                onClick={loadOrders}
+                className="rounded-lg border px-4 py-2 text-sm font-bold hover:bg-slate-50"
+              >
+                🔄 {t.refresh}
+              </button>
+
+              <button
+                onClick={() => setLanguage("sw")}
+                className={`rounded-lg px-3 py-2 text-xs font-bold ${
+                  language === "sw"
+                    ? "bg-sky-700 text-white"
+                    : "bg-slate-100"
+                }`}
+              >
+                🇹🇿 SW
+              </button>
+
+              <button
+                onClick={() => setLanguage("en")}
+                className={`rounded-lg px-3 py-2 text-xs font-bold ${
+                  language === "en"
+                    ? "bg-sky-700 text-white"
+                    : "bg-slate-100"
+                }`}
+              >
+                🇬🇧 EN
+              </button>
+
+            </div>
+
+          </div>
+
+        </header>
+
+        <div className="p-4 md:p-8">
+
+          {/* STATS */}
+
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+
+            <div className="rounded-2xl bg-white p-6 shadow-sm">
+
+              <div className="flex items-center justify-between">
+
+                <div>
+
+                  <p className="text-sm font-semibold text-slate-500">
+                    {t.totalOrders}
+                  </p>
+
+                  <p className="mt-2 text-3xl font-black">
+                    {orders.length}
+                  </p>
+
+                </div>
+
+                <div className="text-4xl">
+                  🛍️
+                </div>
+
+              </div>
+
+            </div>
+
+            <div className="rounded-2xl bg-white p-6 shadow-sm">
+
+              <div className="flex items-center justify-between">
+
+                <div>
+
+                  <p className="text-sm font-semibold text-slate-500">
+                    {t.customers}
+                  </p>
+
+                  <p className="mt-2 text-3xl font-black">
+                    {customers}
+                  </p>
+
+                </div>
+
+                <div className="text-4xl">
+                  👥
+                </div>
+
+              </div>
+
+            </div>
+
+            <div className="rounded-2xl bg-white p-6 shadow-sm">
+
+              <div className="flex items-center justify-between">
+
+                <div>
+
+                  <p className="text-sm font-semibold text-slate-500">
+                    {t.revenue}
+                  </p>
+
+                  <p className="mt-2 text-xl font-black text-sky-700">
+                    {formatMoney(totalRevenue)}
+                  </p>
+
+                </div>
+
+                <div className="text-4xl">
+                  💰
+                </div>
+
+              </div>
+
+            </div>
+
+            <div className="rounded-2xl bg-white p-6 shadow-sm">
+
+              <div className="flex items-center justify-between">
+
+                <div>
+
+                  <p className="text-sm font-semibold text-slate-500">
+                    {t.pending}
+                  </p>
+
+                  <p className="mt-2 text-3xl font-black text-yellow-600">
+                    {pendingOrders}
+                  </p>
+
+                </div>
+
+                <div className="text-4xl">
+                  ⏳
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+          {/* STATUS SUMMARY */}
+
+          <div className="mt-6 grid gap-4 sm:grid-cols-3">
+
+            <div className="rounded-2xl bg-blue-50 p-5">
+
+              <p className="text-sm font-bold text-blue-700">
+                {t.processing}
+              </p>
+
+              <p className="mt-2 text-3xl font-black text-blue-800">
+                {processingOrders}
+              </p>
+
+            </div>
+
+            <div className="rounded-2xl bg-green-50 p-5">
+
+              <p className="text-sm font-bold text-green-700">
+                {t.delivered}
+              </p>
+
+              <p className="mt-2 text-3xl font-black text-green-800">
+                {deliveredOrders}
+              </p>
+
+            </div>
+
+            <div className="rounded-2xl bg-slate-200 p-5">
+
+              <p className="text-sm font-bold text-slate-600">
+                {t.orders}
+              </p>
+
+              <p className="mt-2 text-3xl font-black">
+                {filteredOrders.length}
+              </p>
+
+            </div>
+
+          </div>
+
+          {/* ORDERS */}
+
+          <section
+            id="orders"
+            className="mt-8 rounded-2xl bg-white shadow-sm"
+          >
+
+            <div className="border-b p-5">
+
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+
+                <div>
+
+                  <h3 className="text-2xl font-black">
+                    🛍️ {t.orders}
+                  </h3>
+
+                  <p className="mt-1 text-sm text-slate-500">
+                    {orders.length} orders
+                  </p>
+
+                </div>
+
+                <div className="flex flex-col gap-3 sm:flex-row">
+
+                  <input
+                    type="search"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder={t.search}
+                    className="w-full rounded-lg border border-slate-200 px-4 py-3 text-sm outline-none focus:border-sky-500 sm:w-80"
+                  />
+
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="rounded-lg border border-slate-200 px-4 py-3 text-sm font-bold outline-none focus:border-sky-500"
+                  >
+
+                    <option value="All">
+                      {t.all}
+                    </option>
+
+                    {STATUS_OPTIONS.map((status) => (
+                      <option key={status} value={status}>
+                        {status}
+                      </option>
+                    ))}
+
+                  </select>
+
+                </div>
+
+              </div>
+
+            </div>
+
+            {filteredOrders.length === 0 ? (
+
+              <div className="p-16 text-center">
+
+                <div className="text-6xl">
+                  🛒
+                </div>
+
+                <h3 className="mt-5 text-xl font-black">
+                  {t.noOrders}
+                </h3>
+
+                <p className="mt-2 text-sm text-slate-500">
+                  Orders mpya zitaonekana hapa baada ya mteja
+                  kukamilisha checkout.
+                </p>
+
+              </div>
+
+            ) : (
+
+              <div className="overflow-x-auto">
+
+                <table className="w-full min-w-[950px] text-left">
+
+                  <thead>
+
+                    <tr className="border-b bg-slate-50 text-xs font-black uppercase text-slate-500">
+
+                      <th className="px-5 py-4">
+                        Order
+                      </th>
+
+                      <th className="px-5 py-4">
+                        {t.customer}
+                      </th>
+
+                      <th className="px-5 py-4">
+                        {t.amount}
+                      </th>
+
+                      <th className="px-5 py-4">
+                        {t.status}
+                      </th>
+
+                      <th className="px-5 py-4">
+                        {t.date}
+                      </th>
+
+                      <th className="px-5 py-4">
+                        {t.action}
+                      </th>
+
+                    </tr>
+
+                  </thead>
+
+                  <tbody>
+
+                    {filteredOrders.map((order) => (
+
+                      <tr
+                        key={order.id}
+                        className="border-b last:border-0 hover:bg-slate-50"
+                      >
+
+                        <td className="px-5 py-5">
+
+                          <p className="font-black text-sky-700">
+                            {order.id}
+                          </p>
+
+                        </td>
+
+                        <td className="px-5 py-5">
+
+                          <p className="font-bold">
+                            {order.customer.name}
+                          </p>
+
+                          <p className="mt-1 text-xs text-slate-500">
+                            {order.customer.phone}
+                          </p>
+
+                        </td>
+
+                        <td className="px-5 py-5">
+
+                          <p className="font-black">
+                            {formatMoney(order.total)}
+                          </p>
+
+                          <p className="mt-1 text-xs text-slate-500">
+                            {order.items.length} {t.products}
+                          </p>
+
+                        </td>
+
+                        <td className="px-5 py-5">
+
+                          <select
+                            value={order.status}
+                            onChange={(e) =>
+                              updateOrderStatus(
+                                order.id,
+                                e.target.value
+                              )
+                            }
+                            className={`rounded-full border-0 px-3 py-2 text-xs font-black outline-none ${statusClass(
+                              order.status
+                            )}`}
+                          >
+
+                            {STATUS_OPTIONS.map((status) => (
+                              <option
+                                key={status}
+                                value={status}
+                              >
+                                {status}
+                              </option>
+                            ))}
+
+                          </select>
+
+                        </td>
+
+                        <td className="px-5 py-5 text-sm text-slate-500">
+                          {formatDate(order.createdAt)}
+                        </td>
+
+                        <td className="px-5 py-5">
+
+                          <button
+                            onClick={() =>
+                              setSelectedOrder(order)
+                            }
+                            className="rounded-lg bg-slate-900 px-4 py-2 text-xs font-bold text-white hover:bg-slate-700"
+                          >
+                            👁️ {t.view}
+                          </button>
+
+                        </td>
+
+                      </tr>
+
+                    ))}
+
+                  </tbody>
+
+                </table>
+
+              </div>
+
+            )}
+
+          </section>
+
+        </div>
+
+      </section>
+
+      {/* ORDER MODAL */}
+
+      {selectedOrder && (
+
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+
+          <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl bg-white shadow-2xl">
+
+            <div className="sticky top-0 flex items-center justify-between border-b bg-white px-6 py-5">
+
+              <div>
+
+                <p className="text-xs font-bold text-slate-500">
+                  {t.orderDetails}
+                </p>
+
+                <h2 className="text-2xl font-black text-sky-700">
+                  {selectedOrder.id}
+                </h2>
+
+              </div>
+
+              <button
+                onClick={() => setSelectedOrder(null)}
+                className="rounded-full bg-slate-100 px-4 py-2 font-bold hover:bg-slate-200"
+              >
+                ✕
+              </button>
+
+            </div>
+
+            <div className="space-y-6 p-6">
+
+              {/* CUSTOMER */}
+
+              <div className="rounded-2xl bg-slate-50 p-5">
+
+                <h3 className="text-lg font-black">
+                  👤 {t.customer}
+                </h3>
+
+                <div className="mt-4 grid gap-4 sm:grid-cols-2">
+
+                  <div>
+                    <p className="text-xs font-bold text-slate-400">
+                      {t.customer}
+                    </p>
+                    <p className="mt-1 font-bold">
+                      {selectedOrder.customer.name}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-bold text-slate-400">
+                      {t.phone}
+                    </p>
+                    <p className="mt-1 font-bold">
+                      {selectedOrder.customer.phone}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-bold text-slate-400">
+                      {t.email}
+                    </p>
+                    <p className="mt-1 font-bold">
+                      {selectedOrder.customer.email || "-"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-bold text-slate-400">
+                      {t.address}
+                    </p>
+                    <p className="mt-1 font-bold">
+                      {selectedOrder.customer.address}
+                    </p>
+                  </div>
+
+                </div>
+
+                {selectedOrder.customer.notes && (
+                  <div className="mt-4 rounded-xl bg-white p-4">
+
+                    <p className="text-xs font-bold text-slate-400">
+                      {t.notes}
+                    </p>
+
+                    <p className="mt-1 text-sm">
+                      {selectedOrder.customer.notes}
+                    </p>
+
+                  </div>
+                )}
+
+              </div>
+
+              {/* LOCATION */}
+
+              <div className="rounded-2xl bg-sky-50 p-5">
+
+                <h3 className="text-lg font-black">
+                  📍 Delivery
+                </h3>
+
+                <div className="mt-4 grid gap-4 sm:grid-cols-2">
+
+                  <div>
+
+                    <p className="text-xs font-bold text-slate-500">
+                      {t.distance}
+                    </p>
+
+                    <p className="mt-1 text-xl font-black text-sky-700">
+                      {selectedOrder.distanceKm !== null
+                        ? `${selectedOrder.distanceKm.toFixed(1)} km`
+                        : "-"}
+                    </p>
+
+                  </div>
+
+                  <div>
+
+                    <p className="text-xs font-bold text-slate-500">
+                      {t.delivery}
+                    </p>
+
+                    <p className="mt-1 text-xl font-black text-green-700">
+                      {formatMoney(
+                        selectedOrder.deliveryFee
+                      )}
+                    </p>
+
+                  </div>
+
+                </div>
+
+                {selectedOrder.location && (
+                  <a
+                    href={`https://www.google.com/maps?q=${selectedOrder.location.latitude},${selectedOrder.location.longitude}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-5 inline-block rounded-lg bg-sky-700 px-5 py-3 text-sm font-bold text-white hover:bg-sky-800"
+                  >
+                    📍 Open Customer Location
+                  </a>
+                )}
+
+              </div>
+
+              {/* PRODUCTS */}
+
+              <div>
+
+                <h3 className="text-lg font-black">
+                  🛒 {t.products}
+                </h3>
+
+                <div className="mt-4 divide-y rounded-2xl border">
+
+                  {selectedOrder.items.map((item) => (
+
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between gap-4 p-4"
+                    >
+
+                      <div>
+
+                        <p className="font-bold">
+                          {item.name}
+                        </p>
+
+                        <p className="mt-1 text-sm text-slate-500">
+                          {item.quantity} ×{" "}
+                          {formatMoney(item.price)}
+                        </p>
+
+                      </div>
+
+                      <p className="font-black">
+                        {formatMoney(
+                          item.price * item.quantity
+                        )}
+                      </p>
+
+                    </div>
+
+                  ))}
+
+                </div>
+
+              </div>
+
+              {/* TOTALS */}
+
+              <div className="rounded-2xl bg-slate-950 p-6 text-white">
+
+                <div className="flex justify-between gap-4">
+
+                  <span className="text-slate-300">
+                    {t.subtotal}
+                  </span>
+
+                  <span className="font-bold">
+                    {formatMoney(
+                      selectedOrder.subtotal
+                    )}
+                  </span>
+
+                </div>
+
+                <div className="mt-3 flex justify-between gap-4">
+
+                  <span className="text-slate-300">
+                    {t.delivery}
+                  </span>
+
+                  <span className="font-bold">
+                    {formatMoney(
+                      selectedOrder.deliveryFee
+                    )}
+                  </span>
+
+                </div>
+
+                <div className="mt-5 flex justify-between gap-4 border-t border-slate-700 pt-5">
+
+                  <span className="text-xl font-black">
+                    {t.total}
+                  </span>
+
+                  <span className="text-xl font-black text-sky-400">
+                    {formatMoney(selectedOrder.total)}
+                  </span>
+
+                </div>
+
+              </div>
+
+              <div className="text-sm text-slate-500">
+                {formatDate(selectedOrder.createdAt)}
+              </div>
+
+              <button
+                onClick={() => setSelectedOrder(null)}
+                className="w-full rounded-lg border border-slate-200 px-6 py-4 font-bold hover:bg-slate-50"
+              >
+                {t.close}
+              </button>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      )}
+
+    </main>
+  );
+} const stats = [
+  {
+    title: "Total Products",
+    value: "24",
+    icon: "📦",
+    change: "+12%",
+  },
+  {
+    title: "Total Orders",
+    value: "156",
+    icon: "🛍️",
+    change: "+18%",
+  },
+  {
+    title: "Customers",
+    value: "89",
+    icon: "👥",
+    change: "+9%",
+  },
+  {
+    title: "Revenue",
+    value: "TZS 8.4M",
+    icon: "💰",
+    change: "+21%",
+  },
+];
+
+const recentOrders = [
+  {
+    id: "#GM-1001",
+    customer: "John M.",
+    amount: "TZS 125,000",
+    status: "Pending",
+  },
+  {
+    id: "#GM-1002",
+    customer: "Asha K.",
+    amount: "TZS 85,000",
+    status: "Processing",
+  },
+  {
+    id: "#GM-1003",
+    customer: "David P.",
+    amount: "TZS 210,000",
+    status: "Completed",
+  },
+  {
+    id: "#GM-1004",
+    customer: "Neema S.",
+    amount: "TZS 65,000",
+    status: "Pending",
+  },
+];
+
+export default function AdminDashboard() {
+  return (
+    <main className="min-h-screen bg-gray-100">
+
+      {/* SIDEBAR */}
+
+      <aside className="fixed left-0 top-0 hidden h-screen w-64 bg-gray-950 text-white md:block">
+
+        <div className="border-b border-gray-800 px-6 py-6">
+
+          <h1 className="text-2xl font-black text-orange-500">
+            GAMORA
+          </h1>
+
+          <p className="text-xs font-semibold tracking-[0.3em] text-gray-500">
+            ONLINE
+          </p>
+
+          <p className="mt-4 text-xs text-gray-400">
+            ADMIN PANEL
+          </p>
+
+        </div>
+
+        <nav className="p-4">
+
+          <a
+            href="/admin"
+            className="mb-2 flex items-center gap-3 rounded-lg bg-orange-600 px-4 py-3 font-semibold"
+          >
+            📊 Dashboard
+          </a>
+
+          <a
+            href="#products"
+            className="mb-2 flex items-center gap-3 rounded-lg px-4 py-3 text-gray-300 hover:bg-gray-800"
+          >
+            📦 Products
+          </a>
+
+          <a
+            href="#orders"
+            className="mb-2 flex items-center gap-3 rounded-lg px-4 py-3 text-gray-300 hover:bg-gray-800"
+          >
+            🛍️ Orders
+          </a>
+
+          <a
+            href="#customers"
+            className="mb-2 flex items-center gap-3 rounded-lg px-4 py-3 text-gray-300 hover:bg-gray-800"
+          >
+            👥 Customers
+          </a>
+
+          <a
+            href="#categories"
+            className="mb-2 flex items-center gap-3 rounded-lg px-4 py-3 text-gray-300 hover:bg-gray-800"
+          >
+            🏷️ Categories
+          </a>
+
+          <a
+            href="#settings"
+            className="flex items-center gap-3 rounded-lg px-4 py-3 text-gray-300 hover:bg-gray-800"
+          >
+            ⚙️ Settings
+          </a>
+
+        </nav>
+
+        <div className="absolute bottom-0 w-full border-t border-gray-800 p-4">
+
+          <a
+            href="/"
+            className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm text-gray-400 hover:bg-gray-800 hover:text-white"
+          >
+            ← View Store
+          </a>
+
+        </div>
+
+      </aside>
+
+      {/* MAIN CONTENT */}
+
+      <section className="md:ml-64">
+
+        {/* TOP HEADER */}
+
+        <header className="sticky top-0 z-40 flex items-center justify-between border-b bg-white px-4 py-4 shadow-sm md:px-8">
+
+          <div>
+
+            <h2 className="text-xl font-bold text-gray-900">
+              Dashboard
+            </h2>
+
+            <p className="text-sm text-gray-500">
+              Welcome back, Admin
+            </p>
+
+          </div>
+
+          <div className="flex items-center gap-3">
+
+            <button className="rounded-lg border px-3 py-2 hover:bg-gray-100">
+              🔔
+            </button>
+
+            <div className="hidden text-right sm:block">
+
+              <p className="text-sm font-bold">
+                Administrator
+              </p>
+
+              <p className="text-xs text-gray-500">
+                Admin
+              </p>
+
+            </div>
+
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-600 font-bold text-white">
+              A
+            </div>
+
+          </div>
+
+        </header>
+
+        {/* CONTENT */}
+
+        <div className="p-4 md:p-8">
+
+          {/* QUICK ACTIONS */}
+
+          <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+
+            <div>
+
+              <h3 className="text-2xl font-black text-gray-900">
+                Overview
+              </h3>
+
+              <p className="text-sm text-gray-500">
+                Monitor your online store
+              </p>
+
+            </div>
+
+            <a
+              href="#add-product"
+              className="rounded-lg bg-orange-600 px-6 py-3 text-center font-bold text-white shadow-sm hover:bg-orange-700"
+            >
+              + Add Product
+            </a>
+
+          </div>
+
+          {/* STATS */}
+
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+
+            {stats.map((stat) => (
+
+              <div
+                key={stat.title}
+                className="rounded-xl bg-white p-5 shadow-sm"
+              >
+
+                <div className="flex items-start justify-between">
+
+                  <div>
+
+                    <p className="text-sm font-medium text-gray-500">
+                      {stat.title}
+                    </p>
+
+                    <h3 className="mt-2 text-2xl font-black text-gray-900">
+                      {stat.value}
+                    </h3>
+
+                  </div>
+
+                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-orange-100 text-2xl">
+                    {stat.icon}
+                  </div>
+
+                </div>
+
+                <p className="mt-4 text-sm font-semibold text-green-600">
+                  ↑ {stat.change} this month
+                </p>
+
+              </div>
+
+            ))}
+
+          </div>
+
+          {/* PRODUCTS / QUICK MANAGEMENT */}
+
+          <div
+            id="products"
+            className="mt-8 rounded-xl bg-white p-5 shadow-sm"
+          >
+
+            <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+
+              <div>
+
+                <h3 className="text-xl font-black">
+                  Product Management
+                </h3>
+
+                <p className="text-sm text-gray-500">
+                  Manage products in your store
+                </p>
+
+              </div>
+
+              <button className="rounded-lg border border-orange-600 px-5 py-2 font-semibold text-orange-600 hover:bg-orange-50">
+                View All Products
+              </button>
+
+            </div>
+
+            <div className="mt-6 grid gap-4 md:grid-cols-3">
+
+              <div className="rounded-lg border p-5">
+
+                <div className="text-3xl">
+                  ➕
+                </div>
+
+                <h4 className="mt-3 font-bold">
+                  Add Product
+                </h4>
+
+                <p className="mt-1 text-sm text-gray-500">
+                  Add new products to your marketplace.
+                </p>
+
+                <button className="mt-4 rounded-md bg-gray-900 px-4 py-2 text-sm font-semibold text-white">
+                  Add Product
+                </button>
+
+              </div>
+
+              <div className="rounded-lg border p-5">
+
+                <div className="text-3xl">
+                  ✏️
+                </div>
+
+                <h4 className="mt-3 font-bold">
+                  Edit Products
+                </h4>
+
+                <p className="mt-1 text-sm text-gray-500">
+                  Update prices, stock and details.
+                </p>
+
+                <button className="mt-4 rounded-md bg-gray-900 px-4 py-2 text-sm font-semibold text-white">
+                  Manage Products
+                </button>
+
+              </div>
+
+              <div className="rounded-lg border p-5">
+
+                <div className="text-3xl">
+                  📦
+                </div>
+
+                <h4 className="mt-3 font-bold">
+                  Stock Management
+                </h4>
+
+                <p className="mt-1 text-sm text-gray-500">
+                  Monitor available product stock.
+                </p>
+
+                <button className="mt-4 rounded-md bg-gray-900 px-4 py-2 text-sm font-semibold text-white">
+                  View Stock
+                </button>
+
+              </div>
+
+            </div>
+
+          </div>
+
+          {/* RECENT ORDERS */}
+
+          <div
+            id="orders"
+            className="mt-8 rounded-xl bg-white p-5 shadow-sm"
+          >
+
+            <div className="mb-5 flex items-center justify-between">
+
+              <div>
+
+                <h3 className="text-xl font-black">
+                  Recent Orders
+                </h3>
+
+                <p className="text-sm text-gray-500">
+                  Latest customer orders
+                </p>
+
+              </div>
+
+              <button className="font-semibold text-orange-600">
+                View All →
+              </button>
+
+            </div>
+
+            <div className="overflow-x-auto">
+
+              <table className="w-full min-w-[600px] text-left">
+
+                <thead>
+
+                  <tr className="border-b text-sm text-gray-500">
+
+                    <th className="px-4 py-3">
+                      Order
+                    </th>
+
+                    <th className="px-4 py-3">
+                      Customer
+                    </th>
+
+                    <th className="px-4 py-3">
+                      Amount
+                    </th>
+
+                    <th className="px-4 py-3">
+                      Status
+                    </th>
+
+                  </tr>
+
+                </thead>
+
+                <tbody>
+
+                  {recentOrders.map((order) => (
+
+                    <tr
+                      key={order.id}
+                      className="border-b last:border-0 hover:bg-gray-50"
+                    >
+
+                      <td className="px-4 py-4 font-semibold">
+                        {order.id}
+                      </td>
+
+                      <td className="px-4 py-4">
+                        {order.customer}
+                      </td>
+
+                      <td className="px-4 py-4 font-bold">
+                        {order.amount}
+                      </td>
+
+                      <td className="px-4 py-4">
+
+                        <span
+                          className={`rounded-full px-3 py-1 text-xs font-bold ${
+                            order.status === "Completed"
+                              ? "bg-green-100 text-green-700"
+                              : order.status === "Processing"
+                                ? "bg-blue-100 text-blue-700"
+                                : "bg-yellow-100 text-yellow-700"
+                          }`}
+                        >
+                          {order.status}
+                        </span>
+
+                      </td>
+
+                    </tr>
+
+                  ))}
+
+                </tbody>
+
+              </table>
+
+            </div>
+
+          </div>
+
+          {/* STORE LINK */}
+
+          <div className="mt-8 rounded-xl bg-gradient-to-r from-orange-600 to-yellow-500 p-6 text-white">
+
+            <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+
+              <div>
+
+                <h3 className="text-xl font-black">
+                  GAMORA ONLINE Store
+                </h3>
+
+                <p className="text-sm text-white/80">
+                  Your marketplace is ready for the next step.
+                </p>
+
+              </div>
+
+              <a
+                href="/"
+                className="rounded-lg bg-gray-900 px-6 py-3 text-center font-bold"
+              >
+                View Store →
+              </a>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+    </main>
+  );
+}

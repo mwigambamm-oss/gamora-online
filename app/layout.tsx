@@ -19,13 +19,20 @@ export const metadata: Metadata = {
     google: "wSzx_6kXQC_6g1gldGV9ynYsB4D7hWO-ZXQjuawtlrw",
   },
 };
-export default function RootLayout({ children }: LayoutProps<"/">) {
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {children}
+      </body>
     </html>
   );
 }

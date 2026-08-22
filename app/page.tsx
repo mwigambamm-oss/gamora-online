@@ -296,16 +296,16 @@ export default function HomePage() {
 
             {/* LOGO */}
 
-            <a
-              href="/"
-              className="shrink-0 text-2xl font-black tracking-tight text-sky-700"
-            >
-              GAMORA
-              <span className="text-sky-950">
-                ONLINE
-              </span>
-            </a>
-
+<a
+  href="/"
+  className="flex shrink-0 items-center"
+>
+  <img
+    src="/images/gamora-logo.png"
+    alt="Gamora Online"
+    className="h-14 w-auto object-contain"
+  />
+</a>
             {/* SEARCH */}
 
             <div className="hidden flex-1 md:block">
@@ -832,7 +832,8 @@ export default function HomePage() {
               <ul className="mt-5 space-y-3 text-sky-200">
 
                 <li>
-                  <a href="#products">
+                  
+                   <a href="#products">
                     {t.products}
                   </a>
                 </li>
@@ -970,21 +971,21 @@ export default function HomePage() {
 
             <div className="mt-5 flex flex-wrap gap-3">
 
-              <SocialButton
-                icon="f"
-                label="Facebook"
-              />
-
-              <SocialButton
-                icon="◎"
-                label="Instagram"
-              />
-
-              <SocialButton
-                icon="♪"
-                label="TikTok"
-              />
-
+<SocialButton
+  icon="f"
+  label="Facebook"
+  href="https://web.facebook.com/gamoraonline/"
+/>
+<SocialButton
+  icon="◎"
+  label="Instagram"
+  href="https://www.instagram.com/gamoraonline_store/"
+/>
+<SocialButton
+  icon="♪"
+  label="TikTok"
+  href="https://www.tiktok.com/@officialgamoraonline"
+/>
               <a
                 href="https://wa.me/255798555221"
                 target="_blank"
@@ -1152,26 +1153,24 @@ function GuideCard({
     </div>
   );
 }
-
 function SocialButton({
   icon,
   label,
+  href,
 }: {
   icon: string;
   label: string;
+  href: string;
 }) {
   return (
-    <button
-      type="button"
-      onClick={() =>
-        alert(`${label} link will be connected soon.`)
-      }
-      className="flex items-center gap-2 rounded-lg bg-sky-900 px-5 py-3 font-bold transition hover:bg-sky-800"
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex items-center gap-2 rounded-lg bg-sky-900 px-5 py-3 font-bold transition hover:-translate-y-1 hover:bg-orange-500"
     >
-      <span className="text-lg">
-        {icon}
-      </span>
+      <span className="text-lg">{icon}</span>
       {label}
-    </button>
+    </a>
   );
 }

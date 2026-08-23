@@ -539,7 +539,60 @@ export default function HomePage() {
 
         </div>
 
-        <div className="flex gap-3 overflow-x-auto pb-2">
+        <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4">
+          <button
+            onClick={() => setSelectedCategory("Women's Fashion")}
+            className="rounded-2xl bg-gradient-to-br from-pink-50 to-rose-100 p-6 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+          >
+            <div className="text-4xl">👗</div>
+            <h3 className="mt-4 text-lg font-black text-slate-900">
+              Women's Fashion
+            </h3>
+            <p className="mt-2 text-sm text-slate-600">
+              Stylish outfits and accessories for every occasion.
+            </p>
+          </button>
+
+          <button
+            onClick={() => setSelectedCategory("Men's Fashion")}
+            className="rounded-2xl bg-gradient-to-br from-blue-50 to-sky-100 p-6 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+          >
+            <div className="text-4xl">👔</div>
+            <h3 className="mt-4 text-lg font-black text-slate-900">
+              Men's Fashion
+            </h3>
+            <p className="mt-2 text-sm text-slate-600">
+              Modern styles and everyday essentials for men.
+            </p>
+          </button>
+
+          <button
+            onClick={() => setSelectedCategory("Shoes")}
+            className="rounded-2xl bg-gradient-to-br from-amber-50 to-orange-100 p-6 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+          >
+            <div className="text-4xl">👟</div>
+            <h3 className="mt-4 text-lg font-black text-slate-900">
+              Shoes
+            </h3>
+            <p className="mt-2 text-sm text-slate-600">
+              Comfortable and fashionable footwear for everyone.
+            </p>
+          </button>
+
+          <button
+            onClick={() => setSelectedCategory("Home & Kitchen")}
+            className="rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-100 p-6 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+          >
+            <div className="text-4xl">🏠</div>
+            <h3 className="mt-4 text-lg font-black text-slate-900">
+              Home & Kitchen
+            </h3>
+            <p className="mt-2 text-sm text-slate-600">
+              Useful products to make your home even better.
+            </p>
+          </button>
+        </div>        
+<div className="flex gap-3 overflow-x-auto pb-2">
 
           {categories.map((category) => (
 
@@ -564,7 +617,111 @@ export default function HomePage() {
         </div>
 
       </section>
+      {/* WHY CHOOSE GAMORA */}
 
+      <section className="bg-gradient-to-br from-slate-50 via-white to-sky-50 py-16">
+
+        <div className="mx-auto max-w-7xl px-4">
+
+          <div className="mx-auto max-w-2xl text-center">
+
+            <p className="font-bold uppercase tracking-wider text-sky-600">
+              GAMORA ONLINE
+            </p>
+
+            <h2 className="mt-2 text-3xl font-black text-slate-900 md:text-4xl">
+              {language === "sw"
+                ? "Kwa Nini Uchague Gamora Online?"
+                : "Why Choose Gamora Online?"}
+            </h2>
+
+            <p className="mt-4 leading-7 text-slate-600">
+              {language === "sw"
+                ? "Tunafanya ununuzi wa mtandaoni uwe rahisi, salama na wenye kuvutia kwa kila mteja."
+                : "We make online shopping simple, secure and enjoyable for every customer."}
+            </p>
+
+          </div>
+
+          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+
+            <div className="rounded-2xl bg-white p-7 text-center shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-sky-100 text-3xl">
+                🚚
+              </div>
+
+              <h3 className="mt-5 text-lg font-black">
+                {language === "sw"
+                  ? "Delivery ya Haraka"
+                  : "Fast Delivery"}
+              </h3>
+
+              <p className="mt-3 text-sm leading-6 text-slate-600">
+                {language === "sw"
+                  ? "Pokea bidhaa zako kwa urahisi na kwa muda unaofaa."
+                  : "Get your orders delivered conveniently and on time."}
+              </p>
+            </div>
+
+            <div className="rounded-2xl bg-white p-7 text-center shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-3xl">
+                🔒
+              </div>
+
+              <h3 className="mt-5 text-lg font-black">
+                {language === "sw"
+                  ? "Ununuzi Salama"
+                  : "Secure Shopping"}
+              </h3>
+
+              <p className="mt-3 text-sm leading-6 text-slate-600">
+                {language === "sw"
+                  ? "Tunaweka usalama wa taarifa na oda zako kuwa kipaumbele."
+                  : "Your information and orders are handled with security in mind."}
+              </p>
+            </div>
+
+            <div className="rounded-2xl bg-white p-7 text-center shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 text-3xl">
+                ⭐
+              </div>
+
+              <h3 className="mt-5 text-lg font-black">
+                {language === "sw"
+                  ? "Bidhaa Bora"
+                  : "Quality Products"}
+              </h3>
+
+              <p className="mt-3 text-sm leading-6 text-slate-600">
+                {language === "sw"
+                  ? "Tunakulenga kukupa bidhaa zenye ubora na thamani nzuri."
+                  : "We focus on products that offer quality and great value."}
+              </p>
+            </div>
+
+            <div className="rounded-2xl bg-white p-7 text-center shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-pink-100 text-3xl">
+                💬
+              </div>
+
+              <h3 className="mt-5 text-lg font-black">
+                {language === "sw"
+                  ? "Huduma kwa Wateja"
+                  : "Customer Support"}
+              </h3>
+
+              <p className="mt-3 text-sm leading-6 text-slate-600">
+                {language === "sw"
+                  ? "Tupo tayari kukusaidia kabla na baada ya kufanya oda."
+                  : "Our team is ready to assist you before and after your order."}
+              </p>
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
       {/* FLASH SALE */}
 
       {saleProducts.length > 0 && (

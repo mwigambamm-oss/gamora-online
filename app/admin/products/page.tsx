@@ -5,12 +5,14 @@ import {
   Product,
   getProducts,
   saveProduct,
+  updateProduct,
   deleteProduct,
 } from "@/lib/products";
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
 
   const [form, setForm] = useState({
     name: "",
@@ -44,17 +46,46 @@ export default function ProductsPage() {
     }));
   }
 
-  function handleImage(event: ChangeEvent<HTMLInputElement>) {
+  async function handleImage(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
 
     if (!file) return;
 
-    const imageUrl = URL.createObjectURL(file);
+    try {
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${Date.now()}-${Math.random()
+        .toString(36)
+        .substring(2)}.${fileExt}`;
 
-    setForm((current) => ({
-      ...current,
-      image: imageUrl,
-    }));
+      const { supabase } = await import("@/lib/supabase");
+
+      const { error } = await supabase.storage
+        .from("product-images")
+        .upload(fileName, file, {
+          cacheControl: "3600",
+          upsert: false,
+        });
+
+      if (error) {
+        console.error("Image upload failed:", error);
+        alert("Failed to upload image.");
+        return;
+      }
+
+      const { data } = supabase.storage
+        .from("product-images")
+        .getPublicUrl(fileName);
+
+      setForm((current) => ({
+        ...current,
+        image: data.publicUrl,
+      }));
+
+      alert("Image uploaded successfully!");
+    } catch (error) {
+      console.error("Image upload error:", error);
+      alert("Failed to upload image.");
+    }
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -66,7 +97,7 @@ export default function ProductsPage() {
     }
 
     try {
-      await saveProduct({
+      const productData = {
         name: form.name,
         price: Number(form.price),
         oldPrice: Number(form.oldPrice || form.price),
@@ -74,14 +105,25 @@ export default function ProductsPage() {
         stock: Number(form.stock),
         description: form.description,
         image: form.image,
-      });
+      };
+
+      if (editingId !== null) {
+        await updateProduct(editingId, productData);
+        alert("Product updated successfully!");
+      } else {
+        await saveProduct(productData);
+        alert("Product saved successfully!");
+      }
 
       await loadProducts();
 
-      alert("Product saved successfully!");
     } catch (error) {
       console.error(error);
-      alert("Failed to save product. Please try again.");
+      alert(
+        editingId !== null
+          ? "Failed to update product. Please try again."
+          : "Failed to save product. Please try again."
+      );
       return;
     }
 
@@ -95,10 +137,27 @@ export default function ProductsPage() {
       image: "",
     });
 
+    setEditingId(null);
     setShowForm(false);
   }
 
-  async function deleteProduct(id: number) {
+  function handleEditProduct(product: Product) {
+    setForm({
+      name: product.name,
+      price: String(product.price),
+      oldPrice: String(product.oldPrice || ""),
+      category: product.category,
+      stock: String(product.stock),
+      description: product.description || "",
+      image: product.image || "",
+    });
+
+    setEditingId(product.id);
+    setShowForm(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+async function handleDeleteProduct(id: number) {
     const confirmed = window.confirm(
       "Are you sure you want to delete this product?"
     );
@@ -413,12 +472,23 @@ export default function ProductsPage() {
                     Stock: {product.stock}
                   </p>
 
-                  <button
-                    onClick={() => deleteProduct(product.id)}
-                    className="mt-4 w-full rounded-lg bg-red-50 py-2 font-bold text-red-600 hover:bg-red-100"
-                  >
-                    Delete
-                  </button>
+                  <div className="mt-4 grid grid-cols-2 gap-2">
+
+                    <button
+                      onClick={() => handleEditProduct(product)}
+                      className="rounded-lg bg-orange-50 py-2 font-bold text-orange-600 hover:bg-orange-100"
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      onClick={() => handleDeleteProduct(product.id)}
+                      className="rounded-lg bg-red-50 py-2 font-bold text-red-600 hover:bg-red-100"
+                    >
+                      Delete
+                    </button>
+
+                  </div>
 
                 </div>
 

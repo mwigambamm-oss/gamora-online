@@ -1,5 +1,6 @@
 "use client";
 
+import { getProducts as getSupabaseProducts } from "@/lib/products";
 import { useEffect, useMemo, useState } from "react";
 
 type Language = "sw" | "en";
@@ -161,24 +162,17 @@ export default function HomePage() {
     };
   }, []);
 
-  function loadProducts() {
-    const savedProducts =
-      localStorage.getItem("gamora_products");
-
-    if (!savedProducts) {
-      setProducts(defaultProducts);
-      return;
-    }
-
+  async function loadProducts() {
     try {
-      const parsed = JSON.parse(savedProducts);
+      const data = await getSupabaseProducts();
 
-      if (Array.isArray(parsed)) {
-        setProducts(parsed);
+      if (data.length > 0) {
+        setProducts(data);
       } else {
         setProducts(defaultProducts);
       }
-    } catch {
+    } catch (error) {
+      console.error("Failed to load products:", error);
       setProducts(defaultProducts);
     }
   }
@@ -303,7 +297,7 @@ export default function HomePage() {
   <img
     src="/images/gamora-logo.png"
     alt="Gamora Online"
-    className="h-14 w-auto object-contain"
+    className="h-16 w-auto object-contain"
   />
 </a>
             {/* SEARCH */}
@@ -427,46 +421,122 @@ export default function HomePage() {
 
       {/* HERO */}
 
-      <section className="bg-gradient-to-br from-sky-950 via-sky-800 to-cyan-600">
+      <section className="relative overflow-hidden bg-gradient-to-br from-sky-950 via-sky-800 to-cyan-600">
 
-        <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 py-16 md:grid-cols-2 md:py-24">
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute -left-20 top-10 h-72 w-72 rounded-full bg-cyan-300 blur-3xl" />
+          <div className="absolute -right-20 bottom-0 h-96 w-96 rounded-full bg-sky-300 blur-3xl" />
+        </div>
+
+        <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-4 py-14 md:grid-cols-2 md:py-20">
 
           <div className="text-white">
 
-            <span className="inline-block rounded-full bg-white/15 px-4 py-2 text-sm font-bold backdrop-blur">
-              🌊 GAMORA ONLINE
-            </span>
+            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-bold backdrop-blur">
+              🛍️ GAMORA ONLINE
+            </div>
 
-            <h1 className="mt-6 text-4xl font-black leading-tight md:text-6xl">
+            <h1 className="max-w-2xl text-4xl font-black leading-tight tracking-tight sm:text-5xl md:text-6xl">
               {t.heroTitle}
             </h1>
 
-            <p className="mt-5 max-w-xl text-lg leading-8 text-sky-100">
+            <p className="mt-5 max-w-xl text-base leading-8 text-sky-100 sm:text-lg">
               {t.heroText}
             </p>
 
-            <a
-              href="#products"
-              className="mt-8 inline-block rounded-xl bg-white px-7 py-4 font-black text-sky-900 shadow-lg transition hover:-translate-y-1"
-            >
-              {t.shopNow} →
-            </a>
+            <div className="mt-8 flex flex-wrap gap-4">
+
+              <a
+                href="#products"
+                className="rounded-xl bg-white px-7 py-4 font-black text-sky-950 shadow-xl transition hover:-translate-y-1 hover:bg-sky-50"
+              >
+                {t.shopNow} →
+              </a>
+
+              <a
+                href="#offers"
+                className="rounded-xl border border-white/30 bg-white/10 px-7 py-4 font-black text-white backdrop-blur transition hover:-translate-y-1 hover:bg-white/20"
+              >
+                🔥 {t.flashSale}
+              </a>
+
+            </div>
+
+            <div className="mt-10 grid max-w-xl grid-cols-3 gap-4 border-t border-white/20 pt-7">
+
+              <div>
+                <p className="text-2xl font-black">100%</p>
+                <p className="mt-1 text-xs text-sky-200 sm:text-sm">
+                  {t.quality}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-2xl font-black">Fast</p>
+                <p className="mt-1 text-xs text-sky-200 sm:text-sm">
+                  {t.delivery}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-2xl font-black">24/7</p>
+                <p className="mt-1 text-xs text-sky-200 sm:text-sm">
+                  {t.support}
+                </p>
+              </div>
+
+            </div>
 
           </div>
 
-          <div className="hidden md:block">
+          <div className="relative flex items-center justify-center">
 
-            <div className="relative mx-auto flex h-80 max-w-md items-center justify-center rounded-3xl border border-white/20 bg-white/10 shadow-2xl backdrop-blur">
+            <div className="absolute h-72 w-72 rounded-full bg-white/10 blur-2xl" />
 
-              <div className="text-center text-white">
+            <div className="relative w-full max-w-md overflow-hidden rounded-3xl border border-white/20 bg-white/10 p-5 shadow-2xl backdrop-blur">
 
-                <div className="text-8xl">
-                  🛍️
+              <div className="rounded-2xl bg-white p-5 shadow-xl">
+
+                <div className="flex items-center justify-center rounded-2xl bg-sky-50 p-8">
+
+                  <img
+                    src="/images/gamora-logo.png"
+                    alt="GAMORA ONLINE"
+                    className="max-h-52 w-auto object-contain"
+                  />
+
                 </div>
 
-                <p className="mt-5 text-2xl font-black">
-                  Shop • Discover • Enjoy
-                </p>
+                <div className="mt-5 grid grid-cols-3 gap-3">
+
+                  <div className="rounded-xl bg-sky-50 p-4 text-center">
+                    <div className="text-2xl">👗</div>
+                    <p className="mt-1 text-xs font-bold text-slate-700">
+                      Fashion
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl bg-sky-50 p-4 text-center">
+                    <div className="text-2xl">👟</div>
+                    <p className="mt-1 text-xs font-bold text-slate-700">
+                      Shoes
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl bg-sky-50 p-4 text-center">
+                    <div className="text-2xl">🏠</div>
+                    <p className="mt-1 text-xs font-bold text-slate-700">
+                      Home
+                    </p>
+                  </div>
+
+                </div>
+
+                <div className="mt-4 rounded-xl bg-gradient-to-r from-sky-700 to-cyan-500 px-5 py-4 text-center text-white">
+                  <p className="text-sm font-bold">
+                    Shop • Discover • Enjoy
+                  </p>
+                </div>
 
               </div>
 

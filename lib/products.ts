@@ -68,3 +68,28 @@ export async function deleteProduct(id: number) {
     throw error;
   }
 }
+
+export async function updateProduct(
+  id: number,
+  product: Omit<Product, "id">
+) {
+  const { error } = await supabase
+    .from("products")
+    .update({
+      name: product.name,
+      price: product.price,
+      old_price: product.oldPrice,
+      category: product.category,
+      stock: product.stock,
+      description: product.description,
+      image: product.image,
+    })
+    .eq("id", id);
+
+  if (error) {
+    console.error("Failed to update product:", error);
+    throw error;
+  }
+
+  return true;
+}

@@ -207,8 +207,7 @@ export default function HomePage() {
   }
 
   function addToCart(product: Product) {
-    const savedCart =
-      localStorage.getItem("gamora_cart");
+    const savedCart = localStorage.getItem("gamora_cart");
 
     let cart: CartItem[] = [];
 
@@ -219,26 +218,7 @@ export default function HomePage() {
         cart = [];
       }
     }
-    const existingItem = cart.find(
-      (item) => item.id === product.id
-    );
 
-    if (existingItem) {
-      existingItem.quantity += 1;
-    } else {
-      cart.push({
-        ...product,
-        quantity: 1,
-      });
-    }
-
-    localStorage.setItem(
-      "gamora_cart",
-      JSON.stringify(cart)
-    );
-
-    updateCartCount();
-}
     const existing = cart.find(
       (item) => item.id === product.id
     );
@@ -259,9 +239,7 @@ export default function HomePage() {
 
     updateCartCount();
 
-    alert(
-      `${product.name} ${t.added}`
-    );
+    alert(`${product.name} ${t.added}`);
   }
 
   const categories = useMemo(() => {

@@ -20,6 +20,7 @@ const STATUS_OPTIONS = [
 export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [filter, setFilter] = useState("All");
+  const [search, setSearch] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -83,10 +84,22 @@ export default function OrdersPage() {
   }
 
   const filteredOrders = useMemo(() => {
-    if (filter === "All") return orders;
+    const query = search.trim().toLowerCase();
 
-    return orders.filter((order) => order.status === filter);
-  }, [orders, filter]);
+    return orders.filter((order) => {
+      const matchesStatus =
+        filter === "All" || order.status === filter;
+
+      const matchesSearch =
+        !query ||
+        order.id.toLowerCase().includes(query) ||
+        order.customer?.name?.toLowerCase().includes(query) ||
+        order.customer?.phone?.toLowerCase().includes(query) ||
+        order.customer?.email?.toLowerCase().includes(query);
+
+      return matchesStatus && matchesSearch;
+    });
+  }, [orders, filter, search]);
 
   const totalRevenue = orders
     .filter((order) => order.status !== "Cancelled")
@@ -173,19 +186,31 @@ export default function OrdersPage() {
               </p>
             </div>
 
-            <select
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              className="rounded-lg border px-4 py-2 text-sm font-semibold"
-            >
-              <option value="All">All Orders</option>
+            <div className="flex flex-col gap-3 sm:flex-row">
 
-              {STATUS_OPTIONS.map((status) => (
-                <option key={status} value={status}>
-                  {status}
-                </option>
-              ))}
-            </select>
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search order, customer or phone..."
+                className="rounded-lg border px-4 py-2 text-sm outline-none focus:border-orange-500"
+              />
+
+              <select
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                className="rounded-lg border px-4 py-2 text-sm font-semibold"
+              >
+                <option value="All">All Orders</option>
+
+                {STATUS_OPTIONS.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
+
+            </div>
           </div>
 
           {loading ? (
@@ -216,6 +241,7 @@ export default function OrdersPage() {
                     <th className="px-6 py-4">Customer</th>
                     <th className="px-6 py-4">Items</th>
                     <th className="px-6 py-4">Amount</th>
+                    <th className="px-6 py-4">Method</th>
                     <th className="px-6 py-4">Status</th>
                     <th className="px-6 py-4">Action</th>
                   </tr>
@@ -260,6 +286,18 @@ export default function OrdersPage() {
                         {Number(
                           order.total || 0
                         ).toLocaleString()}
+                      </td>
+
+                      <td className="px-6 py-4">
+                        {order.deliveryMethod === "pickup" ? (
+                          <span className="inline-flex rounded-full bg-purple-100 px-3 py-1 text-xs font-bold text-purple-700">
+                            🏪 Pickup
+                          </span>
+                        ) : (
+                          <span className="inline-flex rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-700">
+                            🚚 Delivery
+                          </span>
+                        )}
                       </td>
 
                       <td className="px-6 py-4">
@@ -369,6 +407,113 @@ export default function OrdersPage() {
                       {selectedOrder.customer.notes}
                     </p>
                   )}
+                </div>
+              </section>
+
+              <section>
+                <h3 className="mb-3 font-black">
+                  Receiving Method
+                </h3>
+
+                <div
+                  className={`rounded-xl p-4 ${
+                    selectedOrder.deliveryMethod === "pickup"
+                      ? "bg-purple-50"
+                      : "bg-blue-50"
+                  }`}
+                >
+                  <p className="text-xs font-semibold uppercase text-gray-500">
+                    Order Receiving Method
+                  </p>
+
+                  <p
+                    className={`mt-1 text-lg font-black ${
+                      selectedOrder.deliveryMethod === "pickup"
+                        ? "text-purple-700"
+                        : "text-blue-700"
+                    }`}
+                  >
+                    {selectedOrder.deliveryMethod === "pickup"
+                      ? "🏪 Self Pickup"
+                      : "🚚 Delivery"}
+                  </p>
+
+                  <p className="mt-1 text-sm text-gray-600">
+                    {selectedOrder.deliveryMethod === "pickup"
+                      ? "Customer will collect the order personally. No delivery fee."
+                      : "Order will be delivered to the customer's location."}
+                  </p>
+                </div>
+              </section>
+
+              <section>
+                <h3 className="mb-3 font-black">
+                  Delivery Information
+                </h3>
+
+                <div className="rounded-xl bg-orange-50 p-4">
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+
+                    <div>
+                      <p className="text-xs font-semibold uppercase text-gray-500">
+                        Distance
+                      </p>
+
+                      <p className="mt-1 text-lg font-black">
+                        {selectedOrder.distanceKm !== null
+                          ? `${Number(selectedOrder.distanceKm).toFixed(1)} km`
+                          : "Not available"}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-xs font-semibold uppercase text-gray-500">
+                        Delivery Fee
+                      </p>
+
+                      <p className="mt-1 text-lg font-black text-orange-600">
+                        TZS {Number(
+                          selectedOrder.deliveryFee || 0
+                        ).toLocaleString()}
+                      </p>
+                    </div>
+
+                  </div>
+
+                  {selectedOrder.location && (
+                    <div className="mt-4 border-t border-orange-200 pt-4">
+
+                      <p className="text-xs font-semibold uppercase text-gray-500">
+                        Customer Location
+                      </p>
+
+                      <p className="mt-1 text-sm text-gray-700">
+                        Latitude: {selectedOrder.location.latitude}
+                      </p>
+
+                      <p className="text-sm text-gray-700">
+                        Longitude: {selectedOrder.location.longitude}
+                      </p>
+
+                      <a
+                        href={`https://www.google.com/maps?q=${selectedOrder.location.latitude},${selectedOrder.location.longitude}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-3 inline-block rounded-lg bg-orange-600 px-4 py-2 text-sm font-bold text-white hover:bg-orange-700"
+                      >
+                        📍 Open Customer Location
+                      </a>
+
+                    </div>
+                  )}
+
+                  {!selectedOrder.location && (
+                    <p className="mt-4 text-sm text-gray-500">
+                      Customer location was not provided.
+                    </p>
+                  )}
+
                 </div>
               </section>
 

@@ -21,6 +21,7 @@ export default function ProductsPage() {
     oldPrice: "",
     category: "Women's Fashion",
     stock: "",
+    weightKg: "",
     description: "",
     image: "",
   });
@@ -104,6 +105,7 @@ export default function ProductsPage() {
         oldPrice: Number(form.oldPrice || form.price),
         category: form.category,
         stock: Number(form.stock),
+        weightKg: Number(form.weightKg || 0),
         description: form.description,
         image: form.image,
       };
@@ -134,7 +136,8 @@ export default function ProductsPage() {
       oldPrice: "",
       category: "Women's Fashion",
       stock: "",
-        description: "",
+      weightKg: "",
+      description: "",
       image: "",
     });
 
@@ -149,6 +152,7 @@ export default function ProductsPage() {
       oldPrice: String(product.oldPrice || ""),
       category: product.category,
       stock: String(product.stock),
+      weightKg: String(product.weightKg || ""),
       description: product.description || "",
       image: product.image || "",
     });
@@ -408,8 +412,6 @@ async function handleDeleteProduct(id: number) {
                 />
 
               </div>
-
-              {/* WEIGHT */}
 
               {/* IMAGE */}
 

@@ -5,15 +5,12 @@ import {
   Product,
   getProducts,
   saveProduct,
-  updateProduct,
   deleteProduct,
 } from "@/lib/products";
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
-  const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
 
   const [form, setForm] = useState({
     name: "",
@@ -47,46 +44,17 @@ export default function ProductsPage() {
     }));
   }
 
-  async function handleImage(event: ChangeEvent<HTMLInputElement>) {
+  function handleImage(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
 
     if (!file) return;
 
-    try {
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${Date.now()}-${Math.random()
-        .toString(36)
-        .substring(2)}.${fileExt}`;
+    const imageUrl = URL.createObjectURL(file);
 
-      const { supabase } = await import("@/lib/supabase");
-
-      const { error } = await supabase.storage
-        .from("product-images")
-        .upload(fileName, file, {
-          cacheControl: "3600",
-          upsert: false,
-        });
-
-      if (error) {
-        console.error("Image upload failed:", error);
-        alert("Failed to upload image.");
-        return;
-      }
-
-      const { data } = supabase.storage
-        .from("product-images")
-        .getPublicUrl(fileName);
-
-      setForm((current) => ({
-        ...current,
-        image: data.publicUrl,
-      }));
-
-      alert("Image uploaded successfully!");
-    } catch (error) {
-      console.error("Image upload error:", error);
-      alert("Failed to upload image.");
-    }
+    setForm((current) => ({
+      ...current,
+      image: imageUrl,
+    }));
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -98,7 +66,7 @@ export default function ProductsPage() {
     }
 
     try {
-      const productData = {
+      await saveProduct({
         name: form.name,
         price: Number(form.price),
         oldPrice: Number(form.oldPrice || form.price),
@@ -106,25 +74,14 @@ export default function ProductsPage() {
         stock: Number(form.stock),
         description: form.description,
         image: form.image,
-      };
-
-      if (editingId !== null) {
-        await updateProduct(editingId, productData);
-        alert("Product updated successfully!");
-      } else {
-        await saveProduct(productData);
-        alert("Product saved successfully!");
-      }
+      });
 
       await loadProducts();
 
+      alert("Product saved successfully!");
     } catch (error) {
       console.error(error);
-      alert(
-        editingId !== null
-          ? "Failed to update product. Please try again."
-          : "Failed to save product. Please try again."
-      );
+      alert("Failed to save product. Please try again.");
       return;
     }
 
@@ -134,28 +91,11 @@ export default function ProductsPage() {
       oldPrice: "",
       category: "Women's Fashion",
       stock: "",
-        description: "",
+      description: "",
       image: "",
     });
 
-    setEditingId(null);
     setShowForm(false);
-  }
-
-  function handleEditProduct(product: Product) {
-    setForm({
-      name: product.name,
-      price: String(product.price),
-      oldPrice: String(product.oldPrice || ""),
-      category: product.category,
-      stock: String(product.stock),
-      description: product.description || "",
-      image: product.image || "",
-    });
-
-    setEditingId(product.id);
-    setShowForm(true);
-    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
 async function handleDeleteProduct(id: number) {
@@ -173,30 +113,6 @@ async function handleDeleteProduct(id: number) {
       alert("Failed to delete product. Please try again.");
     }
   }
-
-  const filteredProducts = products.filter((product) => {
-    const query = search.trim().toLowerCase();
-
-    if (!query) return true;
-
-    return (
-      product.name.toLowerCase().includes(query) ||
-      product.category.toLowerCase().includes(query)
-    );
-  });
-
-  const totalStock = products.reduce(
-    (sum, product) => sum + Number(product.stock || 0),
-    0
-  );
-
-  const lowStock = products.filter(
-    (product) => Number(product.stock || 0) > 0 && Number(product.stock || 0) <= 5
-  ).length;
-
-  const outOfStock = products.filter(
-    (product) => Number(product.stock || 0) === 0
-  ).length;
 
   return (
     <main className="min-h-screen bg-gray-100">
@@ -238,56 +154,6 @@ async function handleDeleteProduct(id: number) {
       </header>
 
       <div className="mx-auto max-w-7xl px-4 py-8">
-
-        {/* INVENTORY SUMMARY */}
-
-        <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-
-          <div className="rounded-xl bg-white p-5 shadow-sm">
-            <p className="text-sm text-gray-500">
-              Total Products
-            </p>
-
-            <p className="mt-2 text-3xl font-black">
-              {products.length}
-            </p>
-          </div>
-
-          <div className="rounded-xl bg-white p-5 shadow-sm">
-            <p className="text-sm text-gray-500">
-              Total Stock
-            </p>
-
-            <p className="mt-2 text-3xl font-black text-blue-600">
-              {totalStock}
-            </p>
-          </div>
-
-          <div className="rounded-xl bg-white p-5 shadow-sm">
-            <p className="text-sm text-gray-500">
-              Low Stock
-            </p>
-
-            <p className="mt-2 text-3xl font-black text-yellow-600">
-              {lowStock}
-            </p>
-
-            <p className="mt-1 text-xs text-gray-500">
-              5 units or less
-            </p>
-          </div>
-
-          <div className="rounded-xl bg-white p-5 shadow-sm">
-            <p className="text-sm text-gray-500">
-              Out of Stock
-            </p>
-
-            <p className="mt-2 text-3xl font-black text-red-600">
-              {outOfStock}
-            </p>
-          </div>
-
-        </div>
 
         {/* ADD PRODUCT FORM */}
 
@@ -408,8 +274,6 @@ async function handleDeleteProduct(id: number) {
                 />
 
               </div>
-
-              {/* WEIGHT */}
 
               {/* IMAGE */}
 
@@ -549,23 +413,12 @@ async function handleDeleteProduct(id: number) {
                     Stock: {product.stock}
                   </p>
 
-                  <div className="mt-4 grid grid-cols-2 gap-2">
-
-                    <button
-                      onClick={() => handleEditProduct(product)}
-                      className="rounded-lg bg-orange-50 py-2 font-bold text-orange-600 hover:bg-orange-100"
-                    >
-                      Edit
-                    </button>
-
-                    <button
-                      onClick={() => handleDeleteProduct(product.id)}
-                      className="rounded-lg bg-red-50 py-2 font-bold text-red-600 hover:bg-red-100"
-                    >
-                      Delete
-                    </button>
-
-                  </div>
+                  <button
+                    onClick={() => handleProduct(product.id)}
+                    className="mt-4 w-full rounded-lg bg-red-50 py-2 font-bold text-red-600 hover:bg-red-100"
+                  >
+                    Delete
+                  </button>
 
                 </div>
 

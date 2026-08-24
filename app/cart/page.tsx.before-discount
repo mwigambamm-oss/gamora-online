@@ -1,14 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { calculateItemDiscount } from "@/lib/discount";
 
 type CartItem = {
   id: number;
   name: string;
   price: number;
   oldPrice?: number;
-  stock: number;
   quantity: number;
   image?: string;
 };
@@ -66,32 +64,12 @@ export default function CartPage() {
 
 const subtotal: number = cart.reduce(
   (total: number, item: CartItem) =>
-    total +
-    Number(item.price) * Number(item.quantity),
+    total + Number(item.price) * Number(item.quantity),
   0
 );
+  const deliveryFee: number = cart.length > 0 ? 0 : 0;
 
-const discountTotal: number = cart.reduce(
-  (total: number, item: CartItem) => {
-    const result = calculateItemDiscount(
-      Number(item.price),
-      Number(item.quantity),
-      Number(item.stock ?? item.quantity)
-    );
-
-    return total + result.discountTotal;
-  },
-  0
-);
-
-const discountedSubtotal =
-  subtotal - discountTotal;
-
-const deliveryFee: number =
-  cart.length > 0 ? 0 : 0;
-
-const total =
-  discountedSubtotal + deliveryFee;
+  const total = subtotal + deliveryFee;
 
   const sw = {
     cart: "Shopping Cart",
@@ -101,7 +79,6 @@ const total =
     quantity: "Idadi",
     remove: "Ondoa",
     subtotal: "Jumla ya Bidhaa",
-    discount: "Punguzo la Jumla",
     delivery: "Delivery",
     calculated: "Itahesabiwa Checkout",
     total: "Jumla",
@@ -118,7 +95,6 @@ const total =
     quantity: "Quantity",
     remove: "Remove",
     subtotal: "Subtotal",
-    discount: "Total Discount",
     delivery: "Delivery",
     calculated: "Calculated at Checkout",
     total: "Total",
@@ -334,16 +310,6 @@ const total =
                     TZS {subtotal.toLocaleString()}
                   </span>
                 </div>
-
-                {discountTotal > 0 && (
-                  <div className="flex justify-between gap-4 text-green-600">
-                    <span>{t.discount}</span>
-
-                    <span className="font-bold">
-                      - TZS {discountTotal.toLocaleString()}
-                    </span>
-                  </div>
-                )}
 
                 <div className="flex justify-between gap-4 text-slate-600">
                   <span>{t.delivery}</span>

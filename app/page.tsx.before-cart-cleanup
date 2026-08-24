@@ -1,5 +1,4 @@
 "use client";
-"use client";
 
 import { getProducts as getSupabaseProducts } from "@/lib/products";
 import { useEffect, useMemo, useState } from "react";

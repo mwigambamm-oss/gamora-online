@@ -487,12 +487,7 @@ Thank you.`
       const results = await response.json();
 
       if (!Array.isArray(results) || results.length === 0) {
-        setLocationError(
-          language === "sw"
-            ? "Eneo hilo halijapatikana. Jaribu kuandika jina la eneo kwa usahihi au sehemu maarufu iliyo karibu nawe, mfano Sinza Madukani au Mlimani City."
-            : "We could not find that location. Try the correct area name or a nearby landmark, for example Sinza Madukani or Mlimani City."
-        );
-        return;
+        throw new Error("Location not found");
       }
 
       /*
@@ -975,8 +970,6 @@ Thank you.`
 
       subtotal: discountedSubtotal,
 
-      discountTotal: discountTotal,
-
       total:
         deliveryMethod === "pickup"
           ? discountedSubtotal
@@ -1016,7 +1009,7 @@ I have placed order ${newOrderNumber} and would like to negotiate the product pr
 
 Customer: ${name || "Not provided"}
 Phone: ${phone || "Not provided"}
-Order Value: TZS ${discountedSubtotal.toLocaleString()}
+Order Value: TZS ${subtotal.toLocaleString()}
 Delivery Fee: TZS ${deliveryFee.toLocaleString()}
 Distance: ${
                 distanceKm !== null
@@ -1033,7 +1026,7 @@ I have placed order ${newOrderNumber} and would like to discuss how I can receiv
 
 Customer: ${name || "Not provided"}
 Phone: ${phone || "Not provided"}
-Order Value: TZS ${discountedSubtotal.toLocaleString()}
+Order Value: TZS ${subtotal.toLocaleString()}
 Delivery Fee: TZS ${deliveryFee.toLocaleString()}
 Distance: ${
                 distanceKm !== null

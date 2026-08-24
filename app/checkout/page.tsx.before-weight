@@ -29,23 +29,38 @@ const STORE_LOCATION = {
 };
 
 /*
-  GAMORA ONLINE DELIVERY PRICING
+  DELIVERY PRICING
 
+  Base fee: TZS 2,000
+  Per kilometre: TZS 1,000
   Minimum delivery fee: TZS 3,000
-  Distance rate: TZS 845 per kilometre
 
-  Cargo value surcharge:
-  TZS 0–99,999          = +TZS 0
-  TZS 100,000–499,999   = +TZS 1,000
-  TZS 500,000–999,999   = +TZS 2,000
-  TZS 1,000,000+        = +TZS 5,000
-
-  Final delivery fee is rounded up to the nearest TZS 500.
-
-  Product bargaining/discounts NEVER reduce the delivery fee.
+  Example:
+  1 km  -> TZS 3,000
+  3 km  -> TZS 5,000
+  5 km  -> TZS 7,000
+  10 km -> TZS 12,000
 */
 const DELIVERY_MIN_FEE = 3000;
 const DELIVERY_PER_KM = 845;
+
+/*
+  GAMORA ONLINE delivery pricing.
+  Road distance from OSRM is used first.
+
+  Pricing:
+  0–1 km   = TZS 3,000
+  1–2 km   = TZS 4,000
+  2–3 km   = TZS 5,000
+  3–4 km   = TZS 6,000
+  4–5 km   = TZS 7,000
+  5–6 km   = TZS 8,000
+  etc.
+
+  IMPORTANT:
+  Bargaining must NEVER reduce the delivery fee.
+  Any bargain/discount applies to the product/order value only.
+*/
 
 function calculateStraightDistance(
   lat1: number,
@@ -71,10 +86,7 @@ function calculateStraightDistance(
   return earthRadius * c;
 }
 
-function calculateDeliveryFee(
-  distanceKm: number,
-  cargoValue: number = 0
-) {
+function calculateDeliveryFee(distanceKm: number) {
   if (
     !Number.isFinite(distanceKm) ||
     distanceKm < 0
@@ -82,30 +94,10 @@ function calculateDeliveryFee(
     return DELIVERY_MIN_FEE;
   }
 
-  const distanceFee = Math.max(
+  const rawFee = Math.max(
     DELIVERY_MIN_FEE,
     distanceKm * DELIVERY_PER_KM
   );
-
-  let cargoValueFee = 0;
-
-  if (
-    cargoValue >= 100000 &&
-    cargoValue < 500000
-  ) {
-    cargoValueFee = 1000;
-  } else if (
-    cargoValue >= 500000 &&
-    cargoValue < 1000000
-  ) {
-    cargoValueFee = 2000;
-  } else if (cargoValue >= 1000000) {
-    cargoValueFee = 5000;
-  }
-
-  const rawFee =
-    distanceFee +
-    cargoValueFee;
 
   return Math.ceil(rawFee / 500) * 500;
 }
@@ -201,10 +193,7 @@ export default function CheckoutPage() {
 
   const calculatedDeliveryFee =
     distanceKm !== null
-      ? calculateDeliveryFee(
-          distanceKm,
-          subtotal
-        )
+      ? calculateDeliveryFee(distanceKm)
       : 0;
 
   // If the order is below TZS 20,000 and delivery exceeds TZS 5,000,
@@ -404,20 +393,17 @@ Thank you.`
 
       const calibratedDistance = straightDistance * 1.12;
 
-      const finalDeliveryFee =
-        calculateDeliveryFee(
-          calibratedDistance,
-          subtotal
-        );
-
       setDistanceKm(calibratedDistance);
-      setDeliveryFee(finalDeliveryFee);
+      setDeliveryFee(
+        calculateDeliveryFee(calibratedDistance)
+      );
 
-      console.log("DELIVERY CALCULATION:", {
+      console.log("DELIVERY DISTANCE:", {
         straightDistance,
         calibratedDistance,
-        cargoValue: subtotal,
-        deliveryFee: finalDeliveryFee,
+        deliveryFee: calculateDeliveryFee(
+          calibratedDistance
+        ),
       });
     } catch (error) {
       console.error(
@@ -487,12 +473,7 @@ Thank you.`
       const results = await response.json();
 
       if (!Array.isArray(results) || results.length === 0) {
-        setLocationError(
-          language === "sw"
-            ? "Eneo hilo halijapatikana. Jaribu kuandika jina la eneo kwa usahihi au sehemu maarufu iliyo karibu nawe, mfano Sinza Madukani au Mlimani City."
-            : "We could not find that location. Try the correct area name or a nearby landmark, for example Sinza Madukani or Mlimani City."
-        );
-        return;
+        throw new Error("Location not found");
       }
 
       /*
@@ -973,13 +954,11 @@ Thank you.`
 
       items: cart,
 
-      subtotal: discountedSubtotal,
-
-      discountTotal: discountTotal,
+      subtotal,
 
       total:
         deliveryMethod === "pickup"
-          ? discountedSubtotal
+          ? subtotal
           : total,
 
       status: "Pending",
@@ -1016,7 +995,7 @@ I have placed order ${newOrderNumber} and would like to negotiate the product pr
 
 Customer: ${name || "Not provided"}
 Phone: ${phone || "Not provided"}
-Order Value: TZS ${discountedSubtotal.toLocaleString()}
+Order Value: TZS ${subtotal.toLocaleString()}
 Delivery Fee: TZS ${deliveryFee.toLocaleString()}
 Distance: ${
                 distanceKm !== null
@@ -1033,7 +1012,7 @@ I have placed order ${newOrderNumber} and would like to discuss how I can receiv
 
 Customer: ${name || "Not provided"}
 Phone: ${phone || "Not provided"}
-Order Value: TZS ${discountedSubtotal.toLocaleString()}
+Order Value: TZS ${subtotal.toLocaleString()}
 Delivery Fee: TZS ${deliveryFee.toLocaleString()}
 Distance: ${
                 distanceKm !== null

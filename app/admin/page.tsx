@@ -1,146 +1,147 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
+import { getProducts } from "@/lib/products";
+import { getOrders, type Order } from "@/lib/orders";
 
-type CartItem = {
-  id: number;
-  name: string;
-  price: number;
-  quantity: number;
-  image?: string;
+type Stat = {
+  title: string;
+  value: string;
+  icon: string;
 };
-
-type Order = {
-  id: string;
-  customer: {
-    name: string;
-    phone: string;
-    email: string;
-    address: string;
-    notes: string;
-  };
-  location: {
-    latitude: number;
-    longitude: number;
-  } | null;
-  distanceKm: number | null;
-  deliveryFee: number;
-  items: CartItem[];
-  subtotal: number;
-  total: number;
-  status: string;
-  createdAt: string;
-};
-
-const STATUS_OPTIONS = [
-  "Pending",
-  "Confirmed",
-  "Processing",
-  "Out for Delivery",
-  "Delivered",
-  "Cancelled",
-];
-
-const emptyStats = [
-  {
-    title: "Total Products",
-    value: "0",
-    icon: "📦",
-    change: "Live",
-  },
-  {
-    title: "Total Orders",
-    value: "0",
-    icon: "🛍️",
-    change: "Live",
-  },
-  {
-    title: "Customers",
-    value: "0",
-    icon: "👥",
-    change: "Live",
-  },
-  {
-    title: "Revenue",
-    value: "TZS 0",
-    icon: "💰",
-    change: "Live",
-  },
-];
 
 export default function AdminDashboard() {
   const [productsCount, setProductsCount] = useState(0);
   const [orders, setOrders] = useState<Order[]>([]);
   const [customersCount, setCustomersCount] = useState(0);
   const [revenue, setRevenue] = useState(0);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  async function loadDashboard() {
     try {
-      const savedProducts = localStorage.getItem("gamora_products");
-      const savedOrders = localStorage.getItem("gamora_orders");
+      setLoading(true);
 
-      const products = savedProducts ? JSON.parse(savedProducts) : [];
-      const loadedOrders = savedOrders ? JSON.parse(savedOrders) : [];
+      const [products, loadedOrders] = await Promise.all([
+        getProducts(),
+        getOrders(),
+      ]);
 
-      setProductsCount(Array.isArray(products) ? products.length : 0);
-      setOrders(Array.isArray(loadedOrders) ? loadedOrders : []);
+      setProductsCount(products.length);
+      setOrders(loadedOrders);
 
       const customers = new Set(
-        Array.isArray(loadedOrders)
-          ? loadedOrders.map((order: Order) => order.customer?.phone).filter(Boolean)
-          : []
+        loadedOrders
+          .map((order) => order.customer?.phone)
+          .filter(Boolean)
       );
 
       setCustomersCount(customers.size);
 
-      const totalRevenue = Array.isArray(loadedOrders)
-        ? loadedOrders
-            .filter((order: Order) => order.status !== "Cancelled")
-            .reduce(
-              (sum: number, order: Order) => sum + Number(order.total || 0),
-              0
-            )
-        : 0;
+      const totalRevenue = loadedOrders
+        .filter((order) => order.status !== "Cancelled")
+        .reduce(
+          (sum, order) => sum + Number(order.total || 0),
+          0
+        );
 
       setRevenue(totalRevenue);
     } catch (error) {
-      console.error("Failed to load admin dashboard data:", error);
+      console.error("Failed to load dashboard:", error);
+    } finally {
+      setLoading(false);
     }
+  }
+
+  useEffect(() => {
+    loadDashboard();
   }, []);
 
-  const stats = [
+  const now = new Date();
+
+  const todayStart = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate()
+  );
+
+  const monthStart = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    1
+  );
+
+  const todayOrders = orders.filter((order) => {
+    const date = new Date(order.createdAt);
+    return date >= todayStart && order.status !== "Cancelled";
+  });
+
+  const monthOrders = orders.filter((order) => {
+    const date = new Date(order.createdAt);
+    return date >= monthStart && order.status !== "Cancelled";
+  });
+
+  const todaySales = todayOrders.reduce(
+    (sum, order) => sum + Number(order.total || 0),
+    0
+  );
+
+  const monthSales = monthOrders.reduce(
+    (sum, order) => sum + Number(order.total || 0),
+    0
+  );
+
+  const cancelledOrders = orders.filter(
+    (order) => order.status === "Cancelled"
+  );
+
+  const cancelledValue = cancelledOrders.reduce(
+    (sum, order) => sum + Number(order.total || 0),
+    0
+  );
+
+  const deliveryFees = orders
+    .filter((order) => order.status !== "Cancelled")
+    .reduce(
+      (sum, order) => sum + Number(order.deliveryFee || 0),
+      0
+    );
+
+  const stats: Stat[] = [
     {
       title: "Total Products",
       value: String(productsCount),
       icon: "📦",
-      change: "Live",
     },
     {
       title: "Total Orders",
       value: String(orders.length),
       icon: "🛍️",
-      change: "Live",
     },
     {
       title: "Customers",
       value: String(customersCount),
       icon: "👥",
-      change: "Live",
     },
     {
       title: "Revenue",
       value: `TZS ${revenue.toLocaleString()}`,
       icon: "💰",
-      change: "Live",
     },
   ];
 
-  const recentOrders = orders.slice(0, 5).map((order) => ({
-    id: order.id,
-    customer: order.customer?.name || "Unknown",
-    amount: `TZS ${Number(order.total || 0).toLocaleString()}`,
-    status: order.status || "Pending",
-  }));
+  const recentOrders = orders.slice(0, 5);
+
+  const pending = orders.filter(
+    (order) => order.status === "Pending"
+  ).length;
+
+  const processing = orders.filter(
+    (order) => order.status === "Processing"
+  ).length;
+
+  const delivered = orders.filter(
+    (order) => order.status === "Delivered"
+  ).length;
 
   return (
     <main className="min-h-screen bg-gray-100">
@@ -175,7 +176,7 @@ export default function AdminDashboard() {
           </a>
 
           <a
-            href="#products"
+            href="/admin/products"
             className="mb-2 flex items-center gap-3 rounded-lg px-4 py-3 text-gray-300 hover:bg-gray-800"
           >
             📦 Products
@@ -224,11 +225,11 @@ export default function AdminDashboard() {
 
       </aside>
 
-      {/* MAIN CONTENT */}
+      {/* MAIN */}
 
       <section className="md:ml-64">
 
-        {/* TOP HEADER */}
+        {/* HEADER */}
 
         <header className="sticky top-0 z-40 flex items-center justify-between border-b bg-white px-4 py-4 shadow-sm md:px-8">
 
@@ -239,15 +240,19 @@ export default function AdminDashboard() {
             </h2>
 
             <p className="text-sm text-gray-500">
-              Welcome back, Admin
+              Welcome back, Administrator
             </p>
 
           </div>
 
           <div className="flex items-center gap-3">
 
-            <button className="rounded-lg border px-3 py-2 hover:bg-gray-100">
-              🔔
+            <button
+              onClick={loadDashboard}
+              className="rounded-lg border px-3 py-2 hover:bg-gray-100"
+              title="Refresh"
+            >
+              🔄
             </button>
 
             <div className="hidden text-right sm:block">
@@ -270,22 +275,20 @@ export default function AdminDashboard() {
 
         </header>
 
-        {/* CONTENT */}
-
         <div className="p-4 md:p-8">
 
-          {/* QUICK ACTIONS */}
+          {/* OVERVIEW */}
 
           <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
 
             <div>
 
-              <h3 className="text-2xl font-black text-gray-900">
+              <h3 className="text-2xl font-black">
                 Overview
               </h3>
 
               <p className="text-sm text-gray-500">
-                Monitor your online store
+                Live information from your GAMORA ONLINE store
               </p>
 
             </div>
@@ -301,133 +304,264 @@ export default function AdminDashboard() {
 
           {/* STATS */}
 
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {loading ? (
 
-            {stats.map((stat) => (
+            <div className="rounded-xl bg-white p-10 text-center shadow-sm">
+              <div className="text-4xl">⏳</div>
 
-              <div
-                key={stat.title}
-                className="rounded-xl bg-white p-5 shadow-sm"
-              >
+              <p className="mt-3 text-sm text-gray-500">
+                Loading dashboard...
+              </p>
+            </div>
 
-                <div className="flex items-start justify-between">
+          ) : (
 
-                  <div>
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
 
-                    <p className="text-sm font-medium text-gray-500">
-                      {stat.title}
-                    </p>
+              {stats.map((stat) => (
 
-                    <h3 className="mt-2 text-2xl font-black text-gray-900">
-                      {stat.value}
-                    </h3>
+                <div
+                  key={stat.title}
+                  className="rounded-xl bg-white p-5 shadow-sm"
+                >
+
+                  <div className="flex items-start justify-between">
+
+                    <div>
+
+                      <p className="text-sm font-medium text-gray-500">
+                        {stat.title}
+                      </p>
+
+                      <h3 className="mt-2 text-2xl font-black">
+                        {stat.value}
+                      </h3>
+
+                    </div>
+
+                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-orange-100 text-2xl">
+                      {stat.icon}
+                    </div>
 
                   </div>
 
-                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-orange-100 text-2xl">
-                    {stat.icon}
-                  </div>
+                  <p className="mt-4 text-xs font-semibold text-green-600">
+                    ● Live from database
+                  </p>
 
                 </div>
 
-                <p className="mt-4 text-sm font-semibold text-green-600">
-                  ↑ {stat.change} this month
+              ))}
+
+            </div>
+
+          )}
+
+          {/* SALES PERFORMANCE */}
+
+          {!loading && (
+            <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+
+              <div className="rounded-xl bg-white p-5 shadow-sm">
+                <p className="text-sm font-medium text-gray-500">
+                  Today's Sales
                 </p>
 
+                <p className="mt-2 text-2xl font-black text-green-600">
+                  TZS {todaySales.toLocaleString()}
+                </p>
+
+                <p className="mt-2 text-xs text-gray-500">
+                  {todayOrders.length} order(s) today
+                </p>
               </div>
 
-            ))}
+              <div className="rounded-xl bg-white p-5 shadow-sm">
+                <p className="text-sm font-medium text-gray-500">
+                  This Month
+                </p>
+
+                <p className="mt-2 text-2xl font-black text-blue-600">
+                  TZS {monthSales.toLocaleString()}
+                </p>
+
+                <p className="mt-2 text-xs text-gray-500">
+                  {monthOrders.length} order(s) this month
+                </p>
+              </div>
+
+              <div className="rounded-xl bg-white p-5 shadow-sm">
+                <p className="text-sm font-medium text-gray-500">
+                  Delivery Fees
+                </p>
+
+                <p className="mt-2 text-2xl font-black text-orange-600">
+                  TZS {deliveryFees.toLocaleString()}
+                </p>
+
+                <p className="mt-2 text-xs text-gray-500">
+                  From non-cancelled orders
+                </p>
+              </div>
+
+              <div className="rounded-xl bg-white p-5 shadow-sm">
+                <p className="text-sm font-medium text-gray-500">
+                  Cancelled Orders
+                </p>
+
+                <p className="mt-2 text-2xl font-black text-red-600">
+                  {cancelledOrders.length}
+                </p>
+
+                <p className="mt-2 text-xs text-gray-500">
+                  Value: TZS {cancelledValue.toLocaleString()}
+                </p>
+              </div>
+
+            </div>
+          )}
+
+          {/* ORDER SUMMARY */}
+
+          <div className="mt-8 grid gap-4 md:grid-cols-3">
+
+            <div className="rounded-xl bg-white p-5 shadow-sm">
+
+              <p className="text-sm text-gray-500">
+                Pending Orders
+              </p>
+
+              <p className="mt-2 text-3xl font-black text-yellow-600">
+                {pending}
+              </p>
+
+              <a
+                href="/admin/orders"
+                className="mt-3 inline-block text-sm font-bold text-orange-600"
+              >
+                Manage Orders →
+              </a>
+
+            </div>
+
+            <div className="rounded-xl bg-white p-5 shadow-sm">
+
+              <p className="text-sm text-gray-500">
+                Processing Orders
+              </p>
+
+              <p className="mt-2 text-3xl font-black text-blue-600">
+                {processing}
+              </p>
+
+              <a
+                href="/admin/orders"
+                className="mt-3 inline-block text-sm font-bold text-orange-600"
+              >
+                View Orders →
+              </a>
+
+            </div>
+
+            <div className="rounded-xl bg-white p-5 shadow-sm">
+
+              <p className="text-sm text-gray-500">
+                Delivered Orders
+              </p>
+
+              <p className="mt-2 text-3xl font-black text-green-600">
+                {delivered}
+              </p>
+
+              <a
+                href="/admin/orders"
+                className="mt-3 inline-block text-sm font-bold text-orange-600"
+              >
+                View Delivered →
+              </a>
+
+            </div>
 
           </div>
 
-          {/* PRODUCTS / QUICK MANAGEMENT */}
+          {/* QUICK MANAGEMENT */}
 
-          <div
-            id="products"
-            className="mt-8 rounded-xl bg-white p-5 shadow-sm"
-          >
+          <div className="mt-8 rounded-xl bg-white p-5 shadow-sm">
 
             <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
 
               <div>
 
                 <h3 className="text-xl font-black">
-                  Product Management
+                  Store Management
                 </h3>
 
                 <p className="text-sm text-gray-500">
-                  Manage products in your store
+                  Manage your online shop
                 </p>
 
               </div>
-
-              <a href="/admin/products" className="rounded-lg border border-orange-600 px-5 py-2 font-semibold text-orange-600 hover:bg-orange-50">
-                View All Products
-              </a>
 
             </div>
 
             <div className="mt-6 grid gap-4 md:grid-cols-3">
 
-              <div className="rounded-lg border p-5">
-
-                <div className="text-3xl">
-                  ➕
-                </div>
-
-                <h4 className="mt-3 font-bold">
-                  Add Product
-                </h4>
-
-                <p className="mt-1 text-sm text-gray-500">
-                  Add new products to your marketplace.
-                </p>
-
-                <a href="/admin/products" className="mt-4 inline-block rounded-md bg-gray-900 px-4 py-2 text-sm font-semibold text-white">
-                  Add Product
-                </a>
-
-              </div>
-
-              <div className="rounded-lg border p-5">
-
-                <div className="text-3xl">
-                  ✏️
-                </div>
-
-                <h4 className="mt-3 font-bold">
-                  Edit Products
-                </h4>
-
-                <p className="mt-1 text-sm text-gray-500">
-                  Update prices, stock and details.
-                </p>
-
-                <a href="/admin/products" className="mt-4 inline-block rounded-md bg-gray-900 px-4 py-2 text-sm font-semibold text-white">
-                  Manage Products
-                </a>
-
-              </div>
-
-              <div className="rounded-lg border p-5">
+              <a
+                href="/admin/products"
+                className="rounded-xl border p-5 transition hover:border-orange-500 hover:bg-orange-50"
+              >
 
                 <div className="text-3xl">
                   📦
                 </div>
 
                 <h4 className="mt-3 font-bold">
-                  Stock Management
+                  Products
                 </h4>
 
                 <p className="mt-1 text-sm text-gray-500">
-                  Monitor available product stock.
+                  Add, edit and manage products.
                 </p>
 
-                <a href="/admin/products" className="mt-4 inline-block rounded-md bg-gray-900 px-4 py-2 text-sm font-semibold text-white">
-                  View Stock
-                </a>
+              </a>
 
-              </div>
+              <a
+                href="/admin/orders"
+                className="rounded-xl border p-5 transition hover:border-orange-500 hover:bg-orange-50"
+              >
+
+                <div className="text-3xl">
+                  🛍️
+                </div>
+
+                <h4 className="mt-3 font-bold">
+                  Orders
+                </h4>
+
+                <p className="mt-1 text-sm text-gray-500">
+                  Track customer orders and delivery.
+                </p>
+
+              </a>
+
+              <a
+                href="/admin/customers"
+                className="rounded-xl border p-5 transition hover:border-orange-500 hover:bg-orange-50"
+              >
+
+                <div className="text-3xl">
+                  👥
+                </div>
+
+                <h4 className="mt-3 font-bold">
+                  Customers
+                </h4>
+
+                <p className="mt-1 text-sm text-gray-500">
+                  View your customer information.
+                </p>
+
+              </a>
 
             </div>
 
@@ -435,10 +569,7 @@ export default function AdminDashboard() {
 
           {/* RECENT ORDERS */}
 
-          <div
-            id="orders"
-            className="mt-8 rounded-xl bg-white p-5 shadow-sm"
-          >
+          <div className="mt-8 rounded-xl bg-white p-5 shadow-sm">
 
             <div className="mb-5 flex items-center justify-between">
 
@@ -454,90 +585,120 @@ export default function AdminDashboard() {
 
               </div>
 
-              <button className="font-semibold text-orange-600">
+              <a
+                href="/admin/orders"
+                className="font-semibold text-orange-600"
+              >
                 View All →
-              </button>
+              </a>
 
             </div>
 
-            <div className="overflow-x-auto">
+            {recentOrders.length === 0 ? (
 
-              <table className="w-full min-w-[600px] text-left">
+              <div className="rounded-lg bg-gray-50 p-10 text-center">
 
-                <thead>
+                <div className="text-4xl">
+                  🛍️
+                </div>
 
-                  <tr className="border-b text-sm text-gray-500">
+                <p className="mt-3 font-bold">
+                  No orders yet
+                </p>
 
-                    <th className="px-4 py-3">
-                      Order
-                    </th>
+                <p className="mt-1 text-sm text-gray-500">
+                  Customer orders will appear here.
+                </p>
 
-                    <th className="px-4 py-3">
-                      Customer
-                    </th>
+              </div>
 
-                    <th className="px-4 py-3">
-                      Amount
-                    </th>
+            ) : (
 
-                    <th className="px-4 py-3">
-                      Status
-                    </th>
+              <div className="overflow-x-auto">
 
-                  </tr>
+                <table className="w-full min-w-[650px] text-left">
 
-                </thead>
+                  <thead>
 
-                <tbody>
+                    <tr className="border-b text-sm text-gray-500">
 
-                  {recentOrders.map((order) => (
+                      <th className="px-4 py-3">
+                        Order
+                      </th>
 
-                    <tr
-                      key={order.id}
-                      className="border-b last:border-0 hover:bg-gray-50"
-                    >
+                      <th className="px-4 py-3">
+                        Customer
+                      </th>
 
-                      <td className="px-4 py-4 font-semibold">
-                        {order.id}
-                      </td>
+                      <th className="px-4 py-3">
+                        Amount
+                      </th>
 
-                      <td className="px-4 py-4">
-                        {order.customer}
-                      </td>
-
-                      <td className="px-4 py-4 font-bold">
-                        {order.amount}
-                      </td>
-
-                      <td className="px-4 py-4">
-
-                        <span
-                          className={`rounded-full px-3 py-1 text-xs font-bold ${
-                            order.status === "Completed"
-                              ? "bg-green-100 text-green-700"
-                              : order.status === "Processing"
-                                ? "bg-blue-100 text-blue-700"
-                                : "bg-yellow-100 text-yellow-700"
-                          }`}
-                        >
-                          {order.status}
-                        </span>
-
-                      </td>
+                      <th className="px-4 py-3">
+                        Status
+                      </th>
 
                     </tr>
 
-                  ))}
+                  </thead>
 
-                </tbody>
+                  <tbody>
 
-              </table>
+                    {recentOrders.map((order) => (
 
-            </div>
+                      <tr
+                        key={order.id}
+                        className="border-b last:border-0 hover:bg-gray-50"
+                      >
+
+                        <td className="px-4 py-4 font-semibold">
+                          {order.id}
+                        </td>
+
+                        <td className="px-4 py-4">
+                          {order.customer?.name || "Unknown"}
+                        </td>
+
+                        <td className="px-4 py-4 font-bold">
+                          TZS{" "}
+                          {Number(
+                            order.total || 0
+                          ).toLocaleString()}
+                        </td>
+
+                        <td className="px-4 py-4">
+
+                          <span
+                            className={`rounded-full px-3 py-1 text-xs font-bold ${
+                              order.status === "Delivered"
+                                ? "bg-green-100 text-green-700"
+                                : order.status === "Cancelled"
+                                  ? "bg-red-100 text-red-700"
+                                  : order.status === "Processing"
+                                    ? "bg-blue-100 text-blue-700"
+                                    : "bg-yellow-100 text-yellow-700"
+                            }`}
+                          >
+                            {order.status || "Pending"}
+                          </span>
+
+                        </td>
+
+                      </tr>
+
+                    ))}
+
+                  </tbody>
+
+                </table>
+
+              </div>
+
+            )}
 
           </div>
 
-          {/* STORE LINK */}
+          {/* STORE */}
 
           <div className="mt-8 rounded-xl bg-gradient-to-r from-orange-600 to-yellow-500 p-6 text-white">
 
@@ -550,7 +711,7 @@ export default function AdminDashboard() {
                 </h3>
 
                 <p className="text-sm text-white/80">
-                  Your marketplace is ready for the next step.
+                  Your online marketplace is ready.
                 </p>
 
               </div>

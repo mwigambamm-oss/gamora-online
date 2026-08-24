@@ -1,5 +1,4 @@
 "use client";
-"use client";
 
 import { getProducts as getSupabaseProducts } from "@/lib/products";
 import { useEffect, useMemo, useState } from "react";
@@ -20,6 +19,49 @@ type Product = {
 type CartItem = Product & {
   quantity: number;
 };
+
+const defaultProducts: Product[] = [
+  {
+    id: 1,
+    name: "Elegant Women Dress",
+    price: 45000,
+    oldPrice: 60000,
+    category: "Women's Fashion",
+    stock: 12,
+    description: "Elegant casual dress for everyday use.",
+    image: "",
+  },
+  {
+    id: 2,
+    name: "Men's Casual Shirt",
+    price: 35000,
+    oldPrice: 50000,
+    category: "Men's Fashion",
+    stock: 20,
+    description: "Comfortable casual shirt.",
+    image: "",
+  },
+  {
+    id: 3,
+    name: "Classic Sneakers",
+    price: 65000,
+    oldPrice: 85000,
+    category: "Shoes",
+    stock: 15,
+    description: "Classic sneakers for everyday use.",
+    image: "",
+  },
+  {
+    id: 4,
+    name: "Kitchen Set",
+    price: 85000,
+    oldPrice: 110000,
+    category: "Home & Kitchen",
+    stock: 10,
+    description: "Quality kitchen set for your home.",
+    image: "",
+  },
+];
 
 const translations = {
   sw: {
@@ -124,10 +166,14 @@ export default function HomePage() {
     try {
       const data = await getSupabaseProducts();
 
-      setProducts(data);
+      if (data.length > 0) {
+        setProducts(data);
+      } else {
+        setProducts(defaultProducts);
+      }
     } catch (error) {
       console.error("Failed to load products:", error);
-      setProducts([]);
+      setProducts(defaultProducts);
     }
   }
 

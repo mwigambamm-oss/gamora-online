@@ -145,25 +145,46 @@ export async function updateOrderStatus(
     throw orderError;
   }
 
-  const oldStatus = order.status || "Pending";
+  const oldStatus = order.status;
   const items = Array.isArray(order.items) ? order.items : [];
 
   if (oldStatus === status) {
     return;
   }
 
-  const stockDeductedStatuses = [
-    "Pending",
-    "Confirmed",
-    "Processing",
-    "Out for Delivery",
-    "Delivered",
-  ];
+  if (status === "Cancelled" && oldStatus !== "Cancelled") {
+    for (const item of items) {
+      const quantity = Number(item.quantity || 0);
+      const productId = Number(item.id);
 
-  const wasStockDeducted = stockDeductedStatuses.includes(oldStatus);
-  const shouldDeductStock = stockDeductedStatuses.includes(status);
+      if (!productId || quantity <= 0) continue;
 
-  if (!wasStockDeducted && shouldDeductStock) {
+      const { data: product, error: productError } = await supabase
+        .from("products")
+        .select("stock")
+        .eq("id", productId)
+        .single();
+
+      if (productError) {
+        console.error("Failed to load product:", productError);
+        throw productError;
+      }
+
+      const newStock = Number(product.stock || 0) + quantity;
+
+      const { error: stockError } = await supabase
+        .from("products")
+        .update({ stock: newStock })
+        .eq("id", productId);
+
+      if (stockError) {
+        console.error("Failed to restore stock:", stockError);
+        throw stockError;
+      }
+    }
+  }
+
+  if (oldStatus === "Cancelled" && status !== "Cancelled") {
     for (const item of items) {
       const quantity = Number(item.quantity || 0);
       const productId = Number(item.id);
@@ -185,7 +206,7 @@ export async function updateOrderStatus(
 
       if (currentStock < quantity) {
         throw new Error(
-          `Not enough stock for product ${productId}. Available: ${currentStock}, required: ${quantity}`
+          `Not enough stock for product ${productId}`
         );
       }
 
@@ -198,39 +219,6 @@ export async function updateOrderStatus(
 
       if (stockError) {
         console.error("Failed to deduct stock:", stockError);
-        throw stockError;
-      }
-    }
-  }
-
-  if (wasStockDeducted && status === "Cancelled") {
-    for (const item of items) {
-      const quantity = Number(item.quantity || 0);
-      const productId = Number(item.id);
-
-      if (!productId || quantity <= 0) continue;
-
-      const { data: product, error: productError } = await supabase
-        .from("products")
-        .select("stock")
-        .eq("id", productId)
-        .single();
-
-      if (productError) {
-        console.error("Failed to load product:", productError);
-        throw productError;
-      }
-
-      const currentStock = Number(product.stock || 0);
-      const newStock = currentStock + quantity;
-
-      const { error: stockError } = await supabase
-        .from("products")
-        .update({ stock: newStock })
-        .eq("id", productId);
-
-      if (stockError) {
-        console.error("Failed to restore stock:", stockError);
         throw stockError;
       }
     }

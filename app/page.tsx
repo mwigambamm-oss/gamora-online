@@ -503,7 +503,99 @@ export default function HomePage() {
         </div>
 
       </section>
+      {/* SEO INTRO */}
 
+      <section className="bg-white">
+        <div className="mx-auto max-w-7xl px-4 py-12 sm:py-16">
+          <div className="max-w-4xl">
+            <h2 className="text-2xl font-black tracking-tight text-sky-950 sm:text-3xl">
+              {language === "sw"
+                ? "GAMORA ONLINE – Online Shopping Tanzania"
+                : "GAMORA ONLINE – Online Shopping Tanzania"}
+            </h2>
+
+            <p className="mt-4 text-base leading-8 text-slate-600 sm:text-lg">
+              {language === "sw"
+                ? "Gamora Online ni duka la online shopping Tanzania linalokupa njia rahisi ya kununua bidhaa mbalimbali mtandaoni. Tunakuletea fashion za wanawake na wanaume, viatu, pamoja na bidhaa za nyumbani na jikoni kwa bei nzuri."
+                : "Gamora Online is an online shopping store in Tanzania offering a convenient way to shop for a wide range of products online. Discover women's fashion, men's fashion, shoes, home and kitchen products at great prices."}
+            </p>
+
+            <p className="mt-4 text-base leading-8 text-slate-600">
+              {language === "sw"
+                ? "Chagua bidhaa unazopenda, ziweke kwenye cart na uendelee na oda yako kwa urahisi. Gamora Online inalenga kukupa uzoefu salama, rahisi na wa kuaminika wa ununuzi mtandaoni Tanzania."
+                : "Choose the products you love, add them to your cart and place your order with ease. Gamora Online is focused on providing a simple, secure and reliable online shopping experience in Tanzania."}
+            </p>
+          </div>
+
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <a
+              href="#categories"
+              className="rounded-2xl border bg-slate-50 p-5 transition hover:-translate-y-1 hover:border-sky-300 hover:bg-sky-50"
+            >
+              <div className="text-2xl">👗</div>
+              <h3 className="mt-3 font-black text-sky-950">
+                {language === "sw"
+                  ? "Fashion za Wanawake"
+                  : "Women's Fashion"}
+              </h3>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                {language === "sw"
+                  ? "Mitindo na mavazi ya wanawake kwa ununuzi online."
+                  : "Fashion and clothing for women available online."}
+              </p>
+            </a>
+
+            <a
+              href="#categories"
+              className="rounded-2xl border bg-slate-50 p-5 transition hover:-translate-y-1 hover:border-sky-300 hover:bg-sky-50"
+            >
+              <div className="text-2xl">👔</div>
+              <h3 className="mt-3 font-black text-sky-950">
+                {language === "sw"
+                  ? "Fashion za Wanaume"
+                  : "Men's Fashion"}
+              </h3>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                {language === "sw"
+                  ? "Mavazi na bidhaa za fashion kwa wanaume."
+                  : "Men's clothing and fashion products."}
+              </p>
+            </a>
+
+            <a
+              href="#categories"
+              className="rounded-2xl border bg-slate-50 p-5 transition hover:-translate-y-1 hover:border-sky-300 hover:bg-sky-50"
+            >
+              <div className="text-2xl">👟</div>
+              <h3 className="mt-3 font-black text-sky-950">
+                {language === "sw" ? "Viatu" : "Shoes"}
+              </h3>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                {language === "sw"
+                  ? "Chagua viatu kwa matumizi na mitindo mbalimbali."
+                  : "Shop shoes for different styles and occasions."}
+              </p>
+            </a>
+
+            <a
+              href="#categories"
+              className="rounded-2xl border bg-slate-50 p-5 transition hover:-translate-y-1 hover:border-sky-300 hover:bg-sky-50"
+            >
+              <div className="text-2xl">🏠</div>
+              <h3 className="mt-3 font-black text-sky-950">
+                {language === "sw"
+                  ? "Nyumbani & Jikoni"
+                  : "Home & Kitchen"}
+              </h3>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                {language === "sw"
+                  ? "Bidhaa mbalimbali kwa matumizi ya nyumbani na jikoni."
+                  : "Useful products for your home and kitchen."}
+              </p>
+            </a>
+          </div>
+        </div>
+      </section>
       {/* FEATURES */}
 
       <section className="border-b bg-white">

@@ -13,13 +13,65 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Gamora Online",
-  description: "Gamora Online - Your trusted online shopping platform.",
+  metadataBase: new URL("https://gamoraonline.co.tz"),
+
+  title: {
+    default: "Gamora Online | Online Shopping Tanzania",
+    template: "%s | Gamora Online",
+  },
+
+  description:
+    "Gamora Online is a trusted online shopping platform in Tanzania. Shop women's fashion, men's fashion, shoes, home and kitchen products, and more.",
+
+  keywords: [
+    "Gamora Online",
+    "online shopping Tanzania",
+    "online shop Tanzania",
+    "shopping online Dar es Salaam",
+    "fashion Tanzania",
+    "women fashion Tanzania",
+    "men fashion Tanzania",
+    "shoes Tanzania",
+    "home and kitchen Tanzania",
+  ],
+
+  alternates: {
+    canonical: "https://gamoraonline.co.tz",
+  },
+
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
+
+  openGraph: {
+    type: "website",
+    locale: "en_TZ",
+    url: "https://gamoraonline.co.tz",
+    siteName: "Gamora Online",
+    title: "Gamora Online | Online Shopping Tanzania",
+    description:
+      "Shop fashion, shoes, home and kitchen products online in Tanzania with Gamora Online.",
+  },
+
+  twitter: {
+    card: "summary_large_image",
+    title: "Gamora Online | Online Shopping Tanzania",
+    description:
+      "Shop fashion, shoes, home and kitchen products online in Tanzania.",
+  },
+
   verification: {
     google: "wSzx_6kXQC_6g1gldGV9ynYsB4D7hWO-ZXQjuawtlrw",
   },
 };
-
 export default function RootLayout({
   children,
 }: Readonly<{

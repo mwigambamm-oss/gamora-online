@@ -260,7 +260,7 @@ export default function HomePage() {
 
             <div className="hidden flex-1 md:block">
 
-              <div className="relative">
+              <div className="relative mx-auto max-w-2xl">
 
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg">
                   🔎
@@ -268,11 +268,9 @@ export default function HomePage() {
 
                 <input
                   value={search}
-                  onChange={(e) =>
-                    setSearch(e.target.value)
-                  }
+                  onChange={(e) => setSearch(e.target.value)}
                   placeholder={t.search}
-                  className="w-full rounded-full border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 outline-none transition focus:border-sky-500 focus:bg-white"
+                  className="w-full rounded-full border border-slate-200 bg-slate-50 py-3 pl-11 pr-5 outline-none transition focus:border-sky-500 focus:bg-white"
                 />
 
               </div>
@@ -311,7 +309,7 @@ export default function HomePage() {
 
             <a
               href="/cart"
-              className="relative flex items-center gap-2 rounded-lg px-3 py-2 font-bold text-sky-950 hover:bg-sky-50"
+              className="relative flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 font-bold text-slate-800 transition hover:border-sky-300 hover:bg-sky-50"
             >
               🛒
               <span className="hidden sm:inline">
@@ -319,7 +317,7 @@ export default function HomePage() {
               </span>
 
               {cartCount > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-xs font-black text-white">
+                <span className="absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-xs font-black text-white">
                   {cartCount}
                 </span>
               )}
@@ -333,9 +331,7 @@ export default function HomePage() {
 
             <input
               value={search}
-              onChange={(e) =>
-                setSearch(e.target.value)
-              }
+              onChange={(e) => setSearch(e.target.value)}
               placeholder={t.search}
               className="w-full rounded-full border border-slate-200 bg-slate-50 px-5 py-3 outline-none focus:border-sky-500"
             />
@@ -348,25 +344,44 @@ export default function HomePage() {
 
             <a
               href="/"
-              className="text-sky-700"
+              className="text-sky-700 transition hover:text-sky-500"
             >
               {t.home}
             </a>
 
-            <a href="#categories">
+            <a
+              href="#categories"
+              className="transition hover:text-sky-600"
+            >
               {t.categories}
             </a>
 
-            <a href="#offers">
+            <a
+              href="#offers"
+              className="transition hover:text-sky-600"
+            >
               {t.flashSale}
             </a>
 
-            <a href="#products">
+            <a
+              href="#products"
+              className="transition hover:text-sky-600"
+            >
               {t.popular}
             </a>
 
-            <a href="#shopping-guide">
+            <a
+              href="#shopping-guide"
+              className="transition hover:text-sky-600"
+            >
               {t.shoppingGuide}
+            </a>
+
+            <a
+              href="/contact"
+              className="transition hover:text-sky-600"
+            >
+              {t.contact}
             </a>
 
           </nav>
@@ -377,121 +392,147 @@ export default function HomePage() {
 
       {/* HERO */}
 
-      <section className="relative overflow-hidden bg-gradient-to-br from-sky-950 via-sky-800 to-cyan-600">
+      <section className="relative overflow-hidden bg-slate-100">
 
-        <div className="absolute inset-0 opacity-20">
-          <div className="absolute -left-20 top-10 h-72 w-72 rounded-full bg-cyan-300 blur-3xl" />
-          <div className="absolute -right-20 bottom-0 h-96 w-96 rounded-full bg-sky-300 blur-3xl" />
-        </div>
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:py-8">
 
-        <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-4 py-14 md:grid-cols-2 md:py-20">
+          <div className="relative min-h-[430px] overflow-hidden rounded-3xl bg-gradient-to-r from-sky-950 via-sky-800 to-cyan-600 shadow-2xl">
 
-          <div className="text-white">
+            {/* Decorative background */}
 
-            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-bold backdrop-blur">
-              🛍️ GAMORA ONLINE
-            </div>
+            <div className="absolute -right-20 -top-20 h-80 w-80 rounded-full bg-cyan-300/20 blur-3xl" />
+            <div className="absolute -bottom-32 left-1/3 h-96 w-96 rounded-full bg-white/10 blur-3xl" />
 
-            <h1 className="max-w-2xl text-4xl font-black leading-tight tracking-tight sm:text-5xl md:text-6xl">
-              {t.heroTitle}
-            </h1>
+            <div className="relative grid min-h-[430px] items-center md:grid-cols-2">
 
-            <p className="mt-5 max-w-xl text-base leading-8 text-sky-100 sm:text-lg">
-              {t.heroText}
-            </p>
+              {/* HERO TEXT */}
 
-            <div className="mt-8 flex flex-wrap gap-4">
+              <div className="px-7 py-12 text-white sm:px-10 lg:px-14">
 
-              <a
-                href="#products"
-                className="rounded-xl bg-white px-7 py-4 font-black text-sky-950 shadow-xl transition hover:-translate-y-1 hover:bg-sky-50"
-              >
-                {t.shopNow} →
-              </a>
+                <div className="mb-5 inline-flex rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-wider backdrop-blur">
+                  GAMORA ONLINE
+                </div>
 
-              <a
-                href="#offers"
-                className="rounded-xl border border-white/30 bg-white/10 px-7 py-4 font-black text-white backdrop-blur transition hover:-translate-y-1 hover:bg-white/20"
-              >
-                🔥 {t.flashSale}
-              </a>
+                <h1 className="max-w-xl text-4xl font-black leading-tight sm:text-5xl lg:text-6xl">
+                  {language === "sw"
+                    ? "Nunua kwa Urahisi. Chagua kwa Kujiamini."
+                    : "Shop Easily. Choose with Confidence."}
+                </h1>
 
-            </div>
-
-            <div className="mt-10 grid max-w-xl grid-cols-3 gap-4 border-t border-white/20 pt-7">
-
-              <div>
-                <p className="text-2xl font-black">100%</p>
-                <p className="mt-1 text-xs text-sky-200 sm:text-sm">
-                  {t.quality}
+                <p className="mt-5 max-w-lg text-base leading-7 text-sky-100 sm:text-lg">
+                  {language === "sw"
+                    ? "Gundua fashion, viatu, simu, electronics na bidhaa za nyumbani — zote sehemu moja."
+                    : "Discover fashion, shoes, phones, electronics and home products — all in one place."}
                 </p>
-              </div>
 
-              <div>
-                <p className="text-2xl font-black">Fast</p>
-                <p className="mt-1 text-xs text-sky-200 sm:text-sm">
-                  {t.delivery}
-                </p>
-              </div>
+                <div className="mt-8 flex flex-wrap gap-3">
 
-              <div>
-                <p className="text-2xl font-black">24/7</p>
-                <p className="mt-1 text-xs text-sky-200 sm:text-sm">
-                  {t.support}
-                </p>
-              </div>
+                  <a
+                    href="#products"
+                    className="rounded-xl bg-white px-7 py-4 font-black text-sky-950 shadow-xl transition hover:-translate-y-1 hover:bg-sky-50"
+                  >
+                    {t.shopNow} →
+                  </a>
 
-            </div>
-
-          </div>
-
-          <div className="relative flex items-center justify-center">
-
-            <div className="absolute h-72 w-72 rounded-full bg-white/10 blur-2xl" />
-
-            <div className="relative w-full max-w-md overflow-hidden rounded-3xl border border-white/20 bg-white/10 p-5 shadow-2xl backdrop-blur">
-
-              <div className="rounded-2xl bg-white p-5 shadow-xl">
-
-                <div className="flex items-center justify-center rounded-2xl bg-sky-50 p-8">
-
-                  <img
-                    src="/gamora-logo.png"
-                    alt="GAMORA ONLINE"
-                    className="max-h-52 w-auto object-contain"
-                  />
+                  <a
+                    href="#categories"
+                    className="rounded-xl border border-white/30 bg-white/10 px-7 py-4 font-black text-white backdrop-blur transition hover:-translate-y-1 hover:bg-white/20"
+                  >
+                    {t.categories}
+                  </a>
 
                 </div>
 
-                <div className="mt-5 grid grid-cols-3 gap-3">
+                <div className="mt-8 flex flex-wrap gap-5 text-sm font-bold text-sky-100">
 
-                  <div className="rounded-xl bg-sky-50 p-4 text-center">
-                    <div className="text-2xl">👗</div>
-                    <p className="mt-1 text-xs font-bold text-slate-700">
-                      Fashion
-                    </p>
-                  </div>
-
-                  <div className="rounded-xl bg-sky-50 p-4 text-center">
-                    <div className="text-2xl">👟</div>
-                    <p className="mt-1 text-xs font-bold text-slate-700">
-                      Shoes
-                    </p>
-                  </div>
-
-                  <div className="rounded-xl bg-sky-50 p-4 text-center">
-                    <div className="text-2xl">🏠</div>
-                    <p className="mt-1 text-xs font-bold text-slate-700">
-                      Home
-                    </p>
-                  </div>
+                  <span>✓ {t.quality}</span>
+                  <span>✓ {t.delivery}</span>
+                  <span>✓ {t.secure}</span>
 
                 </div>
 
-                <div className="mt-4 rounded-xl bg-gradient-to-r from-sky-700 to-cyan-500 px-5 py-4 text-center text-white">
-                  <p className="text-sm font-bold">
-                    Shop • Discover • Enjoy
-                  </p>
+              </div>
+
+              {/* REAL PRODUCT VISUALS — NO PEOPLE */}
+
+              <div className="relative hidden h-full min-h-[430px] items-center justify-center md:flex">
+
+                <div className="absolute right-10 top-10 h-72 w-72 rounded-full bg-white/10 blur-2xl" />
+
+                <div className="relative grid w-full max-w-lg grid-cols-2 gap-4 p-8">
+
+                  {/* Fashion */}
+
+                  <div className="group overflow-hidden rounded-2xl bg-white shadow-2xl">
+
+                    <img
+                      src="/images/womens-fashion.jpg"
+                      alt="Fashion products"
+                      className="h-44 w-full object-cover transition duration-500 group-hover:scale-105"
+                    />
+
+                    <div className="p-3">
+                      <p className="text-sm font-black text-slate-900">
+                        Fashion
+                      </p>
+                    </div>
+
+                  </div>
+
+                  {/* Phone */}
+
+                  <div className="mt-8 group overflow-hidden rounded-2xl bg-white shadow-2xl">
+
+                    <img
+                      src="/images/phone.jpg"
+                      alt="Smartphone"
+                      className="h-44 w-full object-cover transition duration-500 group-hover:scale-105"
+                    />
+
+                    <div className="p-3">
+                      <p className="text-sm font-black text-slate-900">
+                        Phones
+                      </p>
+                    </div>
+
+                  </div>
+
+                  {/* Shoes */}
+
+                  <div className="-mt-4 group overflow-hidden rounded-2xl bg-white shadow-2xl">
+
+                    <img
+                      src="/images/shoes.jpg"
+                      alt="Shoes"
+                      className="h-44 w-full object-cover transition duration-500 group-hover:scale-105"
+                    />
+
+                    <div className="p-3">
+                      <p className="text-sm font-black text-slate-900">
+                        Shoes
+                      </p>
+                    </div>
+
+                  </div>
+
+                  {/* Home */}
+
+                  <div className="group overflow-hidden rounded-2xl bg-white shadow-2xl">
+
+                    <img
+                      src="/images/home-kitchen.jpg"
+                      alt="Home and Kitchen"
+                      className="h-44 w-full object-cover transition duration-500 group-hover:scale-105"
+                    />
+
+                    <div className="p-3">
+                      <p className="text-sm font-black text-slate-900">
+                        Home & Kitchen
+                      </p>
+                    </div>
+
+                  </div>
+
                 </div>
 
               </div>
@@ -503,6 +544,7 @@ export default function HomePage() {
         </div>
 
       </section>
+
       {/* SEO INTRO */}
 
       <section className="bg-white">
@@ -657,59 +699,115 @@ export default function HomePage() {
 
         </div>
 
-        <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4">
-          <button
-            onClick={() => setSelectedCategory("Women's Fashion")}
-            className="rounded-2xl bg-gradient-to-br from-pink-50 to-rose-100 p-6 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
-          >
-            <div className="text-4xl">👗</div>
-            <h3 className="mt-4 text-lg font-black text-slate-900">
-              Women's Fashion
-            </h3>
-            <p className="mt-2 text-sm text-slate-600">
-              Stylish outfits and accessories for every occasion.
-            </p>
-          </button>
+        <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
 
-          <button
-            onClick={() => setSelectedCategory("Men's Fashion")}
-            className="rounded-2xl bg-gradient-to-br from-blue-50 to-sky-100 p-6 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
-          >
-            <div className="text-4xl">👔</div>
-            <h3 className="mt-4 text-lg font-black text-slate-900">
-              Men's Fashion
-            </h3>
-            <p className="mt-2 text-sm text-slate-600">
-              Modern styles and everyday essentials for men.
-            </p>
-          </button>
+  <button
+    onClick={() => setSelectedCategory("Women's Fashion")}
+    className="group overflow-hidden rounded-2xl border bg-white text-left shadow-sm transition hover:-translate-y-1 hover:shadow-xl"
+  >
+    <div className="h-44 overflow-hidden bg-slate-100">
+      <img
+        src="/images/womens-fashion.jpg"
+        alt="Women's Fashion"
+        className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+      />
+    </div>
+    <div className="p-5">
+      <h3 className="text-lg font-black text-slate-900">
+        Women's Fashion
+      </h3>
+      <p className="mt-2 text-sm text-slate-600">
+        Stylish outfits and accessories for every occasion.
+      </p>
+    </div>
+  </button>
 
-          <button
-            onClick={() => setSelectedCategory("Shoes")}
-            className="rounded-2xl bg-gradient-to-br from-amber-50 to-orange-100 p-6 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
-          >
-            <div className="text-4xl">👟</div>
-            <h3 className="mt-4 text-lg font-black text-slate-900">
-              Shoes
-            </h3>
-            <p className="mt-2 text-sm text-slate-600">
-              Comfortable and fashionable footwear for everyone.
-            </p>
-          </button>
+  <button
+    onClick={() => setSelectedCategory("Men's Fashion")}
+    className="group overflow-hidden rounded-2xl border bg-white text-left shadow-sm transition hover:-translate-y-1 hover:shadow-xl"
+  >
+    <div className="h-44 overflow-hidden bg-slate-100">
+      <img
+        src="/images/mens-fashion.jpg"
+        alt="Men's Fashion"
+        className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+      />
+    </div>
+    <div className="p-5">
+      <h3 className="text-lg font-black text-slate-900">
+        Men's Fashion
+      </h3>
+      <p className="mt-2 text-sm text-slate-600">
+        Modern styles and everyday essentials for men.
+      </p>
+    </div>
+  </button>
 
-          <button
-            onClick={() => setSelectedCategory("Home & Kitchen")}
-            className="rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-100 p-6 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
-          >
-            <div className="text-4xl">🏠</div>
-            <h3 className="mt-4 text-lg font-black text-slate-900">
-              Home & Kitchen
-            </h3>
-            <p className="mt-2 text-sm text-slate-600">
-              Useful products to make your home even better.
-            </p>
-          </button>
-        </div>        
+  <button
+    onClick={() => setSelectedCategory("Shoes")}
+    className="group overflow-hidden rounded-2xl border bg-white text-left shadow-sm transition hover:-translate-y-1 hover:shadow-xl"
+  >
+    <div className="h-44 overflow-hidden bg-slate-100">
+      <img
+        src="/images/shoes.jpg"
+        alt="Shoes"
+        className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+      />
+    </div>
+    <div className="p-5">
+      <h3 className="text-lg font-black text-slate-900">
+        Shoes
+      </h3>
+      <p className="mt-2 text-sm text-slate-600">
+        Comfortable and fashionable footwear for everyone.
+      </p>
+    </div>
+  </button>
+
+  <button
+    onClick={() => setSelectedCategory("Home & Kitchen")}
+    className="group overflow-hidden rounded-2xl border bg-white text-left shadow-sm transition hover:-translate-y-1 hover:shadow-xl"
+  >
+    <div className="h-44 overflow-hidden bg-slate-100">
+      <img
+        src="/images/home-kitchen.jpg"
+        alt="Home and Kitchen"
+        className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+      />
+    </div>
+    <div className="p-5">
+      <h3 className="text-lg font-black text-slate-900">
+        Home & Kitchen
+      </h3>
+      <p className="mt-2 text-sm text-slate-600">
+        Useful products for your home and kitchen.
+      </p>
+    </div>
+  </button>
+
+  <button
+    onClick={() => setSelectedCategory("Phones & Electronics")}
+    className="group overflow-hidden rounded-2xl border bg-white text-left shadow-sm transition hover:-translate-y-1 hover:shadow-xl"
+  >
+    <div className="h-44 overflow-hidden bg-slate-100">
+      <img
+        src="/images/phone.jpg"
+        alt="Phones and Electronics"
+        className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+      />
+    </div>
+    <div className="p-5">
+      <h3 className="text-lg font-black text-slate-900">
+        Phones & Electronics
+      </h3>
+      <p className="mt-2 text-sm text-slate-600">
+        Smartphones, accessories and useful electronics.
+      </p>
+    </div>
+  </button>
+
+</div>
+
 <div className="flex gap-3 overflow-x-auto pb-2">
 
           {categories.map((category) => (

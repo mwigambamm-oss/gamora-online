@@ -51,16 +51,23 @@ export const metadata: Metadata = {
     },
   },
 
-  openGraph: {
-    type: "website",
-    locale: "en_TZ",
-    url: "https://gamoraonline.co.tz",
-    siteName: "Gamora Online",
-    title: "Gamora Online | Online Shopping Tanzania",
-    description:
-      "Shop fashion, shoes, home and kitchen products online in Tanzania with Gamora Online.",
-  },
-
+openGraph: {
+  type: "website",
+  locale: "en_TZ",
+  url: "https://gamoraonline.co.tz",
+  siteName: "Gamora Online",
+  title: "Gamora Online | Online Shopping Tanzania",
+  description:
+    "Shop fashion, shoes, home and kitchen products online in Tanzania with Gamora Online.",
+  images: [
+    {
+      url: "/og-image.png",
+      width: 1200,
+      height: 630,
+      alt: "Gamora Online - Online Shopping Tanzania",
+    },
+  ],
+},
   twitter: {
     card: "summary_large_image",
     title: "Gamora Online | Online Shopping Tanzania",

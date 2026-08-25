@@ -11,6 +11,7 @@ type Stat = {
 };
 
 export default function AdminDashboard() {
+  const [analytics, setAnalytics] = useState<any>(null);
   const [productsCount, setProductsCount] = useState(0);
   const [orders, setOrders] = useState<Order[]>([]);
   const [customersCount, setCustomersCount] = useState(0);
@@ -21,10 +22,13 @@ export default function AdminDashboard() {
     try {
       setLoading(true);
 
-      const [products, loadedOrders] = await Promise.all([
+      const [products, loadedOrders, analyticsResponse] = await Promise.all([
         getProducts(),
         getOrders(),
+        fetch("/api/analytics").then((r) => r.json()),
       ]);
+
+      setAnalytics(analyticsResponse);
 
       setProductsCount(products.length);
       setOrders(loadedOrders);
@@ -204,6 +208,13 @@ export default function AdminDashboard() {
           </a>
 
           <a
+            href="/admin/reports"
+            className="mb-2 flex items-center gap-3 rounded-lg px-4 py-3 text-gray-300 hover:bg-gray-800"
+          >
+            📑 Reports
+          </a>
+
+          <a
             href="/admin/settings"
             className="flex items-center gap-3 rounded-lg px-4 py-3 text-gray-300 hover:bg-gray-800"
           >
@@ -355,6 +366,138 @@ export default function AdminDashboard() {
 
             </div>
 
+          )}
+
+          {/* ACCOUNTING PERFORMANCE */}
+
+          {!loading && analytics?.success && (
+            <section className="mt-8">
+
+              <div className="mb-4">
+                <h3 className="text-2xl font-black">
+                  Financial Overview
+                </h3>
+
+                <p className="text-sm text-gray-500">
+                  Live accounting figures calculated from your GAMORA database
+                </p>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+
+                {[
+                  {
+                    title: "Product Revenue",
+                    value: analytics.kpis.revenue,
+                    icon: "💰",
+                    color: "text-green-600",
+                  },
+                  {
+                    title: "Paid Amount",
+                    value: analytics.kpis.paidAmount,
+                    icon: "💳",
+                    color: "text-blue-600",
+                  },
+                  {
+                    title: "Product Cost",
+                    value: analytics.kpis.cogs,
+                    icon: "📦",
+                    color: "text-orange-600",
+                  },
+                  {
+                    title: "Gross Profit",
+                    value: analytics.kpis.grossProfit,
+                    icon: "📈",
+                    color: "text-green-600",
+                  },
+                  {
+                    title: "Expenses",
+                    value: analytics.kpis.expenses,
+                    icon: "💸",
+                    color: "text-red-600",
+                  },
+                  {
+                    title: "Net Profit",
+                    value: analytics.kpis.netProfit,
+                    icon: "🟢",
+                    color: "text-emerald-600",
+                  },
+                  {
+                    title: "Delivery Income",
+                    value: analytics.kpis.deliveryIncome,
+                    icon: "🚚",
+                    color: "text-purple-600",
+                  },
+                  {
+                    title: "Stock Cost Value",
+                    value: analytics.kpis.stockCostValue,
+                    icon: "🏷️",
+                    color: "text-indigo-600",
+                  },
+                ].map((item) => (
+
+                  <div
+                    key={item.title}
+                    className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+                  >
+
+                    <div className="flex items-start justify-between">
+
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">
+                          {item.title}
+                        </p>
+
+                        <p className={`mt-2 text-2xl font-black ${item.color}`}>
+                          TZS {Number(item.value || 0).toLocaleString()}
+                        </p>
+                      </div>
+
+                      <div className="text-2xl">
+                        {item.icon}
+                      </div>
+
+                    </div>
+
+                  </div>
+
+                ))}
+
+              </div>
+
+              <div className="mt-4 rounded-2xl bg-gray-950 p-6 text-white shadow-lg">
+
+                <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+
+                  <div>
+                    <p className="text-sm text-gray-400">
+                      Profit Margin
+                    </p>
+
+                    <p className="mt-1 text-3xl font-black">
+                      {Number(
+                        analytics.kpis.profitMargin || 0
+                      ).toFixed(2)}%
+                    </p>
+                  </div>
+
+                  <div className="text-left md:text-right">
+                    <p className="text-sm text-gray-400">
+                      Stock Selling Value
+                    </p>
+
+                    <p className="mt-1 text-xl font-bold">
+                      TZS {Number(
+                        analytics.kpis.stockSellingValue || 0
+                      ).toLocaleString()}
+                    </p>
+                  </div>
+
+                </div>
+
+              </div>
+
+            </section>
           )}
 
           {/* SALES PERFORMANCE */}

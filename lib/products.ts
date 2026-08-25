@@ -7,6 +7,7 @@ export type Product = {
   oldPrice: number;
   category: string;
   stock: number;
+  cost_price?: number;
   description: string;
   image: string;
 };
@@ -29,6 +30,7 @@ export async function getProducts(): Promise<Product[]> {
     oldPrice: Number(product.old_price),
     category: product.category,
     stock: Number(product.stock),
+      cost_price: Number(product.cost_price || 0),
     description: product.description || "",
     image: product.image || "",
   }));
@@ -43,6 +45,7 @@ export async function saveProduct(product: Omit<Product, "id">) {
       old_price: product.oldPrice,
       category: product.category,
       stock: product.stock,
+      cost_price: product.cost_price ?? 0,
       description: product.description,
       image: product.image,
     })
@@ -81,6 +84,7 @@ export async function updateProduct(
       old_price: product.oldPrice,
       category: product.category,
       stock: product.stock,
+      cost_price: product.cost_price ?? 0,
       description: product.description,
       image: product.image,
     })

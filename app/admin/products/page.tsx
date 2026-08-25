@@ -21,6 +21,7 @@ export default function ProductsPage() {
     oldPrice: "",
     category: "Women's Fashion",
     stock: "",
+    cost_price: "",
     description: "",
     image: "",
   });
@@ -104,6 +105,7 @@ export default function ProductsPage() {
         oldPrice: Number(form.oldPrice || form.price),
         category: form.category,
         stock: Number(form.stock),
+      cost_price: Number(form.cost_price || 0),
         description: form.description,
         image: form.image,
       };
@@ -134,7 +136,8 @@ export default function ProductsPage() {
       oldPrice: "",
       category: "Women's Fashion",
       stock: "",
-        description: "",
+      cost_price: "",
+      description: "",
       image: "",
     });
 
@@ -149,6 +152,7 @@ export default function ProductsPage() {
       oldPrice: String(product.oldPrice || ""),
       category: product.category,
       stock: String(product.stock),
+      cost_price: String(product.cost_price ?? 0),
       description: product.description || "",
       image: product.image || "",
     });

@@ -134,22 +134,41 @@ export async function updateOrderStatus(
   id: string,
   status: string
 ) {
+  const response = await fetch("/api/orders/status", {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      order_number: id,
+      status,
+    }),
+  });
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      result?.error ||
+        "Failed to update order status"
+    );
+  }
+
+  return result;
+}
+
+export async function deleteOrder(
+  id: string
+) {
   const { data: order, error: orderError } = await supabase
     .from("orders")
-    .select("order_number, status, items")
+    .select("status, items")
     .eq("order_number", id)
     .single();
 
   if (orderError) {
-    console.error("Failed to load order:", orderError);
+    console.error("Failed to load order before deletion:", orderError);
     throw orderError;
-  }
-
-  const oldStatus = order.status || "Pending";
-  const items = Array.isArray(order.items) ? order.items : [];
-
-  if (oldStatus === status) {
-    return;
   }
 
   const stockDeductedStatuses = [
@@ -160,10 +179,13 @@ export async function updateOrderStatus(
     "Delivered",
   ];
 
-  const wasStockDeducted = stockDeductedStatuses.includes(oldStatus);
-  const shouldDeductStock = stockDeductedStatuses.includes(status);
+  const shouldRestoreStock = stockDeductedStatuses.includes(
+    order.status || "Pending"
+  );
 
-  if (!wasStockDeducted && shouldDeductStock) {
+  const items = Array.isArray(order.items) ? order.items : [];
+
+  if (shouldRestoreStock) {
     for (const item of items) {
       const quantity = Number(item.quantity || 0);
       const productId = Number(item.id);
@@ -177,79 +199,24 @@ export async function updateOrderStatus(
         .single();
 
       if (productError) {
-        console.error("Failed to load product:", productError);
+        console.error("Failed to load product before deletion:", productError);
         throw productError;
       }
 
-      const currentStock = Number(product.stock || 0);
-
-      if (currentStock < quantity) {
-        throw new Error(
-          `Not enough stock for product ${productId}. Available: ${currentStock}, required: ${quantity}`
-        );
-      }
-
-      const newStock = currentStock - quantity;
-
       const { error: stockError } = await supabase
         .from("products")
-        .update({ stock: newStock })
+        .update({
+          stock: Number(product.stock || 0) + quantity,
+        })
         .eq("id", productId);
 
       if (stockError) {
-        console.error("Failed to deduct stock:", stockError);
+        console.error("Failed to restore stock before deletion:", stockError);
         throw stockError;
       }
     }
   }
 
-  if (wasStockDeducted && status === "Cancelled") {
-    for (const item of items) {
-      const quantity = Number(item.quantity || 0);
-      const productId = Number(item.id);
-
-      if (!productId || quantity <= 0) continue;
-
-      const { data: product, error: productError } = await supabase
-        .from("products")
-        .select("stock")
-        .eq("id", productId)
-        .single();
-
-      if (productError) {
-        console.error("Failed to load product:", productError);
-        throw productError;
-      }
-
-      const currentStock = Number(product.stock || 0);
-      const newStock = currentStock + quantity;
-
-      const { error: stockError } = await supabase
-        .from("products")
-        .update({ stock: newStock })
-        .eq("id", productId);
-
-      if (stockError) {
-        console.error("Failed to restore stock:", stockError);
-        throw stockError;
-      }
-    }
-  }
-
-  const { error } = await supabase
-    .from("orders")
-    .update({ status })
-    .eq("order_number", id);
-
-  if (error) {
-    console.error("Failed to update order:", error);
-    throw error;
-  }
-}
-
-export async function deleteOrder(
-  id: string
-) {
   const { error } = await supabase
     .from("orders")
     .delete()

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 
+const processingOrders = new Set<string>();
+
 type OrderItem = {
   id: number;
   name: string;
@@ -125,6 +127,7 @@ async function rollbackStock(
 }
 
 export async function POST(request: Request) {
+  let orderLockId = "";
   let changedStock: {
     id: number;
     quantity: number;
@@ -168,6 +171,24 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+
+    orderLockId = String(id);
+
+    if (processingOrders.has(orderLockId)) {
+      console.warn(
+        "⚠️ Duplicate order request blocked:",
+        orderLockId
+      );
+
+      return NextResponse.json(
+        {
+          error: "This order is already being processed.",
+        },
+        { status: 409 }
+      );
+    }
+
+    processingOrders.add(orderLockId);
 
     /*
      * Prevent duplicate orders
@@ -292,25 +313,45 @@ export async function POST(request: Request) {
     }
 
     // 🤖 GAMORA ROBOT NOTIFICATION
-    try {
-      const robotMessage =
-        `🛒 GAMORA ONLINE - NEW ORDER\\n` +
-        `Order: ${data.order_number}\\n` +
-        `Customer: ${data.customer_name || "-"}\\n` +
-        `Phone: ${data.customer_phone || "-"}\\n` +
-        `Total: TZS ${Number(data.total || 0).toLocaleString()}\\n` +
-        `Status: ${data.status || "Pending"}`;
+try {
+  console.log("🤖 Starting Telegram order notification...");
 
-      console.log("🤖 ROBOT NOTIFICATION");
-      console.log(robotMessage);
-    } catch (robotError) {
-      console.error("Robot notification failed:", robotError);
-    }
+  const { orderRobotNotification } = await import("@/lib/robot");
+
+  const telegramResult = await orderRobotNotification({
+    order_number: data.order_number,
+    customer_name: data.customer_name,
+    customer_phone: data.customer_phone,
+    items: orderItems,
+    subtotal: Number(data.subtotal || 0),
+    delivery_fee: Number(data.delivery_fee || 0),
+    total: Number(data.total || 0),
+    status: data.status || "Pending",
+  });
+
+  console.log(
+    "✅ Telegram order notification completed:",
+    telegramResult
+  );
+} catch (robotError) {
+  console.error(
+    "❌ Telegram order notification failed:",
+    robotError
+  );
+}
+
+
+    processingOrders.delete(orderLockId);
 
     return NextResponse.json(data, {
       status: 201,
     });
   } catch (error) {
+    // Request failed; allow this order number to be retried.
+    if (orderLockId) {
+      processingOrders.delete(orderLockId);
+    }
+
     console.error("Create order error:", error);
 
     return NextResponse.json(

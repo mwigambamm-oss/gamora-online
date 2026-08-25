@@ -1,5 +1,4 @@
 "use client";
-"use client";
 
 import { getProductById, getProducts } from "@/lib/products";
 import { useEffect, useState } from "react";
@@ -148,13 +147,13 @@ export default function ProductDetailsPage() {
       <header className="border-b bg-white shadow-sm">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4">
 
-          <a
-            href="/"
-            className="font-black text-sky-700"
-          >
-            GAMORA ONLINE
-          </a>
-
+<a href="/" className="flex items-center">
+  <img
+    src="/gamora-logo.png"
+    alt="Gamora Online"
+    className="h-14 w-auto object-contain"
+  />
+</a>
           <a
             href="/cart"
             className="rounded-lg px-4 py-2 font-bold text-sky-700 hover:bg-sky-50"

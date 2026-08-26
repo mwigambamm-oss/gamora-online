@@ -61,3 +61,17 @@ h6 {
 button:disabled {
   opacity: 0.6;
 }
+@keyframes gamora-marquee {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.gamora-marquee {
+  width: max-content;
+  animation: gamora-marquee 22s linear infinite;
+}

@@ -1,5 +1,4 @@
 "use client";
-"use client";
 
 import { getProducts as getSupabaseProducts } from "@/lib/products";
 import { useEffect, useMemo, useState } from "react";
@@ -10,86 +9,91 @@ type Product = {
   id: number;
   name: string;
   price: number;
-  oldPrice?: number;
+  oldPrice: number;
   category: string;
   stock: number;
   description?: string;
   image?: string;
 };
 
-type CartItem = Product & {
-  quantity: number;
-};
+type CartItem = Product & { quantity: number };
 
 const translations = {
   sw: {
     home: "Nyumbani",
+    shop: "Duka",
     categories: "Makundi",
-    flashSale: "Ofa Maalum",
-    popular: "Bidhaa Maarufu",
+    about: "Kuhusu Sisi",
+    contact: "Wasiliana Nasi",
     search: "Tafuta bidhaa...",
-    shopNow: "Nunua Sasa",
-    addToCart: "Weka kwenye Cart",
+    featured: "Bidhaa Maarufu",
     viewAll: "Angalia Zote",
     cart: "Cart",
-    products: "Bidhaa",
-    all: "Zote",
-    shoppingGuide: "Mwongozo wa Ununuzi",
-    subscription: "Subscription",
-    helpCenter: "Kituo cha Msaada",
-    about: "Kuhusu GAMORA ONLINE",
-    contact: "Wasiliana Nasi",
-    address: "Anwani",
-    phone: "Simu",
-    stayConnected: "Endelea Kuunganishwa",
-    newsletter: "Pokea ofa na taarifa mpya",
+    freeDelivery: "DELIVERY YA UHAKIKA • UNUNUZI SALAMA",
+    deliveryTitle: "DELIVERY YA UHAKIKA",
+    deliveryText: "100% tunahakikisha oda yako inafika salama",
+    secureTitle: "USALAMA",
+    secureText: "Usalama wa taarifa zako ni 100%",
+    qualityTitle: "BIDHAA BORA",
+    qualityText: "Bidhaa bora zenye uhakika na uhalisia",
+    supportTitle: "HUDUMA KWA WATEJA",
+    supportText: "24/7 tuko tayari kukuhudumia",
+    quickLinks: "QUICK LINKS",
+    customerService: "CUSTOMER SERVICE",
+    newsletter: "NEWSLETTER",
+    newsletterText: "Jiandikishe kupata taarifa za bidhaa mpya na ofa maalum.",
     emailPlaceholder: "Weka email yako",
     subscribe: "Jiunge",
     rights: "Haki zote zimehifadhiwa.",
-    heroTitle: "Nunua Kila Unachohitaji",
-    heroText:
-      "Karibu GAMORA ONLINE — marketplace yako ya kisasa kwa bidhaa bora kwa bei nzuri.",
-    delivery: "Delivery ya Haraka",
-    secure: "Ununuzi Salama",
-    quality: "Bidhaa Bora",
-    support: "Huduma kwa Wateja",
+    products: "Bidhaa",
+    orders: "Oda",
+    returns: "Returns",
+    shipping: "Shipping",
+    faqs: "FAQs",
+    myAccount: "Akaunti Yangu",
+    terms: "Masharti na Vigezo",
+    privacy: "Sera ya Faragha",
     noProducts: "Hakuna bidhaa zilizopatikana.",
     added: "imeongezwa kwenye cart.",
+    shopNow: "Nunua Sasa",
   },
-
   en: {
     home: "Home",
+    shop: "Shop",
     categories: "Categories",
-    flashSale: "Special Offers",
-    popular: "Popular Products",
+    about: "About Us",
+    contact: "Contact",
     search: "Search products...",
-    shopNow: "Shop Now",
-    addToCart: "Add to Cart",
-    viewAll: "View All",
+    featured: "Featured Products",
+    viewAll: "View all",
     cart: "Cart",
-    products: "Products",
-    all: "All",
-    shoppingGuide: "Shopping Guide",
-    subscription: "Subscription",
-    helpCenter: "Help Center",
-    about: "About GAMORA ONLINE",
-    contact: "Contact Us",
-    address: "Address",
-    phone: "Phone",
-    stayConnected: "Stay Connected",
-    newsletter: "Get latest offers and updates",
+    freeDelivery: "RELIABLE DELIVERY • SECURE SHOPPING",
+    deliveryTitle: "RELIABLE DELIVERY",
+    deliveryText: "We make sure your order arrives safely",
+    secureTitle: "SECURITY",
+    secureText: "Usalama wa taarifa zako ni 100%",
+    qualityTitle: "QUALITY PRODUCTS",
+    qualityText: "Genuine, reliable quality products",
+    supportTitle: "CUSTOMER SUPPORT",
+    supportText: "24/7 tuko tayari kukuhudumia",
+    quickLinks: "QUICK LINKS",
+    customerService: "CUSTOMER SERVICE",
+    newsletter: "NEWSLETTER",
+    newsletterText: "Subscribe to get updates on new products and exclusive offers.",
     emailPlaceholder: "Enter your email",
     subscribe: "Subscribe",
     rights: "All rights reserved.",
-    heroTitle: "Shop Everything You Need",
-    heroText:
-      "Welcome to GAMORA ONLINE — your modern marketplace for quality products at great prices.",
-    delivery: "Fast Delivery",
-    secure: "Secure Shopping",
-    quality: "Quality Products",
-    support: "Customer Support",
+    products: "Products",
+    orders: "Orders",
+    returns: "Returns",
+    shipping: "Shipping",
+    faqs: "FAQs",
+    myAccount: "My Account",
+    terms: "Terms & Conditions",
+    privacy: "Privacy Policy",
     noProducts: "No products found.",
     added: "has been added to your cart.",
+    shopNow: "Shop Now",
   },
 };
 
@@ -97,8 +101,7 @@ export default function HomePage() {
   const [language, setLanguage] = useState<Language>("sw");
   const [products, setProducts] = useState<Product[]>([]);
   const [search, setSearch] = useState("");
-  const [selectedCategory, setSelectedCategory] =
-    useState("All");
+  const [selectedCategory, setSelectedCategory] = useState("All");
   const [cartCount, setCartCount] = useState(0);
 
   const t = translations[language];
@@ -107,23 +110,14 @@ export default function HomePage() {
     loadProducts();
     updateCartCount();
 
-    window.addEventListener(
-      "storage",
-      updateCartCount
-    );
-
-    return () => {
-      window.removeEventListener(
-        "storage",
-        updateCartCount
-      );
-    };
+    const onStorage = () => updateCartCount();
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
   }, []);
 
   async function loadProducts() {
     try {
       const data = await getSupabaseProducts();
-
       setProducts(data);
     } catch (error) {
       console.error("Failed to load products:", error);
@@ -132,9 +126,7 @@ export default function HomePage() {
   }
 
   function updateCartCount() {
-    const savedCart =
-      localStorage.getItem("gamora_cart");
-
+    const savedCart = localStorage.getItem("gamora_cart");
     if (!savedCart) {
       setCartCount(0);
       return;
@@ -142,13 +134,7 @@ export default function HomePage() {
 
     try {
       const cart: CartItem[] = JSON.parse(savedCart);
-
-      const count = cart.reduce(
-        (total, item) => total + item.quantity,
-        0
-      );
-
-      setCartCount(count);
+      setCartCount(cart.reduce((total, item) => total + item.quantity, 0));
     } catch {
       setCartCount(0);
     }
@@ -156,7 +142,6 @@ export default function HomePage() {
 
   function addToCart(product: Product) {
     const savedCart = localStorage.getItem("gamora_cart");
-
     let cart: CartItem[] = [];
 
     if (savedCart) {
@@ -167,1400 +152,551 @@ export default function HomePage() {
       }
     }
 
-    const existing = cart.find(
-      (item) => item.id === product.id
-    );
+    const existing = cart.find((item) => item.id === product.id);
+    if (existing) existing.quantity += 1;
+    else cart.push({ ...product, quantity: 1 });
 
-    if (existing) {
-      existing.quantity += 1;
-    } else {
-      cart.push({
-        ...product,
-        quantity: 1,
-      });
-    }
-
-    localStorage.setItem(
-      "gamora_cart",
-      JSON.stringify(cart)
-    );
-
-    console.log("GAMORA CART ITEM:", cart);
-
+    localStorage.setItem("gamora_cart", JSON.stringify(cart));
     updateCartCount();
-
     alert(`${product.name} ${t.added}`);
   }
 
   const categories = useMemo(() => {
-    const unique = Array.from(
-      new Set(products.map((product) => product.category))
-    );
-
-    return ["All", ...unique];
+    return ["All", ...Array.from(new Set(products.map((product) => product.category)))];
   }, [products]);
 
   const filteredProducts = useMemo(() => {
+    const query = search.toLowerCase().trim();
     return products.filter((product) => {
       const matchesSearch =
-        product.name
-          .toLowerCase()
-          .includes(search.toLowerCase()) ||
-        product.category
-          .toLowerCase()
-          .includes(search.toLowerCase());
-
-      const matchesCategory =
-        selectedCategory === "All" ||
-        product.category === selectedCategory;
-
+        product.name.toLowerCase().includes(query) ||
+        product.category.toLowerCase().includes(query);
+      const matchesCategory = selectedCategory === "All" || product.category === selectedCategory;
       return matchesSearch && matchesCategory;
     });
   }, [products, search, selectedCategory]);
 
-  const saleProducts = products
-    .filter(
-      (product) =>
-        product.oldPrice &&
-        product.oldPrice > product.price
-    )
+  const featuredProducts = filteredProducts
+    .filter((product) => product.image && product.image.trim() !== "")
     .slice(0, 4);
 
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-900">
+    
 
-      {/* TOP BAR */}
+<main className="min-h-screen bg-white text-slate-900">
 
-      <div className="bg-sky-950 px-4 py-2 text-center text-sm text-white">
-        🚚 {t.delivery} • 🔒 {t.secure} • ⭐{" "}
-        {t.quality}
+      {/* MOVING WELCOME BAR */}
+      <div className="w-full overflow-hidden bg-[#E30613] py-2.5 text-white shadow-sm">
+        <div className="flex w-max gamora-marquee whitespace-nowrap">
+          <span className="mx-10 text-sm font-black tracking-wide sm:text-base">
+            🇹🇿 KARIBU GAMORA ONLINE • NUNUA KWA URAHISI • CHAGUA KWA KUJIAMINI •
+          </span>
+          <span className="mx-10 text-sm font-black tracking-wide sm:text-base">
+            🇹🇿 KARIBU GAMORA ONLINE • NUNUA KWA URAHISI • CHAGUA KWA KUJIAMINI •
+          </span>
+          <span className="mx-10 text-sm font-black tracking-wide sm:text-base">
+            🇹🇿 KARIBU GAMORA ONLINE • NUNUA KWA URAHISI • CHAGUA KWA KUJIAMINI •
+          </span>
+          <span className="mx-10 text-sm font-black tracking-wide sm:text-base">
+            🇹🇿 KARIBU GAMORA ONLINE • NUNUA KWA URAHISI • CHAGUA KWA KUJIAMINI •
+          </span>
+        </div>
+      </div>
+
+      {/* TOP RED BAR */}
+      <div className="bg-[#e30613] px-4 py-2 text-center text-xs font-bold text-white sm:text-sm">
+        <div className="mx-auto flex max-w-[1180px] items-center justify-center">
+          <span>🚚 {t.freeDelivery}</span>
+        </div>
       </div>
 
       {/* HEADER */}
+      <header className="border-b border-slate-200 bg-white">
+        <div className="mx-auto max-w-[1180px] px-4">
+          <div className="flex min-h-[82px] items-center gap-5">
+            <a href="/" className="shrink-0" aria-label="GAMORA ONLINE home">
+              <img src="/gamora-logo.png" alt="Gamora Online" className="h-14 w-auto object-contain sm:h-16" />
+            </a>
 
-      <header className="sticky top-0 z-50 border-b bg-white/95 shadow-sm backdrop-blur">
+            <nav className="hidden items-center gap-7 text-sm font-bold lg:flex">
 
-        <div className="mx-auto max-w-7xl px-4">
+  <a
+    href="/"
+    className="relative py-7 text-[#e30613] after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:bg-[#e30613]"
+  >
+    {t.home}
+  </a>
 
-          <div className="flex min-h-20 items-center gap-4">
+  <a
+    href="#products"
+    className="py-7 transition hover:text-[#e30613]"
+  >
+    {t.shop}
+  </a>
 
-            {/* LOGO */}
+  {/* CATEGORY MEGA MENU */}
+  <div className="group relative">
 
-<a
-  href="/"
-  className="flex shrink-0 items-center"
->
-  <img
-    src="/gamora-logo.png"
-    alt="Gamora Online"
-    className="h-16 w-auto object-contain"
-  />
-</a>
-            {/* SEARCH */}
+    <button
+      type="button"
+      className="flex items-center gap-1 py-7 transition hover:text-[#e30613]"
+    >
+      <span>{t.categories}</span>
+      <span className="text-xs transition group-hover:rotate-180">⌄</span>
+    </button>
 
-            <div className="hidden flex-1 md:block">
+    <div className="invisible absolute left-1/2 top-full z-50 w-[720px] -translate-x-1/2 translate-y-2 overflow-hidden rounded-2xl border border-slate-200 bg-white opacity-0 shadow-2xl transition-all duration-200 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100">
 
-              <div className="relative mx-auto max-w-2xl">
+      <div className="grid grid-cols-[220px_1fr]">
 
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg">
-                  🔎
-                </span>
+        {/* LEFT CATEGORY COLUMN */}
+        <div className="bg-purple-800 p-4">
+          <p className="mb-3 px-3 text-[11px] font-black uppercase tracking-widest text-[#F28C28]">
+            GAMORA ONLINE
+          </p>
 
+          <div className="space-y-1">
+            {categories.filter((category) => category !== "All").map((category) => {
+              const icon =
+                category === "Women's Fashion" ? "👗" :
+                category === "Men's Fashion" ? "👔" :
+                category === "Shoes" ? "👟" :
+                category === "Phones & Electronics" ? "📱" :
+                category === "Home & Kitchen" ? "🏠" :
+                category === "Accessories" ? "👜" :
+                "🛍️";
+
+              return (
+                <button
+                  key={category}
+                  type="button"
+                  onClick={() => setSelectedCategory(category)}
+                  className={`flex w-full items-center justify-between rounded-xl px-3 py-3 text-left text-sm font-black text-white transition ${
+                    selectedCategory === category
+                      ? "bg-[#E30613]"
+                      : "hover:bg-[#E30613]"
+                  }`}
+                >
+                  <span>{icon} {category}</span>
+                  <span>›</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setSelectedCategory("All")}
+            className="mt-4 w-full rounded-xl border border-white/20 px-3 py-2.5 text-xs font-black text-white transition hover:bg-white hover:text-slate-700"
+          >
+            Angalia Bidhaa Zote →
+          </button>
+        </div>
+
+        {/* RIGHT CATEGORY CONTENT */}
+        <div className="bg-white p-7">
+
+          <p className="text-xs font-black uppercase tracking-widest text-[#E30613]">
+            SHOP BY CATEGORY
+          </p>
+
+          <h3 className="mt-2 text-2xl font-black text-purple-900">
+            Chagua Unachotafuta
+          </h3>
+
+          <p className="mt-2 max-w-md text-sm leading-6 text-slate-500">
+            Pitia makundi yetu na uchague bidhaa unayotaka kwa haraka.
+          </p>
+
+          <div className="mt-6 grid grid-cols-2 gap-3">
+
+            <button
+              type="button"
+              onClick={() => setSelectedCategory("Women's Fashion")}
+              className="rounded-xl border border-slate-200 p-4 text-left transition hover:border-[#E30613] hover:bg-red-50"
+            >
+              <div className="h-28 overflow-hidden rounded-lg bg-slate-100">
+                <img src="/images/womens-fashion.jpg" alt="Women's Fashion" className="h-full w-full object-cover" />
+              </div>
+              <p className="mt-2 text-sm font-black text-purple-900">
+                Women's Fashion
+              </p>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setSelectedCategory("Men's Fashion")}
+              className="rounded-xl border border-slate-200 p-4 text-left transition hover:border-[#E30613] hover:bg-red-50"
+            >
+              <div className="h-28 overflow-hidden rounded-lg bg-slate-100">
+                <img src="/images/mens-fashion.jpg" alt="Men's Fashion" className="h-full w-full object-cover" />
+              </div>
+              <p className="mt-2 text-sm font-black text-purple-900">
+                Men's Fashion
+              </p>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setSelectedCategory("Shoes")}
+              className="rounded-xl border border-slate-200 p-4 text-left transition hover:border-[#E30613] hover:bg-red-50"
+            >
+              <div className="h-28 overflow-hidden rounded-lg bg-slate-100">
+                <img src="/images/shoes.jpg" alt="Shoes" className="h-full w-full object-cover" />
+              </div>
+              <p className="mt-2 text-sm font-black text-purple-900">
+                Shoes
+              </p>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setSelectedCategory("Phones & Electronics")}
+              className="rounded-xl border border-slate-200 p-4 text-left transition hover:border-[#E30613] hover:bg-red-50"
+            >
+              <div className="h-28 overflow-hidden rounded-lg bg-slate-100">
+                <img src="/images/phone.jpg" alt="Phones & Electronics" className="h-full w-full object-cover" />
+              </div>
+              <p className="mt-2 text-sm font-black text-purple-900">
+                Phones & Electronics
+              </p>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setSelectedCategory("Home & Kitchen")}
+              className="rounded-xl border border-slate-200 p-4 text-left transition hover:border-[#E30613] hover:bg-red-50"
+            >
+              <div className="h-28 overflow-hidden rounded-lg bg-slate-100">
+                <img src="/images/home-kitchen.jpg" alt="Home & Kitchen" className="h-full w-full object-cover" />
+              </div>
+              <p className="mt-2 text-sm font-black text-purple-900">
+                Home & Kitchen
+              </p>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setSelectedCategory("Accessories")}
+              className="rounded-xl border border-slate-200 p-4 text-left transition hover:border-[#E30613] hover:bg-red-50"
+            >
+              <div className="h-28 overflow-hidden rounded-lg bg-slate-100">
+                <img src="/images/accessories.jpg" alt="Accessories" className="h-full w-full object-cover" />
+              </div>
+              <p className="mt-2 text-sm font-black text-purple-900">
+                Accessories
+              </p>
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <a
+    href="#about"
+    className="py-7 transition hover:text-[#e30613]"
+  >
+    {t.about}
+  </a>
+
+  <a
+    href="/contact"
+    className="py-7 transition hover:text-[#e30613]"
+  >
+    {t.contact}
+  </a>
+
+</nav>
+
+            <div className="ml-auto flex min-w-0 items-center gap-2 sm:gap-3">
+              <div className="relative hidden w-52 xl:block">
                 <input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder={t.search}
-                  className="w-full rounded-full border border-slate-200 bg-slate-50 py-3 pl-11 pr-5 outline-none transition focus:border-sky-500 focus:bg-white"
+                  className="w-full rounded-full border border-slate-300 bg-white py-3 pl-5 pr-12 text-sm outline-none transition focus:border-[#e30613]"
                 />
-
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-lg">⌕</span>
               </div>
 
-            </div>
+              <div className="hidden items-center rounded-lg border border-slate-200 bg-white p-1 text-xs font-black sm:flex">
+                <button
+                  type="button"
+                  onClick={() => setLanguage("sw")}
+                  className={`rounded-md px-2.5 py-1.5 transition ${
+                    language === "sw"
+                      ? "bg-[#e30613] text-white"
+                      : "text-slate-600 hover:text-[#e30613]"
+                  }`}
+                >
+                  SW
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLanguage("en")}
+                  className={`rounded-md px-2.5 py-1.5 transition ${
+                    language === "en"
+                      ? "bg-[#e30613] text-white"
+                      : "text-slate-600 hover:text-[#e30613]"
+                  }`}
+                >
+                  EN
+                </button>
+              </div>
 
-            {/* LANGUAGE */}
-
-            <div className="flex rounded-lg border bg-white p-1">
-
-              <button
-                onClick={() => setLanguage("sw")}
-                className={`rounded-md px-2 py-2 text-xs font-bold ${
-                  language === "sw"
-                    ? "bg-sky-600 text-white"
-                    : "text-slate-600"
-                }`}
+              <span
+                className="hidden cursor-default select-none text-2xl md:block"
+                aria-hidden="true"
               >
-                🇹🇿 SW
-              </button>
-
-              <button
-                onClick={() => setLanguage("en")}
-                className={`rounded-md px-2 py-2 text-xs font-bold ${
-                  language === "en"
-                    ? "bg-sky-600 text-white"
-                    : "text-slate-600"
-                }`}
-              >
-                🇬🇧 EN
-              </button>
-
-            </div>
-
-            {/* CART */}
-
-            <a
-              href="/cart"
-              className="relative flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 font-bold text-slate-800 transition hover:border-sky-300 hover:bg-sky-50"
-            >
-              🛒
-              <span className="hidden sm:inline">
-                {t.cart}
+                ♙
               </span>
 
-              {cartCount > 0 && (
-                <span className="absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-xs font-black text-white">
-                  {cartCount}
-                </span>
-              )}
-            </a>
-
+              <a href="/cart" className="relative text-2xl" aria-label={`${t.cart}: ${cartCount}`}>
+                🛒
+                {cartCount > 0 && (
+                  <span className="absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#e30613] px-1 text-[10px] font-black text-white">
+                    {cartCount}
+                  </span>
+                )}
+              </a>
+            </div>
           </div>
 
-          {/* MOBILE SEARCH */}
-
-          <div className="pb-4 md:hidden">
-
+          <div className="pb-4 lg:hidden">
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={t.search}
-              className="w-full rounded-full border border-slate-200 bg-slate-50 px-5 py-3 outline-none focus:border-sky-500"
+              className="w-full rounded-full border border-slate-300 px-5 py-3 text-sm outline-none focus:border-[#e30613]"
             />
-
           </div>
-
-          {/* NAVIGATION */}
-
-          <nav className="hidden items-center gap-8 border-t py-3 text-sm font-bold text-slate-700 md:flex">
-
-            <a
-              href="/"
-              className="text-sky-700 transition hover:text-sky-500"
-            >
-              {t.home}
-            </a>
-
-            <a
-              href="#categories"
-              className="transition hover:text-sky-600"
-            >
-              {t.categories}
-            </a>
-
-            <a
-              href="#offers"
-              className="transition hover:text-sky-600"
-            >
-              {t.flashSale}
-            </a>
-
-            <a
-              href="#products"
-              className="transition hover:text-sky-600"
-            >
-              {t.popular}
-            </a>
-
-            <a
-              href="#shopping-guide"
-              className="transition hover:text-sky-600"
-            >
-              {t.shoppingGuide}
-            </a>
-
-            <a
-              href="/contact"
-              className="transition hover:text-sky-600"
-            >
-              {t.contact}
-            </a>
-
-          </nav>
-
         </div>
-
       </header>
 
-      {/* HERO */}
-
-      <section className="relative overflow-hidden bg-slate-100">
-
-        <div className="mx-auto max-w-7xl px-4 py-6 sm:py-8">
-
-          <div className="relative min-h-[430px] overflow-hidden rounded-3xl bg-gradient-to-r from-sky-950 via-sky-800 to-cyan-600 shadow-2xl">
-
-            {/* Decorative background */}
-
-            <div className="absolute -right-20 -top-20 h-80 w-80 rounded-full bg-cyan-300/20 blur-3xl" />
-            <div className="absolute -bottom-32 left-1/3 h-96 w-96 rounded-full bg-white/10 blur-3xl" />
-
-            <div className="relative grid min-h-[430px] items-center md:grid-cols-2">
-
-              {/* HERO TEXT */}
-
-              <div className="px-7 py-12 text-white sm:px-10 lg:px-14">
-
-                <div className="mb-5 inline-flex rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-wider backdrop-blur">
-                  GAMORA ONLINE
-                </div>
-
-                <h1 className="max-w-xl text-4xl font-black leading-tight sm:text-5xl lg:text-6xl">
-                  {language === "sw"
-                    ? "Nunua kwa Urahisi. Chagua kwa Kujiamini."
-                    : "Shop Easily. Choose with Confidence."}
-                </h1>
-
-                <p className="mt-5 max-w-lg text-base leading-7 text-sky-100 sm:text-lg">
-                  {language === "sw"
-                    ? "Gundua fashion, viatu, simu, electronics na bidhaa za nyumbani — zote sehemu moja."
-                    : "Discover fashion, shoes, phones, electronics and home products — all in one place."}
-                </p>
-
-                <div className="mt-8 flex flex-wrap gap-3">
-
-                  <a
-                    href="#products"
-                    className="rounded-xl bg-white px-7 py-4 font-black text-sky-950 shadow-xl transition hover:-translate-y-1 hover:bg-sky-50"
-                  >
-                    {t.shopNow} →
-                  </a>
-
-                  <a
-                    href="#categories"
-                    className="rounded-xl border border-white/30 bg-white/10 px-7 py-4 font-black text-white backdrop-blur transition hover:-translate-y-1 hover:bg-white/20"
-                  >
-                    {t.categories}
-                  </a>
-
-                </div>
-
-                <div className="mt-8 flex flex-wrap gap-5 text-sm font-bold text-sky-100">
-
-                  <span>✓ {t.quality}</span>
-                  <span>✓ {t.delivery}</span>
-                  <span>✓ {t.secure}</span>
-
-                </div>
-
-              </div>
-
-              {/* REAL PRODUCT VISUALS — NO PEOPLE */}
-
-              <div className="relative hidden h-full min-h-[430px] items-center justify-center md:flex">
-
-                <div className="absolute right-10 top-10 h-72 w-72 rounded-full bg-white/10 blur-2xl" />
-
-                <div className="relative grid w-full max-w-lg grid-cols-2 gap-4 p-8">
-
-                  {/* Fashion */}
-
-                  <div className="group overflow-hidden rounded-2xl bg-white shadow-2xl">
-
-                    <img
-                      src="/images/womens-fashion.jpg"
-                      alt="Fashion products"
-                      className="h-44 w-full object-cover transition duration-500 group-hover:scale-105"
-                    />
-
-                    <div className="p-3">
-                      <p className="text-sm font-black text-slate-900">
-                        Fashion
-                      </p>
-                    </div>
-
-                  </div>
-
-                  {/* Phone */}
-
-                  <div className="mt-8 group overflow-hidden rounded-2xl bg-white shadow-2xl">
-
-                    <img
-                      src="/images/phone.jpg"
-                      alt="Smartphone"
-                      className="h-44 w-full object-cover transition duration-500 group-hover:scale-105"
-                    />
-
-                    <div className="p-3">
-                      <p className="text-sm font-black text-slate-900">
-                        Phones
-                      </p>
-                    </div>
-
-                  </div>
-
-                  {/* Shoes */}
-
-                  <div className="-mt-4 group overflow-hidden rounded-2xl bg-white shadow-2xl">
-
-                    <img
-                      src="/images/shoes.jpg"
-                      alt="Shoes"
-                      className="h-44 w-full object-cover transition duration-500 group-hover:scale-105"
-                    />
-
-                    <div className="p-3">
-                      <p className="text-sm font-black text-slate-900">
-                        Shoes
-                      </p>
-                    </div>
-
-                  </div>
-
-                  {/* Home */}
-
-                  <div className="group overflow-hidden rounded-2xl bg-white shadow-2xl">
-
-                    <img
-                      src="/images/home-kitchen.jpg"
-                      alt="Home and Kitchen"
-                      className="h-44 w-full object-cover transition duration-500 group-hover:scale-105"
-                    />
-
-                    <div className="p-3">
-                      <p className="text-sm font-black text-slate-900">
-                        Home & Kitchen
-                      </p>
-                    </div>
-
-                  </div>
-
-                </div>
-
-              </div>
-
-            </div>
-
-          </div>
-
-        </div>
-
-      </section>
-
-      {/* SEO INTRO */}
-
-      <section className="bg-white">
-        <div className="mx-auto max-w-7xl px-4 py-12 sm:py-16">
-          <div className="max-w-4xl">
-            <h2 className="text-2xl font-black tracking-tight text-sky-950 sm:text-3xl">
-              {language === "sw"
-                ? "GAMORA ONLINE – Online Shopping Tanzania"
-                : "GAMORA ONLINE – Online Shopping Tanzania"}
-            </h2>
-
-            <p className="mt-4 text-base leading-8 text-slate-600 sm:text-lg">
-              {language === "sw"
-                ? "Gamora Online ni duka la online shopping Tanzania linalokupa njia rahisi ya kununua bidhaa mbalimbali mtandaoni. Tunakuletea fashion za wanawake na wanaume, viatu, pamoja na bidhaa za nyumbani na jikoni kwa bei nzuri."
-                : "Gamora Online is an online shopping store in Tanzania offering a convenient way to shop for a wide range of products online. Discover women's fashion, men's fashion, shoes, home and kitchen products at great prices."}
-            </p>
-
-            <p className="mt-4 text-base leading-8 text-slate-600">
-              {language === "sw"
-                ? "Chagua bidhaa unazopenda, ziweke kwenye cart na uendelee na oda yako kwa urahisi. Gamora Online inalenga kukupa uzoefu salama, rahisi na wa kuaminika wa ununuzi mtandaoni Tanzania."
-                : "Choose the products you love, add them to your cart and place your order with ease. Gamora Online is focused on providing a simple, secure and reliable online shopping experience in Tanzania."}
-            </p>
-          </div>
-
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <a
-              href="#categories"
-              className="rounded-2xl border bg-slate-50 p-5 transition hover:-translate-y-1 hover:border-sky-300 hover:bg-sky-50"
-            >
-              <div className="text-2xl">👗</div>
-              <h3 className="mt-3 font-black text-sky-950">
-                {language === "sw"
-                  ? "Fashion za Wanawake"
-                  : "Women's Fashion"}
-              </h3>
-              <p className="mt-2 text-sm leading-6 text-slate-600">
-                {language === "sw"
-                  ? "Mitindo na mavazi ya wanawake kwa ununuzi online."
-                  : "Fashion and clothing for women available online."}
-              </p>
-            </a>
-
-            <a
-              href="#categories"
-              className="rounded-2xl border bg-slate-50 p-5 transition hover:-translate-y-1 hover:border-sky-300 hover:bg-sky-50"
-            >
-              <div className="text-2xl">👔</div>
-              <h3 className="mt-3 font-black text-sky-950">
-                {language === "sw"
-                  ? "Fashion za Wanaume"
-                  : "Men's Fashion"}
-              </h3>
-              <p className="mt-2 text-sm leading-6 text-slate-600">
-                {language === "sw"
-                  ? "Mavazi na bidhaa za fashion kwa wanaume."
-                  : "Men's clothing and fashion products."}
-              </p>
-            </a>
-
-            <a
-              href="#categories"
-              className="rounded-2xl border bg-slate-50 p-5 transition hover:-translate-y-1 hover:border-sky-300 hover:bg-sky-50"
-            >
-              <div className="text-2xl">👟</div>
-              <h3 className="mt-3 font-black text-sky-950">
-                {language === "sw" ? "Viatu" : "Shoes"}
-              </h3>
-              <p className="mt-2 text-sm leading-6 text-slate-600">
-                {language === "sw"
-                  ? "Chagua viatu kwa matumizi na mitindo mbalimbali."
-                  : "Shop shoes for different styles and occasions."}
-              </p>
-            </a>
-
-            <a
-              href="#categories"
-              className="rounded-2xl border bg-slate-50 p-5 transition hover:-translate-y-1 hover:border-sky-300 hover:bg-sky-50"
-            >
-              <div className="text-2xl">🏠</div>
-              <h3 className="mt-3 font-black text-sky-950">
-                {language === "sw"
-                  ? "Nyumbani & Jikoni"
-                  : "Home & Kitchen"}
-              </h3>
-              <p className="mt-2 text-sm leading-6 text-slate-600">
-                {language === "sw"
-                  ? "Bidhaa mbalimbali kwa matumizi ya nyumbani na jikoni."
-                  : "Useful products for your home and kitchen."}
-              </p>
-            </a>
-          </div>
-        </div>
-      </section>
-      {/* FEATURES */}
-
-      <section className="border-b bg-white">
-
-        <div className="mx-auto grid max-w-7xl grid-cols-2 divide-x md:grid-cols-4">
-
-          <div className="p-6 text-center">
-            <div className="text-3xl">🚚</div>
-            <p className="mt-2 font-black">
-              {t.delivery}
-            </p>
-          </div>
-
-          <div className="p-6 text-center">
-            <div className="text-3xl">🔒</div>
-            <p className="mt-2 font-black">
-              {t.secure}
-            </p>
-          </div>
-
-          <div className="p-6 text-center">
-            <div className="text-3xl">⭐</div>
-            <p className="mt-2 font-black">
-              {t.quality}
-            </p>
-          </div>
-
-          <div className="p-6 text-center">
-            <div className="text-3xl">💬</div>
-            <p className="mt-2 font-black">
-              {t.support}
-            </p>
-          </div>
-
-        </div>
-
-      </section>
-
-      {/* CATEGORIES */}
-
-      <section
-        id="categories"
-        className="mx-auto max-w-7xl px-4 py-12"
-      >
-
-        <div className="mb-6 flex items-end justify-between">
-
+      {/* FEATURED PRODUCTS */}
+      <section id="products" className="mx-auto max-w-[1180px] px-4 py-6 sm:py-7">
+        <div className="mb-5 flex items-center justify-between">
           <div>
-
-            <p className="font-bold text-sky-600">
-              GAMORA ONLINE
-            </p>
-
-            <h2 className="text-3xl font-black">
-              {t.categories}
-            </h2>
-
-          </div>
-
-        </div>
-
-        <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-
-  <button
-    onClick={() => setSelectedCategory("Women's Fashion")}
-    className="group overflow-hidden rounded-2xl border bg-white text-left shadow-sm transition hover:-translate-y-1 hover:shadow-xl"
-  >
-    <div className="h-44 overflow-hidden bg-slate-100">
-      <img
-        src="/images/womens-fashion.jpg"
-        alt="Women's Fashion"
-        className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-      />
-    </div>
-    <div className="p-5">
-      <h3 className="text-lg font-black text-slate-900">
-        Women's Fashion
-      </h3>
-      <p className="mt-2 text-sm text-slate-600">
-        Stylish outfits and accessories for every occasion.
-      </p>
-    </div>
-  </button>
-
-  <button
-    onClick={() => setSelectedCategory("Men's Fashion")}
-    className="group overflow-hidden rounded-2xl border bg-white text-left shadow-sm transition hover:-translate-y-1 hover:shadow-xl"
-  >
-    <div className="h-44 overflow-hidden bg-slate-100">
-      <img
-        src="/images/mens-fashion.jpg"
-        alt="Men's Fashion"
-        className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-      />
-    </div>
-    <div className="p-5">
-      <h3 className="text-lg font-black text-slate-900">
-        Men's Fashion
-      </h3>
-      <p className="mt-2 text-sm text-slate-600">
-        Modern styles and everyday essentials for men.
-      </p>
-    </div>
-  </button>
-
-  <button
-    onClick={() => setSelectedCategory("Shoes")}
-    className="group overflow-hidden rounded-2xl border bg-white text-left shadow-sm transition hover:-translate-y-1 hover:shadow-xl"
-  >
-    <div className="h-44 overflow-hidden bg-slate-100">
-      <img
-        src="/images/shoes.jpg"
-        alt="Shoes"
-        className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-      />
-    </div>
-    <div className="p-5">
-      <h3 className="text-lg font-black text-slate-900">
-        Shoes
-      </h3>
-      <p className="mt-2 text-sm text-slate-600">
-        Comfortable and fashionable footwear for everyone.
-      </p>
-    </div>
-  </button>
-
-  <button
-    onClick={() => setSelectedCategory("Home & Kitchen")}
-    className="group overflow-hidden rounded-2xl border bg-white text-left shadow-sm transition hover:-translate-y-1 hover:shadow-xl"
-  >
-    <div className="h-44 overflow-hidden bg-slate-100">
-      <img
-        src="/images/home-kitchen.jpg"
-        alt="Home and Kitchen"
-        className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-      />
-    </div>
-    <div className="p-5">
-      <h3 className="text-lg font-black text-slate-900">
-        Home & Kitchen
-      </h3>
-      <p className="mt-2 text-sm text-slate-600">
-        Useful products for your home and kitchen.
-      </p>
-    </div>
-  </button>
-
-  <button
-    onClick={() => setSelectedCategory("Phones & Electronics")}
-    className="group overflow-hidden rounded-2xl border bg-white text-left shadow-sm transition hover:-translate-y-1 hover:shadow-xl"
-  >
-    <div className="h-44 overflow-hidden bg-slate-100">
-      <img
-        src="/images/phone.jpg"
-        alt="Phones and Electronics"
-        className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-      />
-    </div>
-    <div className="p-5">
-      <h3 className="text-lg font-black text-slate-900">
-        Phones & Electronics
-      </h3>
-      <p className="mt-2 text-sm text-slate-600">
-        Smartphones, accessories and useful electronics.
-      </p>
-    </div>
-  </button>
-
-</div>
-
-<div className="flex gap-3 overflow-x-auto pb-2">
-
-          {categories.map((category) => (
-
-            <button
-              key={category}
-              onClick={() =>
-                setSelectedCategory(category)
-              }
-              className={`whitespace-nowrap rounded-full px-5 py-3 text-sm font-bold transition ${
-                selectedCategory === category
-                  ? "bg-sky-700 text-white shadow-lg"
-                  : "bg-white text-slate-700 shadow-sm hover:bg-sky-50"
-              }`}
-            >
-              {category === "All"
-                ? t.all
-                : category}
-            </button>
-
-          ))}
-
-        </div>
-
-      </section>
-      {/* WHY CHOOSE GAMORA */}
-
-      <section className="bg-gradient-to-br from-slate-50 via-white to-sky-50 py-16">
-
-        <div className="mx-auto max-w-7xl px-4">
-
-          <div className="mx-auto max-w-2xl text-center">
-
-            <p className="font-bold uppercase tracking-wider text-sky-600">
-              GAMORA ONLINE
-            </p>
-
-            <h2 className="mt-2 text-3xl font-black text-slate-900 md:text-4xl">
-              {language === "sw"
-                ? "Kwa Nini Uchague Gamora Online?"
-                : "Why Choose Gamora Online?"}
-            </h2>
-
-            <p className="mt-4 leading-7 text-slate-600">
-              {language === "sw"
-                ? "Tunafanya ununuzi wa mtandaoni uwe rahisi, salama na wenye kuvutia kwa kila mteja."
-                : "We make online shopping simple, secure and enjoyable for every customer."}
-            </p>
-
-          </div>
-
-          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-
-            <div className="rounded-2xl bg-white p-7 text-center shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-sky-100 text-3xl">
-                🚚
-              </div>
-
-              <h3 className="mt-5 text-lg font-black">
-                {language === "sw"
-                  ? "Delivery ya Haraka"
-                  : "Fast Delivery"}
-              </h3>
-
-              <p className="mt-3 text-sm leading-6 text-slate-600">
-                {language === "sw"
-                  ? "Pokea bidhaa zako kwa urahisi na kwa muda unaofaa."
-                  : "Get your orders delivered conveniently and on time."}
-              </p>
-            </div>
-
-            <div className="rounded-2xl bg-white p-7 text-center shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-3xl">
-                🔒
-              </div>
-
-              <h3 className="mt-5 text-lg font-black">
-                {language === "sw"
-                  ? "Ununuzi Salama"
-                  : "Secure Shopping"}
-              </h3>
-
-              <p className="mt-3 text-sm leading-6 text-slate-600">
-                {language === "sw"
-                  ? "Tunaweka usalama wa taarifa na oda zako kuwa kipaumbele."
-                  : "Your information and orders are handled with security in mind."}
-              </p>
-            </div>
-
-            <div className="rounded-2xl bg-white p-7 text-center shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 text-3xl">
-                ⭐
-              </div>
-
-              <h3 className="mt-5 text-lg font-black">
-                {language === "sw"
-                  ? "Bidhaa Bora"
-                  : "Quality Products"}
-              </h3>
-
-              <p className="mt-3 text-sm leading-6 text-slate-600">
-                {language === "sw"
-                  ? "Tunakulenga kukupa bidhaa zenye ubora na thamani nzuri."
-                  : "We focus on products that offer quality and great value."}
-              </p>
-            </div>
-
-            <div className="rounded-2xl bg-white p-7 text-center shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-pink-100 text-3xl">
-                💬
-              </div>
-
-              <h3 className="mt-5 text-lg font-black">
-                {language === "sw"
-                  ? "Huduma kwa Wateja"
-                  : "Customer Support"}
-              </h3>
-
-              <p className="mt-3 text-sm leading-6 text-slate-600">
-                {language === "sw"
-                  ? "Tupo tayari kukusaidia kabla na baada ya kufanya oda."
-                  : "Our team is ready to assist you before and after your order."}
-              </p>
-            </div>
-
-          </div>
-
-        </div>
-
-      </section>
-      {/* FLASH SALE */}
-
-      {saleProducts.length > 0 && (
-
-        <section
-          id="offers"
-          className="bg-sky-50 py-12"
-        >
-
-          <div className="mx-auto max-w-7xl px-4">
-
-            <div className="mb-7 flex items-end justify-between">
-
-              <div>
-
-                <p className="font-bold text-red-500">
-                  🔥 LIMITED TIME
-                </p>
-
-                <h2 className="text-3xl font-black">
-                  {t.flashSale}
-                </h2>
-
-              </div>
-
+            <h1 className="text-xl font-black sm:text-2xl">{t.featured}</h1>
+            {selectedCategory !== "All" && (
               <button
-                onClick={() => {
-                  setSelectedCategory("All");
-                  setTimeout(() => {
-                    document
-                      .getElementById("products")
-                      ?.scrollIntoView({
-                        behavior: "smooth",
-                        block: "start",
-                      });
-                  }, 50);
-                }}
-                className="rounded-lg px-2 py-2 font-bold text-sky-700 transition hover:bg-sky-50 active:scale-95"
+                onClick={() => setSelectedCategory("All")}
+                className="mt-1 text-xs font-bold text-[#e30613] hover:underline"
               >
-                {t.viewAll} →
+                {selectedCategory} ×
               </button>
-
-            </div>
-
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-
-              {saleProducts.map((product) => (
-
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  language={language}
-                  addToCart={addToCart}
-                  t={t}
-                />
-
-              ))}
-
-            </div>
-
+            )}
           </div>
-
-        </section>
-
-      )}
-
-      {/* PRODUCTS */}
-
-      <section
-        id="products"
-        className="mx-auto max-w-7xl px-4 py-14"
-      >
-
-        <div className="mb-7">
-
-          <p className="font-bold text-sky-600">
-            GAMORA MARKETPLACE
-          </p>
-
-          <h2 className="text-3xl font-black">
-            {t.popular}
-          </h2>
-
+          <button
+            onClick={() => setSelectedCategory("All")}
+            className="text-sm font-bold text-[#e30613] transition hover:text-[#c9000b]"
+          >
+            {t.viewAll} <span className="ml-1">›</span>
+          </button>
         </div>
 
-        {filteredProducts.length === 0 ? (
-
-          <div className="rounded-2xl bg-white py-20 text-center shadow-sm">
-
-            <div className="text-6xl">
-              🔎
-            </div>
-
-            <p className="mt-4 font-bold text-slate-500">
-              {t.noProducts}
-            </p>
-
-          </div>
-
-        ) : (
-
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-
-            {filteredProducts.map((product) => (
-
-              <ProductCard
-                key={product.id}
-                product={product}
-                language={language}
-                addToCart={addToCart}
-                t={t}
-              />
-
+        {featuredProducts.length > 0 ? (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            {featuredProducts.map((product) => (
+              <ProductCard key={product.id} product={product} addToCart={addToCart} />
             ))}
-
           </div>
-
+        ) : (
+          <div className="rounded-2xl border border-slate-200 py-20 text-center text-slate-500">{t.noProducts}</div>
         )}
-
       </section>
 
-      {/* SHOPPING GUIDE */}
+      {/* BENEFITS */}
+      <section className="mx-auto max-w-[1180px] px-4 pb-5">
+        <div className="grid overflow-hidden rounded-xl border border-slate-200 bg-white sm:grid-cols-2 lg:grid-cols-4">
 
-      <section
-        id="shopping-guide"
-        className="bg-white py-14"
-      >
+          <Benefit
+            title="DELIVERY YA UHAKIKA"
+            text="Oda yako inafika salama."
+          />
 
-        <div className="mx-auto max-w-7xl px-4">
+          <Benefit
+            title="USALAMA"
+            text="Taarifa zako ziko salama."
+          />
 
-          <div className="text-center">
+          <Benefit
+            title="BIDHAA BORA"
+            text="Bidhaa bora na halisi."
+          />
 
-            <p className="font-bold text-sky-600">
-              {t.shoppingGuide}
-            </p>
-
-            <h2 className="mt-2 text-3xl font-black">
-              Shop with confidence
-            </h2>
-
-          </div>
-
-          <div className="mt-10 grid gap-6 md:grid-cols-3">
-
-            <GuideCard
-              icon="🔎"
-              title={
-                language === "sw"
-                  ? "Tafuta bidhaa"
-                  : "Find Products"
-              }
-              text={
-                language === "sw"
-                  ? "Tumia search na categories kupata bidhaa unayotaka haraka."
-                  : "Use search and categories to quickly find what you need."
-              }
-            />
-
-            <GuideCard
-              icon="🛒"
-              title={
-                language === "sw"
-                  ? "Weka kwenye Cart"
-                  : "Add to Cart"
-              }
-              text={
-                language === "sw"
-                  ? "Chagua bidhaa zako, rekebisha quantity na endelea Checkout."
-                  : "Choose your products, adjust quantities and proceed to checkout."
-              }
-            />
-
-            <GuideCard
-              icon="📦"
-              title={
-                language === "sw"
-                  ? "Pokea Oda"
-                  : "Receive Your Order"
-              }
-              text={
-                language === "sw"
-                  ? "Weka location yako ili delivery ihesabiwe kulingana na umbali."
-                  : "Share your location so delivery can be calculated by distance."
-              }
-            />
-
-          </div>
+          <Benefit
+            title="HUDUMA KWA WATEJA"
+            text="Tuko tayari kukusaidia 24/7."
+          />
 
         </div>
-
-      </section>
-
-      {/* NEWSLETTER */}
-
-      <section className="bg-sky-800 py-14">
-
-        <div className="mx-auto max-w-4xl px-4 text-center text-white">
-
-          <div className="text-5xl">
-            📬
-          </div>
-
-          <h2 className="mt-4 text-3xl font-black">
-            {t.subscription}
-          </h2>
-
-          <p className="mt-3 text-sky-100">
-            {t.newsletter}
-          </p>
-
-          <div className="mx-auto mt-7 flex max-w-xl flex-col gap-3 sm:flex-row">
-
-            <input
-              type="email"
-              placeholder={t.emailPlaceholder}
-              className="flex-1 rounded-lg px-5 py-4 text-slate-900 outline-none"
-            />
-
-            <button
-              className="rounded-lg bg-white px-7 py-4 font-black text-sky-800 hover:bg-sky-50"
-              onClick={() =>
-                alert(
-                  language === "sw"
-                    ? "Asante! Umejiunga na GAMORA ONLINE."
-                    : "Thank you! You have subscribed to GAMORA ONLINE."
-                )
-              }
-            >
-              {t.subscribe}
-            </button>
-
-          </div>
-
-        </div>
-
       </section>
 
       {/* FOOTER */}
-
-      <footer className="bg-sky-950 text-white">
-
-        <div className="mx-auto max-w-7xl px-4 py-14">
-
-          <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-4">
-
-            {/* ABOUT */}
+      <footer id="about" className="border-t border-slate-200 bg-white text-slate-900">
+        <div className="mx-auto max-w-[1180px] px-4 py-10">
+          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
 
             <div>
-
-              <div className="text-2xl font-black text-white">
-                GAMORA
-                <span className="text-sky-300">
-                  ONLINE
-                </span>
+              <div className="text-2xl font-black leading-none">
+                <span className="text-slate-900">GAMORA</span>
+                <span className="block text-[#E30613]">ONLINE</span>
               </div>
 
-              <p className="mt-5 leading-7 text-sky-200">
-                {language === "sw"
-                  ? "Marketplace ya kisasa inayokusaidia kupata bidhaa bora kwa urahisi, usalama na huduma nzuri."
-                  : "A modern marketplace helping you discover quality products with convenience, security and great service."}
+              <p className="mt-4 max-w-xs text-sm leading-6 text-slate-600">
+                GAMORA ONLINE ni duka lako la kuaminika kwa bidhaa bora kwa bei nzuri.
               </p>
 
-            </div>
-
-            {/* SHOPPING */}
-
-            <div>
-
-              <h3 className="font-black">
-                {t.shoppingGuide}
-              </h3>
-
-              <ul className="mt-5 space-y-3 text-sky-200">
-
-                <li>
-                  
-                   <a href="#products">
-                    {t.products}
-                  </a>
-                </li>
-
-                <li>
-                  <a href="#categories">
-                    {t.categories}
-                  </a>
-                </li>
-
-                <li>
-                  <a href="#offers">
-                    {t.flashSale}
-                  </a>
-                </li>
-
-                <li>
-                  <a href="/cart">
-                    {t.cart}
-                  </a>
-                </li>
-
-              </ul>
-
-            </div>
-
-            {/* HELP */}
-
-            <div>
-
-              <h3 className="font-black">
-                {t.helpCenter}
-              </h3>
-
-              <ul className="mt-5 space-y-3 text-sky-200">
-<li>
-  <a
-    href="/help"
-    className="transition hover:text-white"
-  >
-    {t.helpCenter}
-  </a>
-</li>
-<li>
-  <a
-    href="/about"
-    className="transition hover:text-white"
-  >
-    {t.about}
-  </a>
-</li>
-<li>
-  <a
-    href="/contact"
-    className="transition hover:text-white"
-  >
-    {t.contact}
-  </a>
-</li>
-<li>
-  <a
-    href="/delivery"
-    className="transition hover:text-white"
-  >
-    {language === "sw"
-      ? "Taarifa za Delivery"
-      : "Delivery Information"}
-  </a>
-</li>
-<li>
-  <a
-    href="/terms"
-    className="transition hover:text-white"
-  >
-    {language === "sw"
-      ? "Masharti na Vigezo"
-      : "Terms & Conditions"}
-  </a>
-</li>
-<li>
-  <a
-    href="/privacy"
-    className="transition hover:text-white"
-  >
-    {language === "sw"
-      ? "Sera ya Faragha"
-      : "Privacy Policy"}
-  </a>
-</li>
-              </ul>
-
-            </div>
-
-            {/* CONTACT */}
-
-            <div>
-
-              <h3 className="font-black">
-                {t.contact}
-              </h3>
-
-              <div className="mt-5 space-y-4 text-sky-200">
-
-                <p>
-                  📍 <strong>{t.address}:</strong>
-                  <br />
-                  Kariakoo, Dar es Salaam, Tanzania
+              <div className="mt-5 text-left">
+                <p className="text-xs font-black text-slate-900">
+                  Tufuatilie (@gamoraonline)
                 </p>
 
-                <p>
-                  ☎️ <strong>{t.phone}:</strong>
-                  <br />
-                  +255 798 555 221
-                </p>
+                <div className="mt-3 flex items-center gap-3">
+                  <a
+                    href="https://web.facebook.com/gamoraonline/"
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label="Facebook"
+                    className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white hover:border-[#1877F2]"
+                  >
+                    <svg viewBox="0 0 24 24" className="h-5 w-5 fill-[#1877F2]">
+                      <path d="M13.5 21v-8h2.7l.4-3h-3.1V8.1c0-.9.3-1.5 1.6-1.5h1.7V4c-.3 0-1.2-.1-2.3-.1-2.3 0-3.9 1.4-3.9 4v2.1H8v3h2.6v8h2.9Z"/>
+                    </svg>
+                  </a>
 
-                <p>
-                  💬 WhatsApp:
-                  <br />
-                  +255 798 555 221
-                </p>
+                  <a
+                    href="https://www.instagram.com/gamoraonline_store/"
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label="Instagram"
+                    className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white hover:border-[#E1306C]"
+                  >
+                    <svg viewBox="0 0 24 24" className="h-5 w-5 fill-none stroke-[#E1306C]" strokeWidth="1.8">
+                      <rect x="3" y="3" width="18" height="18" rx="5"/>
+                      <circle cx="12" cy="12" r="4"/>
+                      <circle cx="17.4" cy="6.7" r="1" className="fill-[#E1306C] stroke-none"/>
+                    </svg>
+                  </a>
 
+                  <a
+                    href="https://www.tiktok.com/@officialgamoraonline"
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label="TikTok"
+                    className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white hover:border-slate-900"
+                  >
+                    <svg viewBox="0 0 24 24" className="h-5 w-5 fill-slate-900">
+                      <path d="M15.7 4c.4 2.3 1.7 3.8 4 4v3.1c-1.5.1-2.8-.4-4-1.1v6.2c0 4-2.6 6.1-5.7 6.1-3 0-5.3-2.1-5.3-5.1 0-3.2 2.6-5.4 6.3-5.2v3.1c-1.8-.2-3 .7-3 2 0 1.1.8 2 2 2 1.4 0 2.4-.9 2.4-2.8V4h3.3Z"/>
+                    </svg>
+                  </a>
+                </div>
               </div>
+            </div>
 
+            <div>
+              <h3 className="text-sm font-black text-slate-900">
+                NAVIGATION
+              </h3>
+              <div className="mt-4 space-y-3 text-sm text-slate-600">
+                <a href="/" className="block hover:text-[#E30613]">Home</a>
+                <a href="#products" className="block hover:text-[#E30613]">Shop</a>
+                <a href="#products" className="block hover:text-[#E30613]">Makundi</a>
+                <a href="#about" className="block hover:text-[#E30613]">Kuhusu Sisi</a>
+                <a href="/contact" className="block hover:text-[#E30613]">Wasiliana Nasi</a>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-sm font-black text-slate-900">
+                HUDUMA KWA WATEJA
+              </h3>
+              <div className="mt-4 space-y-3 text-sm text-slate-600">
+                <p>Jinsi ya Kununua</p>
+                <p>Sera ya Uwasilishaji</p>
+                <p>Sera ya Marejesho</p>
+                <p>Masharti na Vigezo</p>
+                <p>Tuko tayari kukusaidia 24/7</p>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-sm font-black text-slate-900">
+                JIUNGE NA ORODHA YETU
+              </h3>
+              <p className="mt-4 text-sm leading-6 text-slate-600">
+                Pata taarifa za bidhaa mpya na ofa maalum moja kwa moja kwenye email yako.
+              </p>
+
+              <div className="mt-4 flex overflow-hidden rounded-lg border border-slate-300">
+                <input
+                  type="email"
+                  placeholder="Weka email yako"
+                  className="min-w-0 flex-1 px-4 py-3 text-sm outline-none"
+                />
+                <button
+                  type="button"
+                  className="bg-[#E30613] px-5 text-sm font-black text-white"
+                >
+                  JIUNGE
+                </button>
+              </div>
             </div>
 
           </div>
 
-          {/* SOCIAL */}
-
-          <div className="mt-12 border-t border-sky-800 pt-8">
-
-            <h3 className="font-black">
-              {t.stayConnected}
-            </h3>
-
-            <div className="mt-5 flex flex-wrap gap-3">
-
-<SocialButton
-  icon="f"
-  label="Facebook"
-  href="https://web.facebook.com/gamoraonline/"
-/>
-<SocialButton
-  icon="◎"
-  label="Instagram"
-  href="https://www.instagram.com/gamoraonline_store/"
-/>
-<SocialButton
-  icon="♪"
-  label="TikTok"
-  href="https://www.tiktok.com/@officialgamoraonline"
-/>
-              <a
-                href="https://wa.me/255798555221"
-                target="_blank"
-                rel="noreferrer"
-                className="rounded-lg bg-green-600 px-5 py-3 font-bold transition hover:bg-green-700"
-              >
-                WhatsApp
-              </a>
-
-            </div>
-
+          <div className="mt-9 border-t border-slate-200 pt-5 text-center text-xs text-slate-500">
+            © 2025 Gamora Online. Haki zote zimehifadhiwa.
           </div>
-
-          {/* COPYRIGHT */}
-
-          <div className="mt-10 border-t border-sky-800 pt-6 text-center text-sm text-sky-300">
-
-            © {new Date().getFullYear()} GAMORA ONLINE.{" "}
-            {t.rights}
-
-          </div>
-
         </div>
-
       </footer>
-
     </main>
   );
 }
 
-function ProductCard({
-  product,
-  addToCart,
-  t,
-}: {
-  product: Product;
-  language: Language;
-  addToCart: (product: Product) => void;
-  t: (typeof translations)["sw"];
-}) {
-  const discount =
-    product.oldPrice &&
-    product.oldPrice > product.price
-      ? Math.round(
-          ((product.oldPrice - product.price) /
-            product.oldPrice) *
-            100
-        )
-      : 0;
 
-  const isOutOfStock = product.stock <= 0;
-  const isLowStock = product.stock > 0 && product.stock <= 5;
 
-  return (
-    <article className="group relative overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
-
-      {/* PRODUCT IMAGE */}
-
-      <a
-        href={`/product/${product.id}`}
-        className="relative block h-56 overflow-hidden bg-slate-50"
-        aria-label={`View ${product.name}`}
-      >
-
-        <div className="flex h-full items-center justify-center">
-
-          {product.image ? (
-            <img
-              src={product.image}
-              alt={product.name}
-              loading="lazy"
-              className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-            />
-          ) : (
-            <div className="text-7xl opacity-70 transition duration-500 group-hover:scale-110">
-              🛍️
-            </div>
-          )}
-
-        </div>
-
-        {/* DISCOUNT */}
-
-        {discount > 0 && (
-          <span className="absolute left-3 top-3 rounded-full bg-red-500 px-3 py-1.5 text-xs font-black text-white shadow-md">
-            -{discount}%
-          </span>
-        )}
-
-        {/* STOCK */}
-
-        {isLowStock && (
-          <span className="absolute right-3 top-3 rounded-full bg-white px-3 py-1.5 text-xs font-bold text-red-500 shadow-md">
-            Only {product.stock} left
-          </span>
-        )}
-
-        {isOutOfStock && (
-          <span className="absolute inset-0 flex items-center justify-center bg-slate-900/45">
-            <span className="rounded-full bg-white px-4 py-2 text-sm font-black text-slate-900 shadow-lg">
-              Out of Stock
-            </span>
-          </span>
-        )}
-
-      </a>
-
-      {/* PRODUCT DETAILS */}
-
-      <div className="p-4">
-
-        <p className="text-[11px] font-black uppercase tracking-wide text-sky-600">
-          {product.category}
-        </p>
-
-        <a
-          href={`/product/${product.id}`}
-          className="mt-2 block min-h-12 line-clamp-2 text-base font-black leading-6 text-slate-900 transition hover:text-sky-700"
-        >
-          {product.name}
-        </a>
-
-        {/* RATING */}
-
-        <div className="mt-2 flex items-center gap-2">
-          <span className="text-sm tracking-wide">
-            ⭐⭐⭐⭐⭐
-          </span>
-
-          <span className="text-xs font-medium text-slate-400">
-            (New)
-          </span>
-        </div>
-
-        {/* PRICE */}
-
-        <div className="mt-3 flex flex-wrap items-baseline gap-2">
-
-          <span className="text-xl font-black text-sky-700">
-            TZS {product.price.toLocaleString()}
-          </span>
-
-          {product.oldPrice &&
-            product.oldPrice > product.price && (
-              <span className="text-sm font-medium text-slate-400 line-through">
-                TZS {product.oldPrice.toLocaleString()}
-              </span>
-            )}
-
-        </div>
-
-        {/* ACTION */}
-
-        <button
-          onClick={() => addToCart(product)}
-          disabled={isOutOfStock}
-          className="mt-4 w-full rounded-xl bg-sky-700 px-4 py-3 text-sm font-black text-white shadow-sm transition-all duration-200 hover:bg-sky-800 hover:shadow-md active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500"
-        >
-          {isOutOfStock ? "Out of Stock" : `🛒 ${t.addToCart}`}
-        </button>
-
-      </div>
-
-    </article>
-  );
-}
-
-function GuideCard({
-  icon,
+function FooterLinks({
   title,
-  text,
+  links,
 }: {
-  icon: string;
   title: string;
-  text: string;
+  links: Array<[string, string] | { label: string; href: string }>;
 }) {
   return (
-    <div className="rounded-2xl bg-slate-50 p-7 text-center transition hover:-translate-y-1 hover:shadow-lg">
-
-      <div className="text-5xl">
-        {icon}
-      </div>
-
-      <h3 className="mt-5 text-xl font-black">
+    <div>
+      <h3 className="text-sm font-black tracking-wide text-[#f28c28]">
         {title}
       </h3>
 
-      <p className="mt-3 leading-7 text-slate-500">
-        {text}
-      </p>
+      <ul className="mt-4 space-y-2.5 text-sm text-slate-300">
+        {links.map((link) => {
+          const [label, href] = Array.isArray(link)
+            ? link
+            : [link.label, link.href];
 
+          return (
+            <li key={`${label}-${href}`}>
+              <a
+                href={href}
+                className="transition hover:text-white"
+              >
+                {label}
+              </a>
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
 }
+
 function SocialButton({
   icon,
   label,
@@ -1575,10 +711,135 @@ function SocialButton({
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex items-center gap-2 rounded-lg bg-sky-900 px-5 py-3 font-bold transition hover:-translate-y-1 hover:bg-orange-500"
+      aria-label={label}
+      className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-500 text-sm font-bold text-white transition hover:border-[#e30613] hover:bg-[#e30613]"
     >
-      <span className="text-lg">{icon}</span>
-      {label}
+      {icon}
     </a>
+  );
+}
+
+
+function Benefit({
+  title,
+  text,
+}: {
+  title: string;
+  text: string;
+}) {
+  return (
+    <div className="flex min-h-[92px] items-center justify-center border-b border-slate-200 px-4 py-4 text-center sm:border-r lg:border-b-0 lg:last:border-r-0">
+      <div>
+        <h3 className="text-xs font-black tracking-wide text-[#071B3A]">
+          {title}
+        </h3>
+
+        <p className="mt-1.5 text-xs leading-5 text-slate-600">
+          {text}
+        </p>
+
+        <div className="mx-auto mt-2 h-0.5 w-6 bg-[#E30613]" />
+      </div>
+    </div>
+  );
+}
+
+function ProductCard({
+  product,
+  addToCart,
+}: {
+  product: Product;
+  addToCart: (product: Product) => void;
+}) {
+  const oldPrice =
+    typeof product.oldPrice === "number"
+      ? product.oldPrice
+      : undefined;
+
+  const discount =
+    oldPrice !== undefined && oldPrice > product.price
+      ? Math.round(((oldPrice - product.price) / oldPrice) * 100)
+      : 0;
+
+  return (
+    <article className="group overflow-hidden rounded-2xl border-2 border-slate-200 bg-white shadow-lg transition-all duration-300 hover:-translate-y-1 hover:border-slate-300 hover:shadow-2xl">
+      <a
+        href={`/product/${product.id}`}
+        className="relative block aspect-square overflow-hidden bg-white"
+      >
+        {product.image ? (
+          <img
+            src={product.image}
+            alt={product.name}
+            loading="lazy"
+            className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center bg-white text-5xl text-slate-300">
+            🛍️
+          </div>
+        )}
+
+        {discount > 0 && (
+          <span className="absolute left-2 top-2 rounded-md bg-[#e30613] px-2 py-1 text-[10px] font-black text-white">
+            -{discount}%
+          </span>
+        )}
+      </a>
+
+      <div className="p-3">
+        <p className="mb-1 text-[11px] font-black uppercase tracking-wide text-slate-600">
+          {product.category}
+        </p>
+
+        <a href={`/product/${product.id}`}>
+          <h3 className="text-sm font-black text-slate-900 transition hover:text-[#e30613]">
+            {product.name}
+          </h3>
+        </a>
+
+        <div className="mt-2 flex items-center gap-2 rounded-lg bg-white px-2 py-1">
+          <span
+            className="text-lg font-black tracking-[2px]"
+            style={{ color: "#D4AF37" }}
+          >
+            ★★★★★
+          </span>
+
+          <span className="text-[10px] font-black text-slate-700">
+            (New)
+          </span>
+        </div>
+
+        <div className="mt-2 flex items-end justify-between gap-2">
+          <div>
+            <p className="text-base font-black text-slate-900">
+              TSh {product.price.toLocaleString()}
+            </p>
+
+            {oldPrice !== undefined && oldPrice > product.price && (
+              <p className="text-xs font-bold text-red-600 line-through decoration-red-600">
+                TSh {oldPrice.toLocaleString()}
+              </p>
+            )}
+          </div>
+
+          {product.stock <= 0 ? (
+            <span className="text-xs font-black uppercase text-red-600">
+              OUT OF STOCK
+            </span>
+          ) : (
+            <button
+              type="button"
+              onClick={() => addToCart(product)}
+              className="flex h-10 shrink-0 items-center justify-center rounded-lg border border-slate-300 bg-white px-3 text-sm font-black text-slate-700 transition hover:border-[#e30613] hover:bg-red-50"
+              aria-label={`Add ${product.name} to cart`}
+            >
+              🛒
+            </button>
+          )}
+        </div>
+      </div>
+    </article>
   );
 }

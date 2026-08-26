@@ -1802,24 +1802,24 @@ Thank you.`;
 
   <div className="grid grid-cols-2 gap-3">
     {[
-      "M-Pesa",
-      "Mix by Yas",
-      "NMB",
-      "CRDB",
-      "Lipa Number - Mix by Yas",
-      "Cash (Lipa ukipokea)"
-    ].map((method) => (
+  {name:"M-Pesa", icon:"/payment/mpesa.jpeg"},
+  {name:"Mix by Yas", icon:"/payment/mixx-yas.jpeg"},
+  {name:"NMB", icon:"/payment/nmb.jpeg"},
+  {name:"CRDB", icon:"/payment/crdb.jpeg"},
+  {name:"Lipa Number - Mix by Yas", icon:"/payment/mixx-yas.jpeg"},
+  {name:"Cash (Lipa ukipokea)", icon:"💴"}
+].map((method) => (
       <button
-        key={method}
+        key={method.name}
         type="button"
-        onClick={() => setPaymentMethod(method)}
+        onClick={() => setPaymentMethod(method.name)}
         className={`rounded-xl border-2 p-3 text-sm font-black ${
-          paymentMethod === method
+          paymentMethod === method.name
             ? "border-sky-700 bg-sky-50 text-sky-700"
             : "border-slate-200 bg-white"
         }`}
       >
-        {method}
+        {method.name}
       </button>
     ))}
   </div>

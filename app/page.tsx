@@ -550,23 +550,23 @@ export default function HomePage() {
         <div className="grid overflow-hidden rounded-xl border border-slate-200 bg-white sm:grid-cols-2 lg:grid-cols-4">
 
           <Benefit
-            title="DELIVERY YA UHAKIKA"
-            text={t.safeOrder}
+            title={language === "sw" ? "DELIVERY YA UHAKIKA" : "RELIABLE DELIVERY"}
+            text={language === "sw" ? "100% tunahakikisha oda yako inafika salama" : "We make sure your order arrives safely"}
           />
 
           <Benefit
-            title="USALAMA"
-            text={t.safeInfo}
+            title={language === "sw" ? "USALAMA" : "SECURITY"}
+            text={language === "sw" ? "Taarifa zako ziko salama kwa 100%" : "Your information is 100% secure."}
           />
 
           <Benefit
-            title="BIDHAA BORA"
-            text={t.realProducts}
+            title={language === "sw" ? "BIDHAA BORA" : "QUALITY PRODUCTS"}
+            text={language === "sw" ? "Bidhaa bora zenye uhakika na uhalisia" : "Quality and genuine products."}
           />
 
           <Benefit
-            title="HUDUMA KWA WATEJA"
-            text="Tuko tayari kukusaidia 24/7."
+            title={language === "sw" ? "HUDUMA KWA WATEJA" : "CUSTOMER SUPPORT"}
+            text={language === "sw" ? "Tuko tayari kukusaidia 24/7." : "We are ready to help you 24/7."}
           />
 
         </div>

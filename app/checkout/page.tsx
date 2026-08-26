@@ -113,6 +113,13 @@ function calculateDeliveryFee(
 export default function CheckoutPage() {
   const [language, setLanguage] = useState<"sw" | "en">("sw");
 
+  useEffect(() => {
+    const savedLanguage = localStorage.getItem("gamora_language");
+    if (savedLanguage === "sw" || savedLanguage === "en") {
+      setLanguage(savedLanguage);
+    }
+  }, []);
+
   const [cart, setCart] = useState<CartItem[]>([]);
 
   const [name, setName] = useState("");
@@ -1093,7 +1100,10 @@ Thank you.`;
             <div className="flex gap-2">
 
               <button
-                onClick={() => setLanguage("sw")}
+                onClick={() => {
+                setLanguage("sw");
+                localStorage.setItem("gamora_language", "sw");
+              }}
                 className={`rounded-lg px-3 py-2 text-xs font-bold ${
                   language === "sw"
                     ? "bg-sky-700 text-white"
@@ -1104,7 +1114,10 @@ Thank you.`;
               </button>
 
               <button
-                onClick={() => setLanguage("en")}
+                onClick={() => {
+                setLanguage("en");
+                localStorage.setItem("gamora_language", "en");
+              }}
                 className={`rounded-lg px-3 py-2 text-xs font-bold ${
                   language === "en"
                     ? "bg-sky-700 text-white"
@@ -1244,7 +1257,10 @@ Thank you.`;
           <div className="flex gap-2">
 
             <button
-              onClick={() => setLanguage("sw")}
+              onClick={() => {
+                setLanguage("sw");
+                localStorage.setItem("gamora_language", "sw");
+              }}
               className={`rounded-lg px-3 py-2 text-xs font-bold ${
                 language === "sw"
                   ? "bg-sky-700 text-white"
@@ -1255,7 +1271,10 @@ Thank you.`;
             </button>
 
             <button
-              onClick={() => setLanguage("en")}
+              onClick={() => {
+                setLanguage("en");
+                localStorage.setItem("gamora_language", "en");
+              }}
               className={`rounded-lg px-3 py-2 text-xs font-bold ${
                 language === "en"
                   ? "bg-sky-700 text-white"

@@ -99,6 +99,13 @@ const translations = {
 
 export default function HomePage() {
   const [language, setLanguage] = useState<Language>("sw");
+
+  useEffect(() => {
+    const savedLanguage = localStorage.getItem("gamora_language");
+    if (savedLanguage === "sw" || savedLanguage === "en") {
+      setLanguage(savedLanguage);
+    }
+  }, []);
   const [products, setProducts] = useState<Product[]>([]);
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -427,7 +434,10 @@ export default function HomePage() {
               <div className="hidden items-center rounded-lg border border-slate-200 bg-white p-1 text-xs font-black sm:flex">
                 <button
                   type="button"
-                  onClick={() => setLanguage("sw")}
+                  onClick={() => {
+                    setLanguage("sw");
+                    localStorage.setItem("gamora_language", "sw");
+                  }}
                   className={`rounded-md px-2.5 py-1.5 transition ${
                     language === "sw"
                       ? "bg-[#e30613] text-white"
@@ -438,7 +448,10 @@ export default function HomePage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setLanguage("en")}
+                  onClick={() => {
+                    setLanguage("en");
+                    localStorage.setItem("gamora_language", "en");
+                  }}
                   className={`rounded-md px-2.5 py-1.5 transition ${
                     language === "en"
                       ? "bg-[#e30613] text-white"

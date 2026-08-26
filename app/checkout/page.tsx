@@ -1819,12 +1819,62 @@ Thank you.`;
             : "border-slate-200 bg-white"
         }`}
       >
-        {method.name}
+        <div className="flex flex-col items-center gap-2">
+  {method.icon.startsWith("/") ? (
+    <img
+      src={method.icon}
+      alt={method.name}
+      className="h-10 w-10 object-contain"
+    />
+  ) : (
+    <div className="text-3xl">
+      {method.icon}
+    </div>
+  )}
+
+  <span>{method.name}</span>
+</div>
       </button>
     ))}
   </div>
 </div>
-              <div className="border-t pt-5">
+              {paymentMethod === "M-Pesa" && (
+  <div className="mt-4 rounded-xl bg-slate-50 p-4 font-bold">
+    Lipa M-Pesa: 0798555221
+  </div>
+)}
+
+{paymentMethod === "Mix by Yas" && (
+  <div className="mt-4 rounded-xl bg-slate-50 p-4 font-bold">
+    Lipa Mix by Yas: 0676285283
+  </div>
+)}
+
+{paymentMethod === "Lipa Number - Mix by Yas" && (
+  <div className="mt-4 rounded-xl bg-slate-50 p-4 font-bold">
+    Lipa Number - Mix by Yas: 433064356
+  </div>
+)}
+
+{paymentMethod === "NMB" && (
+  <div className="mt-4 rounded-xl bg-slate-50 p-4 font-bold">
+    NMB Account: 20510105556
+  </div>
+)}
+
+{paymentMethod === "CRDB" && (
+  <div className="mt-4 rounded-xl bg-slate-50 p-4 font-bold">
+    CRDB Account: 01520013RMG00
+  </div>
+)}
+
+{paymentMethod === "Cash (Lipa ukipokea)" && (
+  <div className="mt-4 rounded-xl bg-green-50 p-4 font-bold text-green-700">
+    Lipa cash ukipokea mzigo wako
+  </div>
+)}
+
+<div className="border-t pt-5">
 
                 <div className="flex justify-between gap-4">
 

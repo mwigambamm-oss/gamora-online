@@ -641,9 +641,9 @@ export default function HomePage() {
               <div className="mt-4 space-y-3 text-sm text-slate-600">
                 <a href="/" className="block hover:text-[#E30613]">Home</a>
                 <a href="#products" className="block hover:text-[#E30613]">Shop</a>
-                <a href="#products" className="block hover:text-[#E30613]">Makundi</a>
-                <a href="#about" className="block hover:text-[#E30613]">Kuhusu Sisi</a>
-                <a href="/contact" className="block hover:text-[#E30613]">Wasiliana Nasi</a>
+                <a href="#products" className="block hover:text-[#E30613]">{t.categories}</a>
+                <a href="#about" className="block hover:text-[#E30613]">{t.about}</a>
+                <a href="/contact" className="block hover:text-[#E30613]">{t.contact}</a>
               </div>
             </div>
 

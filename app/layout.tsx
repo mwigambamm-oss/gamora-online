@@ -17,11 +17,11 @@ export const metadata: Metadata = {
 
   title: {
     default: "Gamora Online | Online Shopping Tanzania",
-    template: "%s | Gamora Online",
+    template: "%s",
   },
 
   description:
-    "Gamora Online is a trusted online shopping platform in Tanzania. Shop women's fashion, men's fashion, shoes, home and kitchen products, and more.",
+    "GAMORA ONLINE ni duka la mtandaoni Tanzania linalokupa bidhaa bora kwa bei nzuri. Nunua Fashion, Shoes, Handbags, Accessories, Phones, Home & Kitchen na bidhaa nyingine mbalimbali. Tunakuahakikishia ununuzi salama, bidhaa bora na delivery ya uhakika. Nunua online kwa urahisi kupitia Gamora Online.",
 
   keywords: [
     "Gamora Online",
@@ -32,6 +32,8 @@ export const metadata: Metadata = {
     "women fashion Tanzania",
     "men fashion Tanzania",
     "shoes Tanzania",
+    "handbags Tanzania",
+    "accessories Tanzania",
     "home and kitchen Tanzania",
   ],
 
@@ -51,34 +53,58 @@ export const metadata: Metadata = {
     },
   },
 
-openGraph: {
-  type: "website",
-  locale: "en_TZ",
-  url: "https://gamoraonline.co.tz",
-  siteName: "Gamora Online",
-  title: "Gamora Online | Online Shopping Tanzania",
-  description:
-    "Shop fashion, shoes, home and kitchen products online in Tanzania with Gamora Online.",
-  images: [
-    {
-      url: "/og-image.png",
-      width: 1200,
-      height: 630,
-      alt: "Gamora Online - Online Shopping Tanzania",
-    },
-  ],
-},
+  openGraph: {
+    type: "website",
+    locale: "en_TZ",
+    url: "https://gamoraonline.co.tz",
+    siteName: "Gamora Online",
+    title: "Gamora Online | Online Shopping Tanzania",
+    description:
+      "GAMORA ONLINE ni duka la mtandaoni Tanzania linalokupa bidhaa bora kwa bei nzuri. Nunua Fashion, Shoes, Handbags, Accessories, Phones, Home & Kitchen na bidhaa nyingine mbalimbali. Tunakuahakikishia ununuzi salama, bidhaa bora na delivery ya uhakika.",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Gamora Online - Online Shopping Tanzania",
+      },
+    ],
+  },
+
   twitter: {
     card: "summary_large_image",
     title: "Gamora Online | Online Shopping Tanzania",
     description:
-      "Shop fashion, shoes, home and kitchen products online in Tanzania.",
+      "GAMORA ONLINE - Nunua bidhaa bora online Tanzania kwa bei nzuri na delivery ya uhakika.",
   },
 
   verification: {
     google: "wSzx_6kXQC_6g1gldGV9ynYsB4D7hWO-ZXQjuawtlrw",
   },
 };
+
+const organizationSchema = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "GAMORA ONLINE",
+  url: "https://gamoraonline.co.tz",
+  description:
+    "GAMORA ONLINE ni duka la mtandaoni Tanzania linalokupa bidhaa bora kwa bei nzuri, ununuzi salama na delivery ya uhakika.",
+  areaServed: {
+    "@type": "Country",
+    name: "Tanzania",
+  },
+};
+
+const websiteSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "GAMORA ONLINE",
+  url: "https://gamoraonline.co.tz",
+  description:
+    "Nunua Fashion, Shoes, Handbags, Accessories, Phones, Home & Kitchen na bidhaa nyingine online Tanzania.",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -90,6 +116,18 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(organizationSchema),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(websiteSchema),
+          }}
+        />
         {children}
       </body>
     </html>

@@ -217,7 +217,7 @@ export default function HomePage() {
             onClick={() => setSelectedCategory("All")}
             className="mt-4 w-full rounded-xl border border-white/20 px-3 py-2.5 text-xs font-black text-white transition hover:bg-white hover:text-slate-700"
           >
-            Angalia Bidhaa Zote →
+            {language === "sw" ? "Angalia Bidhaa Zote →" : "View All Products →"}
           </button>
         </div>
 

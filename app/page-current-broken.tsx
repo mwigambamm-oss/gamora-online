@@ -244,11 +244,12 @@ export default function HomePage() {
               className="rounded-xl border border-slate-200 p-4 text-left transition hover:border-[#E30613] hover:bg-red-50"
             >
               <div className="h-28 overflow-hidden rounded-lg bg-slate-100">
-                <img src="/images/womens-fashion.jpg" alt="Women's Fashion" className="h-full w-full object-cover" />
-              </div>
-              <p className="mt-2 text-sm font-black text-purple-900">
-                Women's Fashion
-              </p>
+                <img
+  src="/images/womens-fashion.jpg"
+  alt="Women's Fashion"
+  className="h-full w-full object-cover"
+  />
+</div>
             </button>
 
             <button
@@ -450,8 +451,8 @@ export default function HomePage() {
         <div className="grid overflow-hidden rounded-xl border border-slate-200 bg-white sm:grid-cols-2 lg:grid-cols-4">
 
           <Benefit
-            title={language === "sw" ? "DELIVERY YA UHAKIKA" : "RELIABLE DELIVERY"}
-            text={language === "sw" ? "100% tunahakikisha oda yako inafika salama" : "We make sure your order arrives safely"}
+            title={t.deliveryTitle}
+           text={language === "sw" ? t.deliveryText : "We make sure your order arrives safely"}
           />
 
           <Benefit
@@ -489,7 +490,7 @@ export default function HomePage() {
 
               <div className="mt-5 text-left">
                 <p className="text-xs font-black text-slate-900">
-                  Tufuatilie (@gamoraonline)
+                  {t.followUs}
                 </p>
 
                 <div className="mt-3 flex items-center gap-3">
@@ -555,7 +556,7 @@ export default function HomePage() {
                 <p>{t.howToBuy}</p>
 <p>{t.deliveryPolicy}</p>
 <p>{t.returnPolicy}</p>
-                <p>{language === "sw" ? "Masharti na Vigezo" : "Terms & Conditions"}</p>
+                <p>{t.terms}</p>
                 <p>{t.supportText}</p>
               </div>
             </div>
@@ -698,20 +699,20 @@ function ProductCard({
   return (
     <article className="group overflow-hidden rounded-2xl border-2 border-slate-200 bg-white shadow-lg transition-all duration-300 hover:-translate-y-1 hover:border-slate-300 hover:shadow-2xl">
       <a
-        href={`/product/${product.id}`}
-        className="relative block aspect-square overflow-hidden bg-white"
-      >
+  href={`/product/${product.id}`}
+  className="relative block h-56 overflow-hidden rounded-t-2xl bg-white"
+>
         {product.image ? (
           <img
             src={product.image}
             alt={product.name}
             loading="lazy"
-            className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+           className="h-full w-full object-contain transition-all duration-300"
           />
         ) : (
-          <div className="flex h-full items-center justify-center bg-white text-5xl text-slate-300">
-            🛍️
-          </div>
+<div className="flex h-full items-center justify-center bg-white text-3xl md:text-5xl text-slate-300">
+  🛍️
+</div>
         )}
 
         {discount > 0 && (
@@ -721,7 +722,7 @@ function ProductCard({
         )}
       </a>
 
-      <div className="p-3">
+      <div className="p-2">
         <p className="mb-1 text-[11px] font-black uppercase tracking-wide text-slate-600">
           {product.category}
         </p>
@@ -745,18 +746,15 @@ function ProductCard({
           </span>
         </div>
 
-        <div className="mt-2 flex items-end justify-between gap-2">
-          <div>
-            <p className="text-base font-black text-slate-900">
-              TSh {product.price.toLocaleString()}
-            </p>
+<div className="flex items-center gap-2 mt-2">
+  <span className="text-lg font-black text-slate-900">
+    TSh 45,000
+  </span>
 
-            {oldPrice !== undefined && oldPrice > product.price && (
-              <p className="text-xs font-bold text-red-600 line-through decoration-red-600">
-                TSh {oldPrice.toLocaleString()}
-              </p>
-            )}
-          </div>
+  <span className="text-sm font-bold text-red-500 line-through">
+    TSh 55,000
+  </span>
+</div>
 
           {product.stock <= 0 ? (
             <span className="text-xs font-black uppercase text-red-600">
@@ -773,7 +771,6 @@ function ProductCard({
 </button>
           )}
         </div>
-      </div>
     </article>
   );
 }

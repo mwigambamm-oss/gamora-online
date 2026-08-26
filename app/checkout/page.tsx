@@ -127,6 +127,7 @@ export default function CheckoutPage() {
   const [email, setEmail] = useState("");
   const [address, setAddress] = useState("");
   const [notes, setNotes] = useState("");
+const [paymentMethod, setPaymentMethod] = useState("");
 
   const [deliveryMethod, setDeliveryMethod] =
     useState<DeliveryMethod>("delivery");
@@ -1794,7 +1795,35 @@ Thank you.`;
                   🏪 Self pickup — No delivery fee
                 </div>
               )}
+<div className="mt-6">
+  <h3 className="mb-3 text-lg font-black">
+    {language === "sw" ? "Njia ya Malipo" : "Payment Method"}
+  </h3>
 
+  <div className="grid grid-cols-2 gap-3">
+    {[
+      "M-Pesa",
+      "Mix by Yas",
+      "NMB",
+      "CRDB",
+      "Lipa Number - Mix by Yas",
+      "Cash (Lipa ukipokea)"
+    ].map((method) => (
+      <button
+        key={method}
+        type="button"
+        onClick={() => setPaymentMethod(method)}
+        className={`rounded-xl border-2 p-3 text-sm font-black ${
+          paymentMethod === method
+            ? "border-sky-700 bg-sky-50 text-sky-700"
+            : "border-slate-200 bg-white"
+        }`}
+      >
+        {method}
+      </button>
+    ))}
+  </div>
+</div>
               <div className="border-t pt-5">
 
                 <div className="flex justify-between gap-4">

@@ -1,3 +1,5 @@
+export type Language = "sw" | "en";
+
 export const translations = {
   sw: {
     home: "Nyumbani",
@@ -9,23 +11,14 @@ export const translations = {
     search: "Tafuta bidhaa...",
     featured: "Bidhaa Maarufu",
 
-    marquee:
-      "🇹🇿 KARIBU GAMORA ONLINE • NUNUA KWA URAHISI • CHAGUA KWA KUJIAMINI •",
-
-    safeOrder: "Oda yako inafika salama.",
-    safeInfo: "Taarifa zako ziko salama kwa 100%.",
-    realProducts: "Bidhaa bora zenye uhakika na uhalisia.",
-
-    aboutText:
-      "GAMORA ONLINE ni duka lako la kuaminika kwa bidhaa bora kwa bei nzuri.",
-
-    viewAll: "Angalia Zote",
-    cart: "Kikapu",
-
-    freeDelivery: "DELIVERY YA UHAKIKA • UNUNUZI SALAMA",
-
+marquee: "🇹🇿 KARIBU GAMORA ONLINE • NUNUA KWA URAHISI • CHAGUA KWA KUJIAMINI •",
+    
+  viewAll: "Angalia Zote",
+  cart: "Cart",
+  freeDelivery: "DELIVERY YA UHAKIKA • UNUNUZI SALAMA",
+followUs: "Tufuatilie (@gamoraonline)",
     deliveryTitle: "DELIVERY YA UHAKIKA",
-    deliveryText: "100% tunahakikisha oda yako inafika salama",
+    deliveryText: "Tunatoa huduma ya delivery ya uhakika na haraka hadi ulipo.",
 
     secureTitle: "USALAMA",
     secureText: "Taarifa zako ziko salama kwa 100%",
@@ -36,30 +29,26 @@ export const translations = {
     supportTitle: "HUDUMA KWA WATEJA",
     supportText: "Tuko tayari kukusaidia 24/7",
 
+    aboutText:
+      "GAMORA ONLINE ni duka lako la kuaminika kwa bidhaa bora kwa bei nzuri.",
+
     newsletter: "JIUNGE NA ORODHA YETU",
     newsletterText:
-      "Pata taarifa za bidhaa mpya na ofa maalum moja kwa moja kwenye email yako.",
+      "Pata taarifa za bidhaa mpya na ofa maalum moja kwa moja.",
 
     emailPlaceholder: "Weka email yako",
     subscribe: "JIUNGE",
 
-    rights: "Haki zote zimehifadhiwa.",
-
-    products: "Bidhaa",
-    orders: "Oda",
-    returns: "Marejesho",
-    shipping: "Uwasilishaji",
-    faqs: "Maswali",
-    myAccount: "Akaunti Yangu",
-
     terms: "Masharti na Vigezo",
     privacy: "Sera ya Faragha",
-howToBuy: "Jinsi ya Kununua",
-deliveryPolicy: "Sera ya Uwasilishaji",
-returnPolicy: "Sera ya Marejesho",
+
+    rights: "Haki zote zimehifadhiwa.",
     noProducts: "Hakuna bidhaa zilizopatikana.",
-    added: "imeongezwa kwenye kikapu.",
-    shopNow: "Nunua Sasa",
+    added: "imeongezwa kwenye cart.",
+
+    howToBuy: "Jinsi ya Kununua",
+    deliveryPolicy: "Sera ya Uwasilishaji",
+    returnPolicy: "Sera ya Marejesho",
   },
 
   en: {
@@ -71,59 +60,44 @@ returnPolicy: "Sera ya Marejesho",
 
     search: "Search products...",
     featured: "Featured Products",
-
-    marquee:
-      "🇬🇧 WELCOME TO GAMORA ONLINE • SHOP EASILY • CHOOSE WITH CONFIDENCE •",
-
-    safeOrder: "Your order arrives safely.",
-    safeInfo: "Your information is 100% secure.",
-    realProducts: "Quality and genuine products.",
-
-    aboutText:
-      "GAMORA ONLINE is your trusted online shop for quality products at affordable prices.",
-
-    viewAll: "View All",
-    cart: "Cart",
-
-    freeDelivery: "RELIABLE DELIVERY • SECURE SHOPPING",
-
+  
+marquee: "🇬🇧 WELCOME TO GAMORA ONLINE • SHOP EASILY • CHOOSE WITH CONFIDENCE •",
+  
+ viewAll: "View All Products",
+  cart: "Cart",
+  freeDelivery: "RELIABLE DELIVERY • SECURE SHOPPING",
+followUs: "Follow us (@gamoraonline)",
     deliveryTitle: "RELIABLE DELIVERY",
-    deliveryText: "We make sure your order arrives safely",
+    deliveryText: "We provide reliable and fast delivery to your location.",
 
     secureTitle: "SECURITY",
-    secureText: "Your information is 100% secure.",
+    secureText: "Your information is 100% secure",
 
     qualityTitle: "QUALITY PRODUCTS",
-    qualityText: "Quality and genuine products.",
+    qualityText: "Quality and genuine products",
 
     supportTitle: "CUSTOMER SUPPORT",
     supportText: "We are ready to help you 24/7",
 
+    aboutText:
+      "GAMORA ONLINE is your trusted online shop for quality products at affordable prices.",
+
     newsletter: "JOIN OUR NEWSLETTER",
     newsletterText:
-      "Get updates on new products and exclusive offers directly to your email.",
+      "Get updates about new products and special offers.",
 
     emailPlaceholder: "Enter your email",
     subscribe: "SUBSCRIBE",
 
-    rights: "All rights reserved.",
-
-    products: "Products",
-    orders: "Orders",
-    returns: "Returns",
-    shipping: "Shipping",
-    faqs: "FAQs",
-    myAccount: "My Account",
-
-    terms: "Terms & Conditions",
     privacy: "Privacy Policy",
-howToBuy: "How to Buy",
-deliveryPolicy: "Delivery Policy",
-returnPolicy: "Return Policy",
+
+    rights: "All rights reserved.",
     noProducts: "No products found.",
     added: "has been added to your cart.",
-    shopNow: "Shop Now",
+
+    howToBuy: "How to Buy",
+    deliveryPolicy: "Delivery Policy",
+    returnPolicy: "Return Policy",
+terms: "Terms & Conditions",
   },
 };
-
-export type Language = keyof typeof translations;

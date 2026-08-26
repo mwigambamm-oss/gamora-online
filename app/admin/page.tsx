@@ -11,24 +11,21 @@ type Stat = {
 };
 
 export default function AdminDashboard() {
-  const [analytics, setAnalytics] = useState<any>(null);
   const [productsCount, setProductsCount] = useState(0);
   const [orders, setOrders] = useState<Order[]>([]);
   const [customersCount, setCustomersCount] = useState(0);
   const [revenue, setRevenue] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [profileOpen, setProfileOpen] = useState(false);
 
   async function loadDashboard() {
     try {
       setLoading(true);
 
-      const [products, loadedOrders, analyticsResponse] = await Promise.all([
+      const [products, loadedOrders] = await Promise.all([
         getProducts(),
         getOrders(),
-        fetch("/api/analytics").then((r) => r.json()),
       ]);
-
-      setAnalytics(analyticsResponse);
 
       setProductsCount(products.length);
       setOrders(loadedOrders);
@@ -56,6 +53,18 @@ export default function AdminDashboard() {
     }
   }
 
+  async function handleLogout() {
+    try {
+      await fetch("/api/admin/logout", {
+        method: "POST",
+      });
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+
+    window.location.href = "/admin/login";
+  }
+
   useEffect(() => {
     loadDashboard();
   }, []);
@@ -74,14 +83,18 @@ export default function AdminDashboard() {
     1
   );
 
-  const todayOrders = orders.filter((order) => {
+  const activeOrders = orders.filter(
+    (order) => order.status !== "Cancelled"
+  );
+
+  const todayOrders = activeOrders.filter((order) => {
     const date = new Date(order.createdAt);
-    return date >= todayStart && order.status !== "Cancelled";
+    return date >= todayStart;
   });
 
-  const monthOrders = orders.filter((order) => {
+  const monthOrders = activeOrders.filter((order) => {
     const date = new Date(order.createdAt);
-    return date >= monthStart && order.status !== "Cancelled";
+    return date >= monthStart;
   });
 
   const todaySales = todayOrders.reduce(
@@ -103,12 +116,22 @@ export default function AdminDashboard() {
     0
   );
 
-  const deliveryFees = orders
-    .filter((order) => order.status !== "Cancelled")
-    .reduce(
-      (sum, order) => sum + Number(order.deliveryFee || 0),
-      0
-    );
+  const deliveryFees = activeOrders.reduce(
+    (sum, order) => sum + Number(order.deliveryFee || 0),
+    0
+  );
+
+  const pendingOrders = orders.filter(
+    (order) => order.status === "Pending"
+  ).length;
+
+  const processingOrders = orders.filter(
+    (order) => order.status === "Processing"
+  ).length;
+
+  const deliveredOrders = orders.filter(
+    (order) => order.status === "Delivered"
+  ).length;
 
   const stats: Stat[] = [
     {
@@ -135,27 +158,12 @@ export default function AdminDashboard() {
 
   const recentOrders = orders.slice(0, 5);
 
-  const pending = orders.filter(
-    (order) => order.status === "Pending"
-  ).length;
-
-  const processing = orders.filter(
-    (order) => order.status === "Processing"
-  ).length;
-
-  const delivered = orders.filter(
-    (order) => order.status === "Delivered"
-  ).length;
-
   return (
     <main className="min-h-screen bg-gray-100">
-
-      {/* SIDEBAR */}
 
       <aside className="fixed left-0 top-0 hidden h-screen w-64 bg-gray-950 text-white md:block">
 
         <div className="border-b border-gray-800 px-6 py-6">
-
           <h1 className="text-2xl font-black text-orange-500">
             GAMORA
           </h1>
@@ -167,7 +175,6 @@ export default function AdminDashboard() {
           <p className="mt-4 text-xs text-gray-400">
             ADMIN PANEL
           </p>
-
         </div>
 
         <nav className="p-4">
@@ -215,6 +222,13 @@ export default function AdminDashboard() {
           </a>
 
           <a
+            href="/admin/analytics"
+            className="mb-2 flex items-center gap-3 rounded-lg px-4 py-3 text-gray-300 hover:bg-gray-800"
+          >
+            📈 Analytics
+          </a>
+
+          <a
             href="/admin/settings"
             className="flex items-center gap-3 rounded-lg px-4 py-3 text-gray-300 hover:bg-gray-800"
           >
@@ -227,562 +241,327 @@ export default function AdminDashboard() {
 
           <a
             href="/"
-            className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm text-gray-400 hover:bg-gray-800 hover:text-white"
+            className="mb-2 flex items-center gap-3 rounded-lg px-4 py-3 text-sm text-gray-400 hover:bg-gray-800 hover:text-white"
           >
             ← View Store
           </a>
+
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm text-red-400 hover:bg-red-950 hover:text-red-300"
+          >
+            🚪 Logout
+          </button>
 
         </div>
 
       </aside>
 
-      {/* MAIN */}
-
       <section className="md:ml-64">
 
-        {/* HEADER */}
+        <header className="border-b bg-white px-4 py-5 shadow-sm md:px-6">
 
-        <header className="sticky top-0 z-40 flex items-center justify-between border-b bg-white px-4 py-4 shadow-sm md:px-8">
+          <div className="flex items-center justify-between gap-4">
 
-          <div>
+            <div>
+              <h2 className="text-2xl font-black text-gray-900">
+                Dashboard
+              </h2>
 
-            <h2 className="text-xl font-bold text-gray-900">
-              Dashboard
-            </h2>
-
-            <p className="text-sm text-gray-500">
-              Welcome back, Administrator
-            </p>
-
-          </div>
-
-          <div className="flex items-center gap-3">
-
-            <button
-              onClick={loadDashboard}
-              className="rounded-lg border px-3 py-2 hover:bg-gray-100"
-              title="Refresh"
-            >
-              🔄
-            </button>
-
-            <div className="hidden text-right sm:block">
-
-              <p className="text-sm font-bold">
-                Administrator
+              <p className="text-sm text-gray-500">
+                GAMORA ONLINE administration panel
               </p>
-
-              <p className="text-xs text-gray-500">
-                Admin
-              </p>
-
             </div>
 
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-600 font-bold text-white">
-              A
+            <div className="flex items-center gap-3">
+
+              <button
+                type="button"
+                onClick={loadDashboard}
+                disabled={loading}
+                className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-bold text-white hover:bg-gray-800 disabled:opacity-50"
+              >
+                {loading ? "Loading..." : "🔄 Refresh"}
+              </button>
+
+              <div className="relative">
+
+                <button
+                  type="button"
+                  onClick={() => setProfileOpen((value) => !value)}
+                  className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 shadow-sm hover:shadow-md"
+                >
+
+                  <img
+                    src="/admin-picture.jpeg"
+                    alt="Admin"
+                    className="h-10 w-10 rounded-full border-2 border-orange-500 object-cover"
+                  />
+
+                  <div className="hidden text-left sm:block">
+                    <p className="text-xs font-black text-gray-900">
+                      Admin
+                    </p>
+
+                    <p className="text-[10px] text-gray-500">
+                      GAMORA ONLINE
+                    </p>
+                  </div>
+
+                  <span className="text-xs text-gray-500">
+                    {profileOpen ? "▲" : "▼"}
+                  </span>
+
+                </button>
+
+                {profileOpen && (
+                  <div className="absolute right-0 top-14 z-50 w-56 rounded-2xl border border-gray-200 bg-white p-2 shadow-xl">
+
+                    <div className="border-b border-gray-100 px-3 py-3">
+
+                      <div className="flex items-center gap-3">
+
+                        <img
+                          src="/admin-picture.jpeg"
+                          alt="Admin"
+                          className="h-12 w-12 rounded-full border-2 border-orange-500 object-cover"
+                        />
+
+                        <div>
+                          <p className="text-sm font-black text-gray-900">
+                            Admin
+                          </p>
+
+                          <p className="text-xs text-gray-500">
+                            Administrator
+                          </p>
+                        </div>
+
+                      </div>
+
+                    </div>
+
+                    <a
+                      href="/admin/change-password"
+                      className="mt-2 flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-bold text-gray-700 hover:bg-orange-50 hover:text-orange-600"
+                    >
+                      🔐 Change Password
+                    </a>
+
+                    <button
+                      type="button"
+                      onClick={handleLogout}
+                      className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-bold text-red-600 hover:bg-red-50"
+                    >
+                      🚪 Logout
+                    </button>
+
+                  </div>
+                )}
+
+              </div>
+
             </div>
 
           </div>
 
         </header>
 
-        <div className="p-4 md:p-8">
+        <div className="p-4 md:p-6">
 
-          {/* OVERVIEW */}
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
 
-          <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+            {stats.map((stat) => (
+              <div
+                key={stat.title}
+                className="rounded-2xl bg-white p-5 shadow-sm"
+              >
 
-            <div>
-
-              <h3 className="text-2xl font-black">
-                Overview
-              </h3>
-
-              <p className="text-sm text-gray-500">
-                Live information from your GAMORA ONLINE store
-              </p>
-
-            </div>
-
-            <a
-              href="/admin/products"
-              className="rounded-lg bg-orange-600 px-6 py-3 text-center font-bold text-white shadow-sm hover:bg-orange-700"
-            >
-              + Add Product
-            </a>
-
-          </div>
-
-          {/* STATS */}
-
-          {loading ? (
-
-            <div className="rounded-xl bg-white p-10 text-center shadow-sm">
-              <div className="text-4xl">⏳</div>
-
-              <p className="mt-3 text-sm text-gray-500">
-                Loading dashboard...
-              </p>
-            </div>
-
-          ) : (
-
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-
-              {stats.map((stat) => (
-
-                <div
-                  key={stat.title}
-                  className="rounded-xl bg-white p-5 shadow-sm"
-                >
-
-                  <div className="flex items-start justify-between">
-
-                    <div>
-
-                      <p className="text-sm font-medium text-gray-500">
-                        {stat.title}
-                      </p>
-
-                      <h3 className="mt-2 text-2xl font-black">
-                        {stat.value}
-                      </h3>
-
-                    </div>
-
-                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-orange-100 text-2xl">
-                      {stat.icon}
-                    </div>
-
-                  </div>
-
-                  <p className="mt-4 text-xs font-semibold text-green-600">
-                    ● Live from database
-                  </p>
-
-                </div>
-
-              ))}
-
-            </div>
-
-          )}
-
-          {/* ACCOUNTING PERFORMANCE */}
-
-          {!loading && analytics?.success && (
-            <section className="mt-8">
-
-              <div className="mb-4">
-                <h3 className="text-2xl font-black">
-                  Financial Overview
-                </h3>
-
-                <p className="text-sm text-gray-500">
-                  Live accounting figures calculated from your GAMORA database
-                </p>
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-
-                {[
-                  {
-                    title: "Product Revenue",
-                    value: analytics.kpis.revenue,
-                    icon: "💰",
-                    color: "text-green-600",
-                  },
-                  {
-                    title: "Paid Amount",
-                    value: analytics.kpis.paidAmount,
-                    icon: "💳",
-                    color: "text-blue-600",
-                  },
-                  {
-                    title: "Product Cost",
-                    value: analytics.kpis.cogs,
-                    icon: "📦",
-                    color: "text-orange-600",
-                  },
-                  {
-                    title: "Gross Profit",
-                    value: analytics.kpis.grossProfit,
-                    icon: "📈",
-                    color: "text-green-600",
-                  },
-                  {
-                    title: "Expenses",
-                    value: analytics.kpis.expenses,
-                    icon: "💸",
-                    color: "text-red-600",
-                  },
-                  {
-                    title: "Net Profit",
-                    value: analytics.kpis.netProfit,
-                    icon: "🟢",
-                    color: "text-emerald-600",
-                  },
-                  {
-                    title: "Delivery Income",
-                    value: analytics.kpis.deliveryIncome,
-                    icon: "🚚",
-                    color: "text-purple-600",
-                  },
-                  {
-                    title: "Stock Cost Value",
-                    value: analytics.kpis.stockCostValue,
-                    icon: "🏷️",
-                    color: "text-indigo-600",
-                  },
-                ].map((item) => (
-
-                  <div
-                    key={item.title}
-                    className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
-                  >
-
-                    <div className="flex items-start justify-between">
-
-                      <div>
-                        <p className="text-sm font-medium text-gray-500">
-                          {item.title}
-                        </p>
-
-                        <p className={`mt-2 text-2xl font-black ${item.color}`}>
-                          TZS {Number(item.value || 0).toLocaleString()}
-                        </p>
-                      </div>
-
-                      <div className="text-2xl">
-                        {item.icon}
-                      </div>
-
-                    </div>
-
-                  </div>
-
-                ))}
-
-              </div>
-
-              <div className="mt-4 rounded-2xl bg-gray-950 p-6 text-white shadow-lg">
-
-                <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+                <div className="flex items-center justify-between">
 
                   <div>
-                    <p className="text-sm text-gray-400">
-                      Profit Margin
+                    <p className="text-sm font-semibold text-gray-500">
+                      {stat.title}
                     </p>
 
-                    <p className="mt-1 text-3xl font-black">
-                      {Number(
-                        analytics.kpis.profitMargin || 0
-                      ).toFixed(2)}%
+                    <p className="mt-2 text-2xl font-black text-gray-900">
+                      {stat.value}
                     </p>
                   </div>
 
-                  <div className="text-left md:text-right">
-                    <p className="text-sm text-gray-400">
-                      Stock Selling Value
-                    </p>
-
-                    <p className="mt-1 text-xl font-bold">
-                      TZS {Number(
-                        analytics.kpis.stockSellingValue || 0
-                      ).toLocaleString()}
-                    </p>
+                  <div className="text-3xl">
+                    {stat.icon}
                   </div>
 
                 </div>
 
               </div>
+            ))}
 
-            </section>
-          )}
+          </div>
 
-          {/* SALES PERFORMANCE */}
+          <div className="mt-6 grid gap-4 md:grid-cols-3">
 
-          {!loading && (
-            <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-
-              <div className="rounded-xl bg-white p-5 shadow-sm">
-                <p className="text-sm font-medium text-gray-500">
-                  Today's Sales
-                </p>
-
-                <p className="mt-2 text-2xl font-black text-green-600">
-                  TZS {todaySales.toLocaleString()}
-                </p>
-
-                <p className="mt-2 text-xs text-gray-500">
-                  {todayOrders.length} order(s) today
-                </p>
-              </div>
-
-              <div className="rounded-xl bg-white p-5 shadow-sm">
-                <p className="text-sm font-medium text-gray-500">
-                  This Month
-                </p>
-
-                <p className="mt-2 text-2xl font-black text-blue-600">
-                  TZS {monthSales.toLocaleString()}
-                </p>
-
-                <p className="mt-2 text-xs text-gray-500">
-                  {monthOrders.length} order(s) this month
-                </p>
-              </div>
-
-              <div className="rounded-xl bg-white p-5 shadow-sm">
-                <p className="text-sm font-medium text-gray-500">
-                  Delivery Fees
-                </p>
-
-                <p className="mt-2 text-2xl font-black text-orange-600">
-                  TZS {deliveryFees.toLocaleString()}
-                </p>
-
-                <p className="mt-2 text-xs text-gray-500">
-                  From non-cancelled orders
-                </p>
-              </div>
-
-              <div className="rounded-xl bg-white p-5 shadow-sm">
-                <p className="text-sm font-medium text-gray-500">
-                  Cancelled Orders
-                </p>
-
-                <p className="mt-2 text-2xl font-black text-red-600">
-                  {cancelledOrders.length}
-                </p>
-
-                <p className="mt-2 text-xs text-gray-500">
-                  Value: TZS {cancelledValue.toLocaleString()}
-                </p>
-              </div>
-
-            </div>
-          )}
-
-          {/* ORDER SUMMARY */}
-
-          <div className="mt-8 grid gap-4 md:grid-cols-3">
-
-            <div className="rounded-xl bg-white p-5 shadow-sm">
-
-              <p className="text-sm text-gray-500">
-                Pending Orders
+            <div className="rounded-2xl bg-white p-5 shadow-sm">
+              <p className="text-sm font-bold text-gray-500">
+                Today's Sales
               </p>
 
-              <p className="mt-2 text-3xl font-black text-yellow-600">
-                {pending}
+              <p className="mt-2 text-2xl font-black text-emerald-600">
+                TZS {todaySales.toLocaleString()}
               </p>
 
-              <a
-                href="/admin/orders"
-                className="mt-3 inline-block text-sm font-bold text-orange-600"
-              >
-                Manage Orders →
-              </a>
-
+              <p className="mt-1 text-xs text-gray-500">
+                {todayOrders.length} orders today
+              </p>
             </div>
 
-            <div className="rounded-xl bg-white p-5 shadow-sm">
-
-              <p className="text-sm text-gray-500">
-                Processing Orders
+            <div className="rounded-2xl bg-white p-5 shadow-sm">
+              <p className="text-sm font-bold text-gray-500">
+                This Month
               </p>
 
-              <p className="mt-2 text-3xl font-black text-blue-600">
-                {processing}
+              <p className="mt-2 text-2xl font-black text-blue-600">
+                TZS {monthSales.toLocaleString()}
               </p>
 
-              <a
-                href="/admin/orders"
-                className="mt-3 inline-block text-sm font-bold text-orange-600"
-              >
-                View Orders →
-              </a>
-
+              <p className="mt-1 text-xs text-gray-500">
+                {monthOrders.length} orders this month
+              </p>
             </div>
 
-            <div className="rounded-xl bg-white p-5 shadow-sm">
-
-              <p className="text-sm text-gray-500">
-                Delivered Orders
+            <div className="rounded-2xl bg-white p-5 shadow-sm">
+              <p className="text-sm font-bold text-gray-500">
+                Delivery Fees
               </p>
 
-              <p className="mt-2 text-3xl font-black text-green-600">
-                {delivered}
+              <p className="mt-2 text-2xl font-black text-orange-600">
+                TZS {deliveryFees.toLocaleString()}
               </p>
 
-              <a
-                href="/admin/orders"
-                className="mt-3 inline-block text-sm font-bold text-orange-600"
-              >
-                View Delivered →
-              </a>
-
+              <p className="mt-1 text-xs text-gray-500">
+                From active orders
+              </p>
             </div>
 
           </div>
 
-          {/* QUICK MANAGEMENT */}
+          <div className="mt-6 grid gap-4 md:grid-cols-4">
 
-          <div className="mt-8 rounded-xl bg-white p-5 shadow-sm">
+            <div className="rounded-2xl bg-white p-5 shadow-sm">
+              <p className="text-sm font-bold text-gray-500">
+                Pending
+              </p>
 
-            <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-
-              <div>
-
-                <h3 className="text-xl font-black">
-                  Store Management
-                </h3>
-
-                <p className="text-sm text-gray-500">
-                  Manage your online shop
-                </p>
-
-              </div>
-
+              <p className="mt-2 text-2xl font-black text-amber-600">
+                {pendingOrders}
+              </p>
             </div>
 
-            <div className="mt-6 grid gap-4 md:grid-cols-3">
+            <div className="rounded-2xl bg-white p-5 shadow-sm">
+              <p className="text-sm font-bold text-gray-500">
+                Processing
+              </p>
 
-              <a
-                href="/admin/products"
-                className="rounded-xl border p-5 transition hover:border-orange-500 hover:bg-orange-50"
-              >
+              <p className="mt-2 text-2xl font-black text-blue-600">
+                {processingOrders}
+              </p>
+            </div>
 
-                <div className="text-3xl">
-                  📦
-                </div>
+            <div className="rounded-2xl bg-white p-5 shadow-sm">
+              <p className="text-sm font-bold text-gray-500">
+                Delivered
+              </p>
 
-                <h4 className="mt-3 font-bold">
-                  Products
-                </h4>
+              <p className="mt-2 text-2xl font-black text-emerald-600">
+                {deliveredOrders}
+              </p>
+            </div>
 
-                <p className="mt-1 text-sm text-gray-500">
-                  Add, edit and manage products.
-                </p>
+            <div className="rounded-2xl bg-white p-5 shadow-sm">
+              <p className="text-sm font-bold text-gray-500">
+                Cancelled Value
+              </p>
 
-              </a>
+              <p className="mt-2 text-xl font-black text-red-600">
+                TZS {cancelledValue.toLocaleString()}
+              </p>
 
-              <a
-                href="/admin/orders"
-                className="rounded-xl border p-5 transition hover:border-orange-500 hover:bg-orange-50"
-              >
-
-                <div className="text-3xl">
-                  🛍️
-                </div>
-
-                <h4 className="mt-3 font-bold">
-                  Orders
-                </h4>
-
-                <p className="mt-1 text-sm text-gray-500">
-                  Track customer orders and delivery.
-                </p>
-
-              </a>
-
-              <a
-                href="/admin/customers"
-                className="rounded-xl border p-5 transition hover:border-orange-500 hover:bg-orange-50"
-              >
-
-                <div className="text-3xl">
-                  👥
-                </div>
-
-                <h4 className="mt-3 font-bold">
-                  Customers
-                </h4>
-
-                <p className="mt-1 text-sm text-gray-500">
-                  View your customer information.
-                </p>
-
-              </a>
-
+              <p className="mt-1 text-xs text-gray-500">
+                {cancelledOrders.length} cancelled orders
+              </p>
             </div>
 
           </div>
 
-          {/* RECENT ORDERS */}
+          <div className="mt-6 rounded-2xl bg-white shadow-sm">
 
-          <div className="mt-8 rounded-xl bg-white p-5 shadow-sm">
-
-            <div className="mb-5 flex items-center justify-between">
+            <div className="flex items-center justify-between border-b px-5 py-5">
 
               <div>
-
-                <h3 className="text-xl font-black">
+                <h3 className="text-lg font-black text-gray-900">
                   Recent Orders
                 </h3>
 
                 <p className="text-sm text-gray-500">
                   Latest customer orders
                 </p>
-
               </div>
 
               <a
                 href="/admin/orders"
-                className="font-semibold text-orange-600"
+                className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-bold text-white hover:bg-orange-700"
               >
-                View All →
+                View All
               </a>
 
             </div>
 
-            {recentOrders.length === 0 ? (
+            <div className="overflow-x-auto">
 
-              <div className="rounded-lg bg-gray-50 p-10 text-center">
+              {recentOrders.length === 0 ? (
 
-                <div className="text-4xl">
-                  🛍️
+                <div className="px-5 py-12 text-center">
+
+                  <div className="text-4xl">
+                    🛍️
+                  </div>
+
+                  <p className="mt-3 font-bold text-gray-700">
+                    No orders yet
+                  </p>
+
+                  <p className="mt-1 text-sm text-gray-500">
+                    New customer orders will appear here.
+                  </p>
+
                 </div>
 
-                <p className="mt-3 font-bold">
-                  No orders yet
-                </p>
+              ) : (
 
-                <p className="mt-1 text-sm text-gray-500">
-                  Customer orders will appear here.
-                </p>
-
-              </div>
-
-            ) : (
-
-              <div className="overflow-x-auto">
-
-                <table className="w-full min-w-[650px] text-left">
+                <table className="w-full text-left">
 
                   <thead>
+                    <tr className="border-b bg-gray-50 text-xs font-black uppercase text-gray-500">
 
-                    <tr className="border-b text-sm text-gray-500">
-
-                      <th className="px-4 py-3">
+                      <th className="px-5 py-4">
                         Order
                       </th>
 
-                      <th className="px-4 py-3">
+                      <th className="px-5 py-4">
                         Customer
                       </th>
 
-                      <th className="px-4 py-3">
-                        Amount
+                      <th className="px-5 py-4">
+                        Total
                       </th>
 
-                      <th className="px-4 py-3">
+                      <th className="px-5 py-4">
                         Status
                       </th>
 
                     </tr>
-
                   </thead>
 
                   <tbody>
@@ -794,35 +573,30 @@ export default function AdminDashboard() {
                         className="border-b last:border-0 hover:bg-gray-50"
                       >
 
-                        <td className="px-4 py-4 font-semibold">
-                          {order.id}
+                        <td className="px-5 py-4 font-bold text-gray-900">
+                          #{order.id}
                         </td>
 
-                        <td className="px-4 py-4">
-                          {order.customer?.name || "Unknown"}
+                        <td className="px-5 py-4">
+
+                          <p className="font-semibold text-gray-900">
+                            {order.customer?.name || "Customer"}
+                          </p>
+
+                          <p className="text-xs text-gray-500">
+                            {order.customer?.phone || ""}
+                          </p>
+
                         </td>
 
-                        <td className="px-4 py-4 font-bold">
-                          TZS{" "}
-                          {Number(
-                            order.total || 0
-                          ).toLocaleString()}
+                        <td className="px-5 py-4 font-black text-gray-900">
+                          TZS {Number(order.total || 0).toLocaleString()}
                         </td>
 
-                        <td className="px-4 py-4">
+                        <td className="px-5 py-4">
 
-                          <span
-                            className={`rounded-full px-3 py-1 text-xs font-bold ${
-                              order.status === "Delivered"
-                                ? "bg-green-100 text-green-700"
-                                : order.status === "Cancelled"
-                                  ? "bg-red-100 text-red-700"
-                                  : order.status === "Processing"
-                                    ? "bg-blue-100 text-blue-700"
-                                    : "bg-yellow-100 text-yellow-700"
-                            }`}
-                          >
-                            {order.status || "Pending"}
+                          <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-bold text-gray-700">
+                            {order.status}
                           </span>
 
                         </td>
@@ -835,36 +609,7 @@ export default function AdminDashboard() {
 
                 </table>
 
-              </div>
-
-            )}
-
-          </div>
-
-          {/* STORE */}
-
-          <div className="mt-8 rounded-xl bg-gradient-to-r from-orange-600 to-yellow-500 p-6 text-white">
-
-            <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
-
-              <div>
-
-                <h3 className="text-xl font-black">
-                  GAMORA ONLINE Store
-                </h3>
-
-                <p className="text-sm text-white/80">
-                  Your online marketplace is ready.
-                </p>
-
-              </div>
-
-              <a
-                href="/"
-                className="rounded-lg bg-gray-900 px-6 py-3 text-center font-bold"
-              >
-                View Store →
-              </a>
+              )}
 
             </div>
 

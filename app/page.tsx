@@ -1,9 +1,8 @@
 "use client";
-
+import { translations, type Language } from "@/lib/translations";
 import { getProducts as getSupabaseProducts } from "@/lib/products";
 import { useEffect, useMemo, useState } from "react";
 
-type Language = "sw" | "en";
 
 type Product = {
   id: number;
@@ -18,105 +17,6 @@ type Product = {
 
 type CartItem = Product & { quantity: number };
 
-const translations = {
-  sw: {
-    home: "Nyumbani",
-    shop: "Duka",
-    categories: "Makundi",
-    about: "Kuhusu Sisi",
-    contact: "Wasiliana Nasi",
-    search: "Tafuta bidhaa...",
-    featured: "Bidhaa Maarufu",
-    marquee: "🇹🇿 KARIBU GAMORA ONLINE • NUNUA KWA URAHISI • CHAGUA KWA KUJIAMINI •",
-    safeOrder: "Oda yako inafika salama.",
-    safeInfo: "Taarifa zako ziko salama.",
-    realProducts: "Bidhaa bora na halisi.",
-    aboutText: "GAMORA ONLINE ni duka lako la kuaminika kwa bidhaa bora kwa bei nzuri.",
-
-    viewAll: "Angalia Zote",
-    cart: "Cart",
-    freeDelivery: "DELIVERY YA UHAKIKA • UNUNUZI SALAMA",
-    deliveryTitle: "DELIVERY YA UHAKIKA",
-    deliveryText: "100% tunahakikisha oda yako inafika salama",
-    secureTitle: "USALAMA",
-    secureText: "Usalama wa taarifa zako ni 100%",
-    qualityTitle: "BIDHAA BORA",
-    qualityText: "Bidhaa bora zenye uhakika na uhalisia",
-    supportTitle: "HUDUMA KWA WATEJA",
-    supportText: "24/7 tuko tayari kukuhudumia",
-    quickLinks: "QUICK LINKS",
-    customerService: "CUSTOMER SERVICE",
-    newsletter: "NEWSLETTER",
-    newsletterText: "Jiandikishe kupata taarifa za bidhaa mpya na ofa maalum.",
-    emailPlaceholder: "Weka email yako",
-    subscribe: "Jiunge",
-    rights: "Haki zote zimehifadhiwa.",
-    products: "Bidhaa",
-    orders: "Oda",
-    returns: "Returns",
-    shipping: "Shipping",
-    faqs: "FAQs",
-    myAccount: "Akaunti Yangu",
-    terms: "Masharti na Vigezo",
-    privacy: "Sera ya Faragha",
-    noProducts: "Hakuna bidhaa zilizopatikana.",
-    added: "imeongezwa kwenye cart.",
-    shopNow: "Nunua Sasa",
-  },
-  en: {
-    home: "Home",
-    shop: "Shop",
-    categories: "Categories",
-    about: "About Us",
-    contact: "Contact",
-    search: "Search products...",
-    featured: "Featured Products",
-    viewAll: "View all",
-    cart: "Cart",
-    freeDelivery: "RELIABLE DELIVERY • SECURE SHOPPING",
-    deliveryTitle: "RELIABLE DELIVERY",
-    deliveryText: "We make sure your order arrives safely",
-    secureTitle: "SECURITY",
-    secureText: "Usalama wa taarifa zako ni 100%",
-    qualityTitle: "QUALITY PRODUCTS",
-    qualityText: "Genuine, reliable quality products",
-    supportTitle: "CUSTOMER SUPPORT",
-    supportText: "24/7 tuko tayari kukuhudumia",
-    quickLinks: "QUICK LINKS",
-    customerService: "CUSTOMER SERVICE",
-    newsletter: "NEWSLETTER",
-    newsletterText: "Subscribe to get updates on new products and exclusive offers.",
-    emailPlaceholder: "Enter your email",
-    subscribe: "Subscribe",
-    rights: "All rights reserved.",
-    products: "Products",
-    orders: "Orders",
-    returns: "Returns",
-    shipping: "Shipping",
-    faqs: "FAQs",
-    myAccount: "My Account",
-    terms: "Terms & Conditions",
-    privacy: "Privacy Policy",
-    noProducts: "No products found.",
-    added: "has been added to your cart.",
-    shopNow: "Shop Now",
-
-    marquee:
-      "🇬🇧 WELCOME TO GAMORA ONLINE • SHOP EASILY • CHOOSE WITH CONFIDENCE •",
-
-    safeOrder:
-      "Safe ordering",
-
-    safeInfo:
-      "Your information is 100% secure.",
-
-    realProducts:
-      "Quality and genuine products.",
-
-    aboutText:
-      "GAMORA ONLINE is your trusted online shop for quality products at affordable prices.",
-  },
-};
 
 export default function HomePage() {
   const [language, setLanguage] = useState<Language>("sw");
@@ -565,7 +465,7 @@ export default function HomePage() {
           />
 
           <Benefit
-            title={language === "sw" ? "HUDUMA KWA WATEJA" : "CUSTOMER SUPPORT"}
+            title={t.supportTitle}
             text={language === "sw" ? "Tuko tayari kukusaidia 24/7." : "We are ready to help you 24/7."}
           />
 
@@ -639,8 +539,8 @@ export default function HomePage() {
                 NAVIGATION
               </h3>
               <div className="mt-4 space-y-3 text-sm text-slate-600">
-                <a href="/" className="block hover:text-[#E30613]">Home</a>
-                <a href="#products" className="block hover:text-[#E30613]">Shop</a>
+                <a href="/" className="block hover:text-[#E30613]">{t.home}</a>
+<a href="#products" className="block hover:text-[#E30613]">{t.shop}</a>
                 <a href="#products" className="block hover:text-[#E30613]">{t.categories}</a>
                 <a href="#about" className="block hover:text-[#E30613]">{t.about}</a>
                 <a href="/contact" className="block hover:text-[#E30613]">{t.contact}</a>
@@ -652,9 +552,9 @@ export default function HomePage() {
                 {t.supportTitle}
               </h3>
               <div className="mt-4 space-y-3 text-sm text-slate-600">
-                <p>{language === "sw" ? "Jinsi ya Kununua" : "How to Buy"}</p>
-                <p>{language === "sw" ? "Sera ya Uwasilishaji" : "Delivery Policy"}</p>
-                <p>{language === "sw" ? "Sera ya Marejesho" : "Return Policy"}</p>
+                <p>{t.howToBuy}</p>
+<p>{t.deliveryPolicy}</p>
+<p>{t.returnPolicy}</p>
                 <p>{language === "sw" ? "Masharti na Vigezo" : "Terms & Conditions"}</p>
                 <p>{t.supportText}</p>
               </div>
@@ -671,7 +571,7 @@ export default function HomePage() {
               <div className="mt-4 flex overflow-hidden rounded-lg border border-slate-300">
                 <input
                   type="email"
-                  placeholder="Weka email yako"
+                  placeholder={t.emailPlaceholder}
                   className="min-w-0 flex-1 px-4 py-3 text-sm outline-none"
                 />
                 <button

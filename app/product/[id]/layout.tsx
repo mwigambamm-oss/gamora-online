@@ -6,11 +6,15 @@ type Props = {
   params: Promise<{ id: string }>;
 };
 
+async function getProductData(id: string) {
+  return getProductById(Number(id));
+}
+
 export async function generateMetadata({
   params,
 }: Props): Promise<Metadata> {
   const { id } = await params;
-  const product = await getProductById(Number(id));
+  const product = await getProductData(id);
 
   if (!product) {
     return {
@@ -67,8 +71,66 @@ export async function generateMetadata({
   };
 }
 
-export default function ProductLayout({
+export default async function ProductLayout({
   children,
+  params,
 }: Props) {
-  return children;
+  const { id } = await params;
+  const product = await getProductData(id);
+
+  if (!product) {
+    return children;
+  }
+
+  const baseUrl = "https://gamoraonline.co.tz";
+  const productUrl = `${baseUrl}/product/${product.id}`;
+
+  const description =
+    product.description ||
+    `Buy ${product.name} online in Tanzania from GAMORA ONLINE. Quality products at great prices with convenient delivery.`;
+
+  const imageUrl = product.image
+    ? product.image.startsWith("http")
+      ? product.image
+      : `${baseUrl}${product.image.startsWith("/") ? "" : "/"}${product.image}`
+    : `${baseUrl}/og-image.png`;
+
+  const productSchema = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description,
+    image: [imageUrl],
+    url: productUrl,
+
+    brand: {
+      "@type": "Brand",
+      name: "GAMORA ONLINE",
+    },
+
+    offers: {
+      "@type": "Offer",
+      url: productUrl,
+      priceCurrency: "TZS",
+      price: product.price,
+      availability:
+        product.stock > 0
+          ? "https://schema.org/InStock"
+          : "https://schema.org/OutOfStock",
+      itemCondition: "https://schema.org/NewCondition",
+    },
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(productSchema),
+        }}
+      />
+
+      {children}
+    </>
+  );
 }

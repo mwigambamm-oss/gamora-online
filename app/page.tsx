@@ -649,23 +649,23 @@ export default function HomePage() {
 
             <div>
               <h3 className="text-sm font-black text-slate-900">
-                HUDUMA KWA WATEJA
+                {t.supportTitle}
               </h3>
               <div className="mt-4 space-y-3 text-sm text-slate-600">
-                <p>Jinsi ya Kununua</p>
-                <p>Sera ya Uwasilishaji</p>
-                <p>Sera ya Marejesho</p>
-                <p>Masharti na Vigezo</p>
-                <p>Tuko tayari kukusaidia 24/7</p>
+                <p>{language === "sw" ? "Jinsi ya Kununua" : "How to Buy"}</p>
+                <p>{language === "sw" ? "Sera ya Uwasilishaji" : "Delivery Policy"}</p>
+                <p>{language === "sw" ? "Sera ya Marejesho" : "Return Policy"}</p>
+                <p>{language === "sw" ? "Masharti na Vigezo" : "Terms & Conditions"}</p>
+                <p>{t.supportText}</p>
               </div>
             </div>
 
             <div>
               <h3 className="text-sm font-black text-slate-900">
-                JIUNGE NA ORODHA YETU
+                {t.newsletter}
               </h3>
               <p className="mt-4 text-sm leading-6 text-slate-600">
-                Pata taarifa za bidhaa mpya na ofa maalum moja kwa moja kwenye email yako.
+                {t.newsletterText}
               </p>
 
               <div className="mt-4 flex overflow-hidden rounded-lg border border-slate-300">
@@ -678,7 +678,7 @@ export default function HomePage() {
                   type="button"
                   className="bg-[#E30613] px-5 text-sm font-black text-white"
                 >
-                  JIUNGE
+                  {t.subscribe}
                 </button>
               </div>
             </div>
@@ -686,7 +686,7 @@ export default function HomePage() {
           </div>
 
           <div className="mt-9 border-t border-slate-200 pt-5 text-center text-xs text-slate-500">
-            © 2025 Gamora Online. Haki zote zimehifadhiwa.
+            © 2025 Gamora Online. {t.rights}
           </div>
         </div>
       </footer>

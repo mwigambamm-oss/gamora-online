@@ -1,9 +1,22 @@
 "use client";
 
+import { useEffect } from "react";
+
 import { useState } from "react";
 
 export default function PrivacyPage() {
   const [language, setLanguage] = useState<"sw" | "en">("sw");
+
+  useEffect(() => {
+    const savedLanguage = localStorage.getItem("gamora_language");
+
+    if (
+      savedLanguage === "sw" ||
+      savedLanguage === "en"
+    ) {
+      setLanguage(savedLanguage);
+    }
+  }, []);
 
   const sw = {
     back: "← Rudi Home",

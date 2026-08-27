@@ -266,10 +266,10 @@ const [liked, setLiked] = useState(false);
   const url = encodeURIComponent(window.location.href);
 
   window.open(
-    `https://www.facebook.com/sharer/sharer.php?u=${url}`,
-    "_blank",
-    "width=600,height=500"
-  );
+  `https://m.facebook.com/sharer/sharer.php?u=${url}`,
+  "_blank",
+  "width=600,height=700"
+);
 }}
   className="rounded-xl border px-5 py-2 font-bold"
 >

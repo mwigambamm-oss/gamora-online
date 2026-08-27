@@ -1840,31 +1840,41 @@ Thank you.`;
 </div>
               {paymentMethod === "M-Pesa" && (
   <div className="mt-4 rounded-xl bg-slate-50 p-4 font-bold">
-    Lipa M-Pesa: 0798555221
+   Lipa M-Pesa: 0798555221
+<br />
+Jina: Sokoro Mwigamba
   </div>
 )}
 
 {paymentMethod === "Mix by Yas" && (
   <div className="mt-4 rounded-xl bg-slate-50 p-4 font-bold">
     Lipa Mix by Yas: 0676285283
+<br />
+Jina: Sokoro Mwigamba
   </div>
 )}
 
 {paymentMethod === "Lipa Number - Mix by Yas" && (
   <div className="mt-4 rounded-xl bg-slate-50 p-4 font-bold">
     Lipa Number - Mix by Yas: 433064356
+<br />
+Jina: Sokoro Mwigamba
   </div>
 )}
 
 {paymentMethod === "NMB" && (
   <div className="mt-4 rounded-xl bg-slate-50 p-4 font-bold">
     NMB Account: 20510105556
+<br />
+Jina: Sokoro Mwigamba
   </div>
 )}
 
 {paymentMethod === "CRDB" && (
   <div className="mt-4 rounded-xl bg-slate-50 p-4 font-bold">
     CRDB Account: 01520013RMG00
+<br />
+Jina: Sokoro Mwigamba
   </div>
 )}
 

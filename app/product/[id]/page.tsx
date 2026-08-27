@@ -198,7 +198,7 @@ const [liked, setLiked] = useState(false);
     ""
   }
   alt={product.name}
-  className="h-full max-h-[600px] w-full object-contain"
+  className="h-[320px] max-h-[420px] w-full object-contain md:h-[420px]"
 />
 ) : (
   <div className="text-9xl">
@@ -216,7 +216,7 @@ const [liked, setLiked] = useState(false);
 
           {/* IMAGE THUMBNAILS */}
 
-          <div className="flex gap-3 p-4">
+          className="h-[320px] max-h-[420px] w-full object-contain md:h-[420px]"
 
             {(product.images && product.images.length > 0
               ? product.images
@@ -475,38 +475,42 @@ const [liked, setLiked] = useState(false);
 
             {/* ADD TO CART */}
 
-            <button
-              onClick={addToCart}
-              disabled={product.stock <= 0}
-              className="mt-6 w-full rounded-xl bg-sky-700 px-6 py-4 text-lg font-black text-white shadow-lg transition hover:bg-sky-800 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-slate-300"
-            >
-              {product.stock > 0
-                ? "🛒 Add to Cart"
-                : "Out of Stock"}
-            </button>
+<div className="mt-6 flex gap-2">
 
-            {product.stock > 0 && (
-              <button
-                onClick={() => {
-                  addToCart();
-                  window.location.href = "/checkout";
-                }}
-                className="mt-3 w-full rounded-xl border-2 border-sky-700 bg-white px-6 py-4 text-lg font-black text-sky-700 transition hover:bg-sky-50 active:scale-[0.98]"
-              >
-                ⚡ Buy Now
-              </button>
-            )}
+  <button
+    onClick={addToCart}
+    disabled={product.stock <= 0}
+    className="flex-1 rounded-lg bg-sky-700 px-3 py-3 text-sm font-bold text-white shadow"
+  >
+    {product.stock > 0 ? "🛒 Cart" : "Out"}
+  </button>
 
-            <a
-              href={`https://wa.me/255798555221?text=${encodeURIComponent(
-                `Hello GAMORA ONLINE, I am interested in ${product.name} - TZS ${product.price.toLocaleString()}`
-              )}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-3 flex w-full items-center justify-center rounded-xl bg-green-600 px-6 py-4 text-lg font-black text-white shadow-md transition hover:bg-green-700 active:scale-[0.98]"
-            >
-              💬 Ask on WhatsApp
-            </a>
+
+  {product.stock > 0 && (
+    <button
+      onClick={() => {
+        addToCart();
+        window.location.href = "/checkout";
+      }}
+      className="flex-1 rounded-lg border border-sky-700 px-3 py-3 text-sm font-bold text-sky-700"
+    >
+      ⚡ Buy
+    </button>
+  )}
+
+
+  <a
+    href={`https://wa.me/255798555221?text=${encodeURIComponent(
+      `Hello GAMORA ONLINE, I am interested in ${product.name} - TZS ${product.price.toLocaleString()}`
+    )}`}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="flex-1 rounded-lg bg-green-600 px-3 py-3 text-center text-sm font-bold text-white"
+  >
+    💬 WhatsApp
+  </a>
+
+</div>
 
             {/* TRUST & DELIVERY */}
 
@@ -557,8 +561,6 @@ const [liked, setLiked] = useState(false);
           </div>
 
         </div>
-
-      </div>
 
       {/* RELATED PRODUCTS */}
 

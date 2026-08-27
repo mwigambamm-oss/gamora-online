@@ -107,6 +107,8 @@ export default function ProductsPage() {
         image: uploadedImages[0],
         images: uploadedImages,
       }));
+
+console.log("TOTAL UPLOADED:", uploadedImages.length);
     } catch (error) {
       console.error("Image upload error:", error);
       alert("Failed to upload images.");

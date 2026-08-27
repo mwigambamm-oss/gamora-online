@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { calculateItemDiscount } from "@/lib/discount";
 
 type CartItem = {
   id: number;
@@ -80,13 +79,15 @@ const subtotal: number = cart.reduce(
 
 const discountTotal: number = cart.reduce(
   (total: number, item: CartItem) => {
-    const result = calculateItemDiscount(
-      Number(item.price),
-      Number(item.quantity),
-      Number(item.stock ?? item.quantity)
-    );
+    const oldPrice = Number(item.oldPrice || 0);
+    const price = Number(item.price || 0);
+    const quantity = Number(item.quantity || 0);
 
-    return total + result.discountTotal;
+    if (oldPrice > price) {
+      return total + (oldPrice - price) * quantity;
+    }
+
+    return total;
   },
   0
 );

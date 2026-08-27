@@ -8,7 +8,7 @@ type Product = {
   id: number;
   name: string;
   price: number;
-  oldPrice: number;
+  oldPrice?: number;
   category: string;
   stock: number;
   description?: string;

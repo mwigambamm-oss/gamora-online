@@ -13,6 +13,12 @@ type Product = {
   stock: number;
   description?: string;
   image?: string;
+  images?: string[];
+  colors?: string[];
+  sizes?: string[];
+  discount?: number;
+  orders_count?: number;
+  rating?: number;
 };
 
 export default function ProductDetailsPage() {
@@ -21,6 +27,8 @@ export default function ProductDetailsPage() {
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
+const [selectedImage, setSelectedImage] = useState("");
+const [liked, setLiked] = useState(false);
 
   useEffect(() => {
     async function loadProduct() {
@@ -181,17 +189,22 @@ export default function ProductDetailsPage() {
 
           <div className="relative flex min-h-[350px] items-center justify-center bg-slate-50 md:min-h-[600px]">
 
-            {product.image ? (
-              <img
-                src={product.image}
-                alt={product.name}
-                className="h-full max-h-[600px] w-full object-contain"
-              />
-            ) : (
-              <div className="text-9xl">
-                🛍️
-              </div>
-            )}
+            {(product.images && product.images.length > 0) ? (
+  <img
+  src={
+    selectedImage ||
+    product.images?.[0] ||
+    product.image ||
+    ""
+  }
+  alt={product.name}
+  className="h-full max-h-[600px] w-full object-contain"
+/>
+) : (
+  <div className="text-9xl">
+    🛍️
+  </div>
+)}
 
             {discount > 0 && (
               <span className="absolute left-5 top-5 rounded-full bg-red-500 px-4 py-2 font-black text-white shadow">
@@ -199,7 +212,29 @@ export default function ProductDetailsPage() {
               </span>
             )}
 
+                    </div>
+
+          {/* IMAGE THUMBNAILS */}
+
+          <div className="flex gap-3 p-4">
+
+            {(product.images && product.images.length > 0
+              ? product.images
+              : product.image
+              ? [product.image]
+              : []
+            ).map((img, index) => (
+              <img
+  key={index}
+  src={img}
+  alt={product.name}
+  onClick={() => setSelectedImage(img)}
+  className="h-20 w-20 cursor-pointer rounded-lg object-cover border"
+/>
+            ))}
+
           </div>
+
 
           {/* DETAILS */}
 
@@ -209,9 +244,40 @@ export default function ProductDetailsPage() {
               {product.category}
             </p>
 
-            <h1 className="mt-3 text-3xl font-black text-slate-900 md:text-5xl">
+            <h1 className="mt-3 text-xl font-bold text-slate-900 md:text-2xl">
               {product.name}
-            </h1>
+                        </h1>
+
+
+            {/* LIKE & SHARE */}
+
+            <div className="mt-4 flex gap-3">
+
+              <button
+                onClick={() => setLiked(!liked)}
+                className="rounded-xl border px-5 py-2 font-bold hover:bg-slate-50"
+              >
+                {liked ? "❤️ Liked" : "🤍 Like"}
+              </button>
+
+
+              <button
+  onClick={() => {
+  const url = encodeURIComponent(window.location.href);
+
+  window.open(
+    `https://www.facebook.com/sharer/sharer.php?u=${url}`,
+    "_blank",
+    "width=600,height=500"
+  );
+}}
+  className="rounded-xl border px-5 py-2 font-bold"
+>
+  🔗 Share
+</button>
+
+            </div>
+
 
             <div className="mt-5 flex items-center gap-2">
               <span className="text-lg">⭐⭐⭐⭐⭐</span>
@@ -224,7 +290,7 @@ export default function ProductDetailsPage() {
 
             <div className="mt-6 flex flex-wrap items-center gap-3">
 
-              <span className="text-3xl font-black text-sky-700">
+              <span className="text-2xl font-bold text-sky-700">
                 TZS {product.price.toLocaleString()}
               </span>
 
@@ -237,7 +303,29 @@ export default function ProductDetailsPage() {
 
             </div>
 
-            {/* STOCK */}
+
+{/* PRODUCT STATS */}
+
+<div className="mt-4 flex flex-wrap gap-4 text-sm font-bold">
+
+  {product.discount && product.discount > 0 && (
+    <span className="text-red-600">
+      -{product.discount}% OFF
+    </span>
+  )}
+
+  <span className="text-slate-600">
+    🛒 {product.orders_count || 0} Orders
+  </span>
+
+  <span className="text-yellow-500">
+    ⭐ {product.rating || 0} Rating
+  </span>
+
+</div>
+
+
+{/* STOCK */}
 
             <div className="mt-5">
 
@@ -270,7 +358,60 @@ export default function ProductDetailsPage() {
                   "Quality product available at GAMORA ONLINE."}
               </p>
 
-            </div>
+                        </div>
+
+
+            {/* COLORS */}
+
+            {product.colors && product.colors.length > 0 && (
+              <div className="mt-7">
+
+                <p className="mb-2 text-sm font-bold">
+                  Color
+                </p>
+
+                <div className="flex flex-wrap gap-2">
+
+                  {product.colors.map((color) => (
+                    <span
+                      key={color}
+                      className="rounded-lg border px-4 py-2 text-sm font-bold"
+                    >
+                      {color}
+                    </span>
+                  ))}
+
+                </div>
+
+              </div>
+            )}
+
+
+            {/* SIZES */}
+
+            {product.sizes && product.sizes.length > 0 && (
+              <div className="mt-5">
+
+                <p className="mb-2 text-sm font-bold">
+                  Size
+                </p>
+
+                <div className="flex flex-wrap gap-2">
+
+                  {product.sizes.map((size) => (
+                    <span
+                      key={size}
+                      className="rounded-lg border px-4 py-2 text-sm font-bold"
+                    >
+                      {size}
+                    </span>
+                  ))}
+
+                </div>
+
+              </div>
+            )}
+
 
             {/* QUANTITY */}
 
@@ -454,14 +595,18 @@ export default function ProductDetailsPage() {
 
                     <div className="flex h-44 items-center justify-center overflow-hidden bg-slate-50">
 
-                      {item.image ? (
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          loading="lazy"
-                          className="h-full w-full object-cover transition duration-500 hover:scale-105"
-                        />
-                      ) : (
+                      {(item.images && item.images.length > 0) || item.image ? (
+  <img
+    src={
+      item.images?.[0] ||
+      item.image ||
+      ""
+    }
+    alt={item.name}
+    loading="lazy"
+    className="h-full w-full object-cover transition duration-500 hover:scale-105"
+  />
+) : (
                         <div className="text-6xl">
                           🛍️
                         </div>

@@ -17,6 +17,7 @@ export default function AdminDashboard() {
   const [revenue, setRevenue] = useState(0);
   const [loading, setLoading] = useState(true);
   const [profileOpen, setProfileOpen] = useState(false);
+const [menuOpen, setMenuOpen] = useState(false);
 
   async function loadDashboard() {
     try {
@@ -161,7 +162,18 @@ export default function AdminDashboard() {
   return (
     <main className="min-h-screen bg-gray-100">
 
-      <aside className="fixed left-0 top-0 hidden h-screen w-64 bg-gray-950 text-white md:block">
+      <aside
+  className={`fixed left-0 top-0 z-50 h-screen w-64 bg-gray-950 text-white transition-transform ${
+    menuOpen ? "translate-x-0" : "-translate-x-full"
+  } md:translate-x-0`}
+>
+
+ <button
+    className="absolute right-4 top-4 rounded-lg bg-gray-800 px-3 py-2 text-white md:hidden"
+    onClick={() => setMenuOpen(false)}
+  >
+    ✕
+  </button>
 
         <div className="border-b border-gray-800 px-6 py-6">
           <h1 className="text-2xl font-black text-orange-500">
@@ -262,7 +274,14 @@ export default function AdminDashboard() {
 
         <header className="border-b bg-white px-4 py-5 shadow-sm md:px-6">
 
-          <div className="flex items-center justify-between gap-4">
+  <button
+    className="mb-4 rounded-lg bg-gray-950 px-4 py-3 text-white md:hidden"
+    onClick={() => setMenuOpen(true)}
+  >
+    ☰ Menu
+  </button>
+
+  <div className="flex items-center justify-between gap-4">
 
             <div>
               <h2 className="text-2xl font-black text-gray-900">

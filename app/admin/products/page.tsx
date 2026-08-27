@@ -71,7 +71,7 @@ export default function ProductsPage() {
       const { supabase } = await import("@/lib/supabase");
       const uploadedImages: string[] = [];
 
-      for (const file of files.slice(0, 5)) {
+      for (const file of files.slice(0, 20)) {
         const extension = file.name.split(".").pop() || "jpg";
 
         const fileName = `${Date.now()}-${Math.random()

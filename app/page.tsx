@@ -1,5 +1,7 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+
 import { translations, type Language } from "@/lib/translations";
 import { getProducts as getSupabaseProducts, type Product } from "@/lib/products";
 import { useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
@@ -72,6 +74,7 @@ const ALL_CATEGORIES = [
 ];
 
 export default function HomePage() {
+  const router = useRouter();
   const [language, setLanguage] = useState<Language>("en");
   const [products, setProducts] = useState<Product[]>([]);
   const [search, setSearch] = useState("");
@@ -415,7 +418,17 @@ export default function HomePage() {
                   }}
                   className="flex min-h-[58px] items-center gap-2 rounded-xl border border-[#e5e5e5] bg-white px-3 py-2 text-left text-xs font-bold text-[#333] transition hover:border-[#374151] hover:bg-[#f8f9fa] sm:text-sm"
                 >
-                  <span className="text-xl">{CATEGORY_ICONS[category]}</span>
+                  {CATEGORY_IMAGES[category] ? (
+                    <img
+                      src={CATEGORY_IMAGES[category]}
+                      alt={category}
+                      className="h-10 w-10 rounded-lg object-cover"
+                    />
+                  ) : (
+                    <span className="text-xl">
+                      {CATEGORY_ICONS[category] || "🛍️"}
+                    </span>
+                  )}
                   <span>{category}</span>
                 </button>
               ))}
@@ -590,73 +603,51 @@ export default function HomePage() {
       </section>
 
       {/* FOOTER */}
-      <footer id="about" className="bg-white py-5 sm:py-14 text-slate-700">
-        <div className="mx-auto max-w-[1280px] px-4">
-          <div
-            className="rounded-[28px] px-4 py-6 text-center sm:px-10 sm:py-12 text-white sm:px-10 sm:py-12"
-            style={{
-              background:
-                "#ffffff",
-            }}
-          >
-<p className="mx-auto mt-2 max-w-xl sm:mt-4 text-sm leading-6 text-white">
-              {t.aboutText}
-            </p>
+<footer id="about" className="border-t border-slate-200 bg-white py-8 text-slate-700 sm:py-10">
+  <div className="mx-auto max-w-[1280px] px-4">
 
-            <p className="mt-3 text-xs font-black sm:mt-6 uppercase tracking-[0.22em] text-white">
-              Gamora Online
-            </p>
+    <div className="grid grid-cols-3 gap-3 sm:gap-8">
 
-            <div className="mt-2 flex justify-center gap-2 sm:mt-3">
-              <SocialButton label="Facebook" href="https://web.facebook.com/gamoraonline/" icon="f" />
-              <SocialButton label="Instagram" href="https://www.instagram.com/gamoraonline_store/" icon="◎" />
-              <SocialButton label="TikTok" href="https://www.tiktok.com/@officialgamoraonline" icon="♪" />
-            </div>
+      <FooterColumn
+        title={language === "sw" ? "Duka" : "Shop"}
+        links={[
+          ["Makundi", "#categories"],
+          ["Bidhaa Mpya", "#new-arrivals"],
+          ["Ofa", "#deals"],
+          ["Zinazouzwa Sana", "#best-sellers"],
+        ]}
+      />
 
-            <div className="mx-auto mt-3 grid grid-cols-3 gap-0 sm:mt-10 sm:grid-cols-3 sm:gap-8">
-              <div className="min-w-0"><FooterColumn
-                title={language === "sw" ? "Duka" : "Shop"}
-                links={[
-                  [language === "sw" ? "Makundi" : "Categories", "#categories"],
-                  [language === "sw" ? "Bidhaa Mpya" : "New Arrivals", "#new-arrivals"],
-                  [language === "sw" ? "Ofa" : "Deals", "#deals"],
-                  [language === "sw" ? "Zinazouzwa Sana" : "Best Sellers", "#best-sellers"],
-                ]}
-              /></div>
+      <FooterColumn
+        title={language === "sw" ? "Mteja" : "Customer"}
+        links={[
+          ["Tengeneza Account", "/profile"],
+          ["Oda Zangu", "/orders"],
+          ["Wishlist", "/wishlist"],
+          ["Kikapu", "/cart"],
+        ]}
+      />
 
-              <div className="min-w-0"><FooterColumn
-                title={language === "sw" ? "Mteja" : "Customer"}
-                links={[
-                  [language === "sw" ? "Tengeneza Account" : "Create Account", "/profile"],
-                  [language === "sw" ? "Oda" : "Orders", "/orders"],
-                  [language === "sw" ? "Wishlist" : "Wishlist", "/wishlist"],
-                  [language === "sw" ? "Kikapu" : "Cart", "/cart"],
-                ]}
-              /></div>
+      <FooterColumn
+        title={language === "sw" ? "Msaada" : "Support"}
+        links={[
+          ["Jinsi ya Kununua", "/help"],
+          ["Sera ya Uwasilishaji", "/delivery"],
+          ["Sera ya Marejesho", "/terms"],
+          ["Wasiliana Nasi", "/contact"],
+        ]}
+      />
 
-              <div className="min-w-0"><FooterColumn
-                title={language === "sw" ? "Msaada" : "Support"}
-                links={[
-                  [language === "sw" ? "Jinsi ya Kununua" : "How to Buy", "/contact"],
-                  [language === "sw" ? "Sera ya Uwasilishaji" : "Delivery Policy", "/contact"],
-                  [language === "sw" ? "Sera ya Marejesho" : "Return Policy", "/contact"],
-                  [language === "sw" ? "Wasiliana Nasi" : "Contact Support", "/contact"],
-                ]}
-              /></div>
-            </div>
+    </div>
 
-            <div className="mt-5 border-t sm:mt-10 border-t border-white/20 pt-5 text-xs text-white">
-              <p>© 2026 Gamora Online. {t.rights}</p>
+    <div className="mt-8 border-t border-slate-200 pt-4 text-center text-xs text-slate-500">
+      © 2026 Gamora Online. {t.rights}
+    </div>
 
-              <div className="mt-2 flex justify-center gap-5 sm:mt-3">
-                <span>{t.terms}</span>
-                <span>{t.privacy}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </footer>
-    </main>
+  </div>
+</footer>
+
+</main>
   );
 }
 

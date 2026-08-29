@@ -23,48 +23,48 @@ export default function TermsPage() {
     badge: "GAMORA ONLINE",
     title: "Masharti na Vigezo",
     intro:
-      "Kwa kutumia GAMORA ONLINE, unakubaliana na masharti haya. Tafadhali yasome kabla ya kuweka order.",
+      "Kwa kutumia GAMORA ONLINE, unakubaliana na vigezo na masharti haya. Tafadhali yasome kabla ya kuweka oda.",
     updated: "Ilisasishwa: Agosti 2026",
 
     accountTitle: "1. Taarifa za Mteja",
     account:
-      "Mteja anatakiwa kutoa taarifa sahihi wakati wa kuweka order, ikiwemo jina, namba ya simu, address na taarifa nyingine zinazohitajika kwa delivery.",
+      "Mteja anatakiwa kutoa taarifa sahihi wakati wa kuweka order, ikiwemo jina, namba ya simu, anwani na taarifa nyingine zinazohitajika kwa delivery.",
 
     ordersTitle: "2. Orders",
     orders:
-      "Order inayowekwa kupitia website inaweza kukaguliwa kabla ya kuthibitishwa. GAMORA ONLINE inaweza kuwasiliana na mteja kuthibitisha order ikiwa taarifa zaidi zinahitajika.",
+      "Oda inayowekwa kupitia tovuti inaweza kukaguliwa kabla ya kuthibitishwa. GAMORA ONLINE inaweza kuwasiliana na mteja kuthibitisha order ikiwa taarifa zaidi zinahitajika.",
 
     priceTitle: "3. Bei za Bidhaa",
     price:
-      "Bei zinazoonyeshwa kwenye website zinaweza kubadilika. Bei itakayoonyeshwa wakati wa kuthibitisha order ndiyo itatumika, isipokuwa pale ambapo kuna hitilafu ya wazi ya mfumo au bei.",
+      "Bei zinazoonyeshwa kwenye tovuti zinaweza kubadilika. Bei itakayoonyeshwa wakati wa kuthibitisha oda ndiyo itatumika, isipokuwa pale ambapo kuna hitilafu ya wazi ya mfumo au bei.",
 
     paymentTitle: "4. Malipo",
     payment:
-      "Njia za malipo zitakazoonekana wakati wa checkout ndizo zitakazotumika. Mteja anatakiwa kuhakikisha taarifa za malipo ni sahihi na salama.",
+      "Njia za malipo zitakazoonekana wakati wa malipo ndizo zitakazotumika. Mteja anatakiwa kuhakikisha taarifa za malipo ni sahihi na salama.",
 
     deliveryTitle: "5. Delivery",
     delivery:
-      "Delivery inaweza kuhesabiwa kulingana na distance na eneo la mteja. Muda wa delivery unaweza kutofautiana kulingana na eneo, traffic, hali ya hewa na sababu nyingine za usafirishaji.",
+      "Uwasilishaji unaweza kuhesabiwa kulingana na umbali na eneo la mteja. Muda wa delivery unaweza kutofautiana kulingana na eneo, msongamano wa magari, hali ya hewa na sababu nyingine za usafirishaji.",
 
     productsTitle: "6. Bidhaa",
     products:
-      "Tunajitahidi kuhakikisha taarifa za bidhaa, picha, bei na stock ni sahihi. Hata hivyo, kunaweza kutokea tofauti ndogo kwenye picha au maelezo ya bidhaa.",
+      "Tunajitahidi kuhakikisha taarifa za bidhaa, picha, bei na upatikanaji wa bidhaa ni sahihi. Hata hivyo, kunaweza kutokea tofauti ndogo kwenye picha au maelezo ya bidhaa.",
 
     cancellationTitle: "7. Mabadiliko ya Oda na Matumizi ya Huduma",
     cancellation:
-      "Maombi ya cancellation au return yatashughulikiwa kulingana na hali ya order na sera ya bidhaa husika. Mteja anatakiwa kuwasiliana na GAMORA ONLINE mapema iwezekanavyo.",
+      "Maombi ya cancellation au marejesho yatashughulikiwa kulingana na hali ya order na sera ya bidhaa husika. Mteja anatakiwa kuwasiliana na GAMORA ONLINE mapema iwezekanavyo.",
 
     conductTitle: "8. Matumizi ya Website",
     conduct:
-      "Mteja hatakiwi kutumia website kwa shughuli haramu, udanganyifu, kuharibu mfumo au kujaribu kupata taarifa ambazo hana ruhusa nazo.",
+      "Mteja hatakiwi kutumia tovuti kwa shughuli haramu, udanganyifu, kuharibu mfumo au kujaribu kupata taarifa ambazo hana ruhusa nazo.",
 
     changesTitle: "9. Mabadiliko ya Masharti",
     changes:
-      "GAMORA ONLINE inaweza kubadilisha masharti haya inapohitajika. Toleo jipya litachapishwa kwenye website.",
+      "GAMORA ONLINE inaweza kubadilisha masharti haya inapohitajika. Toleo jipya litachapishwa kwenye tovuti.",
 
     contactTitle: "10. Mawasiliano",
     contact:
-      "Kwa maswali kuhusu masharti haya, wasiliana nasi kupitia simu, WhatsApp au njia nyingine rasmi za mawasiliano zilizowekwa kwenye website.",
+      "Kwa maswali kuhusu masharti haya, wasiliana nasi kupitia simu, WhatsApp au njia nyingine rasmi za mawasiliano zilizowekwa kwenye tovuti.",
   };
 
   const en = {
@@ -81,39 +81,39 @@ export default function TermsPage() {
 
     ordersTitle: "2. Orders",
     orders:
-      "Orders placed through the website may be reviewed before confirmation. GAMORA ONLINE may contact the customer if additional information is required.",
+      "Orders placed through the tovuti may be reviewed before confirmation. GAMORA ONLINE may contact the customer if additional information is required.",
 
     priceTitle: "3. Product Prices",
     price:
-      "Prices displayed on the website may change. The price shown at the time of order confirmation will normally apply, except in cases of obvious system or pricing errors.",
+      "Prices displayed on the tovuti may change. The price shown at the time of order confirmation will normally apply, except in cases of obvious system or pricing errors.",
 
     paymentTitle: "4. Payments",
     payment:
-      "Payment methods displayed during checkout are the available methods for the order. Customers are responsible for ensuring that payment information is accurate and secure.",
+      "Payment methods displayed during malipo are the available methods for the order. Customers are responsible for ensuring that payment information is accurate and secure.",
 
     deliveryTitle: "5. Delivery",
     delivery:
-      "Delivery charges may be calculated based on the customer's distance and location. Delivery times may vary depending on location, traffic, weather and other transportation factors.",
+      "Delivery charges may be calculated based on the customer's umbali and location. Delivery times may vary depending on location, msongamano wa magari, weather and other transportation factors.",
 
     productsTitle: "6. Products",
     products:
-      "We aim to keep product information, images, prices and stock levels accurate. However, minor differences may occur between product images and actual products.",
+      "We aim to keep product information, images, prices and upatikanaji wa bidhaa levels accurate. However, minor differences may occur between product images and actual products.",
 
     cancellationTitle: "7. Order Changes and Service Usage",
     cancellation:
-      "Cancellation or return requests will be handled according to the order status and the applicable product policy. Customers should contact GAMORA ONLINE as soon as possible.",
+      "Cancellation or marejesho requests will be handled according to the order status and the applicable product policy. Customers should contact GAMORA ONLINE as soon as possible.",
 
     conductTitle: "8. Website Use",
     conduct:
-      "Customers must not use the website for illegal activities, fraud, damaging the system or attempting to access information without authorization.",
+      "Customers must not use the tovuti for illegal activities, fraud, damaging the system or attempting to access information without authorization.",
 
     changesTitle: "9. Changes to These Terms",
     changes:
-      "GAMORA ONLINE may update these terms when necessary. The latest version will be published on the website.",
+      "GAMORA ONLINE may update these terms when necessary. The latest version will be published on the tovuti.",
 
     contactTitle: "10. Contact",
     contact:
-      "For questions regarding these terms, contact us through phone, WhatsApp or other official contact channels provided on the website.",
+      "For questions regarding these terms, contact us through phone, WhatsApp or other official contact channels provided on the tovuti.",
   };
 
   const t = language === "sw" ? sw : en;
@@ -166,7 +166,7 @@ export default function TermsPage() {
 
       {/* TOP BAR */}
       <div className="bg-sky-950 px-4 py-2 text-center text-sm text-white">
-        🌊 GAMORA ONLINE • Kariakoo, Dar es Salaam
+        GAMORA ONLINE • Kariakoo, Dar es Salaam
       </div>
 
       {/* HEADER */}

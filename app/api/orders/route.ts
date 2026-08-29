@@ -419,7 +419,12 @@ for (const cost of productCosts || []) {
           data.customer_phone,
 
         items:
-          orderItems,
+          orderItems.map((item) => ({
+            ...item,
+            image:
+              item.image ||
+              "",
+          })),
 
         subtotal:
           Number(

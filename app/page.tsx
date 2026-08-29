@@ -829,18 +829,18 @@ function FooterColumn({ title, links }: { title: string; links: Array<[string, s
 function SocialButton({ icon, label, href }: { icon: string; label: string; href: string }) {
   const icons: Record<string, React.ReactNode> = {
     Facebook: (
-      <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current">
-        <path d="M14 8h3V4h-3c-3.31 0-5 2.08-5 5v3H6v4h3v8h4v-8h3l1-4h-4V9c0-.6.4-1 1-1z"/>
+      <svg viewBox="0 0 24 24" className="h-4 w-4">
+        <path fill="#1877F2" d="M14 8h3V4h-3c-3.31 0-5 2.08-5 5v3H6v4h3v8h4v-8h3l1-4h-4V9c0-.6.4-1 1-1z"/>
       </svg>
     ),
     Instagram: (
-      <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current">
+      <svg viewBox="0 0 24 24" className="h-4 w-4">
         <path d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5zm0 2a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3H7zm5 3.5A4.5 4.5 0 1 1 7.5 12 4.5 4.5 0 0 1 12 7.5z"/>
       </svg>
     ),
     TikTok: (
-      <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current">
-        <path d="M16 2h3c.2 2 1.3 3.6 3 4.5v3.2c-1.8-.1-3.5-.7-5-1.7v7.2a6 6 0 1 1-6-6v3.2a3 3 0 1 0 2 2.7V2z"/>
+      <svg viewBox="0 0 24 24" className="h-4 w-4">
+        <path fill="#000000" d="M16 2h3c.2 2 1.3 3.6 3 4.5v3.2c-1.8-.1-3.5-.7-5-1.7v7.2a6 6 0 1 1-6-6v3.2a3 3 0 1 0 2 2.7V2z"/>
       </svg>
     ),
   };
@@ -851,7 +851,7 @@ function SocialButton({ icon, label, href }: { icon: string; label: string; href
       target="_blank"
       rel="noopener noreferrer"
       aria-label={label}
-      className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-900 hover:text-white"
+      className="flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm transition hover:scale-110"
     >
       {icons[icon]}
     </a>

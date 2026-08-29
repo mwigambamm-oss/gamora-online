@@ -719,7 +719,15 @@ export default function CheckoutPage() {
   if (orderPlaced) {
     return (
       <main className="min-h-screen bg-slate-50 p-5">
-        <div className="mx-auto mt-10 max-w-xl rounded-3xl bg-white p-8 text-center shadow">
+        
+<div className="mt-6 rounded-xl border bg-white p-4 text-sm">
+<h3 className="font-bold text-slate-900">Malipo</h3>
+<p className="mt-2">MIX BY YAS Lipa: <b>433064356</b></p>
+<p>MIX BY YAS Simu: <b>0676285283</b></p>
+<p>VODA: <b>0798555221</b></p>
+</div>
+
+<div className="mx-auto mt-10 max-w-xl rounded-3xl bg-white p-8 text-center shadow">
           <div className="text-6xl">
             ✅
           </div>

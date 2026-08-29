@@ -590,13 +590,13 @@ export default function HomePage() {
       </section>
 
       {/* FOOTER */}
-      <footer id="about" className="bg-[#f3f4f6] py-5 sm:py-14 text-white">
+      <footer id="about" className="bg-white py-5 sm:py-14 text-slate-700">
         <div className="mx-auto max-w-[1280px] px-4">
           <div
             className="rounded-[28px] px-4 py-6 text-center sm:px-10 sm:py-12 text-white sm:px-10 sm:py-12"
             style={{
               background:
-                "radial-gradient(circle at center, #3f4652 0%, #252a32 45%, #171a1f 100%)",
+                "#ffffff",
             }}
           >
 <p className="mx-auto mt-2 max-w-xl sm:mt-4 text-sm leading-6 text-white">
@@ -604,7 +604,7 @@ export default function HomePage() {
             </p>
 
             <p className="mt-3 text-xs font-black sm:mt-6 uppercase tracking-[0.22em] text-white">
-              {t.followUs}
+              Gamora Online
             </p>
 
             <div className="mt-2 flex justify-center gap-2 sm:mt-3">

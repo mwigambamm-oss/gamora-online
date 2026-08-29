@@ -1,0 +1,265 @@
+import { NextResponse } from "next/server";
+import { supabase } from "@/lib/supabase";
+
+const processingOrders = new Set<string>();
+
+type OrderItem = {
+  id: number;
+  name: string;
+  price: number;
+  quantity: number;
+  image?: string;
+};
+
+type OrderBody = {
+  id?: string | number;
+  customer?: {
+    name?: string;
+    phone?: string;
+    email?: string;
+    notes?: string;
+  };
+  location?: {
+    latitude?: number | null;
+    longitude?: number | null;
+  };
+  distanceKm?: number | null;
+  deliveryFee?: number | null;
+  deliveryMethod?: "pickup" | "delivery";
+  items?: OrderItem[];
+  subtotal?: number;
+  discountTotal?: number;
+  total?: number;
+  status?: string;
+  createdAt?: string;
+};
+
+async function changeStock(items: OrderItem[]) {
+  const changed: { id: number; quantity: number }[] = [];
+
+  for (const item of items) {
+    const productId = Number(item.id);
+    const quantity = Number(item.quantity);
+
+    if (!productId || quantity <= 0) {
+      throw new Error(`Invalid product or quantity for ${item.name}`);
+    }
+
+    const { data: product, error } = await supabase
+      .from("products")
+      .select("id,name,stock")
+      .eq("id", productId)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!product) throw new Error(`Product not found: ${item.name}`);
+
+    const stock = Number(product.stock || 0);
+
+    if (stock < quantity) {
+      throw new Error(
+        `Not enough stock for ${product.name}. Available: ${stock}, requested: ${quantity}`
+      );
+    }
+
+    const { error: updateError } = await supabase
+      .from("products")
+      .update({ stock: stock - quantity })
+      .eq("id", productId);
+
+    if (updateError) throw updateError;
+
+    changed.push({ id: productId, quantity });
+  }
+
+  return changed;
+}
+
+async function rollbackStock(
+  items: { id: number; quantity: number }[]
+) {
+  for (const item of items) {
+    const { data: product } = await supabase
+      .from("products")
+      .select("stock")
+      .eq("id", item.id)
+      .maybeSingle();
+
+    if (!product) continue;
+
+    await supabase
+      .from("products")
+      .update({
+        stock: Number(product.stock || 0) + Number(item.quantity),
+      })
+      .eq("id", item.id);
+  }
+}
+
+export async function POST(request: Request) {
+  let orderLockId = "";
+  let changedStock: { id: number; quantity: number }[] = [];
+
+  try {
+    const body = (await request.json()) as OrderBody;
+
+    const {
+      id,
+      customer,
+      location,
+      distanceKm,
+      deliveryFee,
+      deliveryMethod,
+      items,
+      subtotal,
+      discountTotal,
+      total,
+      status,
+      createdAt,
+    } = body;
+
+    const orderItems = Array.isArray(items) ? items : [];
+
+    if (!orderItems.length) {
+      return NextResponse.json(
+        { error: "Order has no products." },
+        { status: 400 }
+      );
+    }
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "Order number is required." },
+        { status: 400 }
+      );
+    }
+
+    orderLockId = String(id);
+
+    if (processingOrders.has(orderLockId)) {
+      return NextResponse.json(
+        { error: "This order is already being processed." },
+        { status: 409 }
+      );
+    }
+
+    processingOrders.add(orderLockId);
+
+    const { data: existingOrder, error: duplicateError } =
+      await supabase
+        .from("orders")
+        .select("id,order_number")
+        .eq("order_number", id)
+        .maybeSingle();
+
+    if (duplicateError) throw duplicateError;
+
+    if (existingOrder) {
+      return NextResponse.json(
+        {
+          error: "This order already exists.",
+          order: existingOrder,
+        },
+        { status: 409 }
+      );
+    }
+
+    const initialStatus = status || "Pending";
+    const isPickup = deliveryMethod === "pickup";
+    const safeSubtotal = Number(subtotal || 0);
+    const safeDeliveryFee = isPickup ? 0 : Number(deliveryFee || 0);
+    const safeTotal = isPickup
+      ? safeSubtotal
+      : Number(total ?? safeSubtotal + safeDeliveryFee);
+
+    if (initialStatus !== "Cancelled") {
+      changedStock = await changeStock(orderItems);
+    }
+
+    const { data, error } = await supabase
+      .from("orders")
+      .insert({
+        id: Date.now(),
+        order_number: id,
+
+        customer_name: customer?.name || "",
+        customer_phone: customer?.phone || "",
+        customer_email: customer?.email || "",
+        customer_notes: customer?.notes || "",
+
+        delivery_method: isPickup ? "pickup" : "delivery",
+
+        latitude: location?.latitude ?? null,
+        longitude: location?.longitude ?? null,
+        distance_km: isPickup ? null : distanceKm ?? null,
+        delivery_fee: safeDeliveryFee,
+
+        items: orderItems,
+        subtotal: safeSubtotal,
+        discount_total: Number(discountTotal || 0),
+        total: safeTotal,
+
+        status: initialStatus,
+        created_at: createdAt || new Date().toISOString(),
+      })
+      .select()
+      .single();
+
+    if (error) {
+      if (changedStock.length) {
+        await rollbackStock(changedStock);
+      }
+
+      console.error("FAILED TO SAVE ORDER:", error);
+
+      return NextResponse.json(
+        {
+          error: error.message || "Supabase insert failed",
+          code: error.code || null,
+          details: error.details || null,
+          hint: error.hint || null,
+        },
+        { status: 500 }
+      );
+    }
+
+    try {
+      const { orderRobotNotification } =
+        await import("@/lib/robot");
+
+      await orderRobotNotification({
+        order_number: data.order_number,
+        customer_name: data.customer_name,
+        customer_phone: data.customer_phone,
+        items: orderItems,
+        subtotal: Number(data.subtotal || 0),
+        delivery_fee: Number(data.delivery_fee || 0),
+        total: Number(data.total || 0),
+        status: data.status || "Pending",
+      });
+    } catch (telegramError) {
+      console.error(
+        "Telegram notification failed:",
+        telegramError
+      );
+    }
+
+    return NextResponse.json(data, { status: 201 });
+  } catch (error) {
+    console.error("Create order error:", error);
+
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to create order",
+      },
+      { status: 500 }
+    );
+  } finally {
+    if (orderLockId) {
+      processingOrders.delete(orderLockId);
+    }
+  }
+}

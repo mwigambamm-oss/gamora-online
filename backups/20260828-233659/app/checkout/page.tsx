@@ -579,8 +579,6 @@ export default function CheckoutPage() {
         ? subtotal
         : total;
 
-    console.log("CHECKOUT CART:", cart);
-
     const order = {
       id: newOrderNumber,
 
@@ -608,10 +606,7 @@ export default function CheckoutPage() {
 
       deliveryMethod,
 
-      items: cart.map((item) => ({
-        ...item,
-        image: item.image || item.images?.[0] || "",
-      })),
+      items: cart,
 
       subtotal,
 

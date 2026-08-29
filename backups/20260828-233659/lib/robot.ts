@@ -77,7 +77,6 @@ export async function orderRobotNotification(
       `https://api.telegram.org/bot${token}/sendMessage`,
       {
         method: "POST",
-        signal: AbortSignal.timeout(60000),
         headers: {
           "Content-Type":
             "application/json",
@@ -138,15 +137,10 @@ export async function orderRobotNotification(
   }
 
   for (const item of items) {
-    let image =
+    const image =
       typeof item.image === "string"
         ? item.image.trim()
         : "";
-
-    if (image.startsWith("/")) {
-      image =
-        `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}${image}`;
-    }
 
     if (!image) {
       continue;
@@ -164,39 +158,32 @@ export async function orderRobotNotification(
         ).toLocaleString()}\n` +
         `🛒 Order: ${order.order_number}`;
 
-      console.log("SENDING TELEGRAM PHOTO:", image);
-
       const photoResponse =
         await fetch(
           `https://api.telegram.org/bot${token}/sendPhoto`,
           {
             method: "POST",
             headers: {
-              "Content-Type": "application/json",
+              "Content-Type":
+                "application/json",
             },
             body: JSON.stringify({
               chat_id: chatId,
               photo: image,
               caption,
             }),
-            signal: AbortSignal.timeout(60000),
           }
         );
 
       const photoResult =
         await photoResponse.json();
 
-      console.log(
-        "TELEGRAM PHOTO RESULT:",
-        photoResult
-      );
-
       if (
         !photoResponse.ok ||
         !photoResult.ok
       ) {
         console.error(
-          "Telegram image failed:",
+          `Telegram image failed for ${item.name}:`,
           photoResult
         );
       }

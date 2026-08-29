@@ -1,0 +1,92 @@
+export type DiscountResult = {
+  discountPerUnit: number;
+  discountTotal: number;
+  discountedSubtotal: number;
+  tier: "none" | "retail" | "wholesale";
+};
+
+export function calculateItemDiscount(
+  price: number,
+  quantity: number,
+  stock: number
+): DiscountResult {
+  const unitPrice = Number(price) || 0;
+  const qty = Number(quantity) || 0;
+  const availableStock = Number(stock) || 0;
+
+  if (unitPrice <= 0 || qty <= 0) {
+    return {
+      discountPerUnit: 0,
+      discountTotal: 0,
+      discountedSubtotal: 0,
+      tier: "none",
+    };
+  }
+
+  /*
+   * RETAIL
+   * Customer takes 5 or more units.
+   */
+  const retailEligible = qty >= 5;
+
+  /*
+   * WHOLESALE
+   * Customer takes at least half of the available stock.
+   *
+   * Examples:
+   * Stock 15 -> starts at 8
+   * Stock 10 -> starts at 5
+   * Stock 5  -> starts at 3
+   */
+  const wholesaleThreshold =
+    availableStock > 0
+      ? Math.ceil(availableStock / 2)
+      : Infinity;
+
+  const wholesaleEligible =
+    availableStock > 0 &&
+    qty >= 5 &&
+    qty >= wholesaleThreshold;
+
+  let discountPerUnit = 0;
+  let tier: "none" | "retail" | "wholesale" = "none";
+
+  /*
+   * Wholesale has priority over retail.
+   */
+  if (wholesaleEligible) {
+    discountPerUnit = 1500;
+    tier = "wholesale";
+  } else if (retailEligible) {
+    discountPerUnit = 1000;
+    tier = "retail";
+  }
+
+  /*
+   * Safety protection:
+   * Never allow discount to reduce the selling price
+   * below TZS 1,000 per unit.
+   */
+  const maximumSafeDiscount = Math.max(
+    0,
+    unitPrice - 1000
+  );
+
+  discountPerUnit = Math.min(
+    discountPerUnit,
+    maximumSafeDiscount
+  );
+
+  const discountTotal =
+    discountPerUnit * qty;
+
+  const discountedSubtotal =
+    unitPrice * qty - discountTotal;
+
+  return {
+    discountPerUnit,
+    discountTotal,
+    discountedSubtotal,
+    tier,
+  };
+}

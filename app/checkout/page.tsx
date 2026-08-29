@@ -606,7 +606,10 @@ export default function CheckoutPage() {
 
       deliveryMethod,
 
-      items: cart,
+      items: cart.map((item) => ({
+        ...item,
+        image: item.image || item.images?.[0] || "",
+      })),
 
       subtotal,
 

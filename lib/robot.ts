@@ -3,6 +3,7 @@ type OrderItem = {
   name: string;
   price: number;
   quantity: number;
+  image?: string;
 };
 
 type OrderNotification = {
@@ -23,27 +24,43 @@ export async function orderRobotNotification(
   const chatId = process.env.TELEGRAM_CHAT_ID;
 
   if (!token || !chatId) {
-    throw new Error("Telegram environment variables are missing");
+    throw new Error(
+      "Telegram environment variables are missing"
+    );
   }
 
-  const itemsText = order.items?.length
+  const items = Array.isArray(order.items)
     ? order.items
-        .map(
-          (item, index) =>
-            `${index + 1}. ${item.name}\n` +
-            `   ${item.quantity} × TZS ${Number(
-              item.price || 0
-            ).toLocaleString()}`
-        )
-        .join("\n")
-    : "-";
+    : [];
+
+  const itemLines = items.map(
+    (item, index) => {
+      const price =
+        Number(item.price || 0);
+
+      const quantity =
+        Number(item.quantity || 0);
+
+      return (
+        `${index + 1}. ${item.name}\n` +
+        `   ${quantity} x TZS ${price.toLocaleString()}`
+      );
+    }
+  );
+
+  const itemsText =
+    itemLines.length > 0
+      ? itemLines.join("\n")
+      : "-";
 
   const message =
-    `🛒 GAMORA ONLINE - NEW ORDER\n\n` +
+    "🛒 GAMORA ONLINE - NEW ORDER\n\n" +
     `📦 Order: ${order.order_number}\n` +
     `👤 Customer: ${order.customer_name || "-"}\n` +
     `📞 Phone: ${order.customer_phone || "-"}\n\n` +
-    `🛍️ PRODUCTS\n${itemsText}\n\n` +
+    "🛍️ PRODUCTS\n" +
+    itemsText +
+    "\n\n" +
     `📊 Subtotal: TZS ${Number(
       order.subtotal || 0
     ).toLocaleString()}\n` +
@@ -55,56 +72,133 @@ export async function orderRobotNotification(
     ).toLocaleString()}\n\n` +
     `📌 Status: ${order.status || "Pending"}`;
 
-  const response = await fetch(
-    `https://api.telegram.org/bot${token}/sendMessage`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text: message,
-        reply_markup: {
-          inline_keyboard: [
-            [
-              {
-                text: "✅ CONFIRM",
-                callback_data: `confirm:${order.order_number}`,
-              },
-              {
-                text: "❌ CANCEL",
-                callback_data: `cancel:${order.order_number}`,
-              },
-            ],
-            [
-              {
-                text: "🚚 OUT FOR DELIVERY",
-                callback_data: `delivery:${order.order_number}`,
-              },
-            ],
-            [
-              {
-                text: "📦 DELIVERED",
-                callback_data: `delivered:${order.order_number}`,
-              },
-            ],
-          ],
+  const messageResponse =
+    await fetch(
+      `https://api.telegram.org/bot${token}/sendMessage`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type":
+            "application/json",
         },
-      }),
-    }
-  );
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: message,
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: "✅ CONFIRM",
+                  callback_data:
+                    `confirm:${order.order_number}`,
+                },
+                {
+                  text: "❌ CANCEL",
+                  callback_data:
+                    `cancel:${order.order_number}`,
+                },
+              ],
+              [
+                {
+                  text: "🚚 OUT FOR DELIVERY",
+                  callback_data:
+                    `delivery:${order.order_number}`,
+                },
+              ],
+              [
+                {
+                  text: "📦 DELIVERED",
+                  callback_data:
+                    `delivered:${order.order_number}`,
+                },
+              ],
+            ],
+          },
+        }),
+      }
+    );
 
-  const result = await response.json();
+  const messageResult =
+    await messageResponse.json();
 
-  if (!response.ok || !result.ok) {
-    console.error("Telegram API error:", result);
+  if (
+    !messageResponse.ok ||
+    !messageResult.ok
+  ) {
+    console.error(
+      "Telegram message error:",
+      messageResult
+    );
+
     throw new Error(
-      result?.description || "Telegram notification failed"
+      messageResult?.description ||
+        "Telegram notification failed"
     );
   }
 
-  console.log("✅ Telegram notification sent:", result);
+  for (const item of items) {
+    const image =
+      typeof item.image === "string"
+        ? item.image.trim()
+        : "";
 
-  return result;
+    if (!image) {
+      continue;
+    }
+
+    try {
+      const caption =
+        `📦 ${item.name}\n` +
+        `🔢 Qty: ${Number(
+          item.quantity || 0
+        )}\n` +
+        `💵 TZS ${(
+          Number(item.price || 0) *
+          Number(item.quantity || 0)
+        ).toLocaleString()}\n` +
+        `🛒 Order: ${order.order_number}`;
+
+      const photoResponse =
+        await fetch(
+          `https://api.telegram.org/bot${token}/sendPhoto`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+            body: JSON.stringify({
+              chat_id: chatId,
+              photo: image,
+              caption,
+            }),
+          }
+        );
+
+      const photoResult =
+        await photoResponse.json();
+
+      if (
+        !photoResponse.ok ||
+        !photoResult.ok
+      ) {
+        console.error(
+          `Telegram image failed for ${item.name}:`,
+          photoResult
+        );
+      }
+    } catch (error) {
+      console.error(
+        `Telegram image error for ${item.name}:`,
+        error
+      );
+    }
+  }
+
+  console.log(
+    "✅ Telegram order notification sent:",
+    order.order_number
+  );
+
+  return messageResult;
 }

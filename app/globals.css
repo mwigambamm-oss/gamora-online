@@ -8,7 +8,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
 }
 
@@ -16,7 +16,7 @@ html,
 body {
   background: #ffffff;
   color: #111111;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-inter), Inter, Arial, Helvetica, sans-serif;
 }
 
 body {
@@ -74,4 +74,35 @@ button:disabled {
 .gamora-marquee {
   width: max-content;
   animation: gamora-marquee 22s linear infinite;
+}
+
+/* Gamora welcome announcement marquee */
+.announcement-marquee {
+  animation: announcement-marquee 32s linear infinite;
+  will-change: transform;
+}
+
+.announcement-marquee:hover {
+  animation-play-state: paused;
+}
+
+@keyframes announcement-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (max-width: 640px) {
+  .announcement-marquee {
+    animation-duration: 27s;
+  }
+}
+
+
+.announcement-marquee,
+.announcement-marquee span {
+  color: #ffffff !important;
 }

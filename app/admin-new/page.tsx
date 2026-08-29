@@ -1,0 +1,564 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import OrdersModule from "@/components/admin-new/OrdersModule";
+import SettingsModule from "@/components/admin-new/SettingsModule";
+import AuditLogModule from "@/components/admin-new/AuditLogModule";
+import AdminUsersModule from "@/components/admin-new/AdminUsersModule";
+import NotificationsModule from "@/components/admin-new/NotificationsModule";
+import ReviewsModule from "@/components/admin-new/ReviewsModule";
+import ReportsModule from "@/components/admin-new/ReportsModule";
+import AccountingModule from "@/components/admin-new/AccountingModule";
+import PaymentsModule from "@/components/admin-new/PaymentsModule";
+import CustomersModule from "@/components/admin-new/CustomersModule";
+import InventoryModule from "@/components/admin-new/InventoryModule";
+import ProductsModule from "@/components/admin-new/ProductsModule";
+import SalesChart from "@/components/admin-new/dashboard/SalesChart";
+import TopProducts from "@/components/admin-new/dashboard/TopProducts";
+import NotificationBell from "@/components/admin-new/dashboard/NotificationBell";
+
+type DashboardData = {
+  orders?: any[];
+  orderItems?: any[];
+  products?: any[];
+
+  summary: {
+    orders: number;
+    revenue: number;
+    cogs: number;
+    grossProfit: number;
+    expenses: number;
+    netProfit: number;
+    pendingOrders: number;
+    pendingPayments: number;
+    lowStock: number;
+    outOfStock: number;
+    products: number;
+  };
+};
+
+const menu = [
+  "Dashboard",
+  "Orders",
+  "Products",
+  "Inventory",
+  "Customers",
+  "Payments",
+  "Accounting",
+  "Reports",
+  "Reviews",
+  "Notifications",
+  "Admin Users",
+  "Audit Log",
+  "Settings",
+];
+
+export default function NewAdminPage() {
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [active, setActive] = useState("Dashboard");
+const [period, setPeriod] = useState("Today");
+const [fromDate, setFromDate] = useState("");
+const [toDate, setToDate] = useState("");
+
+  useEffect(() => {
+  if (period === "Custom Range") {
+    if (fromDate && toDate) {
+      loadDashboard();
+    }
+    return;
+  }
+
+  loadDashboard();
+}, [period, fromDate, toDate]);
+
+  async function loadDashboard() {
+    try {
+      const params = new URLSearchParams();
+
+params.set("period", period);
+
+if (period === "Custom Range") {
+  params.set("from", fromDate);
+  params.set("to", toDate);
+}
+
+const response = await fetch(
+  `/api/admin/dashboard?${params.toString()}`
+);
+
+      if (!response.ok) {
+        throw new Error("Failed to load dashboard");
+      }
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || "Failed to load dashboard");
+      }
+
+      setData(result);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const money = (value: number) =>
+    `TZS ${Number(value || 0).toLocaleString()}`;
+
+  const cards = data
+    ? [
+        {
+          title: "Revenue",
+          value: money(data.summary.revenue),
+          icon: "💰",
+        },
+        {
+          title: "COGS",
+          value: money(data.summary.cogs),
+          icon: "📦",
+        },
+        {
+          title: "Gross Profit",
+          value: money(data.summary.grossProfit),
+          icon: "📈",
+        },
+        {
+          title: "Expenses",
+          value: money(data.summary.expenses),
+          icon: "💸",
+        },
+        {
+          title: "Net Profit",
+          value: money(data.summary.netProfit),
+          icon: "💵",
+        },
+        {
+          title: "Orders",
+          value: data.summary.orders.toLocaleString(),
+          icon: "🛒",
+        },
+        {
+          title: "Pending Orders",
+          value: data.summary.pendingOrders.toLocaleString(),
+          icon: "⏳",
+        },
+        {
+          title: "Pending Payments",
+          value: data.summary.pendingPayments.toLocaleString(),
+          icon: "💳",
+        },
+        {
+          title: "Low Stock",
+          value: data.summary.lowStock.toLocaleString(),
+          icon: "⚠️",
+        },
+        {
+          title: "Out of Stock",
+          value: data.summary.outOfStock.toLocaleString(),
+          icon: "🚫",
+        },
+      ]
+    : [];
+
+return (
+  <div className="min-h-screen bg-[#F8F6F6] text-[#3F3437]">
+    <div className="flex min-h-screen">
+
+        {/* SIDEBAR */}
+<aside className="flex w-72 flex-col border-r border-[#E8DEE1] bg-white text-[#3F3437] shadow-sm">
+
+          <div className="border-b border-[#E8DEE1] p-6">
+            <div className="text-2xl font-black">
+              GAMORA
+            </div>
+
+            <div className="mt-1 text-xs font-medium text-slate-400">
+              BUSINESS CONTROL CENTER
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-4">
+            <div className="mb-3 px-3 text-xs font-bold uppercase tracking-wider text-slate-500">
+              Main Menu
+            </div>
+
+            <nav className="space-y-1">
+              {menu.map((item) => (
+                <button
+                  key={item}
+                  onClick={() => setActive(item)}
+                  className={`flex w-full items-center rounded-xl px-4 py-3 text-left text-sm font-semibold transition ${
+                    active === item
+                      ? "bg-[#800020] text-white"
+: "text-[#3F3437] hover:bg-[#F8EDEF] hover:text-[#800020]"
+
+                  }`}
+                >
+                  <span>{item}</span>
+                </button>
+              ))}
+            </nav>
+          </div>
+
+          <div className="border-t border-[#E8DEE1] p-4">
+            <button
+              onClick={() => {
+                window.location.href = "/api/admin/logout";
+              }}
+              className="w-full rounded-xl bg-red-600 px-4 py-3 text-sm font-bold text-white hover:bg-red-700"
+            >
+              Logout
+            </button>
+          </div>
+        </aside>
+
+        {/* MAIN */}
+        <main className="flex-1">
+
+          {/* TOP BAR */}
+          <header className="border-b bg-white px-6 py-5 shadow-sm">
+            <div className="flex items-center justify-between">
+
+              <div>
+                <p className="text-sm font-medium text-slate-500">
+                  Business Control Center
+                </p>
+
+                <h1 className="text-2xl font-black">
+                  {active}
+                </h1>
+              </div>
+
+              <div className="flex items-center gap-3">
+
+                <div className="hidden text-right sm:block">
+                  <div className="text-sm font-bold">
+                    Administrator
+                  </div>
+
+                  <div className="text-xs text-slate-500">
+                    Super Admin
+                  </div>
+                </div>
+
+<div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#800020] text-lg font-black text-white">
+  A
+</div>
+              </div>
+
+              {data && (
+                <NotificationBell
+                  pendingOrders={data.summary.pendingOrders}
+                  pendingPayments={data.summary.pendingPayments}
+                  lowStock={data.summary.lowStock}
+                />
+              )}
+
+            </div>
+          </header>
+
+          {/* CONTENT */}
+          <div className="p-6">
+
+            {active === "Orders" ? (
+              <OrdersModule />
+            ) : active === "Products" ? (
+              <ProductsModule />
+            ) : active === "Inventory" ? (
+              <InventoryModule />
+            ) : active === "Customers" ? (
+              <CustomersModule />
+            ) : active === "Payments" ? (
+              <PaymentsModule />
+            ) : active === "Accounting" ? (
+              <AccountingModule />
+            ) : active === "Reports" ? (
+              <ReportsModule />
+            ) : active === "Reviews" ? (
+              <ReviewsModule />
+            ) : active === "Notifications" ? (
+              <NotificationsModule />
+            ) : active === "Admin Users" ? (
+              <AdminUsersModule />
+            ) : active === "Audit Log" ? (
+              <AuditLogModule />
+            ) : active === "Settings" ? (
+              <SettingsModule />
+            ) : active !== "Dashboard" ? (
+              <div className="rounded-2xl border bg-white p-10 text-center shadow-sm">
+                <div className="text-4xl">
+                  🚧
+                </div>
+
+                <h2 className="mt-4 text-xl font-black">
+                  {active}
+                </h2>
+
+                <p className="mt-2 text-slate-500">
+                  Module hii itaunganishwa na Business Control
+                  Center hatua inayofuata.
+                </p>
+
+                <button
+                  onClick={() => setActive("Dashboard")}
+                  className="mt-6 rounded-xl bg-[#800020] px-5 py-3 font-bold text-white"
+                >
+                  Back to Dashboard
+                </button>
+              </div>
+            ) : (
+              <>
+                {/* WELCOME */}
+                <div className="mb-6 rounded-2xl bg-gradient-to-r from-[#800020] to-[#A64D63] p-6 text-white shadow-lg">
+                  <div className="text-sm font-medium text-[#FBECEF]">
+                    GAMORA ONLINE
+                  </div>
+
+                  <h2 className="mt-1 text-3xl font-black">
+                    Business Overview
+                  </h2>
+
+                  <p className="mt-2 max-w-2xl text-sm text-slate-300">
+                    Hapa ndipo utaona hali ya biashara yako kwa
+                    ujumla: sales, orders, payments, stock,
+                    expenses na profit.
+                  </p>
+                </div>
+
+{/* PERIOD */}
+<div className="mb-6 flex flex-wrap gap-2">
+  {[
+    "Today",
+    "Yesterday",
+    "This Week",
+    "This Month",
+    "Last Month",
+    "This Year",
+    "Custom Range",
+  ].map((option) => (
+    <button
+      key={option}
+      onClick={() => setPeriod(option)}
+      className={`rounded-xl border px-4 py-2 text-sm font-semibold ${
+        period === option
+          ? "border-[#800020] bg-[#800020] text-white"
+          : "bg-white text-slate-700 hover:bg-[#F8F6F6]"
+      }`}
+    >
+      {option}
+    </button>
+  ))}
+</div>
+
+{period === "Custom Range" && (
+  <div className="mb-6 flex flex-wrap items-end gap-3 rounded-xl bg-white p-4 shadow-sm">
+    <div>
+      <label className="mb-1 block text-sm font-semibold text-slate-700">
+        From
+      </label>
+      <input
+        type="date"
+        value={fromDate}
+        onChange={(e) => setFromDate(e.target.value)}
+        className="rounded-xl border border-slate-300 px-4 py-2 text-sm"
+      />
+    </div>
+
+    <div>
+      <label className="mb-1 block text-sm font-semibold text-slate-700">
+        To
+      </label>
+      <input
+        type="date"
+        value={toDate}
+        onChange={(e) => setToDate(e.target.value)}
+        className="rounded-xl border border-slate-300 px-4 py-2 text-sm"
+      />
+    </div>
+  </div>
+)}
+
+
+
+
+
+
+
+
+
+{/* CARDS */}
+                {loading ? (
+                  <div className="rounded-2xl bg-white p-10 text-center shadow-sm">
+                    Loading business data...
+                  </div>
+                ) : (
+                  <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+                    {cards.map((card) => (
+                      <div
+                        key={card.title}
+                        className="rounded-2xl border bg-white p-5 shadow-sm"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-2xl">
+                            {card.icon}
+                          </span>
+
+                          <span className="text-xs font-bold uppercase text-slate-400">
+                            {card.title}
+                          </span>
+                        </div>
+
+                        <div className="mt-4 text-xl font-black text-[#800020]">
+                          {card.value}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* DASHBOARD ANALYTICS */}
+                {data && (
+                  <div className="mt-6 grid gap-6 lg:grid-cols-2">
+
+                    <SalesChart
+                      orders={data.orders || []}
+                    />
+
+                    <TopProducts
+                      products={data.products || []}
+                      orderItems={data.orderItems || []}
+                    />
+
+                  </div>
+                )}
+
+
+                {/* BUSINESS STATUS */}
+                {data && (
+                  <div className="mt-6 grid gap-6 lg:grid-cols-2">
+
+                    <div className="rounded-2xl border bg-white p-6 shadow-sm">
+                      <h3 className="text-lg font-black">
+                        Business Health
+                      </h3>
+
+                      <div className="mt-5 space-y-4">
+
+                        <div className="flex justify-between border-b pb-3">
+                          <span className="text-slate-500">
+                            Products
+                          </span>
+
+                          <span className="font-bold">
+                            {data.summary.products}
+                          </span>
+                        </div>
+
+                        <div className="flex justify-between border-b pb-3">
+                          <span className="text-slate-500">
+                            Orders
+                          </span>
+
+                          <span className="font-bold">
+                            {data.summary.orders}
+                          </span>
+                        </div>
+
+                        <div className="flex justify-between border-b pb-3">
+                          <span className="text-slate-500">
+                            Low Stock
+                          </span>
+
+                          <span className="font-bold text-orange-600">
+                            {data.summary.lowStock}
+                          </span>
+                        </div>
+
+                        <div className="flex justify-between">
+                          <span className="text-slate-500">
+                            Out of Stock
+                          </span>
+
+                          <span className="font-bold text-red-600">
+                            {data.summary.outOfStock}
+                          </span>
+                        </div>
+
+                      </div>
+                    </div>
+
+                    <div className="rounded-2xl border bg-white p-6 shadow-sm">
+                      <h3 className="text-lg font-black">
+                        Financial Summary
+                      </h3>
+
+                      <div className="mt-5 space-y-4">
+
+                        <div className="flex justify-between border-b pb-3">
+                          <span className="text-slate-500">
+                            Revenue
+                          </span>
+
+                          <span className="font-bold">
+                            {money(data.summary.revenue)}
+                          </span>
+                        </div>
+
+                        <div className="flex justify-between border-b pb-3">
+                          <span className="text-slate-500">
+                            COGS
+                          </span>
+
+                          <span className="font-bold">
+                            {money(data.summary.cogs)}
+                          </span>
+                        </div>
+
+                        <div className="flex justify-between border-b pb-3">
+                          <span className="text-slate-500">
+                            Gross Profit
+                          </span>
+
+                          <span className="font-bold text-emerald-600">
+                            {money(data.summary.grossProfit)}
+                          </span>
+                        </div>
+
+                        <div className="flex justify-between border-b pb-3">
+                          <span className="text-slate-500">
+                            Expenses
+                          </span>
+
+                          <span className="font-bold text-red-600">
+                            {money(data.summary.expenses)}
+                          </span>
+                        </div>
+
+                        <div className="flex justify-between">
+                          <span className="font-black">
+                            Net Profit
+                          </span>
+
+                          <span className="font-black text-emerald-600">
+                            {money(data.summary.netProfit)}
+                          </span>
+                        </div>
+
+                      </div>
+                    </div>
+
+                  </div>
+                )}
+
+              </>
+            )}
+
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}

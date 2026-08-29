@@ -309,7 +309,7 @@ export default function HomePage() {
                 <img 
                   src="/gamora-logo.png" 
                   alt="Gamora Online" 
-                  className="h-14 w-auto object-contain sm:h-16" 
+                  className="h-16 w-auto object-contain sm:h-20" 
                 />
                 <span className="text-[10px] font-semibold text-[#374151] sm:text-xs">
                   Nunua smart. Chagua Gamora.

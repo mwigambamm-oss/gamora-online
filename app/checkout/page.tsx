@@ -610,7 +610,7 @@ export default function CheckoutPage() {
 
       items: cart.map((item) => ({
         ...item,
-        image: item.image || item.images?.[0] || "",
+        image: item.image || "",
       })),
 
       subtotal,

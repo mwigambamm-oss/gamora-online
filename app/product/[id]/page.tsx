@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getProductById, getProducts } from "@/lib/products";
 import { supabase } from "@/lib/supabase";
+import RelatedProducts from "@/components/product/RelatedProducts";
 
 type Product = {
   id: number;
@@ -81,8 +82,12 @@ const [cartCount, setCartCount] = useState(0);
 
       setRelated(
         all
-          .filter((p) => p.id !== productId)
-          .slice(0, 4)
+          .filter(
+            (p) =>
+              p.id !== productId &&
+              p.category === item.category
+          )
+          .slice(0, 5)
       );
 
       /*
@@ -537,7 +542,7 @@ window.dispatchEvent(new Event("cartUpdated"));
 
             {/* TITLE */}
 
-            <h1 className="text-[18px] font-bold leading-6 text-slate-900 sm:text-[20px]">
+            <h1 className="text-[16px] font-bold leading-6 text-slate-900 sm:text-[20px]">
               {product.name}
             </h1>
 
@@ -791,7 +796,7 @@ window.dispatchEvent(new Event("cartUpdated"));
         className="mx-auto max-w-6xl border-t border-slate-200 py-8"
       >
 
-        <h2 className="text-[18px] font-bold text-slate-900">
+        <h2 className="text-[16px] font-bold text-slate-900">
           Customer Reviews
         </h2>
 
@@ -955,7 +960,7 @@ window.dispatchEvent(new Event("cartUpdated"));
       {related.length > 0 && (
         <section className="mx-auto max-w-6xl border-t border-slate-200 py-8">
 
-          <h2 className="mb-5 text-[18px] font-bold text-slate-900">
+          <h2 className="mb-5 text-[16px] font-bold text-slate-900">
             You May Also Like
           </h2>
 
@@ -973,7 +978,7 @@ window.dispatchEvent(new Event("cartUpdated"));
                 className="overflow-hidden rounded-xl border border-slate-200 bg-white text-left transition hover:shadow-md"
               >
 
-                <div className="h-40 bg-slate-50">
+                <div className="h-28 sm:h-32 bg-slate-50">
 
                   <img
                     src={
@@ -987,7 +992,7 @@ window.dispatchEvent(new Event("cartUpdated"));
 
                 </div>
 
-                <div className="p-3">
+                <div className="p-2">
 
                   <p className="line-clamp-2 text-[12px] font-bold text-slate-700">
                     {item.name}

@@ -304,8 +304,17 @@ export default function HomePage() {
       <header className="sticky top-0 z-50 border-b border-[#e5e5e5] bg-white/95 backdrop-blur">
         <div className="mx-auto max-w-[1280px] px-4">
           <div className="flex min-h-[64px] items-center gap-2 sm:min-h-[72px] sm:gap-5">
-            <a href="/" className="shrink-0" aria-label="Gamora Online home">
-              <img src="/gamora-logo.png" alt="Gamora Online" className="h-10 w-auto object-contain sm:h-13" />
+            <a href="/" className="shrink-0 flex items-center gap-2" aria-label="Gamora Online home">
+              <div className="flex flex-col">
+                <img 
+                  src="/gamora-logo.png" 
+                  alt="Gamora Online" 
+                  className="h-14 w-auto object-contain sm:h-16" 
+                />
+                <span className="text-[10px] font-semibold text-[#374151] sm:text-xs">
+                  Nunua smart. Chagua Gamora.
+                </span>
+              </div>
             </a>
 
             <nav className="hidden items-center gap-6 text-sm font-bold lg:flex">
@@ -463,9 +472,9 @@ export default function HomePage() {
           {categories.length > 0 ? (
             <div className="relative mt-7"><button type="button" aria-label="Previous categories" onClick={() => document.getElementById("category-scroll")?.scrollBy({ left: -260, behavior: "smooth" })} className="absolute left-0 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-[#ddd] bg-white text-xl shadow-md sm:hidden">‹</button><div id="category-scroll" className="flex gap-4 overflow-x-auto pb-3 scrollbar-hide lg:grid lg:grid-cols-6 lg:overflow-visible">
               {categories.map((category) => (
-                <button key={category} onClick={() => goToCategory(category)} className={`group min-w-[150px] rounded-2xl border bg-white p-3 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-lg lg:min-w-0 ${selectedCategory === category ? "border-[#374151] ring-2 ring-[#374151]/10" : "border-[#e5e5e5]"}`}>
+                <button key={category} onClick={() => goToCategory(category)} className={`group min-w-[120px] rounded-2xl border bg-white p-3 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-lg lg:min-w-0 ${selectedCategory === category ? "border-[#374151] ring-2 ring-[#374151]/10" : "border-[#e5e5e5]"}`}>
                   <div className="relative h-32 overflow-hidden rounded-xl bg-[#f1f1f1] sm:h-36">
-                    {CATEGORY_IMAGES[category] ? <img src={CATEGORY_IMAGES[category]} alt={category} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" /> : <div className="flex h-full items-center justify-center text-5xl">{CATEGORY_ICONS[category] || "🛍️"}</div>}
+                    {CATEGORY_IMAGES[category] ? <img src={CATEGORY_IMAGES[category]} alt={category} className="h-24 w-full object-contain transition duration-500 group-hover:scale-105 sm:h-28" /> : <div className="flex h-full items-center justify-center text-5xl">{CATEGORY_ICONS[category] || "🛍️"}</div>}
                   </div>
                   <p className="mt-3 line-clamp-1 text-sm font-black text-[#222]">{category}</p>
                   <p className="mt-1 text-xs text-[#777]">{language === "sw" ? "Angalia bidhaa →" : "Explore products →"}</p>
@@ -618,7 +627,7 @@ export default function HomePage() {
               <div className="min-w-0"><FooterColumn
                 title={language === "sw" ? "Mteja" : "Customer"}
                 links={[
-                  [language === "sw" ? "Akaunti Yangu" : "My Account", "/account"],
+                  [language === "sw" ? "Tengeneza Account" : "Create Account", "/profile"],
                   [language === "sw" ? "Oda" : "Orders", "/orders"],
                   [language === "sw" ? "Wishlist" : "Wishlist", "/wishlist"],
                   [language === "sw" ? "Kikapu" : "Cart", "/cart"],

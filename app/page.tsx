@@ -633,7 +633,7 @@ export default function HomePage() {
         links={[
           ["Jinsi ya Kununua", "/help"],
           ["Sera ya Uwasilishaji", "/delivery"],
-          ["Sera ya Marejesho", "/terms"],
+          ["Vigezo na Masharti", "/terms"],
           ["Wasiliana Nasi", "/contact"],
         ]}
       />

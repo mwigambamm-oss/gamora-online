@@ -50,7 +50,7 @@ export default function TermsPage() {
     products:
       "Tunajitahidi kuhakikisha taarifa za bidhaa, picha, bei na stock ni sahihi. Hata hivyo, kunaweza kutokea tofauti ndogo kwenye picha au maelezo ya bidhaa.",
 
-    cancellationTitle: "7. Cancellation na Returns",
+    cancellationTitle: "7. Mabadiliko ya Oda na Matumizi ya Huduma",
     cancellation:
       "Maombi ya cancellation au return yatashughulikiwa kulingana na hali ya order na sera ya bidhaa husika. Mteja anatakiwa kuwasiliana na GAMORA ONLINE mapema iwezekanavyo.",
 
@@ -99,7 +99,7 @@ export default function TermsPage() {
     products:
       "We aim to keep product information, images, prices and stock levels accurate. However, minor differences may occur between product images and actual products.",
 
-    cancellationTitle: "7. Cancellation & Returns",
+    cancellationTitle: "7. Order Changes and Service Usage",
     cancellation:
       "Cancellation or return requests will be handled according to the order status and the applicable product policy. Customers should contact GAMORA ONLINE as soon as possible.",
 

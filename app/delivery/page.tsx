@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 
 import { useState } from "react";
+import { FaTruck, FaMapMarkerAlt, FaRoute, FaShoppingCart } from "react-icons/fa";
 
 export default function DeliveryPage() {
   const [language, setLanguage] = useState<"sw" | "en">("sw");
@@ -21,35 +22,35 @@ export default function DeliveryPage() {
   const sw = {
     back: "← Rudi Home",
     badge: "GAMORA ONLINE DELIVERY",
-    title: "Delivery Rahisi na Salama",
+    title: "Uwasilishaji Rahisi na Salama",
     intro:
       "Tunakuletea bidhaa zako kutoka Kariakoo, Dar es Salaam hadi ulipo.",
     startingPoint: "Kituo cha Delivery",
     startingPointText:
-      "Delivery ya GAMORA ONLINE inaanzia Kariakoo, Dar es Salaam.",
-    distance: "Delivery kwa Distance",
+      "Uwasilishaji wa GAMORA ONLINE unaanzia Kariakoo, Dar es Salaam.",
+    distance: "Uwasilishaji kwa Umbali",
     distanceText:
-      "Gharama ya delivery inaweza kuhesabiwa kulingana na umbali kutoka Kariakoo hadi location yako.",
-    location: "Tumia Location Yako",
+      "Gharama ya delivery inaweza kuhesabiwa kulingana na umbali kutoka Kariakoo hadi eneo lako.",
+    location: "Tumia Eneo Lako",
     locationText:
-      "Wakati wa Checkout utaweza kuruhusu website kutumia location yako ili kusaidia kukadiria distance ya delivery.",
+      "Wakati wa Checkout utaweza kuruhusu website kutumia eneo lako ili kusaidia kukadiria distance ya delivery.",
     areas: "Maeneo Tunayohudumia",
     areasText:
-      "Tunaanza na Dar es Salaam na maeneo yanayozunguka. Availability inaweza kutegemea eneo na umbali.",
-    process: "Jinsi Delivery Inavyofanya Kazi",
+      "Tunaanza na Dar es Salaam na maeneo yanayozunguka. Upatikanaji inaweza kutegemea eneo na umbali.",
+    process: "Jinsi Uwasilishaji Unavyofanya Kazi",
     step1: "Chagua bidhaa",
-    step1Text: "Ongeza bidhaa unazotaka kwenye Cart.",
+    step1Text: "Ongeza bidhaa unazotaka kwenye Kikapu.",
     step2: "Weka taarifa zako",
-    step2Text: "Jaza jina, simu na address/location yako.",
+    step2Text: "Jaza jina, simu na address/eneo lako.",
     step3: "Pima distance",
     step3Text:
-      "Mfumo utatumia location yako kusaidia kuhesabu distance kutoka Kariakoo.",
+      "Mfumo utatumia eneo lako kusaidia kuhesabu distance kutoka Kariakoo.",
     step4: "Thibitisha Order",
     step4Text:
-      "Kagua bidhaa, delivery fee na jumla kabla ya kuweka order.",
+      "Kagua bidhaa, delivery fee na jumla kabla ya kuthibitisha oda.",
     noteTitle: "Muhimu",
     note:
-      "Delivery fee itaonyeshwa kabla ya order kukamilishwa. Gharama inaweza kutofautiana kulingana na distance na eneo la delivery.",
+      "Gharama ya uwasilishaji itaonyeshwa kabla ya order kukamilishwa. Gharama inaweza kutofautiana kulingana na umbali na eneo la delivery.",
     support: "Unahitaji msaada?",
     whatsapp: "Wasiliana nasi WhatsApp",
   };
@@ -63,7 +64,7 @@ export default function DeliveryPage() {
     startingPoint: "Delivery Starting Point",
     startingPointText:
       "GAMORA ONLINE delivery starts from Kariakoo, Dar es Salaam.",
-    distance: "Distance-Based Delivery",
+    distance: "Umbali-Based Delivery",
     distanceText:
       "Delivery charges can be calculated based on the distance from Kariakoo to your location.",
     location: "Use Your Location",
@@ -71,7 +72,7 @@ export default function DeliveryPage() {
       "During Checkout, you will be able to allow the website to use your location to help estimate delivery distance.",
     areas: "Areas We Serve",
     areasText:
-      "We are starting with Dar es Salaam and surrounding areas. Availability may depend on location and distance.",
+      "We are starting with Dar es Salaam and surrounding areas. Upatikanaji may depend on location and distance.",
     process: "How Delivery Works",
     step1: "Choose your products",
     step1Text: "Add the products you want to your Cart.",
@@ -147,7 +148,7 @@ export default function DeliveryPage() {
         <div className="mx-auto max-w-5xl px-4 py-16 text-center text-white">
 
           <div className="mb-5 text-6xl">
-            🚚
+            
           </div>
 
           <p className="font-bold text-sky-200">
@@ -173,8 +174,12 @@ export default function DeliveryPage() {
 
           <div className="rounded-2xl bg-white p-8 text-center shadow-sm">
 
-            <div className="text-5xl">
-              📍
+            <div className="flex justify-center">
+              <FaShoppingCart className="text-4xl text-green-600" />
+              <FaRoute className="text-4xl text-sky-700" />
+              <FaMapMarkerAlt className="text-4xl text-red-600" />
+              <FaTruck className="text-4xl text-sky-700" />
+              
             </div>
 
             <h2 className="mt-5 text-xl font-black">
@@ -189,7 +194,7 @@ export default function DeliveryPage() {
 
           <div className="rounded-2xl bg-white p-8 text-center shadow-sm">
 
-            <div className="text-5xl">
+            <div className="flex justify-center">
               📏
             </div>
 
@@ -205,7 +210,7 @@ export default function DeliveryPage() {
 
           <div className="rounded-2xl bg-white p-8 text-center shadow-sm">
 
-            <div className="text-5xl">
+            <div className="flex justify-center">
               🛰️
             </div>
 
@@ -317,7 +322,7 @@ export default function DeliveryPage() {
 
         <div className="rounded-2xl border border-sky-100 bg-white p-8 text-center shadow-sm">
 
-          <div className="text-5xl">
+          <div className="flex justify-center">
             ℹ️
           </div>
 
@@ -338,7 +343,7 @@ export default function DeliveryPage() {
 
         <div className="mx-auto max-w-3xl">
 
-          <div className="text-5xl">
+          <div className="flex justify-center">
             💬
           </div>
 
@@ -368,7 +373,7 @@ export default function DeliveryPage() {
         </div>
 
         <p className="mt-3 text-sm">
-          📍 Kariakoo, Dar es Salaam, Tanzania
+           Kariakoo, Dar es Salaam, Tanzania
         </p>
 
         <p className="mt-1 text-sm">

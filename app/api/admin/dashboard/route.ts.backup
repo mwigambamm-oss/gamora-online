@@ -1,0 +1,127 @@
+import { NextResponse } from "next/server";
+import { supabase } from "@/lib/supabase";
+
+export async function GET() {
+  try {
+    const [
+      ordersResult,
+      orderItemsResult,
+      paymentsResult,
+      productsResult,
+      expensesResult,
+    ] = await Promise.all([
+      supabase
+        .from("orders")
+        .select("id,order_number,status,total,created_at"),
+
+      supabase
+        .from("order_items")
+        .select(
+          "order_id,order_number,product_id,product_name,price,quantity,total,cost_price_at_sale,subtotal"
+        ),
+
+      supabase
+        .from("payments")
+        .select("*"),
+
+      supabase
+        .from("products")
+        .select("id,name,price,stock"),
+
+      supabase
+        .from("expenses")
+        .select("*"),
+    ]);
+
+    if (ordersResult.error) throw ordersResult.error;
+    if (orderItemsResult.error) throw orderItemsResult.error;
+
+    const orders = ordersResult.data || [];
+    const orderItems = orderItemsResult.data || [];
+    const payments = paymentsResult.data || [];
+    const products = productsResult.data || [];
+    const expenses = expensesResult.data || [];
+
+    const revenue = orders
+      .filter((order) => order.status !== "Cancelled")
+      .reduce(
+        (sum, order) => sum + Number(order.total || 0),
+        0
+      );
+
+    const cogs = orderItems.reduce((sum, item) => {
+      return (
+        sum +
+        Number(item.cost_price_at_sale || 0) *
+          Number(item.quantity || 0)
+      );
+    }, 0);
+
+    const grossProfit = revenue - cogs;
+
+    const totalExpenses = expenses.reduce((sum, expense) => {
+      return sum + Number(expense.amount || 0);
+    }, 0);
+
+    const netProfit = grossProfit - totalExpenses;
+
+    const pendingOrders = orders.filter(
+      (order) =>
+        order.status === "Pending" ||
+        order.status === "Processing"
+    ).length;
+
+    const pendingPayments = payments.filter(
+      (payment: any) =>
+        payment.status === "Pending" ||
+        payment.status === "Processing"
+    ).length;
+
+    const lowStock = products.filter(
+      (product) =>
+        Number(product.stock || 0) > 0 &&
+        Number(product.stock || 0) <= 5
+    ).length;
+
+    const outOfStock = products.filter(
+      (product) => Number(product.stock || 0) <= 0
+    ).length;
+
+    return NextResponse.json({
+      success: true,
+
+      summary: {
+        orders: orders.length,
+        revenue,
+        cogs,
+        grossProfit,
+        expenses: totalExpenses,
+        netProfit,
+        pendingOrders,
+        pendingPayments,
+        lowStock,
+        outOfStock,
+        products: products.length,
+      },
+
+      orders,
+      orderItems,
+      payments,
+      products,
+      expenses,
+    });
+  } catch (error) {
+    console.error("Admin dashboard error:", error);
+
+    return NextResponse.json(
+      {
+        success: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to load dashboard",
+      },
+      { status: 500 }
+    );
+  }
+}

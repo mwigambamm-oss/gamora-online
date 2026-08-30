@@ -123,7 +123,7 @@ export async function PATCH(request: Request) {
         .select(
           "order_number,status,items"
         )
-        .or(`order_number.eq.${orderNumber},id.eq.${orderNumber}`)
+        .eq("order_number", orderNumber)
         .maybeSingle();
 
     if (loadError) {
@@ -221,7 +221,7 @@ export async function PATCH(request: Request) {
         .update({
           status: requestedStatus,
         })
-        .or(`order_number.eq.${orderNumber},id.eq.${orderNumber}`)
+        .eq("order_number", orderNumber)
         .eq("status", oldStatus)
         .select()
         .single();

@@ -163,7 +163,6 @@ export default function ProductsModule() {
 
   }
 
-id="6q4w1a"
   function setMainImage(url:string){
     setForm({
       ...form,

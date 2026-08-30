@@ -88,11 +88,22 @@ function SortableImage({
 }
 
 export default function ProductImageUploader({
+  initialImages = [],
   onChange,
+  onMainChange,
 }: {
+  initialImages?: string[];
   onChange?: (files: File[]) => void;
+  onMainChange?: (url: string) => void;
 }) {
-  const [images, setImages] = useState<ImageItem[]>([]);
+  const [images, setImages] = useState<ImageItem[]>(() =>
+  initialImages.map((url, index) => ({
+    id: `existing-${index}-${url}`,
+    file: null as unknown as File,
+    preview: url,
+    primary: index === 0,
+  }))
+);
   const [selectedPreview, setSelectedPreview] = useState<string | null>(null);
 
   const count = images.length;
@@ -128,16 +139,22 @@ export default function ProductImageUploader({
         primary: false,
       }));
 
-    setImages((prev) => {
-      const merged = [...prev, ...next];
+   setImages((prev) => {
+  const merged = [...prev, ...next];
 
-      if (!merged.some((i) => i.primary) && merged[0]) {
-        merged[0].primary = true;
-      }
-
-      return merged;
-    });
+  if (!merged.some((i) => i.primary) && merged[0]) {
+    merged[0].primary = true;
+    onMainChange?.(merged[0].preview);
   }
+
+  return merged;
+});
+
+if (next.length) {
+  onChange?.(next.map((item) => item.file));
+}
+
+}
 
   function removeImage(id: string) {
     setImages((prev) =>
@@ -146,13 +163,21 @@ export default function ProductImageUploader({
   }
 
   function setPrimary(id: string) {
-    setImages((prev) =>
-      prev.map((i) => ({
-        ...i,
-        primary: i.id === id,
-      }))
-    );
-  }
+  setImages((prev) => {
+    const updated = prev.map((i) => ({
+      ...i,
+      primary: i.id === id,
+    }));
+
+    const main = updated.find((i) => i.primary);
+
+    if (main) {
+      onMainChange?.(main.preview);
+    }
+
+    return updated;
+  });
+}
 
   function onDrop(event: any) {
     const { active, over } = event;
@@ -249,7 +274,7 @@ export default function ProductImageUploader({
           </div>
         </SortableContext>
       </DndContext>
-      {selectedPreview && (
+            {selectedPreview && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6"
           onClick={() => setSelectedPreview(null)}

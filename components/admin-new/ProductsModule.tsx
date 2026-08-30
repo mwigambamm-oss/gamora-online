@@ -8,28 +8,31 @@ import {
   updateProduct,
   deleteProduct,
 } from "@/lib/products";
+import ProductImageUploader from "./product/ProductImageUploader";
 
 const DEFAULT_CATEGORIES = [
-  "Women's Fashion",
-  "Men's Fashion",
-  "Shoes",
   "Phones & Electronics",
-  "Home & Kitchen",
-  "Accessories",
-  "Beauty & Personal Care",
   "Computers & Accessories",
-  "Baby & Kids",
+  "Men's Fashion",
+  "Women's Fashion",
+  "Kids Fashion",
+  "Shoes",
+  "Bags",
+  "Beauty & Personal Care",
+  "Health & Wellness",
+  "Home & Kitchen",
+  "Furniture",
+  "Jewelry & Watches",
+  "Baby Products",
   "Sports & Fitness",
+  "Gaming",
   "Automotive",
   "Tools & Hardware",
   "Books & Stationery",
-  "Jewelry & Watches",
-  "Furniture",
   "Garden & Outdoor",
-  "Health & Wellness",
-  "Gaming",
+  "Food & Beverages",
+  "Pet Supplies",
 ];
-
 export default function ProductsModule() {
   const emptyForm = {
     name: "",
@@ -467,13 +470,23 @@ export default function ProductsModule() {
 
           <div className="flex gap-2">
 
-            <input
-              name="category"
-              value={form.category}
-              onChange={handleChange}
-              placeholder="Enter category name"
-              className="border p-3 rounded flex-1"
-/>
+            <select
+  name="category"
+  value={form.category}
+  onChange={handleChange}
+  className="border p-3 rounded w-full"
+>
+  <option value="">
+    Select Category
+  </option>
+
+  {categories.map((cat) => (
+    <option key={cat} value={cat}>
+      {cat}
+    </option>
+  ))}
+
+</select>
 
 
             <input
@@ -519,12 +532,58 @@ export default function ProductsModule() {
 
 
 
-          <input
-            type="file"
-            multiple
-            accept="image/*"
-            onChange={uploadImages}
-          />
+<ProductImageUploader
+  initialImages={form.images}
+  onMainChange={(url) =>
+    setForm((current) => ({
+      ...current,
+      image: url,
+    }))
+  }
+  onChange={async (files) => {
+    if (!files.length) return;
+
+    setUploading(true);
+
+    const { supabase } =
+      await import("@/lib/supabase");
+
+    const uploaded: string[] = [];
+
+    for (const file of files) {
+      const fileName =
+        `${Date.now()}-${file.name}`;
+
+      const { error } =
+        await supabase.storage
+          .from("product-images")
+          .upload(fileName, file);
+
+      if (!error) {
+        const { data } =
+          supabase.storage
+            .from("product-images")
+            .getPublicUrl(fileName);
+
+        uploaded.push(data.publicUrl);
+      }
+    }
+
+    setForm((current) => ({
+      ...current,
+      images: [
+        ...current.images,
+        ...uploaded,
+      ],
+      image:
+        current.image ||
+        uploaded[0] ||
+        "",
+    }));
+
+    setUploading(false);
+  }}
+/>
 
 
           {uploading && (
@@ -535,65 +594,6 @@ export default function ProductsModule() {
 
 
 
-          {form.images.length > 0 && (
-
-            <div>
-
-              <h3 className="font-bold mb-3">
-                Product Images
-              </h3>
-
-
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-
-              {form.images.map((img)=>(
-
-                <div
-                  key={img}
-                  className="border rounded p-2"
-                >
-
-                  <img
-                    src={img}
-                    className="w-full h-32 object-cover rounded"
-                  />
-
-
-                  <button
-                    type="button"
-                    onClick={()=>setMainImage(img)}
-                    className={`w-full mt-2 py-1 rounded ${
-                      form.image===img
-                      ?"bg-green-600 text-white"
-                      :"bg-gray-200"
-                    }`}
-                  >
-
-                    {form.image===img
-                    ?"Main Image"
-                    :"Set Main"}
-
-                  </button>
-
-
-                  <button
-                    type="button"
-                    onClick={()=>removeImage(img)}
-                    className="w-full mt-2 bg-red-600 text-white py-1 rounded"
-                  >
-                    Delete
-                  </button>
-
-
-                </div>
-
-              ))}
-
-              </div>
-
-            </div>
-
-          )}
 
 
 

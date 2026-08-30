@@ -468,13 +468,24 @@ id="6q4w1a"
 
           <div className="flex gap-2">
 
-            <input
+            <select
               name="category"
               value={form.category}
               onChange={handleChange}
-              placeholder="Enter category name"
               className="border p-3 rounded flex-1"
-/>
+            >
+
+              <option value="">
+                Select Category
+              </option>
+
+              {categories.map((c)=>
+                <option key={c}>
+                  {c}
+                </option>
+              )}
+
+            </select>
 
 
             <input

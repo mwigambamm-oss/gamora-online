@@ -364,13 +364,22 @@ export default function OrdersModule() {
                               e.target.value
                             )
                           }
-                          className="rounded-lg border px-3 py-2 text-xs font-bold"
+                          style={{
+                            display: "block",
+                            width: "170px",
+                            height: "38px",
+                            backgroundColor: "white",
+                            color: "black",
+                            padding: "6px 10px",
+                            border: "1px solid #d1d5db",
+                            borderRadius: "8px",
+                            fontSize: "12px",
+                            fontWeight: 700,
+                            appearance: "auto",
+                          }}
                         >
                           {STATUS_OPTIONS.map((status) => (
-                            <option
-                              key={status}
-                              value={status}
-                            >
+                            <option key={status} value={status}>
                               {status}
                             </option>
                           ))}

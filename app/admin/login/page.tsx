@@ -47,7 +47,7 @@ export default function AdminLoginPage() {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-100 px-4">
-      <div className="w-full max-w-md rounded-3xl bg-white p-8 shadow-xl">
+      <div className="w-full max-w-md rounded-3xl bg-white p-4 shadow-xl">
 
         <div className="mb-8 text-center">
           <img
@@ -56,7 +56,7 @@ export default function AdminLoginPage() {
             className="mx-auto h-20 w-auto object-contain"
           />
 
-          <h1 className="mt-5 text-2xl font-black text-slate-900">
+          <h1 className="mt-5 text-lg font-black text-slate-900">
             Admin Login
           </h1>
 
@@ -68,7 +68,7 @@ export default function AdminLoginPage() {
         <form onSubmit={handleLogin} className="space-y-5">
 
           <div>
-            <label className="mb-2 block text-sm font-bold text-slate-700">
+            <label className="mb-2 block text-xs font-normal text-slate-700">
               Username
             </label>
 
@@ -84,7 +84,7 @@ export default function AdminLoginPage() {
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-bold text-slate-700">
+            <label className="mb-2 block text-xs font-normal text-slate-700">
               Password
             </label>
 
@@ -100,7 +100,7 @@ export default function AdminLoginPage() {
           </div>
 
           {error && (
-            <div className="rounded-xl bg-red-50 px-4 py-3 text-sm font-bold text-red-600">
+            <div className="rounded-xl bg-red-50 px-4 py-3 text-xs font-normal text-red-600">
               {error}
             </div>
           )}
@@ -115,7 +115,7 @@ export default function AdminLoginPage() {
 
           <a
             href="/recover-admin-password"
-            className="block text-center text-sm font-bold text-orange-600 hover:text-orange-700 hover:underline"
+            className="block text-center text-xs font-normal text-orange-600 hover:text-orange-700 hover:underline"
           >
             Forgot Password?
           </a>
@@ -124,7 +124,7 @@ export default function AdminLoginPage() {
 
         <a
           href="/"
-          className="mt-6 block text-center text-sm font-bold text-sky-700 hover:underline"
+          className="mt-6 block text-center text-xs font-normal text-sky-700 hover:underline"
         >
           ← Back to GAMORA ONLINE
         </a>

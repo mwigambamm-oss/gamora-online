@@ -176,7 +176,7 @@ const [menuOpen, setMenuOpen] = useState(false);
   </button>
 
         <div className="border-b border-gray-800 px-6 py-6">
-          <h1 className="text-2xl font-black text-orange-500">
+          <h1 className="text-lg font-black text-orange-500">
             GAMORA
           </h1>
 
@@ -241,6 +241,13 @@ const [menuOpen, setMenuOpen] = useState(false);
           </a>
 
           <a
+            href="/admin/messages"
+            className="mb-2 flex items-center gap-3 rounded-lg px-4 py-3 text-gray-300 hover:bg-gray-800"
+          >
+            💬 Messages
+          </a>
+
+          <a
             href="/admin/settings"
             className="flex items-center gap-3 rounded-lg px-4 py-3 text-gray-300 hover:bg-gray-800"
           >
@@ -284,7 +291,7 @@ const [menuOpen, setMenuOpen] = useState(false);
   <div className="flex items-center justify-between gap-4">
 
             <div>
-              <h2 className="text-2xl font-black text-gray-900">
+              <h2 className="text-lg font-black text-gray-900">
                 Dashboard
               </h2>
 
@@ -299,7 +306,7 @@ const [menuOpen, setMenuOpen] = useState(false);
                 type="button"
                 onClick={loadDashboard}
                 disabled={loading}
-                className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-bold text-white hover:bg-gray-800 disabled:opacity-50"
+                className="rounded-lg bg-gray-900 px-4 py-2 text-xs font-normal text-white hover:bg-gray-800 disabled:opacity-50"
               >
                 {loading ? "Loading..." : "🔄 Refresh"}
               </button>
@@ -348,7 +355,7 @@ const [menuOpen, setMenuOpen] = useState(false);
                         />
 
                         <div>
-                          <p className="text-sm font-black text-gray-900">
+                          <p className="text-xs font-medium text-gray-900">
                             Admin
                           </p>
 
@@ -363,7 +370,7 @@ const [menuOpen, setMenuOpen] = useState(false);
 
                     <a
                       href="/admin/change-password"
-                      className="mt-2 flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-bold text-gray-700 hover:bg-orange-50 hover:text-orange-600"
+                      className="mt-2 flex items-center gap-3 rounded-xl px-3 py-3 text-xs font-normal text-gray-700 hover:bg-orange-50 hover:text-orange-600"
                     >
                       🔐 Change Password
                     </a>
@@ -371,7 +378,7 @@ const [menuOpen, setMenuOpen] = useState(false);
                     <button
                       type="button"
                       onClick={handleLogout}
-                      className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-bold text-red-600 hover:bg-red-50"
+                      className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-xs font-normal text-red-600 hover:bg-red-50"
                     >
                       🚪 Logout
                     </button>
@@ -404,12 +411,12 @@ const [menuOpen, setMenuOpen] = useState(false);
                       {stat.title}
                     </p>
 
-                    <p className="mt-2 text-2xl font-black text-gray-900">
+                    <p className="mt-2 text-lg font-black text-gray-900">
                       {stat.value}
                     </p>
                   </div>
 
-                  <div className="text-3xl">
+                  <div className="text-xl">
                     {stat.icon}
                   </div>
 
@@ -423,11 +430,11 @@ const [menuOpen, setMenuOpen] = useState(false);
           <div className="mt-6 grid gap-4 md:grid-cols-3">
 
             <div className="rounded-2xl bg-white p-5 shadow-sm">
-              <p className="text-sm font-bold text-gray-500">
+              <p className="text-xs font-normal text-gray-500">
                 Today's Sales
               </p>
 
-              <p className="mt-2 text-2xl font-black text-emerald-600">
+              <p className="mt-2 text-lg font-black text-emerald-600">
                 TZS {todaySales.toLocaleString()}
               </p>
 
@@ -437,11 +444,11 @@ const [menuOpen, setMenuOpen] = useState(false);
             </div>
 
             <div className="rounded-2xl bg-white p-5 shadow-sm">
-              <p className="text-sm font-bold text-gray-500">
+              <p className="text-xs font-normal text-gray-500">
                 This Month
               </p>
 
-              <p className="mt-2 text-2xl font-black text-blue-600">
+              <p className="mt-2 text-lg font-black text-blue-600">
                 TZS {monthSales.toLocaleString()}
               </p>
 
@@ -451,11 +458,11 @@ const [menuOpen, setMenuOpen] = useState(false);
             </div>
 
             <div className="rounded-2xl bg-white p-5 shadow-sm">
-              <p className="text-sm font-bold text-gray-500">
+              <p className="text-xs font-normal text-gray-500">
                 Delivery Fees
               </p>
 
-              <p className="mt-2 text-2xl font-black text-orange-600">
+              <p className="mt-2 text-lg font-black text-orange-600">
                 TZS {deliveryFees.toLocaleString()}
               </p>
 
@@ -469,41 +476,41 @@ const [menuOpen, setMenuOpen] = useState(false);
           <div className="mt-6 grid gap-4 md:grid-cols-4">
 
             <div className="rounded-2xl bg-white p-5 shadow-sm">
-              <p className="text-sm font-bold text-gray-500">
+              <p className="text-xs font-normal text-gray-500">
                 Pending
               </p>
 
-              <p className="mt-2 text-2xl font-black text-amber-600">
+              <p className="mt-2 text-lg font-black text-amber-600">
                 {pendingOrders}
               </p>
             </div>
 
             <div className="rounded-2xl bg-white p-5 shadow-sm">
-              <p className="text-sm font-bold text-gray-500">
+              <p className="text-xs font-normal text-gray-500">
                 Processing
               </p>
 
-              <p className="mt-2 text-2xl font-black text-blue-600">
+              <p className="mt-2 text-lg font-black text-blue-600">
                 {processingOrders}
               </p>
             </div>
 
             <div className="rounded-2xl bg-white p-5 shadow-sm">
-              <p className="text-sm font-bold text-gray-500">
+              <p className="text-xs font-normal text-gray-500">
                 Delivered
               </p>
 
-              <p className="mt-2 text-2xl font-black text-emerald-600">
+              <p className="mt-2 text-lg font-black text-emerald-600">
                 {deliveredOrders}
               </p>
             </div>
 
             <div className="rounded-2xl bg-white p-5 shadow-sm">
-              <p className="text-sm font-bold text-gray-500">
+              <p className="text-xs font-normal text-gray-500">
                 Cancelled Value
               </p>
 
-              <p className="mt-2 text-xl font-black text-red-600">
+              <p className="mt-2 text-base font-medium text-red-600">
                 TZS {cancelledValue.toLocaleString()}
               </p>
 
@@ -530,7 +537,7 @@ const [menuOpen, setMenuOpen] = useState(false);
 
               <a
                 href="/admin/orders"
-                className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-bold text-white hover:bg-orange-700"
+                className="rounded-lg bg-orange-600 px-4 py-2 text-xs font-normal text-white hover:bg-orange-700"
               >
                 View All
               </a>
@@ -541,7 +548,7 @@ const [menuOpen, setMenuOpen] = useState(false);
 
               {recentOrders.length === 0 ? (
 
-                <div className="px-5 py-12 text-center">
+                <div className="px-5 py-6 text-center">
 
                   <div className="text-4xl">
                     🛍️

@@ -164,7 +164,7 @@ return (
 <aside className="flex w-72 flex-col border-r border-[#E8DEE1] bg-white text-[#3F3437] shadow-sm">
 
           <div className="border-b border-[#E8DEE1] p-6">
-            <div className="text-2xl font-black">
+            <div className="text-lg font-black">
               GAMORA
             </div>
 
@@ -201,7 +201,7 @@ return (
               onClick={() => {
                 window.location.href = "/api/admin/logout";
               }}
-              className="w-full rounded-xl bg-red-600 px-4 py-3 text-sm font-bold text-white hover:bg-red-700"
+              className="w-full rounded-xl bg-red-600 px-4 py-3 text-xs font-normal text-white hover:bg-red-700"
             >
               Logout
             </button>
@@ -220,7 +220,7 @@ return (
                   Business Control Center
                 </p>
 
-                <h1 className="text-2xl font-black">
+                <h1 className="text-lg font-black">
                   {active}
                 </h1>
               </div>
@@ -228,7 +228,7 @@ return (
               <div className="flex items-center gap-3">
 
                 <div className="hidden text-right sm:block">
-                  <div className="text-sm font-bold">
+                  <div className="text-xs font-normal">
                     Administrator
                   </div>
 
@@ -272,12 +272,12 @@ return (
             ) : active === "Settings" ? (
               <SettingsModule />
             ) : active !== "Dashboard" ? (
-              <div className="rounded-2xl border bg-white p-10 text-center shadow-sm">
+              <div className="rounded-2xl border bg-white p-5 text-center shadow-sm">
                 <div className="text-4xl">
                   🚧
                 </div>
 
-                <h2 className="mt-4 text-xl font-black">
+                <h2 className="mt-4 text-base font-medium">
                   {active}
                 </h2>
 
@@ -301,7 +301,7 @@ return (
                     GAMORA ONLINE
                   </div>
 
-                  <h2 className="mt-1 text-3xl font-black">
+                  <h2 className="mt-1 text-base font-medium">
                     Business Overview
                   </h2>
 
@@ -375,7 +375,7 @@ return (
 
 {/* CARDS */}
                 {loading ? (
-                  <div className="rounded-2xl bg-white p-10 text-center shadow-sm">
+                  <div className="rounded-2xl bg-white p-5 text-center shadow-sm">
                     Loading business data...
                   </div>
                 ) : (
@@ -386,7 +386,7 @@ return (
                         className="rounded-2xl border bg-white p-5 shadow-sm"
                       >
                         <div className="flex items-center justify-between">
-                          <span className="text-2xl">
+                          <span className="text-lg">
                             {card.icon}
                           </span>
 
@@ -395,7 +395,7 @@ return (
                           </span>
                         </div>
 
-                        <div className="mt-4 text-xl font-black text-[#800020]">
+                        <div className="mt-4 text-base font-medium text-[#800020]">
                           {card.value}
                         </div>
                       </div>

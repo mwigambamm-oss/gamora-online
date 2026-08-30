@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 
 import { useState } from "react";
+import { FaPhoneAlt, FaWhatsapp, FaEnvelope, FaMapMarkerAlt } from "react-icons/fa";
 
 export default function ContactPage() {
   const [language, setLanguage] = useState<"sw" | "en">("sw");
@@ -30,7 +31,7 @@ export default function ContactPage() {
     location: "Mahali Tulipo",
     address: "Kariakoo, Dar es Salaam, Tanzania",
     hours: "Muda wa Huduma",
-    hoursText: "Jumatatu – Jumamosi: 8:00 AM – 6:00 PM",
+    hoursText: "Jumatatu – Ijumaa: 24 Hours | Jumamosi: Kuanzia saa 12:00 Jioni | Jumapili: 24 Hours",
     formTitle: "Tutumie Ujumbe",
     name: "Jina lako",
     namePlaceholder: "Andika jina lako",
@@ -55,7 +56,7 @@ export default function ContactPage() {
     location: "Our Location",
     address: "Kariakoo, Dar es Salaam, Tanzania",
     hours: "Service Hours",
-    hoursText: "Monday – Saturday: 8:00 AM – 6:00 PM",
+    hoursText: "Monday – Friday: 24 Hours | Saturday: From 12:00 PM | Sunday: 24 Hours",
     formTitle: "Send Us a Message",
     name: "Your Name",
     namePlaceholder: "Enter your name",
@@ -72,9 +73,28 @@ export default function ContactPage() {
 
   const [sent, setSent] = useState(false);
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setSent(true);
+
+    const form = event.currentTarget;
+    const data = new FormData(form);
+
+    const response = await fetch("/api/contact", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: data.get("name"),
+        email: data.get("email"),
+        message: data.get("message"),
+      }),
+    });
+
+    if (response.ok) {
+      setSent(true);
+      form.reset();
+    }
   }
 
   return (
@@ -91,7 +111,7 @@ export default function ContactPage() {
 
           <a
             href="/"
-            className="text-2xl font-black text-sky-700"
+            className="text-lg font-medium text-sky-700"
           >
             GAMORA
             <span className="text-sky-950">ONLINE</span>
@@ -101,7 +121,7 @@ export default function ContactPage() {
 
             <button
               onClick={() => setLanguage("sw")}
-              className={`rounded-lg px-3 py-2 text-xs font-bold ${
+              className={`rounded-lg px-3 py-2 text-xs font-normal ${
                 language === "sw"
                   ? "bg-sky-700 text-white"
                   : "bg-slate-100 text-slate-700"
@@ -112,7 +132,7 @@ export default function ContactPage() {
 
             <button
               onClick={() => setLanguage("en")}
-              className={`rounded-lg px-3 py-2 text-xs font-bold ${
+              className={`rounded-lg px-3 py-2 text-xs font-normal ${
                 language === "en"
                   ? "bg-sky-700 text-white"
                   : "bg-slate-100 text-slate-700"
@@ -129,21 +149,21 @@ export default function ContactPage() {
       {/* HERO */}
       <section className="bg-gradient-to-br from-sky-950 via-sky-800 to-cyan-600">
 
-        <div className="mx-auto max-w-5xl px-4 py-16 text-center text-white">
+        <div className="mx-auto max-w-5xl px-4 py-5 text-center text-white">
 
           <div className="mb-5 text-6xl">
             📞
           </div>
 
-          <p className="font-bold text-sky-200">
+          <p className="font-normal text-sky-200">
             {t.badge}
           </p>
 
-          <h1 className="mt-3 text-4xl font-black md:text-5xl">
+          <h1 className="mt-3 text-lg font-medium md:text-lg">
             {t.title}
           </h1>
 
-          <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-sky-100">
+          <p className="mx-auto mt-5 max-w-2xl text-sm leading-6 text-sky-100">
             {t.intro}
           </p>
 
@@ -159,16 +179,16 @@ export default function ContactPage() {
           {/* PHONE */}
           <a
             href="tel:+255798555221"
-            className="rounded-2xl bg-white p-7 text-center shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+            className="rounded-xl bg-white p-4 text-center shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
           >
-            <div className="text-5xl">☎️</div>
+            <FaPhoneAlt className="mx-auto text-lg text-sky-700" />
 
-            <h2 className="mt-5 font-black">
+            <h2 className="mt-3 text-sm font-medium">
               {t.phone}
             </h2>
 
             <p className="mt-2 text-sm text-slate-500">
-              +255 798 555 221
+              +255 798 555 221<br/>+255 676 285 283
             </p>
           </a>
 
@@ -177,11 +197,11 @@ export default function ContactPage() {
             href="https://wa.me/255798555221"
             target="_blank"
             rel="noreferrer"
-            className="rounded-2xl bg-white p-7 text-center shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+            className="rounded-xl bg-white p-4 text-center shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
           >
-            <div className="text-5xl">💬</div>
+            <FaWhatsapp className="mx-auto text-4xl text-green-600" />
 
-            <h2 className="mt-5 font-black">
+            <h2 className="mt-3 text-sm font-medium">
               {t.whatsapp}
             </h2>
 
@@ -192,26 +212,26 @@ export default function ContactPage() {
 
           {/* EMAIL */}
           <a
-            href="mailto:info@gamoraonline.com"
-            className="rounded-2xl bg-white p-7 text-center shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+            href="mailto:officialgamoraonline@gmail.com"
+            className="rounded-xl bg-white p-4 text-center shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
           >
-            <div className="text-5xl">📧</div>
+            <FaEnvelope className="mx-auto text-lg text-sky-700" />
 
-            <h2 className="mt-5 font-black">
+            <h2 className="mt-3 text-sm font-medium">
               {t.email}
             </h2>
 
             <p className="mt-2 break-all text-sm text-slate-500">
-              info@gamoraonline.com
+              officialgamoraonline@gmail.com
             </p>
           </a>
 
           {/* LOCATION */}
-          <div className="rounded-2xl bg-white p-7 text-center shadow-sm">
+          <div className="rounded-xl bg-white p-4 text-center shadow-sm">
 
-            <div className="text-5xl">📍</div>
+            <FaMapMarkerAlt className="mx-auto text-4xl text-red-600" />
 
-            <h2 className="mt-5 font-black">
+            <h2 className="mt-3 text-sm font-medium">
               {t.location}
             </h2>
 
@@ -230,7 +250,7 @@ export default function ContactPage() {
 
         <div className="mx-auto max-w-4xl">
 
-          <div className="rounded-2xl bg-white p-7 shadow-sm md:p-10">
+          <div className="rounded-xl bg-white p-4 shadow-sm md:p-5">
 
             <div className="mb-8 text-center">
 
@@ -238,7 +258,7 @@ export default function ContactPage() {
                 ✉️
               </div>
 
-              <h2 className="mt-4 text-3xl font-black">
+              <h2 className="mt-4 text-xl font-medium">
                 {t.formTitle}
               </h2>
 
@@ -252,7 +272,7 @@ export default function ContactPage() {
                   ✅
                 </div>
 
-                <p className="mt-3 font-bold">
+                <p className="mt-3 font-normal">
                   {t.success}
                 </p>
 
@@ -267,12 +287,13 @@ export default function ContactPage() {
 
                 <div>
 
-                  <label className="mb-2 block text-sm font-bold">
+                  <label className="mb-2 block text-xs font-normal">
                     {t.name}
                   </label>
 
                   <input
                     type="text"
+                    name="name"
                     required
                     placeholder={t.namePlaceholder}
                     className="w-full rounded-lg border border-slate-200 px-4 py-3 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
@@ -282,12 +303,13 @@ export default function ContactPage() {
 
                 <div>
 
-                  <label className="mb-2 block text-sm font-bold">
+                  <label className="mb-2 block text-xs font-normal">
                     {t.email}
                   </label>
 
                   <input
                     type="email"
+                    name="email"
                     required
                     placeholder={t.emailPlaceholder}
                     className="w-full rounded-lg border border-slate-200 px-4 py-3 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
@@ -297,13 +319,14 @@ export default function ContactPage() {
 
                 <div>
 
-                  <label className="mb-2 block text-sm font-bold">
+                  <label className="mb-2 block text-xs font-normal">
                     {t.message}
                   </label>
 
                   <textarea
                     required
                     rows={6}
+                    name="message"
                     placeholder={t.messagePlaceholder}
                     className="w-full resize-none rounded-lg border border-slate-200 px-4 py-3 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
                   />
@@ -312,7 +335,7 @@ export default function ContactPage() {
 
                 <button
                   type="submit"
-                  className="w-full rounded-lg bg-sky-700 px-6 py-4 font-black text-white transition hover:bg-sky-800"
+                  className="w-full rounded-lg bg-sky-700 px-6 py-4 font-medium text-white transition hover:bg-sky-800"
                 >
                   {t.send}
                 </button>
@@ -334,13 +357,13 @@ export default function ContactPage() {
       {/* SERVICE HOURS */}
       <section className="mx-auto max-w-4xl px-4 py-14">
 
-        <div className="rounded-2xl bg-white p-8 text-center shadow-sm">
+        <div className="rounded-2xl bg-white p-4 text-center shadow-sm">
 
           <div className="text-5xl">
             🕐
           </div>
 
-          <h2 className="mt-5 text-2xl font-black">
+          <h2 className="mt-5 text-lg font-medium">
             {t.hours}
           </h2>
 
@@ -353,9 +376,9 @@ export default function ContactPage() {
       </section>
 
       {/* FOOTER */}
-      <footer className="bg-sky-950 px-4 py-10 text-center text-sky-200">
+      <footer className="bg-sky-950 px-4 py-5 text-center text-sky-200">
 
-        <div className="text-xl font-black text-white">
+        <div className="text-base font-medium text-white">
           GAMORA
           <span className="text-sky-300">ONLINE</span>
         </div>
@@ -370,7 +393,7 @@ export default function ContactPage() {
 
         <a
           href="/"
-          className="mt-6 inline-block font-bold text-white hover:text-sky-300"
+          className="mt-6 inline-block font-normal text-white hover:text-sky-300"
         >
           {t.back}
         </a>

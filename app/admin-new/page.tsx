@@ -16,6 +16,7 @@ import ProductsModule from "@/components/admin-new/ProductsModule";
 import SalesChart from "@/components/admin-new/dashboard/SalesChart";
 import TopProducts from "@/components/admin-new/dashboard/TopProducts";
 import NotificationBell from "@/components/admin-new/dashboard/NotificationBell";
+import MessagesModule from "@/components/admin-new/MessagesModule";
 
 type DashboardData = {
   orders?: any[];
@@ -43,10 +44,10 @@ const menu = [
   "Products",
   "Inventory",
   "Customers",
+  "Messages",
   "Payments",
   "Accounting",
   "Reports",
-  "Reviews",
   "Notifications",
   "Admin Users",
   "Audit Log",
@@ -171,7 +172,7 @@ return (
 <aside className="flex w-72 flex-col border-r border-[#E8DEE1] bg-white text-[#3F3437] shadow-sm">
 
           <div className="border-b border-[#E8DEE1] p-6">
-            <div className="text-2xl font-black">
+            <div className="text-base font-medium">
               GAMORA
             </div>
 
@@ -190,7 +191,7 @@ return (
                 <button
                   key={item}
                   onClick={() => setActive(item)}
-                  className={`flex w-full items-center rounded-xl px-4 py-3 text-left text-sm font-semibold transition ${
+                  className={`flex w-full items-center rounded-xl px-3 py-2 text-left text-sm font-semibold transition ${
                     active === item
                       ? "bg-[#800020] text-white"
 : "text-[#3F3437] hover:bg-[#F8EDEF] hover:text-[#800020]"
@@ -208,7 +209,7 @@ return (
               onClick={() => {
                 window.location.href = "/api/admin/logout";
               }}
-              className="w-full rounded-xl bg-red-600 px-4 py-3 text-sm font-bold text-white hover:bg-red-700"
+              className="w-full rounded-xl bg-red-600 px-4 py-3 text-xs font-normal text-white hover:bg-red-700"
             >
               Logout
             </button>
@@ -219,7 +220,7 @@ return (
         <main className="flex-1">
 
           {/* TOP BAR */}
-          <header className="border-b bg-white px-6 py-5 shadow-sm">
+          <header className="border-b bg-white px-4 py-3 shadow-sm">
             <div className="flex items-center justify-between">
 
               <div>
@@ -227,7 +228,7 @@ return (
                   Business Control Center
                 </p>
 
-                <h1 className="text-2xl font-black">
+                <h1 className="text-base font-medium">
                   {active}
                 </h1>
               </div>
@@ -235,7 +236,7 @@ return (
               <div className="flex items-center gap-3">
 
                 <div className="hidden text-right sm:block">
-                  <div className="text-sm font-bold">
+                  <div className="text-xs font-normal">
                     Administrator
                   </div>
 
@@ -261,7 +262,7 @@ return (
           </header>
 
           {/* CONTENT */}
-          <div className="p-6">
+          <div className="p-4 md:p-5">
 
             {active === "Orders" ? (
               <OrdersModule />
@@ -271,6 +272,8 @@ return (
               <InventoryModule />
             ) : active === "Customers" ? (
               <CustomersModule />
+            ) : active === "Messages" ? (
+              <MessagesModule />
             ) : active === "Payments" ? (
               <PaymentsModule />
             ) : active === "Accounting" ? (
@@ -288,12 +291,12 @@ return (
             ) : active === "Settings" ? (
               <SettingsModule />
             ) : active !== "Dashboard" ? (
-              <div className="rounded-2xl border bg-white p-10 text-center shadow-sm">
+              <div className="rounded-2xl border bg-white p-5 text-center shadow-sm">
                 <div className="text-4xl">
                   🚧
                 </div>
 
-                <h2 className="mt-4 text-xl font-black">
+                <h2 className="mt-4 text-base font-medium">
                   {active}
                 </h2>
 
@@ -312,12 +315,12 @@ return (
             ) : (
               <>
                 {/* WELCOME */}
-                <div className="mb-6 rounded-2xl bg-gradient-to-r from-[#800020] to-[#A64D63] p-6 text-white shadow-lg">
+                <div className="mb-6 #ROUND rounded-2xl bg-gradient-to-r from-[#800020] to-[#A64D63] p-6 text-white shadow-lg">
                   <div className="text-sm font-medium text-[#FBECEF]">
                     GAMORA ONLINE
                   </div>
 
-                  <h2 className="mt-1 text-3xl font-black">
+                  <h2 className="mt-1 text-base font-medium">
                     Business Overview
                   </h2>
 
@@ -391,18 +394,18 @@ return (
 
 {/* CARDS */}
                 {loading ? (
-                  <div className="rounded-2xl bg-white p-10 text-center shadow-sm">
+                  <div className="rounded-2xl bg-white p-5 text-center shadow-sm">
                     Loading business data...
                   </div>
                 ) : (
-                  <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
                     {cards.map((card) => (
                       <div
                         key={card.title}
-                        className="rounded-2xl border bg-white p-5 shadow-sm"
+                        className="rounded-xl border bg-white p-3 shadow-sm"
                       >
                         <div className="flex items-center justify-between">
-                          <span className="text-2xl">
+                          <span className="text-lg">
                             {card.icon}
                           </span>
 
@@ -411,7 +414,7 @@ return (
                           </span>
                         </div>
 
-                        <div className="mt-4 text-xl font-black text-[#800020]">
+                        <div className="mt-3 text-lg font-black text-[#800020]">
                           {card.value}
                         </div>
                       </div>

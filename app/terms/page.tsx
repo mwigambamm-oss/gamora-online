@@ -175,7 +175,7 @@ export default function TermsPage() {
 
           <a
             href="/"
-            className="text-2xl font-black text-sky-700"
+            className="text-lg font-medium text-sky-700"
           >
             GAMORA
             <span className="text-sky-950">ONLINE</span>
@@ -185,7 +185,7 @@ export default function TermsPage() {
 
             <button
               onClick={() => setLanguage("sw")}
-              className={`rounded-lg px-3 py-2 text-xs font-bold ${
+              className={`rounded-lg px-3 py-2 text-xs font-normal ${
                 language === "sw"
                   ? "bg-sky-700 text-white"
                   : "bg-slate-100 text-slate-700"
@@ -196,7 +196,7 @@ export default function TermsPage() {
 
             <button
               onClick={() => setLanguage("en")}
-              className={`rounded-lg px-3 py-2 text-xs font-bold ${
+              className={`rounded-lg px-3 py-2 text-xs font-normal ${
                 language === "en"
                   ? "bg-sky-700 text-white"
                   : "bg-slate-100 text-slate-700"
@@ -213,25 +213,25 @@ export default function TermsPage() {
       {/* HERO */}
       <section className="bg-gradient-to-br from-sky-950 via-sky-800 to-cyan-600">
 
-        <div className="mx-auto max-w-4xl px-4 py-16 text-center text-white">
+        <div className="mx-auto max-w-4xl px-4 py-8 text-center text-white">
 
           <div className="mb-5 text-6xl">
             📄
           </div>
 
-          <p className="font-bold text-sky-200">
+          <p className="font-normal text-sky-200">
             {t.badge}
           </p>
 
-          <h1 className="mt-3 text-4xl font-black md:text-5xl">
+          <h1 className="mt-3 text-4xl font-medium md:text-5xl">
             {t.title}
           </h1>
 
-          <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-sky-100">
+          <p className="mx-auto mt-5 max-w-2xl text-sm leading-6 text-sky-100">
             {t.intro}
           </p>
 
-          <p className="mt-5 text-sm font-bold text-sky-200">
+          <p className="mt-5 text-xs font-normal text-sky-200">
             {t.updated}
           </p>
 
@@ -250,11 +250,11 @@ export default function TermsPage() {
               className="rounded-2xl bg-white p-7 shadow-sm"
             >
 
-              <h2 className="text-xl font-black text-slate-900">
+              <h2 className="text-base font-medium text-slate-900">
                 {section.title}
               </h2>
 
-              <p className="mt-4 leading-8 text-slate-600">
+              <p className="mt-4 leading-6 text-slate-600">
                 {section.text}
               </p>
 
@@ -266,7 +266,7 @@ export default function TermsPage() {
       </section>
 
       {/* CONTACT */}
-      <section className="bg-sky-950 px-4 py-12 text-center text-white">
+      <section className="bg-sky-950 px-4 py-6 text-center text-white">
 
         <div className="mx-auto max-w-3xl">
 
@@ -274,7 +274,7 @@ export default function TermsPage() {
             💬
           </div>
 
-          <p className="mx-auto mt-4 max-w-xl leading-7 text-sky-200">
+          <p className="mx-auto mt-4 max-w-xl leading-6 text-sky-200">
             {t.contact}
           </p>
 
@@ -282,7 +282,7 @@ export default function TermsPage() {
 
             <a
               href="tel:+255798555221"
-              className="rounded-lg bg-white px-6 py-3 font-black text-sky-900 hover:bg-sky-100"
+              className="rounded-lg bg-white px-6 py-3 font-medium text-sky-900 hover:bg-sky-100"
             >
               ☎️ +255 798 555 221
             </a>
@@ -291,7 +291,7 @@ export default function TermsPage() {
               href="https://wa.me/255798555221"
               target="_blank"
               rel="noreferrer"
-              className="rounded-lg bg-green-600 px-6 py-3 font-black text-white hover:bg-green-700"
+              className="rounded-lg bg-green-600 px-6 py-3 font-medium text-white hover:bg-green-700"
             >
               💬 WhatsApp
             </a>
@@ -305,7 +305,7 @@ export default function TermsPage() {
       {/* FOOTER */}
       <footer className="bg-sky-950 px-4 py-8 text-center text-sky-300">
 
-        <div className="text-xl font-black text-white">
+        <div className="text-base font-medium text-white">
           GAMORA
           <span className="text-sky-300">ONLINE</span>
         </div>
@@ -316,7 +316,7 @@ export default function TermsPage() {
 
         <a
           href="/"
-          className="mt-5 inline-block font-bold text-white hover:text-sky-300"
+          className="mt-5 inline-block font-normal text-white hover:text-sky-300"
         >
           {t.back}
         </a>

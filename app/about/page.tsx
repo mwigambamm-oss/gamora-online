@@ -88,7 +88,7 @@ export default function AboutPage() {
 
           <a
             href="/"
-            className="text-2xl font-black text-sky-700"
+            className="text-lg font-black text-sky-700"
           >
             GAMORA
             <span className="text-sky-950">ONLINE</span>
@@ -124,7 +124,7 @@ export default function AboutPage() {
 
       {/* HERO */}
       <section className="bg-gradient-to-br from-sky-950 via-sky-800 to-cyan-600">
-        <div className="mx-auto max-w-5xl px-4 py-16 text-center text-white">
+        <div className="mx-auto max-w-5xl px-4 py-8 text-center text-white">
 
           <div className="mb-5 text-6xl">
             🌊
@@ -150,10 +150,10 @@ export default function AboutPage() {
 
         <div className="grid gap-6 md:grid-cols-2">
 
-          <div className="rounded-2xl bg-white p-8 shadow-sm">
+          <div className="rounded-2xl bg-white p-4 shadow-sm">
             <div className="text-4xl">🎯</div>
 
-            <h2 className="mt-5 text-2xl font-black">
+            <h2 className="mt-5 text-lg font-black">
               {t.missionTitle}
             </h2>
 
@@ -162,10 +162,10 @@ export default function AboutPage() {
             </p>
           </div>
 
-          <div className="rounded-2xl bg-white p-8 shadow-sm">
+          <div className="rounded-2xl bg-white p-4 shadow-sm">
             <div className="text-4xl">🚀</div>
 
-            <h2 className="mt-5 text-2xl font-black">
+            <h2 className="mt-5 text-lg font-black">
               {t.visionTitle}
             </h2>
 
@@ -188,7 +188,7 @@ export default function AboutPage() {
               GAMORA ONLINE
             </p>
 
-            <h2 className="mt-2 text-3xl font-black">
+            <h2 className="mt-2 text-base font-medium">
               {t.whyTitle}
             </h2>
           </div>
@@ -198,7 +198,7 @@ export default function AboutPage() {
             <div className="rounded-2xl bg-white p-7 text-center shadow-sm">
               <div className="text-5xl">🛍️</div>
 
-              <h3 className="mt-5 text-xl font-black">
+              <h3 className="mt-5 text-base font-medium">
                 {t.quality}
               </h3>
 
@@ -210,7 +210,7 @@ export default function AboutPage() {
             <div className="rounded-2xl bg-white p-7 text-center shadow-sm">
               <div className="text-5xl">📦</div>
 
-              <h3 className="mt-5 text-xl font-black">
+              <h3 className="mt-5 text-base font-medium">
                 {t.delivery}
               </h3>
 
@@ -222,7 +222,7 @@ export default function AboutPage() {
             <div className="rounded-2xl bg-white p-7 text-center shadow-sm">
               <div className="text-5xl">💬</div>
 
-              <h3 className="mt-5 text-xl font-black">
+              <h3 className="mt-5 text-base font-medium">
                 {t.support}
               </h3>
 
@@ -240,11 +240,11 @@ export default function AboutPage() {
       {/* CONTACT INFORMATION */}
       <section className="mx-auto max-w-5xl px-4 py-14">
 
-        <div className="rounded-2xl bg-white p-8 text-center shadow-sm md:p-12">
+        <div className="rounded-2xl bg-white p-4 text-center shadow-sm md:p-12">
 
           <div className="text-5xl">📍</div>
 
-          <h2 className="mt-5 text-2xl font-black">
+          <h2 className="mt-5 text-lg font-black">
             {t.location}
           </h2>
 
@@ -274,9 +274,9 @@ export default function AboutPage() {
       </section>
 
       {/* FOOTER */}
-      <footer className="bg-sky-950 px-4 py-10 text-center text-sky-200">
+      <footer className="bg-sky-950 px-4 py-5 text-center text-sky-200">
 
-        <div className="text-xl font-black text-white">
+        <div className="text-base font-medium text-white">
           GAMORA
           <span className="text-sky-300">ONLINE</span>
         </div>

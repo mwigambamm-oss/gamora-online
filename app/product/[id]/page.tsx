@@ -52,6 +52,7 @@ const [cartCount, setCartCount] = useState(0);
 
   const [selectedColor, setSelectedColor] = useState("");
   const [selectedSize, setSelectedSize] = useState("");
+  const [activeTab, setActiveTab] = useState("description");
 
   /*
    * LOAD PRODUCT + REVIEWS
@@ -347,8 +348,8 @@ window.dispatchEvent(new Event("cartUpdated"));
    */
   if (!product) {
     return (
-      <main className="min-h-screen bg-white p-10 text-center">
-        <p className="text-sm font-bold text-slate-500">
+      <main className="min-h-screen bg-white p-5 text-center">
+        <p className="text-sm font-normal text-slate-500">
           Loading...
         </p>
       </main>
@@ -412,7 +413,7 @@ window.dispatchEvent(new Event("cartUpdated"));
           </span>
         </div>
 
-        <div className="grid gap-8 md:grid-cols-[1.05fr_0.95fr]">
+        <div className="grid gap-4 md:grid-cols-[1.05fr_0.95fr]">
 
           {/* ================= IMAGE AREA ================= */}
 
@@ -460,7 +461,7 @@ window.dispatchEvent(new Event("cartUpdated"));
                   type="button"
                   onClick={previousImage}
                   aria-label="Previous image"
-                  className="absolute left-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-2xl text-slate-700 shadow hover:bg-white"
+                  className="absolute left-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-lg text-slate-700 shadow hover:bg-white"
                 >
                   ‹
                 </button>
@@ -473,7 +474,7 @@ window.dispatchEvent(new Event("cartUpdated"));
                   type="button"
                   onClick={nextImage}
                   aria-label="Next image"
-                  className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-2xl text-slate-700 shadow hover:bg-white"
+                  className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-lg text-slate-700 shadow hover:bg-white"
                 >
                   ›
                 </button>
@@ -542,23 +543,23 @@ window.dispatchEvent(new Event("cartUpdated"));
 
             {/* TITLE */}
 
-            <h1 className="text-[16px] font-bold leading-6 text-slate-900 sm:text-[20px]">
+            <h1 className="text-sm font-medium leading-6 text-slate-900 sm:text-[20px]">
               {product.name}
             </h1>
 
             {/* PRICE */}
 
-            <div className="mt-5 rounded-xl bg-sky-50 px-4 py-3">
+            <div className="mt-3 rounded-xl bg-sky-50 px-4 py-3">
 
               <div className="flex flex-wrap items-center gap-3">
 
-                <span className="text-[24px] font-extrabold text-sky-700">
+                <span className="text-sm font-medium text-sky-700">
                   TZS{" "}
                   {product.price.toLocaleString()}
                 </span>
 
                 {product.oldPrice && (
-                  <span className="text-[14px] text-slate-400 line-through">
+                  <span className="text-[12px] text-slate-400 line-through">
                     TZS{" "}
                     {product.oldPrice.toLocaleString()}
                   </span>
@@ -567,7 +568,7 @@ window.dispatchEvent(new Event("cartUpdated"));
               </div>
 
               {discount > 0 && (
-                <span className="mt-1 inline-block rounded bg-red-100 px-2 py-1 text-[11px] font-bold text-red-600">
+                <span className="mt-1 inline-block rounded bg-red-100 px-2 py-1 text-[11px] font-normal text-red-600">
                   -{discount}%
                 </span>
               )}
@@ -577,14 +578,14 @@ window.dispatchEvent(new Event("cartUpdated"));
             {/* DESCRIPTION */}
 
             {product.description && (
-              <p className="mt-4 text-[13px] font-medium leading-5 text-slate-500">
+              <p className="mt-4 text-[12px] font-normal leading-4 text-slate-500">
                 {product.description}
               </p>
             )}
 
             {/* STOCK */}
 
-            <div className="mt-4 text-[13px] font-bold text-green-600">
+            <div className="mt-4 text-[13px] font-normal text-green-600">
               ✓ In Stock ({product.stock})
             </div>
 
@@ -592,9 +593,9 @@ window.dispatchEvent(new Event("cartUpdated"));
 
             {product.colors &&
               product.colors.length > 0 && (
-                <div className="mt-5">
+                <div className="mt-2">
 
-                  <p className="mb-2 text-[13px] font-bold text-slate-600">
+                  <p className="mb-2 text-[13px] font-normal text-slate-600">
                     Color
                   </p>
 
@@ -607,7 +608,7 @@ window.dispatchEvent(new Event("cartUpdated"));
                         onClick={() =>
                           setSelectedColor(color)
                         }
-                        className={`rounded-lg px-3 py-2 text-[13px] font-bold ${
+                        className={`rounded-lg px-3 py-2 text-[13px] font-normal ${
                           selectedColor === color
                             ? "border-2 border-sky-700 bg-sky-50 text-sky-700"
                             : "border border-slate-300 text-slate-600"
@@ -626,9 +627,9 @@ window.dispatchEvent(new Event("cartUpdated"));
 
             {product.sizes &&
               product.sizes.length > 0 && (
-                <div className="mt-5">
+                <div className="mt-2">
 
-                  <p className="mb-2 text-[13px] font-bold text-slate-600">
+                  <p className="mb-2 text-[13px] font-normal text-slate-600">
                     Size
                   </p>
 
@@ -641,7 +642,7 @@ window.dispatchEvent(new Event("cartUpdated"));
                         onClick={() =>
                           setSelectedSize(size)
                         }
-                        className={`rounded-lg px-3 py-2 text-[13px] font-bold ${
+                        className={`rounded-lg px-3 py-2 text-[13px] font-normal ${
                           selectedSize === size
                             ? "border-2 border-sky-700 bg-sky-50 text-sky-700"
                             : "border border-slate-300 text-slate-600"
@@ -658,9 +659,9 @@ window.dispatchEvent(new Event("cartUpdated"));
 
             {/* QUANTITY */}
 
-            <div className="mt-5">
+            <div className="mt-2">
 
-              <p className="mb-2 text-[13px] font-bold text-slate-600">
+              <p className="mb-2 text-[13px] font-normal text-slate-600">
                 Quantity
               </p>
 
@@ -673,12 +674,12 @@ window.dispatchEvent(new Event("cartUpdated"));
                       Math.max(1, q - 1)
                     )
                   }
-                  className="h-9 w-9 text-lg font-bold text-slate-600 hover:bg-slate-50"
+                  className="h-7 w-7 text-sm font-normal text-slate-600 hover:bg-slate-50"
                 >
                   −
                 </button>
 
-                <span className="flex h-9 w-10 items-center justify-center border-x border-slate-200 text-[13px] font-bold">
+                <span className="flex h-7 w-8 items-center justify-center border-x border-slate-200 text-[11px] font-normal">
                   {quantity}
                 </span>
 
@@ -692,7 +693,7 @@ window.dispatchEvent(new Event("cartUpdated"));
                       )
                     )
                   }
-                  className="h-9 w-9 text-lg font-bold text-slate-600 hover:bg-slate-50"
+                  className="h-7 w-7 text-sm font-normal text-slate-600 hover:bg-slate-50"
                 >
                   +
                 </button>
@@ -703,22 +704,22 @@ window.dispatchEvent(new Event("cartUpdated"));
 
             {/* ACTION BUTTONS */}
 
-            <div className="mt-5 grid grid-cols-2 gap-3">
+            <div className="mt-3 flex gap-3 w-full">
 
               <button
                 type="button"
                 onClick={addToCart}
-                className="rounded-xl bg-sky-700 px-4 py-3 text-[13px] font-extrabold text-white shadow-sm hover:bg-sky-800"
+                className="rounded-md bg-sky-700 px-6 py-2.5 text-xs font-semibold text-white whitespace-nowrap shadow-sm hover:bg-sky-800"
               >
-                🛒 Add to Cart
+                🛒 Add
               </button>
 
               <button
                 type="button"
                 onClick={buyNow}
-                className="rounded-xl border-2 border-sky-700 px-4 py-3 text-[13px] font-extrabold text-sky-700 hover:bg-sky-50"
+                className="rounded-md border border-sky-700 px-6 py-2.5 text-xs font-semibold text-sky-700 whitespace-nowrap hover:bg-sky-50"
               >
-                ⚡ Buy Now
+                ⚡ Buy
               </button>
 
             </div>
@@ -727,7 +728,7 @@ window.dispatchEvent(new Event("cartUpdated"));
 
             <a
               href="https://wa.me/255798555221"
-              className="mt-3 block rounded-xl bg-green-600 px-4 py-3 text-center text-[13px] font-extrabold text-white hover:bg-green-700"
+              className="mt-2 inline-flex rounded-md bg-green-600 px-3.5 py-1.5 text-[11px] font-normal text-white hover:bg-green-700"
             >
               💬 WhatsApp
             </a>
@@ -738,22 +739,99 @@ window.dispatchEvent(new Event("cartUpdated"));
 
       </section>
 
-      {/* ================= DESCRIPTION ================= */}
+      {/* ================= RELATED PRODUCTS ================= */}
 
-      <section className="mx-auto mt-10 max-w-6xl border-t border-slate-200">
+      {related.length > 0 && (
+        <section className="mx-auto max-w-6xl border-t border-slate-200 py-4">
 
-        <div className="flex gap-6 overflow-x-auto border-b border-slate-200 pt-5 text-[13px] font-bold">
+          <h2 className="mb-3 text-sm font-medium text-slate-800">
+            You May Also Like
+          </h2>
+
+          <div className="grid grid-cols-2 gap-3 px-1 sm:grid-cols-3 md:grid-cols-4 lg:gap-4">
+
+            {related.map((item) => (
+              <button
+                type="button"
+                key={item.id}
+                onClick={() =>
+                  router.push(
+                    `/product/${item.id}`
+                  )
+                }
+                className="overflow-hidden rounded-lg border border-slate-200 bg-white text-left transition hover:shadow-md"
+              >
+
+                <div className="h-20 sm:h-24 bg-slate-50">
+
+                  <img
+                    src={
+                      item.image ||
+                      item.images?.[0] ||
+                      ""
+                    }
+                    alt={item.name}
+                    className="h-full w-full object-contain p-3"
+                  />
+
+                </div>
+
+                <div className="p-1.5">
+
+                  <p className="line-clamp-2 text-xs font-normal text-slate-600">
+                    {item.name}
+                  </p>
+
+                  <p className="mt-2 text-xs font-medium text-sky-700 sm:text-sm sm:text-sm">
+                    TZS{" "}
+                    {item.price.toLocaleString()}
+                  </p>
+
+                  {item.oldPrice && (
+                    <p className="text-[11px] text-slate-400 line-through">
+                      TZS{" "}
+                      {item.oldPrice.toLocaleString()}
+                    </p>
+                  )}
+
+                </div>
+
+              </button>
+            ))}
+
+          </div>
+
+        </section>
+      )}
+
+      
+
+{/* ================= DESCRIPTION ================= */}
+
+      <section className="mx-auto mt-5 max-w-6xl border-t border-slate-200">
+
+        <div className="flex gap-5 overflow-x-auto border-b border-slate-200 pt-3 text-xs font-normal">
 
           <button
             type="button"
-            className="border-b-2 border-sky-700 pb-3 text-sky-700"
+            onClick={() => setActiveTab("description")}
+            className={`pb-2 ${
+              activeTab === "description"
+                ? "border-b-2 border-sky-700 text-sky-700"
+                : "text-slate-400"
+            }`}
           >
             Description
           </button>
 
           <button
             type="button"
-            className="pb-3 text-slate-400"
+            onClick={() => setActiveTab("specifications")}
+            className={`pb-2 ${
+              activeTab === "specifications"
+                ? "border-b-2 border-sky-700 text-sky-700"
+                : "text-slate-400"
+            }`}
           >
             Specifications
           </button>
@@ -767,25 +845,78 @@ window.dispatchEvent(new Event("cartUpdated"));
                   behavior: "smooth",
                 })
             }
-            className="pb-3 text-slate-400"
+            className="pb-2 text-slate-400"
           >
             Reviews
           </button>
 
         </div>
 
-        <div className="py-7">
+        <div className="py-4">
 
-          <h2 className="text-[16px] font-bold text-slate-900">
-            Product Description
-          </h2>
+{activeTab === "description" && (
+  <>
+    <h2 className="text-sm font-medium text-slate-900">
+      Product Description
+    </h2>
 
-          <p className="mt-3 max-w-4xl text-[13px] leading-6 text-slate-500">
-            {product.description ||
-              "No additional product description available."}
-          </p>
+    <p className="mt-3 max-w-4xl text-xs leading-5 text-slate-500">
+      {product.description ||
+        "No additional product description available."}
+    </p>
+  </>
+)}
 
-        </div>
+{activeTab === "specifications" && (
+  <div className="rounded-lg border border-slate-200 bg-white p-3">
+
+    <h2 className="text-sm font-medium text-slate-800">
+      Specifications
+    </h2>
+
+    <div className="mt-3 space-y-2 text-xs text-slate-500">
+
+      <div className="flex justify-between">
+        <span>Category</span>
+        <span className="text-slate-700">
+          {product.category || "N/A"}
+        </span>
+      </div>
+
+      <div className="flex justify-between">
+        <span>Stock</span>
+        <span className="text-green-600">
+          In Stock ({product.stock})
+        </span>
+      </div>
+
+      <div className="flex justify-between">
+        <span>Colors</span>
+        <span className="text-slate-700">
+          {product.colors?.join(", ") || "N/A"}
+        </span>
+      </div>
+
+      <div className="flex justify-between">
+        <span>Sizes</span>
+        <span className="text-slate-700">
+          {product.sizes?.join(", ") || "N/A"}
+        </span>
+      </div>
+
+      <div className="flex justify-between">
+        <span>Shipping</span>
+        <span className="text-slate-700">
+          Available
+        </span>
+      </div>
+
+    </div>
+
+  </div>
+)}
+
+</div>
 
       </section>
 
@@ -793,16 +924,16 @@ window.dispatchEvent(new Event("cartUpdated"));
 
       <section
         id="reviews"
-        className="mx-auto max-w-6xl border-t border-slate-200 py-8"
+        className="mx-auto max-w-6xl border-t border-slate-200 py-4"
       >
 
-        <h2 className="text-[16px] font-bold text-slate-900">
+        <h2 className="text-sm font-medium text-slate-900">
           Customer Reviews
         </h2>
 
         {/* REAL REVIEW SUMMARY */}
 
-        <div className="mt-4 flex items-center gap-4">
+        <div className="mt-3 flex items-center gap-3">
 
           <span className="text-[26px] font-extrabold text-amber-500">
             {averageRating}
@@ -842,15 +973,15 @@ window.dispatchEvent(new Event("cartUpdated"));
 
         {/* WRITE REVIEW */}
 
-        <div className="mt-6 rounded-xl border border-slate-200 p-4">
+        <div className="mt-6 rounded-lg border border-slate-200 p-3">
 
-          <h3 className="text-[14px] font-bold text-slate-800">
+          <h3 className="text-[14px] font-normal text-slate-800">
             Leave a Review
           </h3>
 
           {/* STAR SELECTOR */}
 
-          <div className="mt-3 flex gap-1">
+          <div className="mt-2 flex gap-1">
 
             {[1, 2, 3, 4, 5].map((star) => (
               <button
@@ -860,7 +991,7 @@ window.dispatchEvent(new Event("cartUpdated"));
                   setReviewRating(star)
                 }
                 aria-label={`Rate ${star} stars`}
-                className={`text-2xl transition ${
+                className={`text-lg transition ${
                   star <= reviewRating
                     ? "text-amber-400"
                     : "text-slate-300"
@@ -889,7 +1020,7 @@ window.dispatchEvent(new Event("cartUpdated"));
             type="button"
             onClick={submitReview}
             disabled={reviewLoading}
-            className="mt-3 rounded-xl bg-sky-700 px-5 py-3 text-[13px] font-bold text-white hover:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-60"
+            className="mt-3 rounded-xl bg-sky-700 px-5 py-3 text-[13px] font-normal text-white hover:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {reviewLoading
               ? "Submitting..."
@@ -906,7 +1037,7 @@ window.dispatchEvent(new Event("cartUpdated"));
             reviews.map((review) => (
               <div
                 key={review.id}
-                className="rounded-xl border border-slate-200 p-4"
+                className="rounded-lg border border-slate-200 p-3"
               >
 
                 <div className="text-[15px] text-amber-400">
@@ -936,11 +1067,11 @@ window.dispatchEvent(new Event("cartUpdated"));
           ) : (
             <div className="rounded-xl border border-dashed border-slate-200 p-6 text-center">
 
-              <div className="text-2xl text-slate-300">
+              <div className="text-lg text-slate-300">
                 ★★★★★
               </div>
 
-              <p className="mt-2 text-[13px] font-bold text-slate-400">
+              <p className="mt-2 text-[13px] font-normal text-slate-400">
                 No reviews yet.
               </p>
 
@@ -955,78 +1086,13 @@ window.dispatchEvent(new Event("cartUpdated"));
 
       </section>
 
-      {/* ================= RELATED PRODUCTS ================= */}
-
-      {related.length > 0 && (
-        <section className="mx-auto max-w-6xl border-t border-slate-200 py-8">
-
-          <h2 className="mb-5 text-[16px] font-bold text-slate-900">
-            You May Also Like
-          </h2>
-
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-
-            {related.map((item) => (
-              <button
-                type="button"
-                key={item.id}
-                onClick={() =>
-                  router.push(
-                    `/product/${item.id}`
-                  )
-                }
-                className="overflow-hidden rounded-xl border border-slate-200 bg-white text-left transition hover:shadow-md"
-              >
-
-                <div className="h-28 sm:h-32 bg-slate-50">
-
-                  <img
-                    src={
-                      item.image ||
-                      item.images?.[0] ||
-                      ""
-                    }
-                    alt={item.name}
-                    className="h-full w-full object-contain p-3"
-                  />
-
-                </div>
-
-                <div className="p-2">
-
-                  <p className="line-clamp-2 text-[12px] font-bold text-slate-700">
-                    {item.name}
-                  </p>
-
-                  <p className="mt-2 text-[13px] font-extrabold text-sky-700">
-                    TZS{" "}
-                    {item.price.toLocaleString()}
-                  </p>
-
-                  {item.oldPrice && (
-                    <p className="text-[11px] text-slate-400 line-through">
-                      TZS{" "}
-                      {item.oldPrice.toLocaleString()}
-                    </p>
-                  )}
-
-                </div>
-
-              </button>
-            ))}
-
-          </div>
-
-        </section>
-      )}
-
       {/* ================= MOBILE STICKY BAR ================= */}
 
       <div className="fixed bottom-4 right-4 z-50">
   <button
     type="button"
     onClick={() => router.push("/cart")}
-    className="rounded-full bg-slate-900 px-5 py-3 text-sm font-black text-white shadow-lg hover:bg-slate-800"
+    className="rounded-full bg-slate-900 px-5 py-3 text-xs font-medium text-white shadow-lg hover:bg-slate-800"
   >
     🛒 Cart ({cartCount})
   </button>

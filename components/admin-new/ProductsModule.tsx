@@ -9,10 +9,21 @@ export default function ProductsModule() {
   const [primaryImage, setPrimaryImage] = useState(0);
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
+  const [costPrice, setCostPrice] = useState("");
+  const [oldPrice, setOldPrice] = useState("");
   const [category, setCategory] = useState("");
   const [stock, setStock] = useState("");
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState("Draft");
+
+  const discountPercentage =
+    oldPrice && price
+      ? Math.round(
+          ((Number(oldPrice) - Number(price)) /
+            Number(oldPrice)) *
+            100
+        )
+      : 0;
 
 
   async function saveProduct() {
@@ -86,19 +97,19 @@ export default function ProductsModule() {
       />
 
       <div>
-        <p className="text-xs font-black uppercase tracking-widest text-[#800020]">
+        <p className="text-xs font-medium uppercase tracking-widest text-[#800020]">
           GAMORA ONLINE
         </p>
 
-        <h2 className="text-3xl font-black text-[#3F3437]">
+        <h2 className="text-xl font-medium text-[#3F3437]">
           Add Product
         </h2>
       </div>
 
 
-      <div className="rounded-2xl border bg-white p-6 shadow-sm">
+      <div className="rounded-xl border bg-white p-4 shadow-sm">
 
-        <h3 className="mb-4 text-xl font-black">
+        <h3 className="mb-4 text-sm font-medium">
           Product Information
         </h3>
 
@@ -109,23 +120,23 @@ export default function ProductsModule() {
             placeholder="Product Name"
             value={name}
             onChange={(e)=>setName(e.target.value)}
-            className="rounded-xl border px-4 py-3"
+            className="rounded-lg border px-3 py-2 text-sm"
           />
 
 
           <input
             placeholder="SKU"
-            className="rounded-xl border px-4 py-3"
+            className="rounded-lg border px-3 py-2 text-sm"
           />
 
 
           <input
             placeholder="Brand"
-            className="rounded-xl border px-4 py-3"
+            className="rounded-lg border px-3 py-2 text-sm"
           />
 
 
-          <select className="rounded-xl border px-4 py-3">
+          <select className="rounded-lg border px-3 py-2 text-sm">
 
             <option>
               Active
@@ -151,21 +162,21 @@ export default function ProductsModule() {
 
 
 
-      <div className="rounded-2xl border bg-white p-6 shadow-sm">
+      <div className="rounded-xl border bg-white p-4 shadow-sm">
 
-        <h3 className="mb-4 text-xl font-black">
+        <h3 className="mb-4 text-sm font-medium">
           Product Images
         </h3>
 
 
-        <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-10 hover:bg-slate-50">
+        <label className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-6 hover:bg-slate-50">
 
           <div className="text-4xl">
             📷
           </div>
 
 
-          <p className="mt-2 font-bold">
+          <p className="mt-2 font-normal">
             Upload Product Images
           </p>
 
@@ -187,13 +198,13 @@ export default function ProductsModule() {
 
 
 
-        <div className="mt-5 text-sm font-bold">
+        <div className="mt-5 text-sm font-normal">
           {images.length} / 20 images
         </div>
 
 
 
-        <div className="mt-5 grid grid-cols-2 gap-4 md:grid-cols-5">
+        <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-5">
 
           {previews.map((src,index)=>(
 
@@ -204,12 +215,12 @@ export default function ProductsModule() {
 
               <img
                 src={src}
-                className="h-32 w-full object-cover"
+                className="h-24 w-full object-cover sm:h-28"
               />
 
 
               {index === 0 && (
-                <span className="absolute left-2 top-2 rounded bg-[#800020] px-2 py-1 text-xs font-bold text-white">
+                <span className="absolute left-2 top-2 rounded bg-[#800020] px-2 py-1 text-xs font-normal text-white">
                   ⭐ Main
                 </span>
               )}
@@ -234,9 +245,9 @@ export default function ProductsModule() {
 
 
 
-      <div className="rounded-2xl border bg-white p-6 shadow-sm">
+      <div className="rounded-xl border bg-white p-4 shadow-sm">
 
-        <h3 className="text-xl font-black">
+        <h3 className="text-sm font-medium">
           Pricing
         </h3>
 
@@ -246,21 +257,21 @@ export default function ProductsModule() {
           <input
             placeholder="Cost Price"
             type="number"
-            className="rounded-xl border px-4 py-3"
+            className="rounded-lg border px-3 py-2 text-sm"
           />
 
 
           <input
             placeholder="Selling Price"
             type="number"
-            className="rounded-xl border px-4 py-3"
+            className="rounded-lg border px-3 py-2 text-sm"
           />
 
 
           <input
             placeholder="Discount"
             type="number"
-            className="rounded-xl border px-4 py-3"
+            className="rounded-lg border px-3 py-2 text-sm"
           />
 
         </div>
@@ -270,9 +281,9 @@ export default function ProductsModule() {
 
 
 
-      <div className="rounded-2xl border bg-white p-6 shadow-sm">
+      <div className="rounded-xl border bg-white p-4 shadow-sm">
 
-        <h3 className="text-xl font-black">
+        <h3 className="text-sm font-medium">
           Description
         </h3>
 
@@ -289,12 +300,12 @@ export default function ProductsModule() {
 
       <div className="flex gap-3">
 
-        <button className="rounded-xl border px-6 py-3 font-bold">
+        <button className="rounded-xl border px-6 py-3 font-normal">
           Save Draft
         </button>
 
 
-        <button className="rounded-xl bg-[#800020] px-6 py-3 font-bold text-white">
+        <button className="rounded-xl bg-[#800020] px-6 py-3 font-normal text-white">
           Publish Product
         </button>
 
@@ -305,7 +316,7 @@ export default function ProductsModule() {
       <select
         value={status}
         onChange={(e)=>setStatus(e.target.value)}
-        className="rounded-xl border px-4 py-3"
+        className="rounded-lg border px-3 py-2 text-sm"
       >
         <option value="Draft">Save Draft</option>
         <option value="Active">Publish Product</option>
@@ -317,7 +328,7 @@ export default function ProductsModule() {
         type="button"
         onClick={saveProduct}
         disabled={saving}
-        className="rounded-xl bg-[#800020] px-6 py-3 font-black text-white hover:bg-[#6b001b] disabled:bg-slate-300"
+        className="rounded-xl bg-[#800020] px-6 py-3 font-medium text-white hover:bg-[#6b001b] disabled:bg-slate-300"
       >
         {saving ? "Saving..." : "🚀 Save Product"}
       </button>

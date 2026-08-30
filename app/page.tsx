@@ -321,14 +321,14 @@ export default function HomePage() {
               </div>
             </a>
 
-            <nav className="hidden items-center gap-6 text-sm font-bold lg:flex">
+            <nav className="hidden items-center gap-6 text-xs font-normal lg:flex">
               <a href="/" className="border-b-2 border-black py-6">{t.home}</a>
               <button
                 type="button"
                 onClick={() => setShowCategoryMenu((v) => !v)}
                 className="flex items-center gap-1 py-6 text-[#555] transition hover:text-[#374151]"
               >
-                {t.categories} <span className="text-xs">⌄</span>
+                {t.categories}
               </button>
               <a href="#new-arrivals" className="py-6 text-[#555] transition hover:text-[#374151]">{language === "sw" ? "Bidhaa Mpya" : "New Arrivals"}</a>
               <a href="#deals" className="py-6 text-[#555] transition hover:text-[#374151]">{language === "sw" ? "Ofa" : "Deals"}</a>
@@ -381,7 +381,7 @@ export default function HomePage() {
                 onClick={() => setShowCategoryMenu((v) => !v)}
                 className="shrink-0 font-bold text-[#333]"
               >
-                {t.categories} ⌄
+                {t.categories}
               </button>
               <a href="#new-arrivals" className="shrink-0 text-[#333]">{language === "sw" ? "Bidhaa Mpya" : "New Arrivals"}</a>
               <a href="#deals" className="shrink-0 text-[#333]">{language === "sw" ? "Ofa" : "Deals"}</a>
@@ -414,7 +414,7 @@ export default function HomePage() {
                   key={category}
                   type="button"
                   onClick={() => {
-                    goToCategory(category);
+                    router.push(`/category/${encodeURIComponent(category)}`);
                     setShowCategoryMenu(false);
                   }}
                   className="flex min-h-[58px] items-center gap-2 rounded-xl border border-[#e5e5e5] bg-white px-3 py-2 text-left text-xs font-bold text-[#333] transition hover:border-[#374151] hover:bg-[#f8f9fa] sm:text-sm"
@@ -444,16 +444,16 @@ export default function HomePage() {
         onMouseEnter={() => setHeroPaused(true)}
         onMouseLeave={() => setHeroPaused(false)}
       >
-        <div className="mx-auto max-w-[1280px] px-4 py-8 sm:py-12 lg:py-16">
+        <div className="mx-auto max-w-[1280px] px-4 py-8 sm:py-6 lg:py-8">
           <div className="relative min-h-[390px] overflow-hidden rounded-[28px] bg-[#e8e9eb] sm:min-h-[440px] lg:min-h-[500px]">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_45%,#ffffff_0%,#e8e9eb_43%,#d9dbde_100%)]" />
 
-            <div className="relative grid min-h-[390px] items-center gap-6 px-6 py-10 sm:min-h-[440px] sm:px-10 lg:min-h-[500px] lg:grid-cols-[1.05fr_.95fr] lg:px-16">
+            <div className="relative grid min-h-[390px] items-center gap-6 px-6 py-5 sm:min-h-[440px] sm:px-10 lg:min-h-[500px] lg:grid-cols-[1.05fr_.95fr] lg:px-16">
               <div className="relative z-10 max-w-xl">
                 <p className="mb-4 text-xs font-black uppercase tracking-[0.22em] text-[#666] sm:text-sm">{hero.eyebrow}</p>
                 <h1 className="max-w-xl text-4xl font-black leading-[0.98] tracking-tight text-[#111] sm:text-5xl lg:text-7xl">{hero.title}</h1>
                 <p className="mt-5 max-w-lg text-sm leading-6 text-[#555] sm:text-base sm:leading-7">{hero.text}</p>
-                <a href={hero.product ? `/product/${hero.product.id}` : "#products"} className="mt-7 inline-flex rounded-xl bg-[#374151] px-6 py-3.5 text-sm font-black text-white shadow-xl transition hover:-translate-y-0.5 hover:bg-[#374151]">{hero.button} <span className="ml-2">→</span></a>
+                <a href={hero.product ? `/product/${hero.product.id}` : "#products"} className="mt-7 inline-flex rounded-xl bg-[#374151] px-6 py-3.5 text-xs font-medium text-white shadow-xl transition hover:-translate-y-0.5 hover:bg-[#374151]">{hero.button} <span className="ml-2">→</span></a>
               </div>
 
               <div className="relative flex min-h-[210px] items-center justify-center lg:min-h-[360px]">
@@ -479,18 +479,18 @@ export default function HomePage() {
       </section>
 
       {/* CATEGORIES */}
-      <section id="categories" className="bg-white py-10 sm:py-14">
+      <section id="categories" className="bg-white py-5 sm:py-14">
         <div className="mx-auto max-w-[1280px] px-4">
           <SectionHeading title={language === "sw" ? "Nunua kwa Kundi" : "Shop by Category"} subtitle={language === "sw" ? "Chagua unachotafuta kwa haraka." : "Find what you need quickly."} />
 
           {categories.length > 0 ? (
             <div className="relative mt-7"><button type="button" aria-label="Previous categories" onClick={() => document.getElementById("category-scroll")?.scrollBy({ left: -260, behavior: "smooth" })} className="absolute left-0 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-[#ddd] bg-white text-xl shadow-md sm:hidden">‹</button><div id="category-scroll" className="flex gap-4 overflow-x-auto pb-3 scrollbar-hide lg:grid lg:grid-cols-6 lg:overflow-visible">
               {categories.map((category) => (
-                <button key={category} onClick={() => goToCategory(category)} className={`group min-w-[120px] rounded-2xl border bg-white p-3 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-lg lg:min-w-0 ${selectedCategory === category ? "border-[#374151] ring-2 ring-[#374151]/10" : "border-[#e5e5e5]"}`}>
+                <button key={category} onClick={() => router.push(`/category/${encodeURIComponent(category)}`)} className={`group cursor-pointer min-w-[120px] rounded-xl border bg-white p-2 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-lg lg:min-w-0 ${selectedCategory === category ? "border-[#374151] ring-2 ring-[#374151]/10" : "border-[#e5e5e5]"}`}>
                   <div className="relative h-32 overflow-hidden rounded-xl bg-[#f1f1f1] sm:h-36">
-                    {CATEGORY_IMAGES[category] ? <img src={CATEGORY_IMAGES[category]} alt={category} className="h-24 w-full object-contain transition duration-500 group-hover:scale-105 sm:h-28" /> : <div className="flex h-full items-center justify-center text-5xl">{CATEGORY_ICONS[category] || "🛍️"}</div>}
+                    {CATEGORY_IMAGES[category] ? <img src={CATEGORY_IMAGES[category]} alt={category} className="h-20 w-full object-contain transition duration-500 group-hover:scale-105 sm:h-24" /> : <div className="flex h-full items-center justify-center text-5xl">{CATEGORY_ICONS[category] || "🛍️"}</div>}
                   </div>
-                  <p className="mt-3 line-clamp-1 text-sm font-black text-[#222]">{category}</p>
+                  <p className="mt-3 line-clamp-1 text-xs font-normal text-[#333]">{category}</p>
                   <p className="mt-1 text-xs text-[#777]">{language === "sw" ? "Angalia bidhaa →" : "Explore products →"}</p>
                 </button>
               ))}
@@ -498,13 +498,13 @@ export default function HomePage() {
             <button type="button" aria-label="Next categories" onClick={() => document.getElementById("category-scroll")?.scrollBy({ left: 260, behavior: "smooth" })} className="absolute right-0 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-[#ddd] bg-white text-xl shadow-md sm:hidden">›</button>
           </div>
           ) : (
-            <div className="mt-7 rounded-2xl border border-dashed border-[#ddd] p-10 text-center text-sm text-[#777]">{t.noProducts}</div>
+            <div className="mt-7 rounded-2xl border border-dashed border-[#ddd] p-5 text-center text-sm text-[#777]">{t.noProducts}</div>
           )}
         </div>
       </section>
 
       {/* DEALS */}
-      <section id="deals" className="bg-[#f3f4f6] py-10 sm:py-14 text-white">
+      <section id="deals" className="bg-[#f3f4f6] py-5 sm:py-14 text-white">
         <div className="mx-auto max-w-[1280px] px-4">
           <div className="flex items-end justify-between gap-4">
             <SectionHeading title={language === "sw" ? "Ofa za Leo" : "Today's Deals"} subtitle={language === "sw" ? "Punguzo kwenye bidhaa zilizochaguliwa." : "Save on selected products."} />
@@ -540,21 +540,21 @@ export default function HomePage() {
       {/* PROMO */}
       <section className="bg-[#f3f4f6] pb-10 sm:pb-14">
         <div className="mx-auto max-w-[1280px] px-4">
-          <div className="relative overflow-hidden rounded-[28px] bg-[#292929] px-6 py-12 text-white shadow-xl sm:px-10 lg:px-16">
+          <div className="relative overflow-hidden rounded-[28px] bg-[#292929] px-6 py-6 text-white shadow-xl sm:px-10 lg:px-16">
             <div className="absolute -right-20 -top-24 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
             <div className="absolute -bottom-28 left-1/3 h-64 w-64 rounded-full bg-white/5 blur-3xl" />
             <div className="relative z-10 max-w-2xl">
               <p className="text-xs font-black uppercase tracking-[0.22em] text-[#bbb]">GAMORA ONLINE</p>
-              <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-5xl">{language === "sw" ? "Ofa kubwa. Bei bora." : "Big deals. Better prices."}</h2>
+              <h2 className="mt-3 text-base font-medium tracking-tight sm:text-5xl">{language === "sw" ? "Ofa kubwa. Bei bora." : "Big deals. Better prices."}</h2>
               <p className="mt-4 max-w-xl text-sm leading-6 text-[#ccc] sm:text-base">{language === "sw" ? "Gundua bidhaa nyingi zaidi na pata thamani zaidi kila unapofanya manunuzi Gamora." : "Discover more products and get more value every time you shop with Gamora."}</p>
-              <a href="#deals" className="mt-7 inline-flex rounded-xl bg-white px-6 py-3.5 text-sm font-black text-[#374151] transition hover:-translate-y-0.5 hover:bg-[#eee]">{language === "sw" ? "ANGALIA OFA" : "SHOP DEALS"} →</a>
+              <a href="#deals" className="mt-7 inline-flex rounded-xl bg-white px-6 py-3.5 text-xs font-medium text-[#374151] transition hover:-translate-y-0.5 hover:bg-[#eee]">{language === "sw" ? "ANGALIA OFA" : "SHOP DEALS"} →</a>
             </div>
           </div>
         </div>
       </section>
 
       {/* NEW ARRIVALS */}
-      <section id="new-arrivals" className="bg-white py-10 sm:py-14">
+      <section id="new-arrivals" className="bg-white py-5 sm:py-14">
         <div className="mx-auto max-w-[1280px] px-4">
           <div className="flex items-end justify-between gap-4">
             <SectionHeading title={language === "sw" ? "Bidhaa Mpya" : "New Arrivals"} subtitle={language === "sw" ? "Bidhaa mpya zilizoongezwa hivi karibuni." : "Recently added products."} />
@@ -565,7 +565,7 @@ export default function HomePage() {
       </section>
 
       {/* BEST SELLERS */}
-      <section id="best-sellers" className="bg-[#f3f4f6] py-10 sm:py-14 text-white">
+      <section id="best-sellers" className="bg-[#f3f4f6] py-5 sm:py-14 text-white">
         <div className="mx-auto max-w-[1280px] px-4">
           <div className="flex items-end justify-between gap-4">
             <SectionHeading title={language === "sw" ? "Zinazouzwa Sana" : "Best Sellers"} subtitle={language === "sw" ? "Bidhaa zinazopendwa zaidi na wateja." : "Customer favorites."} />
@@ -576,7 +576,7 @@ export default function HomePage() {
       </section>
 
       {/* WHY GAMORA */}
-      <section className="bg-white py-10 sm:py-14">
+      <section className="bg-white py-5 sm:py-14">
         <div className="mx-auto max-w-[1280px] px-4">
           <SectionHeading title={language === "sw" ? "Kwa Nini Gamora?" : "Why Shop With Gamora"} subtitle={language === "sw" ? "Uzoefu rahisi, salama na unaoaminika." : "A simple, secure and reliable shopping experience."} centered />
           <div className="mt-4 grid grid-cols-2 overflow-hidden rounded-2xl border border-[#e5e5e5] gap-px bg-[#e5e5e5] sm:mt-8 sm:grid-cols-2 sm:gap-0 lg:grid-cols-4">
@@ -589,53 +589,53 @@ export default function HomePage() {
       </section>
 
       {/* NEWSLETTER */}
-      <section className="bg-[#f3f4f6] py-10 sm:py-14 text-white">
+      <section className="bg-[#f3f4f6] py-5 sm:py-14 text-white">
         <div className="mx-auto max-w-[900px] px-4 text-center">
-          <div className="rounded-[28px] bg-[#374151] px-5 py-10 text-white sm:px-10 sm:py-12">
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-[#aaa]">{language === "sw" ? "TAARIFA ZA GAMORA" : "GAMORA UPDATES"}</p>
-            <h2 className="mt-3 text-3xl font-black tracking-tight">{language === "sw" ? "Endelea kupata taarifa." : "Stay updated."}</h2>
+          <div className="rounded-[28px] bg-[#374151] px-5 py-5 text-white sm:px-10 sm:py-6">
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-[#aaa]">{language === "sw" ? "" : "GAMORA UPDATES"}</p>
+            <h2 className="mt-3 text-base font-medium tracking-tight">{language === "sw" ? "" : "Stay updated."}</h2>
             <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-[#bbb]">{t.newsletterText}</p>
             <form onSubmit={(e) => { e.preventDefault(); setNotice(language === "sw" ? "Asante! Umejiunga." : "Thanks! You are subscribed."); window.setTimeout(() => setNotice(""), 2200); }} className="mx-auto mt-6 flex max-w-xl flex-col gap-2 sm:flex-row">
               <input type="email" required placeholder={t.emailPlaceholder} className="min-w-0 flex-1 rounded-xl bg-white px-4 py-3.5 text-sm text-[#374151] outline-none" />
-              <button type="submit" className="rounded-xl bg-white px-6 py-3.5 text-sm font-black text-[#374151] transition hover:bg-[#eee]">{t.subscribe}</button>
+              <button type="submit" className="rounded-xl bg-white px-6 py-3.5 text-xs font-medium text-[#374151] transition hover:bg-[#eee]">{t.subscribe}</button>
             </form>
           </div>
         </div>
       </section>
 
       {/* FOOTER */}
-<footer id="about" className="border-t border-slate-200 bg-white py-8 text-slate-700 sm:py-10">
+<footer id="about" className="border-t border-slate-200 bg-white py-8 text-slate-700 sm:py-5">
   <div className="mx-auto max-w-[1280px] px-4">
 
-    <div className="grid grid-cols-3 gap-3 sm:gap-8">
+    <div className="grid grid-cols-3 gap-3 sm:gap-4">
 
       <FooterColumn
         title={language === "sw" ? "Duka" : "Shop"}
         links={[
-          ["Makundi", "#categories"],
-          ["Bidhaa Mpya", "#new-arrivals"],
-          ["Ofa", "#deals"],
-          ["Zinazouzwa Sana", "#best-sellers"],
+          [language === "sw" ? "Makundi" : "Categories", "#categories"],
+          [language === "sw" ? "Bidhaa Mpya" : "New Arrivals", "#new-arrivals"],
+          [language === "sw" ? "Ofa" : "Deals", "#deals"],
+          [language === "sw" ? "Zinazouzwa Sana" : "Best Sellers", "#best-sellers"],
         ]}
       />
 
       <FooterColumn
         title={language === "sw" ? "Mteja" : "Customer"}
         links={[
-          ["Tengeneza Account", "/profile"],
-          ["Oda Zangu", "/orders"],
-          ["Wishlist", "/wishlist"],
-          ["Kikapu", "/cart"],
+          [language === "sw" ? "Tengeneza Account" : "Create Account", "/profile"],
+          [language === "sw" ? "Oda Zangu" : "My Orders", "/orders"],
+          [language === "sw" ? "Orodha ya Matamanio" : "Wishlist", "/wishlist"],
+          [language === "sw" ? "Kikapu" : "Cart", "/cart"],
         ]}
       />
 
       <FooterColumn
         title={language === "sw" ? "Msaada" : "Support"}
         links={[
-          ["Jinsi ya Kununua", "/help"],
-          ["Sera ya Uwasilishaji", "/delivery"],
-          ["Vigezo na Masharti", "/terms"],
-          ["Wasiliana Nasi", "/contact"],
+          [language === "sw" ? "Jinsi ya Kununua" : "How to Buy", "/help"],
+          [language === "sw" ? "Sera ya Uwasilishaji" : "Delivery Policy", "/delivery"],
+          [language === "sw" ? "Vigezo na Masharti" : "Terms & Conditions", "/terms"],
+          [language === "sw" ? "Wasiliana Nasi" : "Contact Us", "/contact"],
         ]}
       />
 
@@ -685,7 +685,7 @@ function getDiscount(product: Product) {
 function SectionHeading({ title, subtitle, centered = false }: { title: string; subtitle?: string; centered?: boolean }) {
   return (
     <div className={centered ? "text-center" : ""}>
-      <h2 className="text-2xl font-black tracking-tight text-[#374151] sm:text-3xl">{title}</h2>
+      <h2 className="text-lg font-black tracking-tight text-[#374151] sm:text-xl">{title}</h2>
       {subtitle && <p className="mt-1.5 text-sm text-[#777]">{subtitle}</p>}
     </div>
   );
@@ -806,21 +806,21 @@ function Benefit({ icon, title, text }: { icon: string; title: string; text: str
   return (
     <div className="border-b border-[#e5e5e5] px-5 py-7 text-center sm:border-r lg:border-b-0 lg:last:border-r-0">
       <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#f0f0f0] text-lg font-black text-[#333]">{icon}</div>
-      <h3 className="mt-4 text-[10px] leading-4 sm:text-sm font-black text-[#222]">{title}</h3>
+      <h3 className="mt-4 text-[10px] leading-4 sm:text-xs font-normal text-[#333]">{title}</h3>
       <p className="mx-auto mt-2 max-w-xs text-xs leading-5 text-[#777]">{text}</p>
     </div>
   );
 }
 
 function EmptySection({ text }: { text: string }) {
-  return <div className="mt-7 rounded-2xl border border-dashed border-[#d7d7d7] bg-white py-16 text-center text-sm text-[#777]">{text}</div>;
+  return <div className="mt-7 rounded-2xl border border-dashed border-[#d7d7d7] bg-white py-8 text-center text-sm text-[#777]">{text}</div>;
 }
 
 function FooterColumn({ title, links }: { title: string; links: Array<[string, string]> }) {
   return (
     <div>
       <h3 className="text-[10px] sm:text-sm text-[11px] font-black sm:text-sm text-white">{title}</h3>
-      <div className="mt-4 space-y-3 text-[10px] sm:text-sm text-[#999]">
+      <div className="mt-4 space-y-3 text-[11px] sm:text-xs text-[#999]">
         {links.map(([label, href]) => <a key={`${label}-${href}`} href={href} className="block transition hover:text-white">{label}</a>)}
       </div>
     </div>
@@ -843,7 +843,15 @@ function SocialButton({ icon, label, href }: { icon: string; label: string; href
       aria-label={label}
       className="flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm transition hover:scale-110"
     >
-      <Icon className="h-4 w-4 text-slate-800" />
+      <Icon
+        className={`h-4 w-4 ${
+          icon === "Facebook"
+            ? "text-[#1877F2]"
+            : icon === "Instagram"
+            ? "text-[#E4405F]"
+            : "text-black"
+        }`}
+      />
     </a>
   );
 }

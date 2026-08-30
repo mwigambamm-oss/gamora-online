@@ -187,7 +187,7 @@ export default function PrivacyPage() {
 
           <a
             href="/"
-            className="text-2xl font-black text-sky-700"
+            className="text-lg font-black text-sky-700"
           >
             GAMORA
             <span className="text-sky-950">ONLINE</span>
@@ -225,7 +225,7 @@ export default function PrivacyPage() {
       {/* HERO */}
       <section className="bg-gradient-to-br from-sky-950 via-sky-800 to-cyan-600">
 
-        <div className="mx-auto max-w-4xl px-4 py-16 text-center text-white">
+        <div className="mx-auto max-w-4xl px-4 py-8 text-center text-white">
 
           <div className="mb-5 text-6xl">
             🔐
@@ -243,7 +243,7 @@ export default function PrivacyPage() {
             {t.intro}
           </p>
 
-          <p className="mt-5 text-sm font-bold text-sky-200">
+          <p className="mt-5 text-xs font-normal text-sky-200">
             {t.updated}
           </p>
 
@@ -262,7 +262,7 @@ export default function PrivacyPage() {
               className="rounded-2xl bg-white p-7 shadow-sm"
             >
 
-              <h2 className="text-xl font-black text-slate-900">
+              <h2 className="text-base font-medium text-slate-900">
                 {section.title}
               </h2>
 
@@ -278,7 +278,7 @@ export default function PrivacyPage() {
       </section>
 
       {/* CONTACT */}
-      <section className="bg-sky-950 px-4 py-12 text-center text-white">
+      <section className="bg-sky-950 px-4 py-6 text-center text-white">
 
         <div className="mx-auto max-w-3xl">
 
@@ -317,7 +317,7 @@ export default function PrivacyPage() {
       {/* FOOTER */}
       <footer className="bg-sky-950 px-4 py-8 text-center text-sky-300">
 
-        <div className="text-xl font-black text-white">
+        <div className="text-base font-medium text-white">
           GAMORA
           <span className="text-sky-300">ONLINE</span>
         </div>

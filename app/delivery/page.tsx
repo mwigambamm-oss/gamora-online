@@ -21,11 +21,11 @@ export default function DeliveryPage() {
 
   const sw = {
     back: "← Rudi Home",
-    badge: "GAMORA ONLINE DELIVERY",
+    badge: "Uwasilishaji Rahisi na Salama",
     title: "Uwasilishaji Rahisi na Salama",
     intro:
       "Tunakuletea bidhaa zako kutoka Kariakoo, Dar es Salaam hadi ulipo.",
-    startingPoint: "Kituo cha Delivery",
+    startingPoint: "Kituo cha Uwasilishaji",
     startingPointText:
       "Uwasilishaji wa GAMORA ONLINE unaanzia Kariakoo, Dar es Salaam.",
     distance: "Uwasilishaji kwa Umbali",
@@ -33,7 +33,7 @@ export default function DeliveryPage() {
       "Gharama ya delivery inaweza kuhesabiwa kulingana na umbali kutoka Kariakoo hadi eneo lako.",
     location: "Tumia Eneo Lako",
     locationText:
-      "Wakati wa Checkout utaweza kuruhusu website kutumia eneo lako ili kusaidia kukadiria distance ya delivery.",
+      "Wakati wa kukamilisha oda utaweza kuruhusu tovuti kutumia eneo lako ili kusaidia kukadiria umbali wa uwasilishaji.",
     areas: "Maeneo Tunayohudumia",
     areasText:
       "Tunaanza na Dar es Salaam na maeneo yanayozunguka. Upatikanaji inaweza kutegemea eneo na umbali.",
@@ -45,7 +45,7 @@ export default function DeliveryPage() {
     step3: "Pima distance",
     step3Text:
       "Mfumo utatumia eneo lako kusaidia kuhesabu distance kutoka Kariakoo.",
-    step4: "Thibitisha Order",
+    step4: "Thibitisha Oda",
     step4Text:
       "Kagua bidhaa, delivery fee na jumla kabla ya kuthibitisha oda.",
     noteTitle: "Muhimu",
@@ -57,25 +57,25 @@ export default function DeliveryPage() {
 
   const en = {
     back: "← Back Home",
-    badge: "GAMORA ONLINE DELIVERY",
+    badge: "Uwasilishaji Rahisi na Salama",
     title: "Easy and Reliable Delivery",
     intro:
       "We deliver your products from Kariakoo, Dar es Salaam to your location.",
     startingPoint: "Delivery Starting Point",
     startingPointText:
       "GAMORA ONLINE delivery starts from Kariakoo, Dar es Salaam.",
-    distance: "Umbali-Based Delivery",
+    distance: "Uwasilishaji kwa Umbali",
     distanceText:
-      "Delivery charges can be calculated based on the distance from Kariakoo to your location.",
-    location: "Use Your Location",
+      "Uwezo wa gharama ya uwasilishaji unaweza kuhesabiwa kulingana na umbali kutoka Kariakoo hadi eneo lako.",
+    location: "Tumia Eneo Lako",
     locationText:
-      "During Checkout, you will be able to allow the website to use your location to help estimate delivery distance.",
+      "Wakati wa kukamilisha oda, utaweza kuruhusu tovuti kutumia eneo lako kusaidia kukadiria umbali wa uwasilishaji.",
     areas: "Areas We Serve",
     areasText:
       "We are starting with Dar es Salaam and surrounding areas. Upatikanaji may depend on location and distance.",
-    process: "How Delivery Works",
+    process: "Jinsi Uwasilishaji Unavyofanya Kazi",
     step1: "Choose your products",
-    step1Text: "Add the products you want to your Cart.",
+    step1Text: "Ongeza bidhaa unazotaka kwenye kikapu chako.",
     step2: "Enter your details",
     step2Text: "Provide your name, phone number and address/location.",
     step3: "Calculate distance",
@@ -107,7 +107,7 @@ export default function DeliveryPage() {
 
           <a
             href="/"
-            className="text-2xl font-black text-sky-700"
+            className="text-lg font-medium text-sky-700"
           >
             GAMORA
             <span className="text-sky-950">ONLINE</span>
@@ -117,7 +117,7 @@ export default function DeliveryPage() {
 
             <button
               onClick={() => setLanguage("sw")}
-              className={`rounded-lg px-3 py-2 text-xs font-bold ${
+              className={`rounded-lg px-3 py-2 text-xs font-normal ${
                 language === "sw"
                   ? "bg-sky-700 text-white"
                   : "bg-slate-100 text-slate-700"
@@ -128,7 +128,7 @@ export default function DeliveryPage() {
 
             <button
               onClick={() => setLanguage("en")}
-              className={`rounded-lg px-3 py-2 text-xs font-bold ${
+              className={`rounded-lg px-3 py-2 text-xs font-normal ${
                 language === "en"
                   ? "bg-sky-700 text-white"
                   : "bg-slate-100 text-slate-700"
@@ -145,21 +145,21 @@ export default function DeliveryPage() {
       {/* HERO */}
       <section className="bg-gradient-to-br from-sky-950 via-sky-800 to-cyan-600">
 
-        <div className="mx-auto max-w-5xl px-4 py-16 text-center text-white">
+        <div className="mx-auto max-w-5xl px-4 py-8 text-center text-white">
 
           <div className="mb-5 text-6xl">
             
           </div>
 
-          <p className="font-bold text-sky-200">
+          <p className="font-normal text-sky-200">
             {t.badge}
           </p>
 
-          <h1 className="mt-3 text-4xl font-black md:text-5xl">
+          <h1 className="mt-3 text-4xl font-medium md:text-5xl">
             {t.title}
           </h1>
 
-          <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-sky-100">
+          <p className="mx-auto mt-5 max-w-2xl text-sm leading-6 text-sky-100">
             {t.intro}
           </p>
 
@@ -172,7 +172,7 @@ export default function DeliveryPage() {
 
         <div className="grid gap-6 md:grid-cols-3">
 
-          <div className="rounded-2xl bg-white p-8 text-center shadow-sm">
+          <div className="rounded-2xl bg-white p-4 text-center shadow-sm">
 
             <div className="flex justify-center">
               <FaShoppingCart className="text-4xl text-green-600" />
@@ -182,43 +182,43 @@ export default function DeliveryPage() {
               
             </div>
 
-            <h2 className="mt-5 text-xl font-black">
+            <h2 className="mt-5 text-base font-medium">
               {t.startingPoint}
             </h2>
 
-            <p className="mt-3 leading-7 text-slate-500">
+            <p className="mt-3 leading-6 text-slate-500">
               {t.startingPointText}
             </p>
 
           </div>
 
-          <div className="rounded-2xl bg-white p-8 text-center shadow-sm">
+          <div className="rounded-2xl bg-white p-4 text-center shadow-sm">
 
             <div className="flex justify-center">
               📏
             </div>
 
-            <h2 className="mt-5 text-xl font-black">
+            <h2 className="mt-5 text-base font-medium">
               {t.distance}
             </h2>
 
-            <p className="mt-3 leading-7 text-slate-500">
+            <p className="mt-3 leading-6 text-slate-500">
               {t.distanceText}
             </p>
 
           </div>
 
-          <div className="rounded-2xl bg-white p-8 text-center shadow-sm">
+          <div className="rounded-2xl bg-white p-4 text-center shadow-sm">
 
             <div className="flex justify-center">
               🛰️
             </div>
 
-            <h2 className="mt-5 text-xl font-black">
+            <h2 className="mt-5 text-base font-medium">
               {t.location}
             </h2>
 
-            <p className="mt-3 leading-7 text-slate-500">
+            <p className="mt-3 leading-6 text-slate-500">
               {t.locationText}
             </p>
 
@@ -235,11 +235,11 @@ export default function DeliveryPage() {
 
           <div className="text-center">
 
-            <p className="font-bold text-sky-600">
+            <p className="font-normal text-sky-600">
               GAMORA ONLINE
             </p>
 
-            <h2 className="mt-2 text-3xl font-black">
+            <h2 className="mt-2 text-xl font-medium">
               {t.process}
             </h2>
 
@@ -249,11 +249,11 @@ export default function DeliveryPage() {
 
             <div className="rounded-2xl bg-white p-6 text-center shadow-sm">
 
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-sky-700 text-xl font-black text-white">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-sky-700 text-base font-medium text-white">
                 1
               </div>
 
-              <h3 className="mt-5 font-black">
+              <h3 className="mt-5 font-medium">
                 {t.step1}
               </h3>
 
@@ -265,11 +265,11 @@ export default function DeliveryPage() {
 
             <div className="rounded-2xl bg-white p-6 text-center shadow-sm">
 
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-sky-700 text-xl font-black text-white">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-sky-700 text-base font-medium text-white">
                 2
               </div>
 
-              <h3 className="mt-5 font-black">
+              <h3 className="mt-5 font-medium">
                 {t.step2}
               </h3>
 
@@ -281,11 +281,11 @@ export default function DeliveryPage() {
 
             <div className="rounded-2xl bg-white p-6 text-center shadow-sm">
 
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-sky-700 text-xl font-black text-white">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-sky-700 text-base font-medium text-white">
                 3
               </div>
 
-              <h3 className="mt-5 font-black">
+              <h3 className="mt-5 font-medium">
                 {t.step3}
               </h3>
 
@@ -297,11 +297,11 @@ export default function DeliveryPage() {
 
             <div className="rounded-2xl bg-white p-6 text-center shadow-sm">
 
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-sky-700 text-xl font-black text-white">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-sky-700 text-base font-medium text-white">
                 4
               </div>
 
-              <h3 className="mt-5 font-black">
+              <h3 className="mt-5 font-medium">
                 {t.step4}
               </h3>
 
@@ -320,17 +320,17 @@ export default function DeliveryPage() {
       {/* IMPORTANT NOTE */}
       <section className="mx-auto max-w-4xl px-4 py-14">
 
-        <div className="rounded-2xl border border-sky-100 bg-white p-8 text-center shadow-sm">
+        <div className="rounded-2xl border border-sky-100 bg-white p-4 text-center shadow-sm">
 
           <div className="flex justify-center">
             ℹ️
           </div>
 
-          <h2 className="mt-5 text-2xl font-black">
+          <h2 className="mt-5 text-lg font-medium">
             {t.noteTitle}
           </h2>
 
-          <p className="mx-auto mt-4 max-w-2xl leading-7 text-slate-600">
+          <p className="mx-auto mt-4 max-w-2xl leading-6 text-slate-600">
             {t.note}
           </p>
 
@@ -347,7 +347,7 @@ export default function DeliveryPage() {
             💬
           </div>
 
-          <h2 className="mt-5 text-3xl font-black">
+          <h2 className="mt-5 text-xl font-medium">
             {t.support}
           </h2>
 
@@ -355,7 +355,7 @@ export default function DeliveryPage() {
             href="https://wa.me/255798555221"
             target="_blank"
             rel="noreferrer"
-            className="mt-7 inline-block rounded-lg bg-green-600 px-7 py-4 font-black hover:bg-green-700"
+            className="mt-7 inline-block rounded-lg bg-green-600 px-7 py-4 font-medium hover:bg-green-700"
           >
             {t.whatsapp}
           </a>
@@ -365,9 +365,9 @@ export default function DeliveryPage() {
       </section>
 
       {/* FOOTER */}
-      <footer className="bg-sky-950 px-4 py-10 text-center text-sky-200">
+      <footer className="bg-sky-950 px-4 py-5 text-center text-sky-200">
 
-        <div className="text-xl font-black text-white">
+        <div className="text-base font-medium text-white">
           GAMORA
           <span className="text-sky-300">ONLINE</span>
         </div>
@@ -382,7 +382,7 @@ export default function DeliveryPage() {
 
         <a
           href="/"
-          className="mt-6 inline-block font-bold text-white hover:text-sky-300"
+          className="mt-6 inline-block font-normal text-white hover:text-sky-300"
         >
           {t.back}
         </a>

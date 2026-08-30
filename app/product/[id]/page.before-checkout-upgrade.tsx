@@ -313,8 +313,8 @@ window.dispatchEvent(new Event("cartUpdated"));
    */
   if (!product) {
     return (
-      <main className="min-h-screen bg-white p-10 text-center">
-        <p className="text-sm font-bold text-slate-500">
+      <main className="min-h-screen bg-white p-5 text-center">
+        <p className="text-xs font-normal text-slate-500">
           Loading...
         </p>
       </main>
@@ -378,7 +378,7 @@ window.dispatchEvent(new Event("cartUpdated"));
           </span>
         </div>
 
-        <div className="grid gap-8 md:grid-cols-[1.05fr_0.95fr]">
+        <div className="grid gap-4 md:grid-cols-[1.05fr_0.95fr]">
 
           {/* ================= IMAGE AREA ================= */}
 
@@ -426,7 +426,7 @@ window.dispatchEvent(new Event("cartUpdated"));
                   type="button"
                   onClick={previousImage}
                   aria-label="Previous image"
-                  className="absolute left-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-2xl text-slate-700 shadow hover:bg-white"
+                  className="absolute left-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-lg text-slate-700 shadow hover:bg-white"
                 >
                   ‹
                 </button>
@@ -439,7 +439,7 @@ window.dispatchEvent(new Event("cartUpdated"));
                   type="button"
                   onClick={nextImage}
                   aria-label="Next image"
-                  className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-2xl text-slate-700 shadow hover:bg-white"
+                  className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-lg text-slate-700 shadow hover:bg-white"
                 >
                   ›
                 </button>
@@ -744,7 +744,7 @@ window.dispatchEvent(new Event("cartUpdated"));
 
         <div className="py-7">
 
-          <h2 className="text-[16px] font-bold text-slate-900">
+          <h2 className="text-[16px] font-normal text-slate-700">
             Product Description
           </h2>
 
@@ -764,7 +764,7 @@ window.dispatchEvent(new Event("cartUpdated"));
         className="mx-auto max-w-6xl border-t border-slate-200 py-8"
       >
 
-        <h2 className="text-[18px] font-bold text-slate-900">
+        <h2 className="text-[18px] font-normal text-slate-700">
           Customer Reviews
         </h2>
 
@@ -828,7 +828,7 @@ window.dispatchEvent(new Event("cartUpdated"));
                   setReviewRating(star)
                 }
                 aria-label={`Rate ${star} stars`}
-                className={`text-2xl transition ${
+                className={`text-lg transition ${
                   star <= reviewRating
                     ? "text-amber-400"
                     : "text-slate-300"
@@ -904,7 +904,7 @@ window.dispatchEvent(new Event("cartUpdated"));
           ) : (
             <div className="rounded-xl border border-dashed border-slate-200 p-6 text-center">
 
-              <div className="text-2xl text-slate-300">
+              <div className="text-lg text-slate-300">
                 ★★★★★
               </div>
 
@@ -928,7 +928,7 @@ window.dispatchEvent(new Event("cartUpdated"));
       {related.length > 0 && (
         <section className="mx-auto max-w-6xl border-t border-slate-200 py-8">
 
-          <h2 className="mb-5 text-[18px] font-bold text-slate-900">
+          <h2 className="mb-5 text-[18px] font-normal text-slate-700">
             You May Also Like
           </h2>
 
@@ -994,7 +994,7 @@ window.dispatchEvent(new Event("cartUpdated"));
   <button
     type="button"
     onClick={() => router.push("/cart")}
-    className="rounded-full bg-slate-900 px-5 py-3 text-sm font-black text-white shadow-lg hover:bg-slate-800"
+    className="rounded-full bg-slate-900 px-5 py-3 text-xs font-medium text-white shadow-lg hover:bg-slate-800"
   >
     🛒 Cart ({cartCount})
   </button>

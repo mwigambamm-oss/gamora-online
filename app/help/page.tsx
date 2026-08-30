@@ -13,7 +13,7 @@ const faqSw: FAQ[] = [
   {
     question: "Ninawezaje ku-order bidhaa?",
     answer:
-      "Chagua bidhaa unayoipenda, bonyeza 'Weka kwenye Cart', fungua Cart yako, kisha bonyeza 'Proceed to Checkout'. Jaza taarifa zako, weka location yako na kamilisha oda.",
+      "Chagua bidhaa unayoipenda, bonyeza 'Weka kwenye Cart', fungua Cart yako, kisha bonyeza 'Proceed to Checkout'. Jaza taarifa zako, weka eneo lako na kamilisha oda.",
   },
   {
     question: "Je, nahitaji WhatsApp kuweka order?",
@@ -21,14 +21,14 @@ const faqSw: FAQ[] = [
       "Hapana. Unaweza kuweka order moja kwa moja kupitia website. WhatsApp ni njia ya ziada ya mawasiliano na si lazima uwe nayo ili ku-order.",
   },
   {
-    question: "Delivery inahesabiwaje?",
+    question: "Uwasilishaji unahesabiwaje?",
     answer:
-      "Delivery inaanzia Kariakoo, Dar es Salaam. Mfumo unaweza kutumia location yako kupima umbali na kuhesabu delivery fee kulingana na distance.",
+      "Uwasilishaji unaanzia Kariakoo, Dar es Salaam. Mfumo unaweza kutumia eneo lako kupima umbali na kuhesabu gharama ya uwasilishaji kulingana na umbali.",
   },
   {
-    question: "Ninawezaje kujua delivery fee yangu?",
+    question: "Ninawezaje kujua gharama ya uwasilishaji yangu?",
     answer:
-      "Wakati wa Checkout, bonyeza 'Tumia Location Yangu'. Mfumo utapima distance kutoka Kariakoo na kukuonyesha delivery fee kabla ya kukamilisha order.",
+      "Wakati wa Checkout, bonyeza 'Tumia Location Yangu'. Mfumo utapima umbali kutoka Kariakoo na kukuonyesha gharama ya uwasilishaji kabla ya kukamilisha order.",
   },
   {
     question: "Naweza kubadilisha au kufuta order?",
@@ -38,7 +38,7 @@ const faqSw: FAQ[] = [
   {
     question: "Bidhaa ikifika ikiwa imeharibika nifanye nini?",
     answer:
-      "Wasiliana na Customer Support mara moja na toa maelezo ya tatizo pamoja na picha za bidhaa ikiwa inahitajika. Tutakusaidia kulingana na return policy ya bidhaa.",
+      "Wasiliana na Huduma kwa Wateja mara moja na toa maelezo ya tatizo pamoja na picha za bidhaa ikiwa inahitajika. Tutakusaidia kulingana na sera ya marejesho ya bidhaa.",
   },
   {
     question: "Ninawezaje kuwasiliana na GAMORA ONLINE?",
@@ -66,12 +66,12 @@ const faqEn: FAQ[] = [
   {
     question: "How is delivery calculated?",
     answer:
-      "Delivery starts from Kariakoo, Dar es Salaam. The system can use your location to calculate the distance and determine the delivery fee.",
+      "Delivery starts from Kariakoo, Dar es Salaam. The system can use your location to calculate the umbali and determine the gharama ya uwasilishaji.",
   },
   {
-    question: "How can I know my delivery fee?",
+    question: "How can I know my gharama ya uwasilishaji?",
     answer:
-      "During Checkout, click 'Use My Location'. The system will calculate the distance from Kariakoo and show your delivery fee before you complete the order.",
+      "During Checkout, click 'Use My Location'. The system will calculate the umbali from Kariakoo and show your gharama ya uwasilishaji before you complete the order.",
   },
   {
     question: "Can I change or cancel my order?",
@@ -81,7 +81,7 @@ const faqEn: FAQ[] = [
   {
     question: "What if my product arrives damaged?",
     answer:
-      "Contact Customer Support immediately and provide details of the issue. Photos may be requested depending on the situation and product return policy.",
+      "Contact Huduma kwa Wateja immediately and provide details of the issue. Photos may be requested depending on the situation and product sera ya marejesho.",
   },
   {
     question: "How can I contact GAMORA ONLINE?",
@@ -108,7 +108,7 @@ export default function HelpCenterPage() {
   const text = {
     sw: {
       back: "← Rudi Home",
-      badge: "GAMORA ONLINE SUPPORT",
+      badge: "KITUO CHA MSAADA",
       title: "Kituo cha Msaada",
       subtitle:
         "Pata majibu ya maswali ya kawaida kuhusu ununuzi, oda na delivery.",
@@ -125,8 +125,8 @@ export default function HelpCenterPage() {
 
     en: {
       back: "← Back Home",
-      badge: "GAMORA ONLINE SUPPORT",
-      title: "Help Center",
+      badge: "KITUO CHA MSAADA",
+      title: "Kituo cha Msaada",
       subtitle:
         "Find answers to common questions about shopping, orders and delivery.",
       faqTitle: "Frequently Asked Questions",
@@ -149,7 +149,7 @@ export default function HelpCenterPage() {
       {/* TOP BAR */}
 
       <div className="bg-sky-950 px-4 py-2 text-center text-sm text-white">
-        🌊 GAMORA ONLINE • Customer Support
+        🌊 GAMORA ONLINE • Huduma kwa Wateja
       </div>
 
       {/* HEADER */}
@@ -160,7 +160,7 @@ export default function HelpCenterPage() {
 
           <a
             href="/"
-            className="text-2xl font-black text-sky-700"
+            className="text-lg font-medium text-sky-700"
           >
             GAMORA
             <span className="text-sky-950">
@@ -172,7 +172,7 @@ export default function HelpCenterPage() {
 
             <button
               onClick={() => setLanguage("sw")}
-              className={`rounded-lg px-3 py-2 text-xs font-bold ${
+              className={`rounded-lg px-3 py-2 text-xs font-normal ${
                 language === "sw"
                   ? "bg-sky-700 text-white"
                   : "bg-slate-100 text-slate-700"
@@ -183,7 +183,7 @@ export default function HelpCenterPage() {
 
             <button
               onClick={() => setLanguage("en")}
-              className={`rounded-lg px-3 py-2 text-xs font-bold ${
+              className={`rounded-lg px-3 py-2 text-xs font-normal ${
                 language === "en"
                   ? "bg-sky-700 text-white"
                   : "bg-slate-100 text-slate-700"
@@ -202,21 +202,21 @@ export default function HelpCenterPage() {
 
       <section className="bg-gradient-to-br from-sky-950 via-sky-800 to-cyan-600">
 
-        <div className="mx-auto max-w-5xl px-4 py-16 text-center text-white">
+        <div className="mx-auto max-w-5xl px-4 py-5 text-center text-white">
 
           <div className="mb-5 text-5xl">
             💬
           </div>
 
-          <p className="font-bold text-sky-200">
+          <p className="font-normal text-sky-200">
             {t.badge}
           </p>
 
-          <h1 className="mt-3 text-4xl font-black md:text-5xl">
+          <h1 className="mt-3 text-lg font-medium md:text-lg">
             {t.title}
           </h1>
 
-          <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-sky-100">
+          <p className="mx-auto mt-5 max-w-2xl text-sm leading-6 text-sky-100">
             {t.subtitle}
           </p>
 
@@ -230,11 +230,11 @@ export default function HelpCenterPage() {
 
         <div className="mb-8">
 
-          <p className="font-bold text-sky-600">
+          <p className="font-normal text-sky-600">
             GAMORA ONLINE
           </p>
 
-          <h2 className="mt-1 text-3xl font-black">
+          <h2 className="mt-1 text-base font-medium">
             {t.faqTitle}
           </h2>
 
@@ -250,7 +250,7 @@ export default function HelpCenterPage() {
             return (
               <div
                 key={faq.question}
-                className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
+                className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
               >
 
                 <button
@@ -259,7 +259,7 @@ export default function HelpCenterPage() {
                       isOpen ? null : index
                     )
                   }
-                  className="flex w-full items-center justify-between gap-5 p-5 text-left font-black transition hover:bg-sky-50"
+                  className="flex w-full items-center justify-between gap-5 p-5 text-left font-medium transition hover:bg-sky-50"
                 >
 
                   <span>
@@ -280,7 +280,7 @@ export default function HelpCenterPage() {
 
                 {isOpen && (
 
-                  <div className="border-t bg-slate-50 px-5 py-5 leading-7 text-slate-600">
+                  <div className="border-t bg-slate-50 px-5 py-5 leading-6 text-slate-600">
                     {faq.answer}
                   </div>
 
@@ -300,17 +300,17 @@ export default function HelpCenterPage() {
 
         <div className="mx-auto max-w-5xl">
 
-          <div className="rounded-2xl bg-white p-8 text-center shadow-sm md:p-12">
+          <div className="rounded-2xl bg-white p-4 text-center shadow-sm md:p-12">
 
             <div className="text-5xl">
               🎧
             </div>
 
-            <h2 className="mt-5 text-3xl font-black">
+            <h2 className="mt-5 text-base font-medium">
               {t.contactTitle}
             </h2>
 
-            <p className="mx-auto mt-3 max-w-xl leading-7 text-slate-500">
+            <p className="mx-auto mt-3 max-w-xl leading-6 text-slate-500">
               {t.contactText}
             </p>
 
@@ -318,7 +318,7 @@ export default function HelpCenterPage() {
 
               <a
                 href="tel:+255798555221"
-                className="rounded-lg bg-sky-700 px-7 py-4 font-black text-white transition hover:bg-sky-800"
+                className="rounded-lg bg-sky-700 px-7 py-4 font-medium text-white transition hover:bg-sky-800"
               >
                 ☎️ {t.call}
               </a>
@@ -327,7 +327,7 @@ export default function HelpCenterPage() {
                 href="https://wa.me/255798555221"
                 target="_blank"
                 rel="noreferrer"
-                className="rounded-lg bg-green-600 px-7 py-4 font-black text-white transition hover:bg-green-700"
+                className="rounded-lg bg-green-600 px-7 py-4 font-medium text-white transition hover:bg-green-700"
               >
                 💬 {t.whatsapp}
               </a>
@@ -354,13 +354,13 @@ export default function HelpCenterPage() {
 
           <a
             href="/"
-            className="rounded-xl bg-white p-6 text-center shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+            className="rounded-xl bg-white p-4 text-center shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
           >
             <div className="text-4xl">
               🛍️
             </div>
 
-            <h3 className="mt-4 font-black">
+            <h3 className="mt-4 font-medium">
               {t.guide}
             </h3>
 
@@ -371,13 +371,13 @@ export default function HelpCenterPage() {
 
           <a
             href="/"
-            className="rounded-xl bg-white p-6 text-center shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+            className="rounded-xl bg-white p-4 text-center shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
           >
             <div className="text-4xl">
               🌊
             </div>
 
-            <h3 className="mt-4 font-black">
+            <h3 className="mt-4 font-medium">
               {t.about}
             </h3>
 
@@ -388,13 +388,13 @@ export default function HelpCenterPage() {
 
           <a
             href="/cart"
-            className="rounded-xl bg-white p-6 text-center shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+            className="rounded-xl bg-white p-4 text-center shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
           >
             <div className="text-4xl">
               🛒
             </div>
 
-            <h3 className="mt-4 font-black">
+            <h3 className="mt-4 font-medium">
               Shopping Cart
             </h3>
 
@@ -409,9 +409,9 @@ export default function HelpCenterPage() {
 
       {/* FOOTER */}
 
-      <footer className="bg-sky-950 px-4 py-10 text-center text-sky-200">
+      <footer className="bg-sky-950 px-4 py-5 text-center text-sky-200">
 
-        <div className="text-xl font-black text-white">
+        <div className="text-base font-medium text-white">
           GAMORA
           <span className="text-sky-300">
             ONLINE
@@ -430,7 +430,7 @@ export default function HelpCenterPage() {
 
           <a
             href="/"
-            className="font-bold text-white hover:text-sky-300"
+            className="font-normal text-white hover:text-sky-300"
           >
             {t.back}
           </a>

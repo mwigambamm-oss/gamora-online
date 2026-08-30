@@ -85,8 +85,8 @@ export default function RecoverAdminPasswordPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-100 px-4 py-10">
-      <div className="w-full max-w-md rounded-3xl bg-white p-8 shadow-xl">
+    <main className="flex min-h-screen items-center justify-center bg-slate-100 px-4 py-5">
+      <div className="w-full max-w-md rounded-3xl bg-white p-4 shadow-xl">
 
         <div className="mb-8 text-center">
           <img
@@ -95,7 +95,7 @@ export default function RecoverAdminPasswordPage() {
             className="mx-auto h-20 w-auto object-contain"
           />
 
-          <h1 className="mt-5 text-2xl font-black text-slate-900">
+          <h1 className="mt-5 text-lg font-black text-slate-900">
             Recover Admin Password
           </h1>
 
@@ -111,7 +111,7 @@ export default function RecoverAdminPasswordPage() {
         >
 
           <div>
-            <label className="mb-2 block text-sm font-bold text-slate-700">
+            <label className="mb-2 block text-xs font-normal text-slate-700">
               Username
             </label>
 
@@ -129,7 +129,7 @@ export default function RecoverAdminPasswordPage() {
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-bold text-slate-700">
+            <label className="mb-2 block text-xs font-normal text-slate-700">
               Recovery Code
             </label>
 
@@ -147,7 +147,7 @@ export default function RecoverAdminPasswordPage() {
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-bold text-slate-700">
+            <label className="mb-2 block text-xs font-normal text-slate-700">
               New Password
             </label>
 
@@ -166,7 +166,7 @@ export default function RecoverAdminPasswordPage() {
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-bold text-slate-700">
+            <label className="mb-2 block text-xs font-normal text-slate-700">
               Confirm New Password
             </label>
 
@@ -185,13 +185,13 @@ export default function RecoverAdminPasswordPage() {
           </div>
 
           {error && (
-            <div className="rounded-xl bg-red-50 px-4 py-3 text-sm font-bold text-red-600">
+            <div className="rounded-xl bg-red-50 px-4 py-3 text-xs font-normal text-red-600">
               {error}
             </div>
           )}
 
           {success && (
-            <div className="rounded-xl bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700">
+            <div className="rounded-xl bg-emerald-50 px-4 py-3 text-xs font-normal text-emerald-700">
               {success}
             </div>
           )}
@@ -210,7 +210,7 @@ export default function RecoverAdminPasswordPage() {
 
         <a
           href="/admin/login"
-          className="mt-6 block text-center text-sm font-bold text-sky-700 hover:underline"
+          className="mt-6 block text-center text-xs font-normal text-sky-700 hover:underline"
         >
           ← Back to Admin Login
         </a>

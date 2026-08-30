@@ -720,36 +720,36 @@ export default function CheckoutPage() {
     return (
       <main className="min-h-screen bg-slate-50 p-5">
         
-<div className="mt-6 rounded-xl border bg-white p-4 text-sm">
-<h3 className="font-bold text-slate-900">Malipo</h3>
+<div className="mt-6 rounded-lg border bg-white p-4 text-xs">
+<h3 className="font-medium text-slate-900">Malipo</h3>
 <p className="mt-2">MIX BY YAS Lipa: <b>433064356</b></p>
 <p>MIX BY YAS Simu: <b>0676285283</b></p>
 <p>VODA: <b>0798555221</b></p>
 </div>
 
-<div className="mx-auto mt-10 max-w-xl rounded-3xl bg-white p-8 text-center shadow">
+<div className="mx-auto mt-10 max-w-xl rounded-3xl bg-white p-4 text-center shadow">
           <div className="text-6xl">
             ✅
           </div>
 
-          <h1 className="mt-5 text-2xl font-black text-slate-900">
+          <h1 className="mt-3 text-lg font-medium text-slate-900">
             Order imepokelewa
           </h1>
 
-          <p className="mt-3 text-sm text-slate-500">
+          <p className="mt-3 text-xs text-slate-500">
             Order yako imewasilishwa
             kikamilifu.
           </p>
 
-          <p className="mt-5 text-sm">
+          <p className="mt-3 text-xs">
             Order Number
           </p>
 
-          <p className="text-2xl font-black text-sky-700">
+          <p className="text-base font-bold text-sky-700">
             {orderNumber}
           </p>
 
-          <div className="mt-6 rounded-xl bg-slate-50 p-4 text-left text-sm">
+          <div className="mt-6 rounded-lg bg-slate-50 p-4 text-left text-xs">
             <div className="flex justify-between">
               <span>Bidhaa</span>
               <strong>
@@ -775,7 +775,7 @@ export default function CheckoutPage() {
               </div>
             )}
 
-            <div className="mt-3 flex justify-between border-t pt-3 text-base font-black">
+            <div className="mt-3 flex justify-between border-t pt-3 text-xs font-normal">
               <span>Total</span>
               <span className="text-sky-700">
                 TZS{" "}
@@ -786,7 +786,7 @@ export default function CheckoutPage() {
 
           <a
             href="/"
-            className="mt-7 inline-block rounded-xl bg-sky-700 px-8 py-3 font-bold text-white"
+            className="mt-4 inline-block rounded-lg bg-sky-700 px-4 py-2 font-bold text-white"
           >
             Rudi Home
           </a>
@@ -797,16 +797,16 @@ export default function CheckoutPage() {
 
   return (
     <main className="min-h-screen bg-slate-50 p-5 pb-10">
-      <div className="mx-auto max-w-2xl rounded-3xl bg-white p-5 shadow md:p-8">
-        <h1 className="text-2xl font-black text-slate-900">
+      <div className="mx-auto max-w-2xl rounded-3xl bg-white p-5 shadow md:p-4">
+        <h1 className="text-lg font-medium text-slate-900">
           GAMORA ONLINE Checkout
         </h1>
 
-        <p className="mt-2 text-sm text-slate-500">
+        <p className="mt-2 text-xs text-slate-500">
           Weka taarifa zako ili tukuletee bidhaa.
         </p>
 <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-  <h2 className="mb-3 text-sm font-black text-slate-800">
+  <h2 className="mb-3 text-xs font-black text-slate-800">
     🛒 Bidhaa zako
   </h2>
 
@@ -814,10 +814,10 @@ export default function CheckoutPage() {
     {cart.map((item) => (
       <div
         key={item.id}
-        className="flex items-center justify-between rounded-xl bg-white p-3"
+        className="flex items-center justify-between rounded-lg bg-white p-3"
       >
         <div>
-          <p className="text-sm font-bold text-slate-800">
+          <p className="text-xs font-bold text-slate-800">
             {item.name}
           </p>
 
@@ -826,7 +826,7 @@ export default function CheckoutPage() {
           </p>
         </div>
 
-        <p className="text-sm font-black text-sky-700">
+        <p className="text-xs font-bold text-sky-700">
           TZS{" "}
           {(
             Number(item.price) *
@@ -839,7 +839,7 @@ export default function CheckoutPage() {
 </div>
 
         <div className="mt-6">
-          <label className="mb-2 block text-sm font-bold text-slate-700">
+          <label className="mb-2 block text-xs font-bold text-slate-700">
             Njia ya kupokea bidhaa
           </label>
 
@@ -851,7 +851,7 @@ export default function CheckoutPage() {
                   "delivery"
                 );
               }}
-              className={`rounded-xl border-2 p-3 text-sm font-bold transition ${
+              className={`rounded-lg border-2 p-3 text-xs font-bold transition ${
                 deliveryMethod ===
                 "delivery"
                   ? "border-sky-700 bg-sky-50 text-sky-700"
@@ -873,7 +873,7 @@ export default function CheckoutPage() {
                   null
                 );
               }}
-              className={`rounded-xl border-2 p-3 text-sm font-bold transition ${
+              className={`rounded-lg border-2 p-3 text-xs font-bold transition ${
                 deliveryMethod ===
                 "pickup"
                   ? "border-sky-700 bg-sky-50 text-sky-700"
@@ -887,11 +887,11 @@ export default function CheckoutPage() {
 
         <form
           onSubmit={placeOrder}
-          className="mt-7 space-y-4"
+          className="mt-4 space-y-4"
         >
           <input
             required
-            className="w-full rounded-xl border border-slate-200 p-3 text-sm outline-none transition focus:border-sky-700"
+            className="w-full rounded-lg border border-slate-200 p-3 text-xs outline-none transition focus:border-sky-700"
             placeholder="Jina kamili"
             value={name}
             onChange={(e) =>
@@ -902,7 +902,7 @@ export default function CheckoutPage() {
           <input
             required
             type="tel"
-            className="w-full rounded-xl border border-slate-200 p-3 text-sm outline-none transition focus:border-sky-700"
+            className="w-full rounded-lg border border-slate-200 p-3 text-xs outline-none transition focus:border-sky-700"
             placeholder="Namba ya simu"
             value={phone}
             onChange={(e) =>
@@ -914,14 +914,14 @@ export default function CheckoutPage() {
             "delivery" && (
             <>
               <div>
-                <label className="mb-2 block text-sm font-bold text-slate-700">
+                <label className="mb-2 block text-xs font-bold text-slate-700">
                   Shipping Address
                 </label>
 
                 <textarea
                   required
                   rows={3}
-                  className="w-full rounded-xl border border-slate-200 p-3 text-sm outline-none transition focus:border-sky-700"
+                  className="w-full rounded-lg border border-slate-200 p-3 text-xs outline-none transition focus:border-sky-700"
                   placeholder="Andika location yako, mfano: Sinza Madukani"
                   value={address}
                   onChange={(e) => {
@@ -941,7 +941,7 @@ export default function CheckoutPage() {
                     disabled={
                       locationLoading
                     }
-                    className="rounded-xl bg-sky-700 px-4 py-3 text-sm font-black text-white transition hover:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="rounded-lg bg-sky-700 px-3 py-2 text-xs font-bold text-white transition hover:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {locationLoading
                       ? "⏳ Inatafuta..."
@@ -956,22 +956,22 @@ export default function CheckoutPage() {
                     disabled={
                       locationLoading
                     }
-                    className="rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm font-bold text-sky-700 transition hover:bg-sky-100 disabled:opacity-60"
+                    className="rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs font-bold text-sky-700 transition hover:bg-sky-100 disabled:opacity-60"
                   >
                     📍 Tumia Location Yangu
                   </button>
                 </div>
 
                 {locationMessage && (
-                  <div className="mt-3 rounded-xl bg-green-50 p-3">
-                    <p className="text-sm font-bold text-green-700">
+                  <div className="mt-3 rounded-lg bg-green-50 p-3">
+                    <p className="text-xs font-bold text-green-700">
                       ✅ {locationMessage}
                     </p>
                   </div>
                 )}
 
                 {searchedLocationName && (
-                  <div className="mt-2 rounded-xl bg-slate-50 p-3">
+                  <div className="mt-2 rounded-lg bg-slate-50 p-3">
                     <p className="text-xs font-bold text-slate-400">
                       LOCATION ILIYOPATIKANA
                     </p>
@@ -991,7 +991,7 @@ export default function CheckoutPage() {
 
               <input
                 required
-                className="w-full rounded-xl border border-slate-200 p-3 text-sm outline-none transition focus:border-sky-700"
+                className="w-full rounded-lg border border-slate-200 p-3 text-xs outline-none transition focus:border-sky-700"
                 placeholder="Mtaa / Eneo / Kata"
                 value={area}
                 onChange={(e) =>
@@ -1000,7 +1000,7 @@ export default function CheckoutPage() {
               />
 
               <input
-                className="w-full rounded-xl border border-slate-200 p-3 text-sm outline-none transition focus:border-sky-700"
+                className="w-full rounded-lg border border-slate-200 p-3 text-xs outline-none transition focus:border-sky-700"
                 placeholder="Landmark (mfano: karibu na...)"
                 value={landmark}
                 onChange={(e) =>
@@ -1013,7 +1013,7 @@ export default function CheckoutPage() {
               <div className="rounded-2xl border border-sky-100 bg-sky-50 p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-black text-sky-800">
+                    <p className="text-xs font-bold text-sky-800">
                       📍 Delivery Estimate
                     </p>
 
@@ -1023,44 +1023,44 @@ export default function CheckoutPage() {
                     </p>
                   </div>
 
-                  <div className="rounded-full bg-white px-3 py-1 text-xs font-black text-sky-700">
+                  <div className="rounded-full bg-white px-3 py-1 text-xs font-bold text-sky-700">
                     TZS 671/KM
                   </div>
                 </div>
 
                 {distanceKm > 0 ? (
                   <div className="mt-4 grid grid-cols-2 gap-3">
-                    <div className="rounded-xl bg-white p-4">
+                    <div className="rounded-lg bg-white p-4">
                       <p className="text-xs font-bold text-slate-400">
                         UMBALI
                       </p>
 
-                      <p className="mt-1 text-2xl font-black text-sky-700">
+                      <p className="mt-1 text-base font-bold text-sky-700">
                         {distanceKm.toFixed(
                           1
                         )}
-                        <span className="ml-1 text-sm">
+                        <span className="ml-1 text-xs">
                           KM
                         </span>
                       </p>
                     </div>
 
-                    <div className="rounded-xl bg-white p-4">
+                    <div className="rounded-lg bg-white p-4">
                       <p className="text-xs font-bold text-slate-400">
                         DELIVERY
                       </p>
 
-                      <p className="mt-1 text-2xl font-black text-sky-700">
+                      <p className="mt-1 text-base font-bold text-sky-700">
                         {deliveryFee.toLocaleString()}
-                        <span className="ml-1 text-sm">
+                        <span className="ml-1 text-xs">
                           TZS
                         </span>
                       </p>
                     </div>
                   </div>
                 ) : (
-                  <div className="mt-4 rounded-xl bg-white p-4 text-center">
-                    <p className="text-sm font-bold text-slate-500">
+                  <div className="mt-4 rounded-lg bg-white p-4 text-center">
+                    <p className="text-xs font-bold text-slate-500">
                       Andika location hapo juu
                     </p>
 
@@ -1079,7 +1079,7 @@ export default function CheckoutPage() {
 
           <select
             required
-            className="w-full rounded-xl border border-slate-200 p-3 text-sm outline-none transition focus:border-sky-700"
+            className="w-full rounded-lg border border-slate-200 p-3 text-xs outline-none transition focus:border-sky-700"
             value={paymentMethod}
             onChange={(e) =>
               setPaymentMethod(
@@ -1105,7 +1105,7 @@ export default function CheckoutPage() {
           </select>
 
           <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-            <div className="flex justify-between text-sm">
+            <div className="flex justify-between text-xs">
               <span className="text-slate-500">
                 Bidhaa
               </span>
@@ -1116,7 +1116,7 @@ export default function CheckoutPage() {
               </span>
             </div>
 
-            <div className="mt-2 flex justify-between text-sm">
+            <div className="mt-2 flex justify-between text-xs">
               <span className="text-slate-500">
                 Delivery
               </span>
@@ -1127,7 +1127,7 @@ export default function CheckoutPage() {
               </span>
             </div>
 
-            <div className="mt-3 flex justify-between border-t border-slate-200 pt-3 text-lg font-black">
+            <div className="mt-3 flex justify-between border-t border-slate-200 pt-3 text-xs font-normal">
               <span>Total</span>
 
               <span className="text-sky-700">
@@ -1140,7 +1140,7 @@ export default function CheckoutPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-xl bg-sky-700 p-4 font-black text-white transition hover:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-60"
+            className="w-full rounded-lg bg-sky-700 px-3 py-2 text-xs font-normal text-white transition hover:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading
               ? "Inaweka Order..."

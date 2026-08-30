@@ -1,70 +1,107 @@
 "use client";
 
+import { useState } from "react";
+
 export default function ProfilePage() {
-  return (
-    <main className="min-h-screen bg-white text-slate-900">
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-[1180px] items-center justify-between px-4 py-5">
-          <a href="/" className="text-xl font-black">
-            GAMORA <span className="text-[#E30613]">ONLINE</span>
-          </a>
 
-          <a
-            href="/"
-            className="text-sm font-bold text-[#E30613] hover:underline"
-          >
-            ← Rudi Dukani
-          </a>
-        </div>
-      </header>
+const [logged,setLogged] = useState(false);
 
-      <section className="mx-auto max-w-[900px] px-4 py-10">
-        <p className="text-xs font-black uppercase tracking-widest text-[#E30613]">
-          AKAUNTI
-        </p>
+return (
+<main className="min-h-screen bg-slate-50">
 
-        <h1 className="mt-2 text-2xl font-black">
-          Taarifa Zangu
-        </h1>
+<header className="border-b bg-white">
+<div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
 
-        <p className="mt-2 text-sm text-slate-500">
-          Angalia taarifa za akaunti yako na bidhaa/oda zako.
-        </p>
+<a href="/" className="text-sm font-medium">
+GAMORA <span className="text-sky-700">ONLINE</span>
+</a>
 
-        <div className="mt-7 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-black">Taarifa za Akaunti</h2>
+<a href="/" className="text-xs text-sky-700">
+← Dukani
+</a>
 
-          <div className="mt-5 grid gap-5 sm:grid-cols-2">
-            <div>
-              <p className="text-xs font-bold uppercase text-slate-400">Jina</p>
-              <p className="mt-1 font-bold">Taarifa zako</p>
-            </div>
+</div>
+</header>
 
-            <div>
-              <p className="text-xs font-bold uppercase text-slate-400">Email</p>
-              <p className="mt-1 font-bold">Email yako</p>
-            </div>
 
-            <div>
-              <p className="text-xs font-bold uppercase text-slate-400">Simu</p>
-              <p className="mt-1 font-bold">Namba yako ya simu</p>
-            </div>
+<section className="mx-auto max-w-md px-4 py-8">
 
-            <div>
-              <p className="text-xs font-bold uppercase text-slate-400">Anwani</p>
-              <p className="mt-1 font-bold">Anwani yako</p>
-            </div>
-          </div>
-        </div>
+<h1 className="text-xl font-medium text-slate-800">
+Account
+</h1>
 
-        <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-black">Bidhaa / Oda Zangu</h2>
+<p className="mt-2 text-sm text-slate-500">
+Ingia au tengeneza akaunti yako ya GAMORA ONLINE.
+</p>
 
-          <div className="mt-5 rounded-xl bg-slate-50 p-5 text-center text-sm text-slate-500">
-            Bidhaa na oda zako zitaonekana hapa.
-          </div>
-        </div>
-      </section>
-    </main>
-  );
+
+<div className="mt-6 rounded-xl border bg-white p-5">
+
+
+{logged ? (
+
+<div>
+
+<h2 className="text-sm font-medium">
+Karibu kwenye akaunti yako
+</h2>
+
+<div className="mt-4 space-y-2 text-xs text-slate-600">
+
+<p>📦 Oda Zangu</p>
+<p>♡ Orodha ya Matamanio</p>
+<p>👤 Taarifa Zangu</p>
+
+</div>
+
+
+<button
+onClick={()=>setLogged(false)}
+className="mt-5 rounded-lg bg-red-600 px-4 py-2 text-xs text-white"
+>
+Logout
+</button>
+
+</div>
+
+) : (
+
+<div className="space-y-3">
+
+
+<button
+onClick={()=>setLogged(true)}
+className="w-full rounded-lg bg-sky-700 py-3 text-sm text-white"
+>
+Login
+</button>
+
+
+<button
+className="w-full rounded-lg border py-3 text-sm text-slate-700"
+>
+Register
+</button>
+
+
+<a
+href="/recover-password"
+className="block text-center text-xs text-sky-700"
+>
+Recover Password
+</a>
+
+
+</div>
+
+)}
+
+</div>
+
+
+</section>
+
+</main>
+)
+
 }

@@ -157,19 +157,21 @@ export async function updateOrderStatus(
   return result;
 }
 
-export async function deleteOrder(id: string) {
+export async function deleteOrder(
+  id: string
+) {
   const { data: order, error: orderError } = await supabase
     .from("orders")
     .select("status, items")
-    .or(`order_number.eq.${id},id.eq.${id}`)
+    .eq("order_number", id)
     .single();
 
   if (orderError) {
-    console.error("Failed to load order:", orderError);
+    console.error("Failed to load order before deletion:", orderError);
     throw orderError;
   }
 
-  const stockStatuses = [
+  const stockDeductedStatuses = [
     "Pending",
     "Confirmed",
     "Processing",
@@ -177,44 +179,55 @@ export async function deleteOrder(id: string) {
     "Delivered",
   ];
 
-  const items = Array.isArray(order?.items)
-    ? order.items
-    : [];
+  const shouldRestoreStock = stockDeductedStatuses.includes(
+    order.status || "Pending"
+  );
 
-  if (stockStatuses.includes(order?.status || "Pending")) {
+  const items = Array.isArray(order.items) ? order.items : [];
+
+  if (shouldRestoreStock) {
     for (const item of items) {
       const quantity = Number(item.quantity || 0);
       const productId = Number(item.id);
 
       if (!productId || quantity <= 0) continue;
 
-      const { data: product } = await supabase
+      const { data: product, error: productError } = await supabase
         .from("products")
         .select("stock")
         .eq("id", productId)
-        .maybeSingle();
+        .single();
 
-      // product haipo, endelea kufuta order
-      if (!product) continue;
+      if (productError) {
+        console.error("Failed to load product before deletion:", productError);
+        throw productError;
+      }
 
-      await supabase
+      const { error: stockError } = await supabase
         .from("products")
         .update({
           stock: Number(product.stock || 0) + quantity,
         })
         .eq("id", productId);
+
+      if (stockError) {
+        console.error("Failed to restore stock before deletion:", stockError);
+        throw stockError;
+      }
     }
   }
 
   const { error } = await supabase
     .from("orders")
     .delete()
-    .or(`order_number.eq.${id},id.eq.${id}`);
+    .eq("order_number", id);
 
   if (error) {
-    console.error("Failed to delete order:", error);
+    console.error(
+      "Failed to delete order:",
+      error
+    );
+
     throw error;
   }
-
-  return true;
 }

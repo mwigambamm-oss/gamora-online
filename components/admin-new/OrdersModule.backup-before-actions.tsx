@@ -23,7 +23,6 @@ export default function OrdersModule() {
   const [search, setSearch] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
 
   async function loadOrders() {
     try {
@@ -81,26 +80,6 @@ export default function OrdersModule() {
     } catch (error) {
       console.error(error);
       alert("Failed to delete order.");
-    }
-  }
-
-  async function handleBulkDelete() {
-    if (!selectedOrders.length) return;
-
-    if (!confirm(`Delete ${selectedOrders.length} selected orders?`)) return;
-
-    try {
-      for (const id of selectedOrders) {
-        await deleteOrder(id);
-      }
-
-      await loadOrders();
-
-      setSelectedOrders([]);
-
-    } catch (error) {
-      console.error("Bulk delete failed:", error);
-      alert("Failed to delete selected orders.");
     }
   }
 
@@ -191,20 +170,9 @@ export default function OrdersModule() {
         <div className="overflow-hidden rounded-xl bg-white shadow-sm">
           <div className="flex flex-col justify-between gap-4 border-b p-6 md:flex-row md:items-center">
             <div>
-              <div className="flex items-center gap-3">
-                <h2 className="text-xl font-black">
-                  All Orders
-                </h2>
-
-                {selectedOrders.length > 0 && (
-                  <button
-                    onClick={handleBulkDelete}
-                    className="rounded bg-red-600 px-3 py-1 text-sm font-bold text-white"
-                  >
-                    Delete Selected ({selectedOrders.length})
-                  </button>
-                )}
-              </div>
+              <h2 className="text-xl font-black">
+                All Orders
+              </h2>
 
               <p className="text-sm text-gray-500">
                 {filteredOrders.length} order(s) displayed
@@ -262,22 +230,6 @@ export default function OrdersModule() {
               <table className="w-full min-w-[850px]">
                 <thead>
                   <tr className="border-b bg-gray-50 text-left text-sm">
-                    <th className="px-6 py-4">
-                      <input
-                        type="checkbox"
-                        checked={
-                          filteredOrders.length > 0 &&
-                          selectedOrders.length === filteredOrders.length
-                        }
-                        onChange={(e) =>
-                          setSelectedOrders(
-                            e.target.checked
-                              ? filteredOrders.map((o) => o.id || o.id)
-                              : []
-                          )
-                        }
-                      />
-                    </th>
                     <th className="px-6 py-4">Order</th>
                     <th className="px-6 py-4">Customer</th>
                     <th className="px-6 py-4">Items</th>
@@ -294,20 +246,6 @@ export default function OrdersModule() {
                       key={order.id}
                       className="border-b hover:bg-gray-50"
                     >
-                      <td className="px-6 py-4">
-                        <input
-                          type="checkbox"
-                          checked={selectedOrders.includes(order.id || order.id)}
-                          onChange={(e) =>
-                            setSelectedOrders((current) =>
-                              e.target.checked
-                                ? [...current, order.id]
-                                : current.filter((id) => id !== (order.id || order.id))
-                            )
-                          }
-                        />
-                      </td>
-
                       <td className="px-6 py-4">
                         <p className="font-bold">
                           {order.id}

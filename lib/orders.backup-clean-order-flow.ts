@@ -161,7 +161,7 @@ export async function deleteOrder(id: string) {
   const { data: order, error: orderError } = await supabase
     .from("orders")
     .select("status, items")
-    .or(`order_number.eq.${id},id.eq.${id}`)
+    .eq("order_number", id)
     .single();
 
   if (orderError) {
@@ -209,7 +209,7 @@ export async function deleteOrder(id: string) {
   const { error } = await supabase
     .from("orders")
     .delete()
-    .or(`order_number.eq.${id},id.eq.${id}`);
+    .eq("order_number", id);
 
   if (error) {
     console.error("Failed to delete order:", error);

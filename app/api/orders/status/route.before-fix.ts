@@ -24,7 +24,30 @@ const ACTIVE_STATUSES = [
 ];
 
 function canMoveStatus(oldStatus: string, newStatus: string) {
-  return ALLOWED_STATUSES.includes(newStatus);
+  if (oldStatus === newStatus) {
+    return true;
+  }
+
+  if (oldStatus === "Delivered") {
+    return false;
+  }
+
+  if (oldStatus === "Cancelled") {
+    return false;
+  }
+
+  if (newStatus === "Cancelled") {
+    return true;
+  }
+
+  const flow: Record<string, string[]> = {
+    Pending: ["Confirmed", "Processing", "Out for Delivery"],
+    Confirmed: ["Processing", "Out for Delivery"],
+    Processing: ["Out for Delivery"],
+    "Out for Delivery": ["Delivered"],
+  };
+
+  return (flow[oldStatus] || []).includes(newStatus);
 }
 
 async function restoreStockOnce(

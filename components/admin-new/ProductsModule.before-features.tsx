@@ -9,26 +9,6 @@ import {
   deleteProduct,
 } from "@/lib/products";
 
-const ALL_CATEGORIES = [
-  "Women's Fashion",
-  "Men's Fashion",
-  "Shoes",
-  "Phones & Electronics",
-  "Home & Kitchen",
-  "Accessories",
-  "Beauty & Personal Care",
-  "Computers & Accessories",
-  "Baby & Kids",
-  "Sports & Fitness",
-  "Automotive",
-  "Tools & Hardware",
-  "Books & Stationery",
-  "Jewelry & Watches",
-  "Furniture",
-  "Garden & Outdoor",
-  "Health & Wellness",
-  "Gaming",
-];
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [search, setSearch] = useState("");
@@ -352,31 +332,15 @@ console.log("TOTAL UPLOADED:", uploadedImages.length);
                   name="category"
                   value={form.category}
                   onChange={handleChange}
-                  className="w-full rounded-lg border px-4 py-3 max-h-40 overflow-y-auto"
+                  className="w-full rounded-lg border px-4 py-3"
                 >
-                  {[
-"Women's Fashion",
-"Men's Fashion",
-"Shoes",
-"Phones & Electronics",
-"Home & Kitchen",
-"Accessories",
-"Beauty & Personal Care",
-"Computers & Accessories",
-"Baby & Kids",
-"Sports & Fitness",
-"Automotive",
-"Tools & Hardware",
-"Books & Stationery",
-"Jewelry & Watches",
-"Furniture",
-"Garden & Outdoor",
-"Health & Wellness",
-"Gaming",
-"Other"
-].map((category) => (
-<option key={category} value={category}>{category}</option>
-))}
+                  <option>Women's Fashion</option>
+                  <option>Men's Fashion</option>
+                  <option>Shoes</option>
+                  <option>Home & Kitchen</option>
+                  <option>Electronics</option>
+                  <option>Beauty</option>
+                  <option>Accessories</option>
                 </select>
               </div>
 
@@ -530,43 +494,14 @@ console.log("TOTAL UPLOADED:", uploadedImages.length);
                   Description
                 </label>
 
-                <div>
-                  <div className="mb-2 flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        document.execCommand("bold")
-                      }
-                      className="rounded border px-3 py-1 font-bold"
-                    >
-                      B
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        document.execCommand("italic")
-                      }
-                      className="rounded border px-3 py-1 italic"
-                    >
-                      I
-                    </button>
-                  </div>
-
-                  <div
-                    contentEditable
-                    suppressContentEditableWarning
-                    onInput={(e) =>
-                      setForm((current) => ({
-                        ...current,
-                        description: e.currentTarget.innerHTML,
-                      }))
-                    }
-                    className="min-h-32 rounded-lg border px-4 py-3"
-                    dangerouslySetInnerHTML={{
-                      __html: form.description,
-                    }}
-                  />
-                </div>
+                <textarea
+                  name="description"
+                  value={form.description}
+                  onChange={handleChange}
+                  rows={4}
+                  placeholder="Describe your product..."
+                  className="w-full rounded-lg border px-4 py-3"
+                />
               </div>
 
               {form.images.length > 0 && (
@@ -575,45 +510,12 @@ console.log("TOTAL UPLOADED:", uploadedImages.length);
 
                   <div className="flex flex-wrap gap-3">
                     {form.images.map((img, index) => (
-                      <div key={`${img}-${index}`} className="relative">
-                        <img
-                          src={img}
-                          alt={`Product ${index + 1}`}
-                          className={`h-28 w-28 rounded-lg border object-cover ${
-                            form.image === img ? "ring-4 ring-orange-500" : ""
-                          }`}
-                        />
-
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setForm((current) => ({
-                              ...current,
-                              images: current.images.filter((_, i) => i !== index),
-                              image:
-                                current.image === img
-                                  ? current.images.find((_, i) => i !== index) || ""
-                                  : current.image,
-                            }))
-                          }
-                          className="absolute right-1 top-1 rounded-full bg-red-600 px-2 text-white"
-                        >
-                          ×
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setForm((current) => ({
-                              ...current,
-                              image: img,
-                            }))
-                          }
-                          className="mt-1 w-full rounded bg-orange-600 px-2 py-1 text-xs text-white"
-                        >
-                          {form.image === img ? "Main" : "Set Main"}
-                        </button>
-                      </div>
+                      <img
+                        key={`${img}-${index}`}
+                        src={img}
+                        alt={`Product ${index + 1}`}
+                        className="h-28 w-28 rounded-lg border object-cover"
+                      />
                     ))}
                   </div>
                 </div>

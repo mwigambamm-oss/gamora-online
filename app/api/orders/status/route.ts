@@ -215,33 +215,32 @@ export async function PATCH(request: Request) {
       await restoreStockOnce(items);
     }
 
-    const { data: updatedOrder, error: updateError } =
-      await supabase
-        .from("orders")
-        .update({
-          status: requestedStatus,
-        })
-        .eq("order_number", orderNumber)
-        .eq("status", oldStatus)
-        .select()
-        .single();
+const { data: updatedOrder, error: updateError } =
+  await supabase
+    .from("orders")
+    .update({
+      status: requestedStatus,
+    })
+    .or(`order_number.eq.${orderNumber},id.eq.${orderNumber}`)
+    .select()
+    .single();
 
-    if (updateError) {
-      console.error(
-        "Order status update error:",
-        updateError
-      );
+if (updateError) {
+  console.error(
+    "Order status update error:",
+    updateError
+  );
 
-      return NextResponse.json(
-        {
-          error: updateError.message,
-          code: updateError.code || null,
-          details: updateError.details || null,
-          hint: updateError.hint || null,
-        },
-        { status: 500 }
-      );
-    }
+  return NextResponse.json(
+    {
+      error: updateError.message,
+      code: updateError.code || null,
+      details: updateError.details || null,
+      hint: updateError.hint || null,
+    },
+    { status: 500 }
+  );
+}
 
     console.log(
       `✅ Order ${orderNumber}: ${oldStatus} → ${requestedStatus}`

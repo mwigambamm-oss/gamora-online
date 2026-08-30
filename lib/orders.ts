@@ -140,6 +140,7 @@ export async function updateOrderStatus(
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
+      id,
       order_number: id,
       status,
     }),

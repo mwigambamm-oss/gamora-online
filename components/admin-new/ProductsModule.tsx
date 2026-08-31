@@ -149,16 +149,21 @@ export default function ProductsModule() {
     }
 
 
-    setForm({
-      ...form,
-      images:[
-        ...form.images,
-        ...uploaded
-      ],
-      image:
-        form.image ||
-        uploaded[0] ||
-        "",
+    setForm((current) => {
+      const allImages = [
+        ...current.images,
+        ...uploaded,
+      ];
+
+      return {
+        ...current,
+        images: allImages,
+        image:
+          uploaded[0] ||
+          current.image ||
+          allImages[0] ||
+          "",
+      };
     });
 
 

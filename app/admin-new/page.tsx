@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
 import OrdersModule from "@/components/admin-new/OrdersModule";
 import SettingsModule from "@/components/admin-new/SettingsModule";
 import AuditLogModule from "@/components/admin-new/AuditLogModule";
@@ -57,12 +58,33 @@ const menu = [
 export default function NewAdminPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [adminEmail, setAdminEmail] = useState("");
   const [active, setActive] = useState("Dashboard");
 const [period, setPeriod] = useState("Today");
 const [fromDate, setFromDate] = useState("");
 const [toDate, setToDate] = useState("");
 
   useEffect(() => {
+    async function loadAdmin() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user?.email) {
+        setAdminEmail(user.email);
+      }
+    }
+
+    loadAdmin();
+  }, []);
+
+  useEffect(() => {
+  import("@/lib/supabase").then(({ supabase }) => {
+    supabase.auth.getUser().then(({ data }) => {
+      setAdminEmail(data.user?.email || "");
+    });
+  });
+
   if (period === "Custom Range") {
     if (fromDate && toDate) {
       loadDashboard();
@@ -206,8 +228,9 @@ return (
 
           <div className="border-t border-[#E8DEE1] p-4">
             <button
-              onClick={() => {
-                window.location.href = "/api/admin/logout";
+              onClick={async () => {
+                await supabase.auth.signOut();
+                window.location.href = "/admin-new/login";
               }}
               className="w-full rounded-xl bg-red-600 px-4 py-3 text-xs font-normal text-white hover:bg-red-700"
             >
@@ -237,7 +260,7 @@ return (
 
                 <div className="hidden text-right sm:block">
                   <div className="text-xs font-normal">
-                    Administrator
+                    {adminEmail || "Administrator"}
                   </div>
 
                   <div className="text-xs text-slate-500">

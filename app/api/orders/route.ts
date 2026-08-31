@@ -479,3 +479,163 @@ for (const cost of productCosts || []) {
     }
   }
 }
+
+export async function DELETE(request: Request) {
+  try {
+    const body = await request.json().catch(() => ({}));
+
+    const id = String(
+      body?.order_number ||
+      body?.id ||
+      ""
+    ).trim();
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "Order ID is required." },
+        { status: 400 }
+      );
+    }
+
+    const isNumericId = /^\d+$/.test(id);
+
+    let orderQuery = supabase
+      .from("orders")
+      .select("id,order_number,status,items");
+
+    if (isNumericId) {
+      orderQuery = orderQuery.or(
+        `order_number.eq.${id},id.eq.${id}`
+      );
+    } else {
+      orderQuery = orderQuery.eq(
+        "order_number",
+        id
+      );
+    }
+
+    const { data: order, error: findError } =
+      await orderQuery.maybeSingle();
+
+    if (findError) {
+      console.error(
+        "Failed to find order:",
+        findError
+      );
+
+      return NextResponse.json(
+        {
+          error:
+            findError.message ||
+            "Failed to find order.",
+        },
+        { status: 500 }
+      );
+    }
+
+    if (!order) {
+      return NextResponse.json(
+        { error: "Order not found." },
+        { status: 404 }
+      );
+    }
+
+    const stockStatuses = [
+      "Pending",
+      "Confirmed",
+      "Processing",
+      "Out for Delivery",
+      "Delivered",
+    ];
+
+    const items = Array.isArray(order.items)
+      ? order.items
+      : [];
+
+    if (stockStatuses.includes(order.status || "Pending")) {
+      for (const item of items) {
+        const productId = Number(item?.id);
+        const quantity = Number(item?.quantity || 0);
+
+        if (!productId || quantity <= 0) continue;
+
+        const { data: product } =
+          await supabase
+            .from("products")
+            .select("stock")
+            .eq("id", productId)
+            .maybeSingle();
+
+        if (!product) continue;
+
+        const { error: stockError } =
+          await supabase
+            .from("products")
+            .update({
+              stock:
+                Number(product.stock || 0) +
+                quantity,
+            })
+            .eq("id", productId);
+
+        if (stockError) {
+          console.error(
+            "Failed to restore stock:",
+            stockError
+          );
+
+          return NextResponse.json(
+            {
+              error:
+                stockError.message ||
+                "Failed to restore product stock.",
+            },
+            { status: 500 }
+          );
+        }
+      }
+    }
+
+    const { error: deleteError } =
+      await supabase
+        .from("orders")
+        .delete()
+        .eq("id", order.id);
+
+    if (deleteError) {
+      console.error(
+        "Failed to delete order:",
+        deleteError
+      );
+
+      return NextResponse.json(
+        {
+          error:
+            deleteError.message ||
+            "Failed to delete order.",
+        },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      deleted: id,
+    });
+
+  } catch (error: any) {
+    console.error(
+      "DELETE ORDER ERROR:",
+      error
+    );
+
+    return NextResponse.json(
+      {
+        error:
+          error?.message ||
+          "Failed to delete order.",
+      },
+      { status: 500 }
+    );
+  }
+}

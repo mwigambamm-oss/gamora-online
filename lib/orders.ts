@@ -159,62 +159,23 @@ export async function updateOrderStatus(
 }
 
 export async function deleteOrder(id: string) {
-  const { data: order, error: orderError } = await supabase
-    .from("orders")
-    .select("status, items")
-    .or(`order_number.eq.${id},id.eq.${id}`)
-    .single();
+  const response = await fetch("/api/orders", {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+    },
+      body: JSON.stringify({
+      id,
+      order_number: id,
+    }),
+  });
 
-  if (orderError) {
-    console.error("Failed to load order:", orderError);
-    throw orderError;
-  }
+  const result = await response.json().catch(() => ({}));
 
-  const stockStatuses = [
-    "Pending",
-    "Confirmed",
-    "Processing",
-    "Out for Delivery",
-    "Delivered",
-  ];
-
-  const items = Array.isArray(order?.items)
-    ? order.items
-    : [];
-
-  if (stockStatuses.includes(order?.status || "Pending")) {
-    for (const item of items) {
-      const quantity = Number(item.quantity || 0);
-      const productId = Number(item.id);
-
-      if (!productId || quantity <= 0) continue;
-
-      const { data: product } = await supabase
-        .from("products")
-        .select("stock")
-        .eq("id", productId)
-        .maybeSingle();
-
-      // product haipo, endelea kufuta order
-      if (!product) continue;
-
-      await supabase
-        .from("products")
-        .update({
-          stock: Number(product.stock || 0) + quantity,
-        })
-        .eq("id", productId);
-    }
-  }
-
-  const { error } = await supabase
-    .from("orders")
-    .delete()
-    .or(`order_number.eq.${id},id.eq.${id}`);
-
-  if (error) {
-    console.error("Failed to delete order:", error);
-    throw error;
+  if (!response.ok) {
+    throw new Error(
+      result?.error || "Failed to delete order"
+    );
   }
 
   return true;

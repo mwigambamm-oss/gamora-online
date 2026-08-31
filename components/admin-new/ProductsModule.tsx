@@ -534,12 +534,16 @@ export default function ProductsModule() {
 
 <ProductImageUploader
   initialImages={form.images}
-  onMainChange={(url) =>
-    setForm((current) => ({
-      ...current,
-      image: url,
-    }))
-  }
+  onMainChange={(url) => {
+    // Preview URLs are temporary blob URLs.
+    // The uploaded Supabase public URL is assigned in onChange.
+    if (!url.startsWith("blob:")) {
+      setForm((current) => ({
+        ...current,
+        image: url,
+      }));
+    }
+  }}
   onChange={async (files) => {
     if (!files.length) return;
 
@@ -559,14 +563,25 @@ export default function ProductsModule() {
           .from("product-images")
           .upload(fileName, file);
 
-      if (!error) {
-        const { data } =
-          supabase.storage
-            .from("product-images")
-            .getPublicUrl(fileName);
+      if (error) {
+        console.error("Image upload failed:", error);
+        alert(`Image upload failed: ${error.message}`);
+        continue;
+      }
 
+      const { data } =
+        supabase.storage
+          .from("product-images")
+          .getPublicUrl(fileName);
+
+      if (data?.publicUrl) {
         uploaded.push(data.publicUrl);
       }
+    }
+
+    if (!uploaded.length) {
+      setUploading(false);
+      return;
     }
 
     setForm((current) => ({

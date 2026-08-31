@@ -270,14 +270,22 @@ const [cartCount, setCartCount] = useState(0);
   function addToCart() {
     if (!product) return;
 
+    const cartImage =
+      product.images?.[0] ||
+      product.image ||
+      images[0] ||
+      "";
+
     const cartItem = {
       id: product.id,
       name: product.name,
       price: product.price,
-      image: product.image || images[0] || "",
+      oldPrice: product.oldPrice,
+      stock: product.stock,
+      image: cartImage,
       quantity: quantity,
-      color: selectedColor,
-      size: selectedSize,
+      selectedColor: selectedColor,
+      selectedSize: selectedSize,
     };
 
     try {
@@ -317,14 +325,22 @@ window.dispatchEvent(new Event("cartUpdated"));
   function buyNow() {
     if (!product) return;
 
+    const cartImage =
+      product.images?.[0] ||
+      product.image ||
+      images[0] ||
+      "";
+
     const cartItem = {
       id: product.id,
       name: product.name,
       price: product.price,
-      image: product.image || images[0] || "",
+      oldPrice: product.oldPrice,
+      stock: product.stock,
+      image: cartImage,
       quantity: quantity,
-      color: selectedColor,
-      size: selectedSize,
+      selectedColor: selectedColor,
+      selectedSize: selectedSize,
     };
 
     try {

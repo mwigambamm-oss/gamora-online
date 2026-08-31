@@ -251,9 +251,9 @@ export default function ProductsModule() {
 
     const product:any = {
 
-      name:form.name,
+      name: form.name,
 
-      price:Number(form.price),
+      price: Number(form.price),
 
       oldPrice:
         Number(
@@ -261,18 +261,24 @@ export default function ProductsModule() {
           form.price
         ),
 
-      category:form.category,
+      category: form.category,
 
-      stock:Number(form.stock),
+      stock: Number(form.stock),
 
-      description:
-        form.description,
+      description: form.description,
 
       image:
-        form.image,
+        form.images?.[0] ||
+        form.image ||
+        "",
 
-      images:
-        form.images,
+      images: Array.isArray(form.images)
+        ? form.images.filter(
+            (url) =>
+              typeof url === "string" &&
+              url.startsWith("http")
+          )
+        : [],
 
     };
 

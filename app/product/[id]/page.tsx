@@ -405,15 +405,15 @@ window.dispatchEvent(new Event("cartUpdated"));
       : "0.0";
 
   return (
-    <main className="min-h-screen bg-white px-4 pb-24 pt-5 md:px-8 md:pb-10 md:pt-8">
+    <main className="min-h-screen bg-white px-3 pb-24 pt-4 sm:px-5 md:px-8 md:pb-10 md:pt-6">
 
       {/* ================= PRODUCT HERO ================= */}
 
-      <section className="mx-auto max-w-6xl">
+      <section className="mx-auto w-full max-w-7xl">
 
         {/* BREADCRUMB */}
 
-        <div className="mb-5 overflow-hidden text-xs text-slate-400">
+        <div className="mb-4 overflow-hidden whitespace-nowrap text-[11px] text-slate-400 sm:mb-5 sm:text-xs">
           <span>Home</span>
 
           <span className="mx-2">›</span>
@@ -429,7 +429,7 @@ window.dispatchEvent(new Event("cartUpdated"));
           </span>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-[1.05fr_0.95fr]">
+        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.08fr)_minmax(360px,0.92fr)] lg:gap-10">
 
           {/* ================= IMAGE AREA ================= */}
 
@@ -438,7 +438,7 @@ window.dispatchEvent(new Event("cartUpdated"));
             {/* MAIN IMAGE */}
 
             <div
-              className="relative h-[330px] overflow-hidden rounded-2xl bg-slate-50 sm:h-[380px] md:h-[430px]"
+              className="relative flex h-[300px] w-full items-center justify-center overflow-hidden bg-white sm:h-[390px] md:h-[500px] lg:h-[520px]"
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
@@ -456,13 +456,13 @@ window.dispatchEvent(new Event("cartUpdated"));
                 {images.map((img, index) => (
                   <div
                     key={`${img}-${index}`}
-                    className="flex h-full min-w-full items-center justify-center"
+                    className="flex h-full min-w-full items-center justify-center bg-white"
                   >
 
                     <img
                       src={img}
                       alt={`${product.name} ${index + 1}`}
-                      className="h-full w-full object-contain p-3"
+                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                     />
 
                   </div>
@@ -477,7 +477,7 @@ window.dispatchEvent(new Event("cartUpdated"));
                   type="button"
                   onClick={previousImage}
                   aria-label="Previous image"
-                  className="absolute left-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-lg text-slate-700 shadow hover:bg-white"
+                  className="absolute left-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-lg text-slate-700 shadow-sm transition hover:bg-slate-50 sm:left-3 sm:h-9 sm:w-9"
                 >
                   ‹
                 </button>
@@ -490,7 +490,7 @@ window.dispatchEvent(new Event("cartUpdated"));
                   type="button"
                   onClick={nextImage}
                   aria-label="Next image"
-                  className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-lg text-slate-700 shadow hover:bg-white"
+                  className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-lg text-slate-700 shadow-sm transition hover:bg-slate-50 sm:right-3 sm:h-9 sm:w-9"
                 >
                   ›
                 </button>
@@ -523,7 +523,7 @@ window.dispatchEvent(new Event("cartUpdated"));
             {/* THUMBNAILS — MAX 6 */}
 
             {visibleThumbnails.length > 0 && (
-              <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+              <div className="mt-3 flex gap-2 overflow-x-auto pb-1 sm:gap-3">
                 {visibleThumbnails.map(
                   (img, index) => (
                     <button
@@ -532,7 +532,7 @@ window.dispatchEvent(new Event("cartUpdated"));
                       onClick={() =>
                         setActiveImage(index)
                       }
-                      className={`h-[62px] w-[62px] flex-shrink-0 overflow-hidden rounded-lg bg-white ${
+                      className={`h-[54px] w-[54px] flex-shrink-0 overflow-hidden rounded-lg bg-white sm:h-[64px] sm:w-[64px] ${
                         activeImage === index
                           ? "border-2 border-sky-700"
                           : "border border-slate-200"
@@ -559,17 +559,17 @@ window.dispatchEvent(new Event("cartUpdated"));
 
             {/* TITLE */}
 
-            <h1 className="text-sm font-medium leading-6 text-slate-900 sm:text-[20px]">
+            <h1 className="text-base font-semibold leading-6 text-slate-900 sm:text-xl md:text-2xl md:leading-8">
               {product.name}
             </h1>
 
             {/* PRICE */}
 
-            <div className="mt-3 rounded-xl bg-sky-50 px-4 py-3">
+            <div className="mt-3 rounded-lg border border-slate-100 bg-slate-50 px-3 py-3 sm:px-4">
 
               <div className="flex flex-wrap items-center gap-3">
 
-                <span className="text-sm font-medium text-sky-700">
+                <span className="text-lg font-bold text-sky-700 sm:text-xl">
                   TZS{" "}
                   {product.price.toLocaleString()}
                 </span>
@@ -594,14 +594,14 @@ window.dispatchEvent(new Event("cartUpdated"));
             {/* DESCRIPTION */}
 
             {product.description && (
-              <p className="mt-4 text-[12px] font-normal leading-4 text-slate-500">
+              <p className="mt-4 text-xs font-normal leading-5 text-slate-600 sm:text-sm sm:leading-6">
                 {product.description}
               </p>
             )}
 
             {/* STOCK */}
 
-            <div className="mt-4 text-[13px] font-normal text-green-600">
+            <div className="mt-4 text-xs font-medium text-green-600 sm:text-sm">
               ✓ In Stock ({product.stock})
             </div>
 
@@ -775,10 +775,10 @@ window.dispatchEvent(new Event("cartUpdated"));
                     `/product/${item.id}`
                   )
                 }
-                className="overflow-hidden rounded-lg border border-slate-200 bg-white text-left transition hover:shadow-md"
+                className="group overflow-hidden rounded-xl border border-slate-200 bg-white text-left shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
               >
 
-                <div className="h-20 sm:h-24 bg-slate-50">
+                <div className="relative h-32 overflow-hidden bg-slate-50 sm:h-36">
 
                   <img
                     src={
@@ -787,7 +787,7 @@ window.dispatchEvent(new Event("cartUpdated"));
                       ""
                     }
                     alt={item.name}
-                    className="h-full w-full object-contain p-3"
+                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                   />
 
                 </div>

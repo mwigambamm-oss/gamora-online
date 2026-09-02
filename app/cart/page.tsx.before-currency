@@ -1,9 +1,6 @@
 "use client";
 
-import { useLanguage } from "@/components/providers/LanguageProvider";
-
 import { useEffect, useState } from "react";
-import { formatCurrency, type Currency } from "@/lib/currency";
 
 type CartItem = {
   id: number;
@@ -18,14 +15,12 @@ type CartItem = {
 };
 
 export default function CartPage() {
-  const { language, setLanguage } = useLanguage();
-  const [currency, setCurrency] = useState<Currency>("TZS");
+  const [language, setLanguage] = useState<"sw" | "en">("sw");
 
   useEffect(() => {
-
-    const savedCurrency = localStorage.getItem("gamora_currency");
-    if (savedCurrency === "TZS" || savedCurrency === "USD") {
-      setCurrency(savedCurrency);
+    const savedLanguage = localStorage.getItem("gamora_language");
+    if (savedLanguage === "sw" || savedLanguage === "en") {
+      setLanguage(savedLanguage);
     }
   }, []);
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -171,6 +166,7 @@ const total =
             <button
               onClick={() => {
                 setLanguage("sw");
+                localStorage.setItem("gamora_language", "sw");
               }}
               className={`rounded-lg px-3 py-2 text-xs font-normal ${
                 language === "sw"
@@ -184,6 +180,7 @@ const total =
             <button
               onClick={() => {
                 setLanguage("en");
+                localStorage.setItem("gamora_language", "en");
               }}
               className={`rounded-lg px-3 py-2 text-xs font-normal ${
                 language === "en"
@@ -290,7 +287,7 @@ const total =
                       </h2>
 
                       <p className="mt-2 font-normal text-sky-700">
-                        {formatCurrency(Number(item.price), currency)}
+                        TZS {item.price.toLocaleString()}
                       </p>
 
                       <p className="mt-2 text-xs text-slate-500">
@@ -350,7 +347,7 @@ const total =
                   <span>{t.subtotal}</span>
 
                   <span className="font-normal text-slate-700">
-                    {formatCurrency(subtotal, currency)}
+                    TZS {subtotal.toLocaleString()}
                   </span>
                 </div>
 
@@ -359,7 +356,7 @@ const total =
                     <span>{t.discount}</span>
 
                     <span className="font-normal">
-                      - {formatCurrency(discountTotal, currency)}
+                      - TZS {discountTotal.toLocaleString()}
                     </span>
                   </div>
                 )}
@@ -370,7 +367,7 @@ const total =
                   <span className="text-right text-xs font-normal text-sky-700">
                     {deliveryFee === 0
                       ? t.calculated
-                      : formatCurrency(deliveryFee, currency)}
+                      : `TZS ${deliveryFee.toLocaleString()}`}
                   </span>
                 </div>
 
@@ -383,7 +380,7 @@ const total =
                     </span>
 
                     <span className="text-xs font-medium text-sky-700">
-                      {formatCurrency(total, currency)}
+                      TZS {total.toLocaleString()}
                     </span>
 
                   </div>

@@ -3,14 +3,11 @@ import { supabase } from "./supabase";
 export type Product = {
   id: number;
   name: string;
-  name_sw?: string;
   price: number;
   oldPrice?: number;
   category: string;
-  category_sw?: string;
   stock: number;
   description?: string;
-  description_sw?: string;
   image?: string;
   images?: string[];
   cost_price?: number;
@@ -25,17 +22,14 @@ function mapProduct(p: any): Product {
   return {
     id: Number(p.id),
     name: p.name || "",
-    name_sw: p.name_sw || "",
     price: Number(p.price || 0),
     oldPrice:
       p.old_price !== null && p.old_price !== undefined
         ? Number(p.old_price)
         : undefined,
     category: p.category || "",
-    category_sw: p.category_sw || "",
     stock: Number(p.stock || 0),
     description: p.description || "",
-    description_sw: p.description_sw || "",
     image: p.image || "",
     images: Array.isArray(p.images) ? p.images : [],
     cost_price: Number(p.cost_price || 0),
@@ -83,18 +77,15 @@ export async function getProductById(
 export async function saveProduct(product: Omit<Product, "id">) {
   const dbProduct = {
     name: product.name,
-    name_sw: product.name_sw || "",
     price: Number(product.price),
     old_price:
       product.oldPrice !== undefined
         ? Number(product.oldPrice)
         : Number(product.price),
     category: product.category,
-    category_sw: product.category_sw || "",
     stock: Number(product.stock),
     cost_price: Number(product.cost_price || 0),
     description: product.description || "",
-    description_sw: product.description_sw || "",
     image: product.image || "",
     images: product.images || [],
     colors: product.colors || [],
@@ -126,10 +117,6 @@ export async function updateProduct(
     dbProduct.name = product.name;
   }
 
-  if (product.name_sw !== undefined) {
-    dbProduct.name_sw = product.name_sw;
-  }
-
   if (product.price !== undefined) {
     dbProduct.price = Number(product.price);
   }
@@ -142,10 +129,6 @@ export async function updateProduct(
     dbProduct.category = product.category;
   }
 
-  if (product.category_sw !== undefined) {
-    dbProduct.category_sw = product.category_sw;
-  }
-
   if (product.stock !== undefined) {
     dbProduct.stock = Number(product.stock);
   }
@@ -156,10 +139,6 @@ export async function updateProduct(
 
   if (product.description !== undefined) {
     dbProduct.description = product.description;
-  }
-
-  if (product.description_sw !== undefined) {
-    dbProduct.description_sw = product.description_sw;
   }
 
   if (product.image !== undefined) {

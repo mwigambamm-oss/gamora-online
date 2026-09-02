@@ -11,14 +11,11 @@ import { useLanguage } from "@/components/providers/LanguageProvider";
 type Product = {
   id: number;
   name: string;
-  name_sw?: string;
   price: number;
   oldPrice?: number;
   category?: string;
-  category_sw?: string;
   stock: number;
   description?: string;
-  description_sw?: string;
   image?: string;
   images?: string[];
   colors?: string[];
@@ -40,20 +37,10 @@ export default function ProductPage({
 }) {
   const router = useRouter();
   const { language } = useLanguage();
-
-  useEffect(() => {
-    console.log("GAMORA PRODUCT LANGUAGE:", language);
-  }, [language]);
   const t = (en: string, sw: string) => (language === "sw" ? sw : en);
 
+
   const [product, setProduct] = useState<Product | null>(null);
-
-  const displayName = product?.name;
-
-  const displayCategory = product?.category;
-
-  const displayDescription = product?.description;
-
   const [related, setRelated] = useState<Product[]>([]);
 
   const [activeImage, setActiveImage] = useState(0);
@@ -91,14 +78,12 @@ const [cartCount, setCartCount] = useState(0);
 
       const item = await getProductById(productId);
 
-console.log("GAMORA PRODUCT DATA:", item);
+      if (!item) {
+        setProduct(null);
+        return;
+      }
 
-if (!item) {
-  setProduct(null);
-  return;
-}
-
-setProduct(item);
+      setProduct(item);
 
       if (item.colors && item.colors.length > 0) {
         setSelectedColor(item.colors[0]);
@@ -448,13 +433,13 @@ window.dispatchEvent(new Event("cartUpdated"));
           <span className="mx-2">›</span>
 
           <span>
-            {displayCategory || t("Products", "Bidhaa")}
+            {product.category || t("Products", "Bidhaa")}
           </span>
 
           <span className="mx-2">›</span>
 
           <span className="text-slate-600">
-            {displayName}
+            {product.name}
           </span>
         </div>
 
@@ -490,7 +475,7 @@ window.dispatchEvent(new Event("cartUpdated"));
 
                     <img
                       src={img}
-                      alt={`${displayName || ""} ${index + 1}`}
+                      alt={`${product.name} ${index + 1}`}
                       className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                     />
 
@@ -569,7 +554,7 @@ window.dispatchEvent(new Event("cartUpdated"));
                     >
                       <img
                         src={img}
-                        alt={`${displayName || ""} thumbnail ${
+                        alt={`${product.name} thumbnail ${
                           index + 1
                         }`}
                         className="h-full w-full object-contain p-1"
@@ -589,7 +574,7 @@ window.dispatchEvent(new Event("cartUpdated"));
             {/* TITLE */}
 
             <h1 className="text-base font-semibold leading-6 text-slate-900 sm:text-xl md:text-2xl md:leading-8">
-              {displayName}
+              {product.name}
             </h1>
 
             {/* PRICE */}
@@ -622,7 +607,7 @@ window.dispatchEvent(new Event("cartUpdated"));
 
             {product.description && (
               <p className="mt-4 text-xs font-normal leading-5 text-slate-600 sm:text-sm sm:leading-6">
-                {displayDescription}
+                {product.description}
               </p>
             )}
 
@@ -874,7 +859,7 @@ window.dispatchEvent(new Event("cartUpdated"));
                 : "text-slate-400"
             }`}
           >
-            {t("Specifications", "Vipengele")}
+            {t("Specifications", "Specifications")}
           </button>
 
           <button
@@ -902,11 +887,8 @@ window.dispatchEvent(new Event("cartUpdated"));
     </h2>
 
     <p className="mt-3 max-w-4xl text-xs leading-5 text-slate-500">
-      {displayDescription ||
-        t(
-          "No additional product description available.",
-          "Hakuna maelezo ya ziada ya bidhaa yaliyowekwa."
-        )}
+      {product.description ||
+        "No additional product description available."}
     </p>
   </>
 )}
@@ -915,7 +897,7 @@ window.dispatchEvent(new Event("cartUpdated"));
   <div className="rounded-lg border border-slate-200 bg-white p-3">
 
     <h2 className="text-sm font-medium text-slate-800">
-      {t("Specifications", "Vipengele")}
+      {t("Specifications", "Specifications")}
     </h2>
 
     <div className="mt-3 space-y-2 text-xs text-slate-500">
@@ -923,7 +905,7 @@ window.dispatchEvent(new Event("cartUpdated"));
       <div className="flex justify-between">
         <span>Category</span>
         <span className="text-slate-700">
-          {displayCategory || "N/A"}
+          {product.category || "N/A"}
         </span>
       </div>
 

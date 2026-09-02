@@ -5,20 +5,15 @@ import { useRouter } from "next/navigation";
 import { getProductById, getProducts } from "@/lib/products";
 import { supabase } from "@/lib/supabase";
 import RelatedProducts from "@/components/product/RelatedProducts";
-import { formatCurrency, type Currency } from "@/lib/currency";
-import { useLanguage } from "@/components/providers/LanguageProvider";
 
 type Product = {
   id: number;
   name: string;
-  name_sw?: string;
   price: number;
   oldPrice?: number;
   category?: string;
-  category_sw?: string;
   stock: number;
   description?: string;
-  description_sw?: string;
   image?: string;
   images?: string[];
   colors?: string[];
@@ -39,27 +34,13 @@ export default function ProductPage({
   params: Promise<{ id: string }>;
 }) {
   const router = useRouter();
-  const { language } = useLanguage();
-
-  useEffect(() => {
-    console.log("GAMORA PRODUCT LANGUAGE:", language);
-  }, [language]);
-  const t = (en: string, sw: string) => (language === "sw" ? sw : en);
 
   const [product, setProduct] = useState<Product | null>(null);
-
-  const displayName = product?.name;
-
-  const displayCategory = product?.category;
-
-  const displayDescription = product?.description;
-
   const [related, setRelated] = useState<Product[]>([]);
 
   const [activeImage, setActiveImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
 const [cartCount, setCartCount] = useState(0);
-  const [currency, setCurrency] = useState<Currency>("TZS");
 
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
@@ -73,14 +54,6 @@ const [cartCount, setCartCount] = useState(0);
   const [selectedSize, setSelectedSize] = useState("");
   const [activeTab, setActiveTab] = useState("description");
 
-  useEffect(() => {
-    const savedCurrency = localStorage.getItem("gamora_currency");
-
-    if (savedCurrency === "TZS" || savedCurrency === "USD") {
-      setCurrency(savedCurrency);
-    }
-  }, []);
-
   /*
    * LOAD PRODUCT + REVIEWS
    */
@@ -91,14 +64,12 @@ const [cartCount, setCartCount] = useState(0);
 
       const item = await getProductById(productId);
 
-console.log("GAMORA PRODUCT DATA:", item);
+      if (!item) {
+        setProduct(null);
+        return;
+      }
 
-if (!item) {
-  setProduct(null);
-  return;
-}
-
-setProduct(item);
+      setProduct(item);
 
       if (item.colors && item.colors.length > 0) {
         setSelectedColor(item.colors[0]);
@@ -434,31 +405,31 @@ window.dispatchEvent(new Event("cartUpdated"));
       : "0.0";
 
   return (
-    <main className="min-h-screen bg-white px-3 pb-24 pt-4 sm:px-5 md:px-8 md:pb-10 md:pt-6">
+    <main className="min-h-screen bg-white px-4 pb-24 pt-5 md:px-8 md:pb-10 md:pt-8">
 
       {/* ================= PRODUCT HERO ================= */}
 
-      <section className="mx-auto w-full max-w-7xl">
+      <section className="mx-auto max-w-6xl">
 
         {/* BREADCRUMB */}
 
-        <div className="mb-4 overflow-hidden whitespace-nowrap text-[11px] text-slate-400 sm:mb-5 sm:text-xs">
-          <span>{t("Home", "Nyumbani")}</span>
+        <div className="mb-5 overflow-hidden text-xs text-slate-400">
+          <span>Home</span>
 
           <span className="mx-2">›</span>
 
           <span>
-            {displayCategory || t("Products", "Bidhaa")}
+            {product.category || "Products"}
           </span>
 
           <span className="mx-2">›</span>
 
           <span className="text-slate-600">
-            {displayName}
+            {product.name}
           </span>
         </div>
 
-        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.08fr)_minmax(360px,0.92fr)] lg:gap-10">
+        <div className="grid gap-4 md:grid-cols-[1.05fr_0.95fr]">
 
           {/* ================= IMAGE AREA ================= */}
 
@@ -467,7 +438,7 @@ window.dispatchEvent(new Event("cartUpdated"));
             {/* MAIN IMAGE */}
 
             <div
-              className="relative flex h-[300px] w-full items-center justify-center overflow-hidden bg-white sm:h-[390px] md:h-[500px] lg:h-[520px]"
+              className="relative h-[330px] overflow-hidden rounded-2xl bg-slate-50 sm:h-[380px] md:h-[430px]"
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
@@ -485,13 +456,13 @@ window.dispatchEvent(new Event("cartUpdated"));
                 {images.map((img, index) => (
                   <div
                     key={`${img}-${index}`}
-                    className="flex h-full min-w-full items-center justify-center bg-white"
+                    className="flex h-full min-w-full items-center justify-center"
                   >
 
                     <img
                       src={img}
-                      alt={`${displayName || ""} ${index + 1}`}
-                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      alt={`${product.name} ${index + 1}`}
+                      className="h-full w-full object-contain p-3"
                     />
 
                   </div>
@@ -506,7 +477,7 @@ window.dispatchEvent(new Event("cartUpdated"));
                   type="button"
                   onClick={previousImage}
                   aria-label="Previous image"
-                  className="absolute left-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-lg text-slate-700 shadow-sm transition hover:bg-slate-50 sm:left-3 sm:h-9 sm:w-9"
+                  className="absolute left-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-lg text-slate-700 shadow hover:bg-white"
                 >
                   ‹
                 </button>
@@ -519,7 +490,7 @@ window.dispatchEvent(new Event("cartUpdated"));
                   type="button"
                   onClick={nextImage}
                   aria-label="Next image"
-                  className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-lg text-slate-700 shadow-sm transition hover:bg-slate-50 sm:right-3 sm:h-9 sm:w-9"
+                  className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-lg text-slate-700 shadow hover:bg-white"
                 >
                   ›
                 </button>
@@ -552,7 +523,7 @@ window.dispatchEvent(new Event("cartUpdated"));
             {/* THUMBNAILS — MAX 6 */}
 
             {visibleThumbnails.length > 0 && (
-              <div className="mt-3 flex gap-2 overflow-x-auto pb-1 sm:gap-3">
+              <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
                 {visibleThumbnails.map(
                   (img, index) => (
                     <button
@@ -561,7 +532,7 @@ window.dispatchEvent(new Event("cartUpdated"));
                       onClick={() =>
                         setActiveImage(index)
                       }
-                      className={`h-[54px] w-[54px] flex-shrink-0 overflow-hidden rounded-lg bg-white sm:h-[64px] sm:w-[64px] ${
+                      className={`h-[62px] w-[62px] flex-shrink-0 overflow-hidden rounded-lg bg-white ${
                         activeImage === index
                           ? "border-2 border-sky-700"
                           : "border border-slate-200"
@@ -569,7 +540,7 @@ window.dispatchEvent(new Event("cartUpdated"));
                     >
                       <img
                         src={img}
-                        alt={`${displayName || ""} thumbnail ${
+                        alt={`${product.name} thumbnail ${
                           index + 1
                         }`}
                         className="h-full w-full object-contain p-1"
@@ -588,23 +559,25 @@ window.dispatchEvent(new Event("cartUpdated"));
 
             {/* TITLE */}
 
-            <h1 className="text-base font-semibold leading-6 text-slate-900 sm:text-xl md:text-2xl md:leading-8">
-              {displayName}
+            <h1 className="text-sm font-medium leading-6 text-slate-900 sm:text-[20px]">
+              {product.name}
             </h1>
 
             {/* PRICE */}
 
-            <div className="mt-3 rounded-lg border border-slate-100 bg-slate-50 px-3 py-3 sm:px-4">
+            <div className="mt-3 rounded-xl bg-sky-50 px-4 py-3">
 
               <div className="flex flex-wrap items-center gap-3">
 
-                <span className="text-lg font-bold text-sky-700 sm:text-xl">
-                  {formatCurrency(Number(product.price), currency)}
+                <span className="text-sm font-medium text-sky-700">
+                  TZS{" "}
+                  {product.price.toLocaleString()}
                 </span>
 
                 {product.oldPrice && (
                   <span className="text-[12px] text-slate-400 line-through">
-                    {formatCurrency(Number(product.oldPrice), currency)}
+                    TZS{" "}
+                    {product.oldPrice.toLocaleString()}
                   </span>
                 )}
 
@@ -621,15 +594,15 @@ window.dispatchEvent(new Event("cartUpdated"));
             {/* DESCRIPTION */}
 
             {product.description && (
-              <p className="mt-4 text-xs font-normal leading-5 text-slate-600 sm:text-sm sm:leading-6">
-                {displayDescription}
+              <p className="mt-4 text-[12px] font-normal leading-4 text-slate-500">
+                {product.description}
               </p>
             )}
 
             {/* STOCK */}
 
-            <div className="mt-4 text-xs font-medium text-green-600 sm:text-sm">
-              ✓ {t("In Stock", "Zinapatikana")} ({product.stock})
+            <div className="mt-4 text-[13px] font-normal text-green-600">
+              ✓ In Stock ({product.stock})
             </div>
 
             {/* COLORS */}
@@ -639,7 +612,7 @@ window.dispatchEvent(new Event("cartUpdated"));
                 <div className="mt-2">
 
                   <p className="mb-2 text-[13px] font-normal text-slate-600">
-                    {t("Color", "Rangi")}
+                    Color
                   </p>
 
                   <div className="flex flex-wrap gap-2">
@@ -673,7 +646,7 @@ window.dispatchEvent(new Event("cartUpdated"));
                 <div className="mt-2">
 
                   <p className="mb-2 text-[13px] font-normal text-slate-600">
-                    {t("Size", "Ukubwa")}
+                    Size
                   </p>
 
                   <div className="flex flex-wrap gap-2">
@@ -705,7 +678,7 @@ window.dispatchEvent(new Event("cartUpdated"));
             <div className="mt-2">
 
               <p className="mb-2 text-[13px] font-normal text-slate-600">
-                {t("Quantity", "Idadi")}
+                Quantity
               </p>
 
               <div className="flex w-fit items-center overflow-hidden rounded-lg border border-slate-200">
@@ -754,7 +727,7 @@ window.dispatchEvent(new Event("cartUpdated"));
                 onClick={addToCart}
                 className="rounded-md bg-sky-700 px-6 py-2.5 text-xs font-semibold text-white whitespace-nowrap shadow-sm hover:bg-sky-800"
               >
-                🛒 {t("Add", "Ongeza")}
+                🛒 Add
               </button>
 
               <button
@@ -762,7 +735,7 @@ window.dispatchEvent(new Event("cartUpdated"));
                 onClick={buyNow}
                 className="rounded-md border border-sky-700 px-6 py-2.5 text-xs font-semibold text-sky-700 whitespace-nowrap hover:bg-sky-50"
               >
-                ⚡ {t("Buy", "Nunua")}
+                ⚡ Buy
               </button>
 
             </div>
@@ -773,7 +746,7 @@ window.dispatchEvent(new Event("cartUpdated"));
               href="https://wa.me/255798555221"
               className="mt-2 inline-flex rounded-md bg-green-600 px-3.5 py-1.5 text-[11px] font-normal text-white hover:bg-green-700"
             >
-              💬 {t("WhatsApp", "WhatsApp")}
+              💬 WhatsApp
             </a>
 
           </div>
@@ -788,7 +761,7 @@ window.dispatchEvent(new Event("cartUpdated"));
         <section className="mx-auto max-w-6xl border-t border-slate-200 py-4">
 
           <h2 className="mb-3 text-sm font-medium text-slate-800">
-            {t("You May Also Like", "Unaweza Pia Kupenda")}
+            You May Also Like
           </h2>
 
           <div className="grid grid-cols-2 gap-3 px-1 sm:grid-cols-3 md:grid-cols-4 lg:gap-4">
@@ -802,10 +775,10 @@ window.dispatchEvent(new Event("cartUpdated"));
                     `/product/${item.id}`
                   )
                 }
-                className="group overflow-hidden rounded-xl border border-slate-200 bg-white text-left shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+                className="overflow-hidden rounded-lg border border-slate-200 bg-white text-left transition hover:shadow-md"
               >
 
-                <div className="relative h-32 overflow-hidden bg-slate-50 sm:h-36">
+                <div className="h-20 sm:h-24 bg-slate-50">
 
                   <img
                     src={
@@ -814,7 +787,7 @@ window.dispatchEvent(new Event("cartUpdated"));
                       ""
                     }
                     alt={item.name}
-                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    className="h-full w-full object-contain p-3"
                   />
 
                 </div>
@@ -826,12 +799,14 @@ window.dispatchEvent(new Event("cartUpdated"));
                   </p>
 
                   <p className="mt-2 text-xs font-medium text-sky-700 sm:text-sm sm:text-sm">
-                    {formatCurrency(Number(item.price), currency)}
+                    TZS{" "}
+                    {item.price.toLocaleString()}
                   </p>
 
                   {item.oldPrice && (
                     <p className="text-[11px] text-slate-400 line-through">
-                      {formatCurrency(Number(item.oldPrice), currency)}
+                      TZS{" "}
+                      {item.oldPrice.toLocaleString()}
                     </p>
                   )}
 
@@ -862,7 +837,7 @@ window.dispatchEvent(new Event("cartUpdated"));
                 : "text-slate-400"
             }`}
           >
-            {t("Description", "Maelezo")}
+            Description
           </button>
 
           <button
@@ -874,7 +849,7 @@ window.dispatchEvent(new Event("cartUpdated"));
                 : "text-slate-400"
             }`}
           >
-            {t("Specifications", "Vipengele")}
+            Specifications
           </button>
 
           <button
@@ -888,7 +863,7 @@ window.dispatchEvent(new Event("cartUpdated"));
             }
             className="pb-2 text-slate-400"
           >
-            {t("Reviews", "Maoni")}
+            Reviews
           </button>
 
         </div>
@@ -898,15 +873,12 @@ window.dispatchEvent(new Event("cartUpdated"));
 {activeTab === "description" && (
   <>
     <h2 className="text-sm font-medium text-slate-900">
-      {t("Product Description", "Maelezo ya Bidhaa")}
+      Product Description
     </h2>
 
     <p className="mt-3 max-w-4xl text-xs leading-5 text-slate-500">
-      {displayDescription ||
-        t(
-          "No additional product description available.",
-          "Hakuna maelezo ya ziada ya bidhaa yaliyowekwa."
-        )}
+      {product.description ||
+        "No additional product description available."}
     </p>
   </>
 )}
@@ -915,7 +887,7 @@ window.dispatchEvent(new Event("cartUpdated"));
   <div className="rounded-lg border border-slate-200 bg-white p-3">
 
     <h2 className="text-sm font-medium text-slate-800">
-      {t("Specifications", "Vipengele")}
+      Specifications
     </h2>
 
     <div className="mt-3 space-y-2 text-xs text-slate-500">
@@ -923,7 +895,7 @@ window.dispatchEvent(new Event("cartUpdated"));
       <div className="flex justify-between">
         <span>Category</span>
         <span className="text-slate-700">
-          {displayCategory || "N/A"}
+          {product.category || "N/A"}
         </span>
       </div>
 
@@ -935,21 +907,21 @@ window.dispatchEvent(new Event("cartUpdated"));
       </div>
 
       <div className="flex justify-between">
-        <span>{t("Colors", "Rangi")}</span>
+        <span>Colors</span>
         <span className="text-slate-700">
           {product.colors?.join(", ") || "N/A"}
         </span>
       </div>
 
       <div className="flex justify-between">
-        <span>{t("Sizes", "Ukubwa")}</span>
+        <span>Sizes</span>
         <span className="text-slate-700">
           {product.sizes?.join(", ") || "N/A"}
         </span>
       </div>
 
       <div className="flex justify-between">
-        <span>{t("Shipping", "Usafirishaji")}</span>
+        <span>Shipping</span>
         <span className="text-slate-700">
           Available
         </span>
@@ -972,7 +944,7 @@ window.dispatchEvent(new Event("cartUpdated"));
       >
 
         <h2 className="text-sm font-medium text-slate-900">
-          {t("Customer Reviews", "Maoni ya Wateja")}
+          Customer Reviews
         </h2>
 
         {/* REAL REVIEW SUMMARY */}
@@ -1020,7 +992,7 @@ window.dispatchEvent(new Event("cartUpdated"));
         <div className="mt-6 rounded-lg border border-slate-200 p-3">
 
           <h3 className="text-[14px] font-normal text-slate-800">
-            {t("Leave a Review", "Acha Maoni")}
+            Leave a Review
           </h3>
 
           {/* STAR SELECTOR */}

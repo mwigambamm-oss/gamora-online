@@ -2,8 +2,6 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { formatCurrency, type Currency } from "@/lib/currency";
-import { useLanguage } from "@/components/providers/LanguageProvider";
 
 type CartItem = {
   id: number;
@@ -46,12 +44,8 @@ const GAMORA_LOCATION: Coordinates = {
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { language } = useLanguage();
-  const t = (en: string, sw: string) => (language === "sw" ? sw : en);
-
 
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [currency, setCurrency] = useState<Currency>("TZS");
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -84,12 +78,6 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const savedCurrency = localStorage.getItem("gamora_currency");
-
-    if (savedCurrency === "TZS" || savedCurrency === "USD") {
-      setCurrency(savedCurrency);
-    }
-
     const saved = localStorage.getItem("gamora_cart");
 
     if (!saved) {
@@ -155,47 +143,6 @@ export default function CheckoutPage() {
     );
   }
 
-  /*
-   * Dar es Salaam delivery zone.
-   * Locations outside this box are treated as outside Dar
-   * and checkout delivery fee becomes TSh 0.
-   */
-  function isInsideDarEsSalaam(
-    coordinates: Coordinates
-  ): boolean {
-    const { latitude, longitude } = coordinates;
-
-    return (
-      latitude >= -7.05 &&
-      latitude <= -6.55 &&
-      longitude >= 38.95 &&
-      longitude <= 39.45
-    );
-  }
-
-  function setLocationForCheckout(
-    coordinates: Coordinates,
-    locationName: string
-  ) {
-    setCustomerLocation(coordinates);
-    setSearchedLocationName(locationName);
-
-    if (!isInsideDarEsSalaam(coordinates)) {
-      setDistanceKm(0);
-      setDeliveryFee(0);
-
-      setLocationMessage(
-        `Location imepatikana • ${locationName} • Nje ya Dar es Salaam — delivery fee TSh 0`
-      );
-
-      return;
-    }
-
-    setLocationMessage(
-      `Location imepatikana • ${locationName} • sasa tafuta umbali wa delivery`
-    );
-  }
-
   async function getGamoraLocation(): Promise<Coordinates | null> {
     if (GAMORA_LOCATION) {
       return GAMORA_LOCATION;
@@ -203,7 +150,7 @@ export default function CheckoutPage() {
 
     try {
       const query =
-        "Gamora, Kariakoo, Dar es Salaam, Tanzania";
+         "Gamora, Kariakoo, Dar es Salaam, Tanzania";
 
       const url =
         "https://nominatim.openstreetmap.org/search" +
@@ -263,12 +210,8 @@ export default function CheckoutPage() {
     name: string;
   } | null> {
     try {
-      /*
-       * IMPORTANT:
-       * Do not append Dar/Tanzania here.
-       * The customer can search any place in the world.
-       */
-      const query = searchText.trim();
+      const query =
+        `${searchText}, Dar es Salaam, Tanzania`;
 
       const url =
         "https://nominatim.openstreetmap.org/search" +
@@ -370,61 +313,17 @@ export default function CheckoutPage() {
 
     if (!query) {
       alert(
-        "Andika location yako kwanza. Mfano: Sinza Madukani au Nairobi, Kenya"
+        "Andika location yako kwanza. Mfano: Sinza Madukani"
       );
       return;
     }
 
     setLocationLoading(true);
     setLocationMessage(
-      "Inatafuta location duniani..."
+      "Inatafuta location na kuhesabu umbali..."
     );
 
     try {
-      const result =
-        await findLocation(query);
-
-      if (!result) {
-        setLocationMessage("");
-
-        alert(
-          `Location "${query}" haijapatikana. Jaribu kuandika jina la eneo, mji, nchi au address kamili.`
-        );
-
-        return;
-      }
-
-      setCustomerLocation(
-        result.coordinates
-      );
-
-      setSearchedLocationName(
-        result.name
-      );
-
-      setAddress(
-        result.name
-      );
-
-      /*
-       * Outside Dar:
-       * allow checkout immediately with TSh 0 delivery fee.
-       */
-      if (!isInsideDarEsSalaam(result.coordinates)) {
-        setDistanceKm(0);
-        setDeliveryFee(0);
-
-        setLocationMessage(
-          `Location imepatikana • ${result.name} • Nje ya Dar es Salaam — delivery fee TSh 0`
-        );
-
-        return;
-      }
-
-      /*
-       * Inside Dar:
-       * calculate actual road distance and delivery fee.
-       */
       const gamora =
         await getGamoraLocation();
 
@@ -432,7 +331,20 @@ export default function CheckoutPage() {
         setLocationMessage("");
 
         alert(
-          "Location ya Gamora haijapatikana kwenye ramani."
+          "Location ya Gamora haijapatikana kwenye ramani. Weka coordinates halisi za Gamora kwenye GAMORA_LOCATION."
+        );
+
+        return;
+      }
+
+      const result =
+        await findLocation(query);
+
+      if (!result) {
+        setLocationMessage("");
+
+        alert(
+          `Location "${query}" haijapatikana. Jaribu kuandika jina la eneo kwa usahihi, mfano Sinza Madukani.`
         );
 
         return;
@@ -453,6 +365,14 @@ export default function CheckoutPage() {
 
         return;
       }
+
+      setCustomerLocation(
+        result.coordinates
+      );
+
+      setSearchedLocationName(
+        result.name
+      );
 
       calculateDeliveryFee(distance);
 
@@ -485,7 +405,7 @@ export default function CheckoutPage() {
 
     setLocationLoading(true);
     setLocationMessage(
-      "Inatafuta location yako duniani..."
+      "Inatafuta location yako..."
     );
 
     navigator.geolocation.getCurrentPosition(
@@ -497,76 +417,15 @@ export default function CheckoutPage() {
             position.coords.longitude,
         };
 
+        setCustomerLocation(
+          coordinates
+        );
+
+        setAddress(
+          `${coordinates.latitude.toFixed(5)}, ${coordinates.longitude.toFixed(5)}`
+        );
+
         try {
-          /*
-           * Reverse geocode GPS coordinates so the
-           * customer gets a real readable address.
-           */
-          const reverseUrl =
-            "https://nominatim.openstreetmap.org/reverse" +
-            "?format=json" +
-            "&addressdetails=1" +
-            "&lat=" +
-            encodeURIComponent(String(coordinates.latitude)) +
-            "&lon=" +
-            encodeURIComponent(String(coordinates.longitude));
-
-          const reverseResponse =
-            await fetch(reverseUrl, {
-              headers: {
-                Accept: "application/json",
-              },
-            });
-
-          let locationName =
-            `${coordinates.latitude.toFixed(5)}, ${coordinates.longitude.toFixed(5)}`;
-
-          if (reverseResponse.ok) {
-            const reverseData =
-              await reverseResponse.json();
-
-            if (
-              typeof reverseData?.display_name ===
-              "string" &&
-              reverseData.display_name.trim()
-            ) {
-              locationName =
-                reverseData.display_name;
-            }
-          }
-
-          setCustomerLocation(
-            coordinates
-          );
-
-          setSearchedLocationName(
-            locationName
-          );
-
-          setAddress(
-            locationName
-          );
-
-          /*
-           * Outside Dar:
-           * no road-distance calculation.
-           * Customer can continue checkout with TSh 0 delivery.
-           */
-          if (!isInsideDarEsSalaam(coordinates)) {
-            setDistanceKm(0);
-            setDeliveryFee(0);
-
-            setLocationMessage(
-              `Location yako imepatikana • ${locationName} • Nje ya Dar es Salaam — delivery fee TSh 0`
-            );
-
-            return;
-          }
-
-          /*
-           * Inside Dar:
-           * calculate actual road distance from Gamora.
-           */
           const gamora =
             await getGamoraLocation();
 
@@ -590,14 +449,14 @@ export default function CheckoutPage() {
             setLocationMessage("");
 
             alert(
-              "Location yako imepatikana lakini mfumo umeshindwa kupata umbali wa barabara. Jaribu tena."
+              "Imeshindikana kupata umbali wa barabara."
             );
 
             return;
           }
 
           setSearchedLocationName(
-            locationName
+            "Location yangu"
           );
 
           calculateDeliveryFee(distance);
@@ -607,14 +466,14 @@ export default function CheckoutPage() {
           );
         } catch (error) {
           console.error(
-            "GPS location error:",
+            "GPS calculation error:",
             error
           );
 
           setLocationMessage("");
 
           alert(
-            "Location imepatikana lakini imeshindikana kuikamilisha. Jaribu tena."
+            "Imeshindikana kuhesabu umbali."
           );
         } finally {
           setLocationLoading(false);
@@ -684,19 +543,12 @@ export default function CheckoutPage() {
         return;
       }
 
-      if (!customerLocation) {
-        alert(
-          "Tafuta location kwanza ili mfumo uthibitishe eneo lako."
-        );
-        return;
-      }
-
       if (
-        isInsideDarEsSalaam(customerLocation) &&
+        !customerLocation ||
         distanceKm <= 0
       ) {
         alert(
-          "Tafuta location tena ili mfumo upate umbali na delivery fee."
+          "Tafuta location kwanza ili mfumo upate umbali na delivery fee."
         );
         return;
       }
@@ -704,7 +556,7 @@ export default function CheckoutPage() {
 
     if (!paymentMethod) {
       alert(
-        t("Choose payment method.", "Chagua njia ya malipo.")
+        "Chagua njia ya malipo."
       );
       return;
     }
@@ -881,16 +733,16 @@ export default function CheckoutPage() {
           </div>
 
           <h1 className="mt-3 text-lg font-medium text-slate-900">
-            {t("Order received", "Order imepokelewa")}
+            Order imepokelewa
           </h1>
 
           <p className="mt-3 text-xs text-slate-500">
-            {t("Your order has been submitted", "Order yako imewasilishwa")}
+            Order yako imewasilishwa
             kikamilifu.
           </p>
 
           <p className="mt-3 text-xs">
-            {t("Order Number", "Namba ya Order")}
+            Order Number
           </p>
 
           <p className="text-base font-bold text-sky-700">
@@ -899,16 +751,18 @@ export default function CheckoutPage() {
 
           <div className="mt-6 rounded-lg bg-slate-50 p-4 text-left text-xs">
             <div className="flex justify-between">
-              <span>{t("Product", "Bidhaa")}</span>
+              <span>Bidhaa</span>
               <strong>
-                {formatCurrency(subtotal, currency)}
+                TZS{" "}
+                {subtotal.toLocaleString()}
               </strong>
             </div>
 
             <div className="mt-2 flex justify-between">
-              <span>{t("Delivery", "Usafirishaji")}</span>
+              <span>Delivery</span>
               <strong>
-                {formatCurrency(deliveryFee, currency)}
+                TZS{" "}
+                {deliveryFee.toLocaleString()}
               </strong>
             </div>
 
@@ -922,9 +776,10 @@ export default function CheckoutPage() {
             )}
 
             <div className="mt-3 flex justify-between border-t pt-3 text-xs font-normal">
-              <span>{t("Total", "Jumla")}</span>
+              <span>Total</span>
               <span className="text-sky-700">
-                {formatCurrency(total, currency)}
+                TZS{" "}
+                {total.toLocaleString()}
               </span>
             </div>
           </div>
@@ -944,15 +799,15 @@ export default function CheckoutPage() {
     <main className="min-h-screen bg-slate-50 p-5 pb-10">
       <div className="mx-auto max-w-2xl rounded-3xl bg-white p-5 shadow md:p-4">
         <h1 className="text-lg font-medium text-slate-900">
-          {t("GAMORA ONLINE Checkout", "GAMORA ONLINE Malipo")}
+          GAMORA ONLINE Checkout
         </h1>
 
         <p className="mt-2 text-xs text-slate-500">
-          {t("Enter your details so we can deliver your products.", "Weka taarifa zako ili tukuletee bidhaa.")}
+          Weka taarifa zako ili tukuletee bidhaa.
         </p>
 <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
   <h2 className="mb-3 text-xs font-black text-slate-800">
-    🛒 {t("Your Products", "Bidhaa zako")}
+    🛒 Bidhaa zako
   </h2>
 
   <div className="space-y-3">
@@ -967,7 +822,7 @@ export default function CheckoutPage() {
           </p>
 
           <p className="text-xs text-slate-500">
-            {t("Qty:", "Idadi:")} {item.quantity}
+            Qty: {item.quantity}
           </p>
         </div>
 
@@ -985,7 +840,7 @@ export default function CheckoutPage() {
 
         <div className="mt-6">
           <label className="mb-2 block text-xs font-bold text-slate-700">
-            {t("Delivery Method", "Njia ya kupokea bidhaa")}
+            Njia ya kupokea bidhaa
           </label>
 
           <div className="grid grid-cols-2 gap-3">
@@ -1003,7 +858,7 @@ export default function CheckoutPage() {
                   : "border-slate-200 text-slate-600"
               }`}
             >
-              🚚 {t("Delivery", "Usafirishaji")}
+              🚚 Delivery
             </button>
 
             <button
@@ -1025,7 +880,7 @@ export default function CheckoutPage() {
                   : "border-slate-200 text-slate-600"
               }`}
             >
-              🏪 {t("Pickup", "Kuchukua Dukani")}
+              🏪 Pickup
             </button>
           </div>
         </div>
@@ -1037,7 +892,7 @@ export default function CheckoutPage() {
           <input
             required
             className="w-full rounded-lg border border-slate-200 p-3 text-xs outline-none transition focus:border-sky-700"
-            placeholder={t("Full Name", "Jina kamili")}
+            placeholder="Jina kamili"
             value={name}
             onChange={(e) =>
               setName(e.target.value)
@@ -1048,7 +903,7 @@ export default function CheckoutPage() {
             required
             type="tel"
             className="w-full rounded-lg border border-slate-200 p-3 text-xs outline-none transition focus:border-sky-700"
-            placeholder={t("Phone Number", "Namba ya simu")}
+            placeholder="Namba ya simu"
             value={phone}
             onChange={(e) =>
               setPhone(e.target.value)
@@ -1060,14 +915,14 @@ export default function CheckoutPage() {
             <>
               <div>
                 <label className="mb-2 block text-xs font-bold text-slate-700">
-                  {t("Shipping Address", "Anwani ya Usafirishaji")}
+                  Shipping Address
                 </label>
 
                 <textarea
                   required
                   rows={3}
                   className="w-full rounded-lg border border-slate-200 p-3 text-xs outline-none transition focus:border-sky-700"
-                  placeholder={t("Enter your location, e.g. Sinza Madukani", "Andika location yako, mfano: Sinza Madukani")}
+                  placeholder="Andika location yako, mfano: Sinza Madukani"
                   value={address}
                   onChange={(e) => {
                     setAddress(
@@ -1090,7 +945,7 @@ export default function CheckoutPage() {
                   >
                     {locationLoading
                       ? "⏳ Inatafuta..."
-                      : t("🔎 Find Location & Calculate KM", "🔎 Tafuta Location & Hesabu KM")}
+                      : "🔎 Tafuta Location & Hesabu KM"}
                   </button>
 
                   <button
@@ -1103,7 +958,7 @@ export default function CheckoutPage() {
                     }
                     className="rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs font-bold text-sky-700 transition hover:bg-sky-100 disabled:opacity-60"
                   >
-                    📍 {t("Use My Location", "Tumia Location Yangu")}
+                    📍 Tumia Location Yangu
                   </button>
                 </div>
 
@@ -1118,7 +973,7 @@ export default function CheckoutPage() {
                 {searchedLocationName && (
                   <div className="mt-2 rounded-lg bg-slate-50 p-3">
                     <p className="text-xs font-bold text-slate-400">
-                      {t("LOCATION FOUND", "LOCATION ILIYOPATIKANA")}
+                      LOCATION ILIYOPATIKANA
                     </p>
 
                     <p className="mt-1 text-xs text-slate-600">
@@ -1128,17 +983,16 @@ export default function CheckoutPage() {
                 )}
 
                 <p className="mt-2 text-xs text-slate-400">
-                  {t(
-                    "Example: Sinza Madukani, Mwenge, Kariakoo, Mbezi Beach.",
-                    "Mfano: Sinza Madukani, Mwenge, Kariakoo, Mbezi Beach."
-                  )}
+                  Mfano: Sinza Madukani,
+                  Mwenge, Kariakoo, Mbezi
+                  Beach.
                 </p>
               </div>
 
               <input
                 required
                 className="w-full rounded-lg border border-slate-200 p-3 text-xs outline-none transition focus:border-sky-700"
-                placeholder={t("Street / Area / Ward", "Mtaa / Eneo / Kata")}
+                placeholder="Mtaa / Eneo / Kata"
                 value={area}
                 onChange={(e) =>
                   setArea(e.target.value)
@@ -1147,7 +1001,7 @@ export default function CheckoutPage() {
 
               <input
                 className="w-full rounded-lg border border-slate-200 p-3 text-xs outline-none transition focus:border-sky-700"
-                placeholder={t("Landmark (e.g. near...)", "Landmark (mfano: karibu na...)")}
+                placeholder="Landmark (mfano: karibu na...)"
                 value={landmark}
                 onChange={(e) =>
                   setLandmark(
@@ -1160,14 +1014,12 @@ export default function CheckoutPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs font-bold text-sky-800">
-                      📍 {t("Delivery Estimate", "Makadirio ya Usafirishaji")}
+                      📍 Delivery Estimate
                     </p>
 
                     <p className="mt-1 text-xs text-slate-500">
-                      {t(
-                      "The system automatically estimates the road distance.",
-                      "Mfumo unakadiria umbali wa barabara automatically."
-                    )}
+                      Mfumo unakadiria umbali
+                      wa barabara automatically.
                     </p>
                   </div>
 
@@ -1180,7 +1032,7 @@ export default function CheckoutPage() {
                   <div className="mt-4 grid grid-cols-2 gap-3">
                     <div className="rounded-lg bg-white p-4">
                       <p className="text-xs font-bold text-slate-400">
-                        {t("DISTANCE", "UMBALI")}
+                        UMBALI
                       </p>
 
                       <p className="mt-1 text-base font-bold text-sky-700">
@@ -1209,17 +1061,14 @@ export default function CheckoutPage() {
                 ) : (
                   <div className="mt-4 rounded-lg bg-white p-4 text-center">
                     <p className="text-xs font-bold text-slate-500">
-                      {t("Enter your location above", "Andika location hapo juu")}
+                      Andika location hapo juu
                     </p>
 
                     <p className="mt-1 text-xs text-slate-400">
-                      {t("then click", "kisha bonyeza")}
+                      kisha bonyeza
                       <strong>
                         {" "}
-                        {t(
-                          "Find Location & Calculate KM",
-                          "Tafuta Location & Hesabu KM"
-                        )}
+                        Tafuta Location & Hesabu KM
                       </strong>
                     </p>
                   </div>
@@ -1239,7 +1088,7 @@ export default function CheckoutPage() {
             }
           >
             <option value="">
-              {t("Choose payment method", "Chagua njia ya malipo")}
+              Chagua njia ya malipo
             </option>
 
             <option value="M-Pesa">
@@ -1258,53 +1107,32 @@ export default function CheckoutPage() {
           <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
             <div className="flex justify-between text-xs">
               <span className="text-slate-500">
-                {t("Product", "Bidhaa")}
+                Bidhaa
               </span>
 
               <span className="font-bold text-slate-800">
-                {formatCurrency(subtotal, currency)}
+                TZS{" "}
+                {subtotal.toLocaleString()}
               </span>
             </div>
 
             <div className="mt-2 flex justify-between text-xs">
               <span className="text-slate-500">
-                {t("Delivery", "Usafirishaji")}
+                Delivery
               </span>
 
               <span className="font-bold text-slate-800">
-                {formatCurrency(deliveryFee, currency)}
+                TZS{" "}
+                {deliveryFee.toLocaleString()}
               </span>
             </div>
 
-            {customerLocation && !isInsideDarEsSalaam(customerLocation) && (
-              <div className="mt-2 rounded-lg border border-sky-200 bg-sky-50 p-3">
-                <p className="text-xs font-semibold text-sky-800">
-                  {t("Shipping cost will be calculated separately.", "Gharama ya usafirishaji itahesabiwa tofauti.")}
-                </p>
-                <p className="mt-1 text-[11px] leading-4 text-sky-700">
-                  {t("Please place your order and request the shipping cost.", "Weka order yako kisha request gharama ya usafirishaji.")}
-                  {t("Our team will contact you with the available shipping", "Timu yetu itawasiliana nawe kuhusu njia za usafirishaji")}
-                  {t("options and cost.", "zinazopatikana na gharama yake.")}
-                </p>
-
-                <div className="mt-2 border-t border-sky-200 pt-2">
-                  <p className="text-xs font-semibold text-sky-800">
-                    Gharama ya usafirishaji itahesabiwa tofauti.
-                  </p>
-                  <p className="mt-1 text-[11px] leading-4 text-sky-700">
-                    Weka order yako kisha request gharama ya usafirishaji.
-                    Timu yetu itawasiliana nawe kuhusu njia za usafirishaji
-                    zinazopatikana na gharama yake.
-                  </p>
-                </div>
-              </div>
-            )}
-
             <div className="mt-3 flex justify-between border-t border-slate-200 pt-3 text-xs font-normal">
-              <span>{t("Total", "Jumla")}</span>
+              <span>Total</span>
 
               <span className="text-sky-700">
-                {formatCurrency(total, currency)}
+                TZS{" "}
+                {total.toLocaleString()}
               </span>
             </div>
           </div>
@@ -1315,8 +1143,8 @@ export default function CheckoutPage() {
             className="w-full rounded-lg bg-sky-700 px-3 py-2 text-xs font-normal text-white transition hover:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading
-              ? t("Placing Order...", "Inaweka Order...")
-              : t("Place Order", "Weka Order")}
+              ? "Inaweka Order..."
+              : "Weka Order"}
           </button>
         </form>
       </div>

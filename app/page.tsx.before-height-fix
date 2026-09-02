@@ -1,12 +1,9 @@
 "use client";
 
-import { useLanguage } from "@/components/providers/LanguageProvider";
-
 import { useRouter } from "next/navigation";
 import { FaFacebookF, FaInstagram, FaTiktok } from "react-icons/fa";
 
 import { translations, type Language } from "@/lib/translations";
-import { formatCurrency, type Currency } from "@/lib/currency";
 import { getProducts as getSupabaseProducts, type Product } from "@/lib/products";
 import { useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
 
@@ -79,8 +76,7 @@ const ALL_CATEGORIES = [
 
 export default function HomePage() {
   const router = useRouter();
-  const { language, setLanguage } = useLanguage();
-  const [currency, setCurrency] = useState<Currency>("TZS");
+  const [language, setLanguage] = useState<Language>("en");
   const [products, setProducts] = useState<Product[]>([]);
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -98,16 +94,9 @@ export default function HomePage() {
   const t = translations[language];
 
   useEffect(() => {
-
-    const savedCurrency = localStorage.getItem("gamora_currency");
-    if (savedCurrency === "TZS" || savedCurrency === "USD") {
-      setCurrency(savedCurrency);
-    }
+    const saved = localStorage.getItem("gamora_language");
+    if (saved === "sw" || saved === "en") setLanguage(saved);
   }, []);
-
-  useEffect(() => {
-    localStorage.setItem("gamora_currency", currency);
-  }, [currency]);
 
   useEffect(() => {
     const updateFlashTime = () => {
@@ -186,6 +175,7 @@ export default function HomePage() {
 
   function changeLanguage(next: Language) {
     setLanguage(next);
+    localStorage.setItem("gamora_language", next);
     window.dispatchEvent(new Event("gamora-language-changed"));
   }
 
@@ -221,17 +211,9 @@ export default function HomePage() {
     window.setTimeout(() => setNotice(""), 2200);
   }
 
-  function scrollCarousel(
-    ref: React.RefObject<HTMLDivElement | null>,
-    direction: number
-  ) {
-    const el = ref.current;
-    if (!el) return;
-
-    const amount = Math.max(320, Math.floor(el.clientWidth * 0.9));
-
-    el.scrollBy({
-      left: direction * amount,
+  function scrollCarousel(ref: React.RefObject<HTMLDivElement | null>, direction: number) {
+    ref.current?.scrollBy({
+      left: direction * Math.max(280, ref.current.clientWidth * 0.82),
       behavior: "smooth",
     });
   }
@@ -393,23 +375,6 @@ export default function HomePage() {
                 <button onClick={() => changeLanguage("sw")} className={`rounded-md px-1.5 py-1 ${language === "sw" ? "bg-[#374151] text-white" : "text-[#666]"} sm:px-2.5 sm:py-1.5`}>SW</button>
               </div>
 
-              <div className="flex items-center rounded-lg border border-[#dedede] bg-white p-0.5 text-[9px] font-black sm:p-1 sm:text-[11px]">
-                <button
-                  type="button"
-                  onClick={() => setCurrency("TZS")}
-                  className={`rounded-md px-1.5 py-1 ${currency === "TZS" ? "bg-[#374151] text-white" : "text-[#666]"} sm:px-2.5 sm:py-1.5`}
-                >
-                  TZS
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setCurrency("USD")}
-                  className={`rounded-md px-1.5 py-1 ${currency === "USD" ? "bg-[#374151] text-white" : "text-[#666]"} sm:px-2.5 sm:py-1.5`}
-                >
-                  USD
-                </button>
-              </div>
-
               <a href="/account" className="flex h-9 items-center rounded-lg px-1.5 text-xs font-bold text-[#333] transition hover:bg-[#f1f1f1] sm:h-10 sm:px-2 sm:text-sm">
                 {language === "sw" ? "Akaunti" : "Account"}
               </a>
@@ -546,23 +511,11 @@ export default function HomePage() {
             <div className="relative mt-7"><button type="button" aria-label="Previous categories" onClick={() => document.getElementById("category-scroll")?.scrollBy({ left: -260, behavior: "smooth" })} className="absolute left-0 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-[#ddd] bg-white text-xl shadow-md sm:hidden">‹</button><div id="category-scroll" className="flex gap-4 overflow-x-auto pb-3 scrollbar-hide lg:grid lg:grid-cols-6 lg:overflow-visible">
               {categories.map((category) => (
                 <button key={category} onClick={() => router.push(`/category/${encodeURIComponent(category)}`)} className={`group cursor-pointer min-w-[120px] rounded-xl border bg-white p-2 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-lg lg:min-w-0 ${selectedCategory === category ? "border-[#374151] ring-2 ring-[#374151]/10" : "border-[#e5e5e5]"}`}>
-                  <div className="relative h-36 overflow-hidden rounded-lg bg-white sm:h-40 lg:h-44">
-                    {CATEGORY_IMAGES[category] ? (
-                      <img
-                        src={CATEGORY_IMAGES[category]}
-                        alt={category}
-                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center text-5xl">
-                        {CATEGORY_ICONS[category] || "🛍️"}
-                      </div>
-                    )}
+                  <div className="relative h-32 overflow-hidden rounded-xl bg-[#f1f1f1] sm:h-36">
+                    {CATEGORY_IMAGES[category] ? <img src={CATEGORY_IMAGES[category]} alt={category} className="h-20 w-full object-contain transition duration-500 group-hover:scale-105 sm:h-24" /> : <div className="flex h-full items-center justify-center text-5xl">{CATEGORY_ICONS[category] || "🛍️"}</div>}
                   </div>
-                  <div className="px-1 pt-2 pb-1">
-                    <p className="line-clamp-1 text-xs font-semibold text-[#333]">{category}</p>
-                    <p className="mt-0.5 text-[10px] text-[#777]">{language === "sw" ? "Angalia bidhaa →" : "Explore products →"}</p>
-                  </div>
+                  <p className="mt-3 line-clamp-1 text-xs font-normal text-[#333]">{category}</p>
+                  <p className="mt-1 text-xs text-[#777]">{language === "sw" ? "Angalia bidhaa →" : "Explore products →"}</p>
                 </button>
               ))}
             </div>
@@ -584,18 +537,7 @@ export default function HomePage() {
 
           {deals.length > 0 ? (
             <Carousel carouselRef={dealsRef} paused={false}>
-              {deals.map((product) => (
-                <div
-                  key={product.id}
-                  className="min-w-[185px] shrink-0 sm:min-w-[205px] lg:min-w-[215px]"
-                >
-                  <ProductCard
-                    product={product}
-                    addToCart={addToCart}
-                    currency={currency}
-                  />
-                </div>
-              ))}
+              {deals.map((product) => <ProductCard key={product.id} product={product} addToCart={addToCart} />)}
             </Carousel>
           ) : (
             <EmptySection text={language === "sw" ? "Hakuna ofa kwa sasa." : "No active deals right now."} />
@@ -613,14 +555,7 @@ export default function HomePage() {
 
           {recommended.length > 0 ? (
             <div className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
-              {recommended.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  addToCart={addToCart}
-                  currency={currency}
-                />
-              ))}
+              {recommended.map((product) => <ProductCard key={product.id} product={product} addToCart={addToCart} />)}
             </div>
           ) : <EmptySection text={t.noProducts} />}
         </div>
@@ -666,7 +601,6 @@ export default function HomePage() {
                   key={product.id}
                   product={product}
                   addToCart={addToCart}
-                  currency={currency}
                 />
               ))}
             </Carousel>
@@ -690,11 +624,7 @@ export default function HomePage() {
             <SectionHeading title={language === "sw" ? "Bidhaa Mpya" : "New Arrivals"} subtitle={language === "sw" ? "Bidhaa mpya zilizoongezwa hivi karibuni." : "Recently added products."} />
             <CarouselArrows onPrev={() => scrollCarousel(newRef, -1)} onNext={() => scrollCarousel(newRef, 1)} />
           </div>
-          <Carousel carouselRef={newRef} paused={false}>{newArrivals.map((product) => (
-  <div key={product.id} className="min-w-[185px] shrink-0 sm:min-w-[205px] lg:min-w-[215px]">
-    <ProductCard product={product} addToCart={addToCart} currency={currency} />
-  </div>
-))}</Carousel>
+          <Carousel carouselRef={newRef} paused={false}>{newArrivals.map((product) => <ProductCard key={product.id} product={product} addToCart={addToCart} />)}</Carousel>
         </div>
       </section>
 
@@ -705,11 +635,7 @@ export default function HomePage() {
             <SectionHeading title={language === "sw" ? "Zinazouzwa Sana" : "Best Sellers"} subtitle={language === "sw" ? "Bidhaa zinazopendwa zaidi na wateja." : "Customer favorites."} />
             <CarouselArrows onPrev={() => scrollCarousel(bestRef, -1)} onNext={() => scrollCarousel(bestRef, 1)} />
           </div>
-          <Carousel carouselRef={bestRef} paused={false}>{bestSellers.map((product) => (
-  <div key={product.id} className="min-w-[185px] shrink-0 sm:min-w-[205px] lg:min-w-[215px]">
-    <ProductCard product={product} addToCart={addToCart} bestSeller currency={currency} />
-  </div>
-))}</Carousel>
+          <Carousel carouselRef={bestRef} paused={false}>{bestSellers.map((product) => <ProductCard key={product.id} product={product} addToCart={addToCart} bestSeller />)}</Carousel>
         </div>
       </section>
 
@@ -801,52 +727,68 @@ function SectionHeading({ title, subtitle, centered = false }: { title: string; 
   );
 }
 
-function Carousel({
-  children,
-  carouselRef,
-}: {
-  children: ReactNode;
-  carouselRef: RefObject<HTMLDivElement | null>;
-  paused?: boolean;
-}) {
+function Carousel({ children, carouselRef, paused = false }: { children: ReactNode; carouselRef: RefObject<HTMLDivElement | null>; paused?: boolean }) {
+  const [hovered, setHovered] = useState(false);
+
+  useEffect(() => {
+    if (paused || hovered || !carouselRef.current) return;
+
+    const el = carouselRef.current;
+    let frame: number;
+    let last = performance.now();
+
+    const move = (now: number) => {
+      const delta = now - last;
+      last = now;
+
+      const max = el.scrollWidth - el.clientWidth;
+
+      if (max > 0) {
+        el.scrollLeft += delta * 0.045;
+
+        if (el.scrollLeft >= max - 1) {
+          el.scrollTo({ left: 0, behavior: "auto" });
+        }
+      }
+
+      frame = requestAnimationFrame(move);
+    };
+
+    frame = requestAnimationFrame(move);
+
+    return () => cancelAnimationFrame(frame);
+  }, [paused, hovered, carouselRef]);
+
   return (
     <div
       ref={carouselRef}
-      className="mt-5 flex w-full gap-3 overflow-x-auto scroll-smooth pb-2 scrollbar-hide sm:gap-4"
-      style={{
-        scrollSnapType: "x mandatory",
-        WebkitOverflowScrolling: "touch",
-      }}
+      className="mt-6 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-4 scrollbar-hide scroll-smooth"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onTouchStart={() => setHovered(true)}
+      onTouchEnd={() => window.setTimeout(() => setHovered(false), 2500)}
     >
       {children}
     </div>
   );
 }
 
-
-function CarouselArrows({
-  onPrev,
-  onNext,
-}: {
-  onPrev: () => void;
-  onNext: () => void;
-}) {
+function CarouselArrows({ onPrev, onNext }: { onPrev: () => void; onNext: () => void }) {
   return (
-    <div className="flex shrink-0 items-center gap-2">
+    <div className="flex gap-2">
       <button
         type="button"
-        aria-label="Previous"
         onClick={onPrev}
-        className="flex h-9 w-9 items-center justify-center rounded-full border border-[#d9d9d9] bg-white text-xl font-bold text-[#333] shadow-sm transition hover:bg-[#f3f4f6] active:scale-95"
+        aria-label="Previous products"
+        className="flex h-9 w-9 items-center justify-center rounded-full border border-[#ddd] bg-white text-lg font-medium text-[#374151] shadow-sm transition hover:bg-[#f2f2f2] sm:h-10 sm:w-10 sm:text-xl"
       >
         ‹
       </button>
-
       <button
         type="button"
-        aria-label="Next"
         onClick={onNext}
-        className="flex h-9 w-9 items-center justify-center rounded-full border border-[#d9d9d9] bg-white text-xl font-bold text-[#333] shadow-sm transition hover:bg-[#f3f4f6] active:scale-95"
+        aria-label="Next products"
+        className="flex h-9 w-9 items-center justify-center rounded-full border border-[#ddd] bg-white text-lg font-medium text-[#374151] shadow-sm transition hover:bg-[#f2f2f2] sm:h-10 sm:w-10 sm:text-xl"
       >
         ›
       </button>
@@ -858,12 +800,10 @@ function ProductCard({
   product,
   addToCart,
   bestSeller = false,
-  currency,
 }: {
   product: Product;
   addToCart: (product: Product) => void;
   bestSeller?: boolean;
-  currency: Currency;
 }) {
   const image = getProductImage(product);
   const discount = getDiscount(product);
@@ -871,22 +811,20 @@ function ProductCard({
   const orders = Number(product.orders_count || 0);
 
   return (
-    <article className="group w-[155px] shrink-0 overflow-hidden bg-white sm:w-[190px] lg:w-[215px]">
+    <article className="group min-w-0 overflow-hidden bg-white">
       <a
         href={`/product/${product.id}`}
         className="relative block overflow-hidden bg-white"
       >
         {image ? (
-          <div className="relative flex h-[185px] w-full items-center justify-center overflow-hidden bg-white sm:h-[215px] lg:h-[245px]">
-            <img
-              src={image}
-              alt={product.name}
-              loading="lazy"
-              className="h-full w-full object-contain p-1 transition-transform duration-300 group-hover:scale-[1.025]"
-            />
-          </div>
+          <img
+            src={image}
+            alt={product.name}
+            loading="lazy"
+            className="block aspect-square w-full object-contain transition-transform duration-300 group-hover:scale-[1.025]"
+          />
         ) : (
-          <div className="flex h-[185px] w-full items-center justify-center bg-white text-4xl text-gray-300 sm:h-[215px] lg:h-[245px]">
+          <div className="flex aspect-square w-full items-center justify-center bg-white text-4xl text-gray-300">
             🛍️
           </div>
         )}
@@ -904,15 +842,17 @@ function ProductCard({
         )}
       </a>
 
-      <div className="px-1 pt-1 pb-1">
+      <div className="px-1 pt-1.5 pb-2">
         <a href={`/product/${product.id}`}>
-          <h3 className="line-clamp-2 text-[11px] font-medium leading-[14px] text-[#222] sm:text-xs">
+          <h3 className="line-clamp-2 min-h-[30px] text-[11px] font-normal leading-[15px] text-[#222] sm:text-xs">
             {product.name}
           </h3>
         </a>
 
         <div className="mt-1 flex items-center gap-1">
-          <span className="text-[10px] text-[#f59e0b]">★★★★★</span>
+          <span className="text-[10px] text-[#f59e0b]">
+            ★★★★★
+          </span>
 
           {rating > 0 && (
             <span className="text-[9px] text-[#777]">
@@ -929,13 +869,13 @@ function ProductCard({
 
         <div className="mt-1 flex flex-wrap items-baseline gap-1">
           <span className="text-xs font-bold text-[#e30613] sm:text-sm">
-            {formatCurrency(Number(product.price), currency)}
+            TSh {Number(product.price).toLocaleString()}
           </span>
 
           {typeof product.oldPrice === "number" &&
             product.oldPrice > product.price && (
               <span className="text-[9px] text-[#999] line-through">
-                {formatCurrency(Number(product.oldPrice), currency)}
+                TSh {product.oldPrice.toLocaleString()}
               </span>
             )}
         </div>

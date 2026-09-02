@@ -18,15 +18,12 @@ export default function ProductsPage() {
 
   const emptyForm = {
     name: "",
-    name_sw: "",
     price: "",
     oldPrice: "",
     category: "Women's Fashion",
-    category_sw: "",
     stock: "",
     cost_price: "",
     description: "",
-    description_sw: "",
     image: "",
     images: [] as string[],
     colors: [] as string[],
@@ -130,15 +127,12 @@ console.log("TOTAL UPLOADED:", uploadedImages.length);
 
     const productData = {
       name: form.name.trim(),
-      name_sw: form.name_sw.trim(),
       price: Number(form.price),
       oldPrice: Number(form.oldPrice || form.price),
       category: form.category,
-      category_sw: form.category_sw.trim(),
       stock: Number(form.stock),
       cost_price: Number(form.cost_price || 0),
       description: form.description.trim(),
-      description_sw: form.description_sw.trim(),
       image: form.image,
       images: form.images,
       colors: form.colors,
@@ -172,15 +166,12 @@ console.log("TOTAL UPLOADED:", uploadedImages.length);
   function handleEditProduct(product: Product) {
     setForm({
       name: product.name || "",
-      name_sw: product.name_sw || "",
       price: String(product.price ?? ""),
       oldPrice: String(product.oldPrice ?? ""),
       category: product.category || "Women's Fashion",
-      category_sw: product.category_sw || "",
       stock: String(product.stock ?? ""),
       cost_price: String(product.cost_price ?? 0),
       description: product.description || "",
-      description_sw: product.description_sw || "",
       image: product.image || "",
       images: product.images || [],
       colors: product.colors || [],
@@ -334,20 +325,6 @@ console.log("TOTAL UPLOADED:", uploadedImages.length);
 
               <div>
                 <label className="mb-2 block text-sm font-bold">
-                  Product Name (Swahili)
-                </label>
-
-                <input
-                  name="name_sw"
-                  value={form.name_sw}
-                  onChange={handleChange}
-                  placeholder="Mfano: Jeans za Wanaume"
-                  className="w-full rounded-lg border px-4 py-3"
-                />
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-bold">
                   Category
                 </label>
 
@@ -365,20 +342,6 @@ console.log("TOTAL UPLOADED:", uploadedImages.length);
                   <option>Beauty</option>
                   <option>Accessories</option>
                 </select>
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-bold">
-                  Category (Swahili)
-                </label>
-
-                <input
-                  name="category_sw"
-                  value={form.category_sw}
-                  onChange={handleChange}
-                  placeholder="Mfano: Mitindo ya Wanaume"
-                  className="w-full rounded-lg border px-4 py-3"
-                />
               </div>
 
               <div>
@@ -537,21 +500,6 @@ console.log("TOTAL UPLOADED:", uploadedImages.length);
                   onChange={handleChange}
                   rows={4}
                   placeholder="Describe your product..."
-                  className="w-full rounded-lg border px-4 py-3"
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="mb-2 block text-sm font-bold">
-                  Description (Swahili)
-                </label>
-
-                <textarea
-                  name="description_sw"
-                  value={form.description_sw}
-                  onChange={handleChange}
-                  rows={4}
-                  placeholder="Eleza bidhaa hii kwa Kiswahili..."
                   className="w-full rounded-lg border px-4 py-3"
                 />
               </div>

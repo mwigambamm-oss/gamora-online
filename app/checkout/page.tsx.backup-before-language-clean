@@ -952,7 +952,7 @@ export default function CheckoutPage() {
         </p>
 <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
   <h2 className="mb-3 text-xs font-black text-slate-800">
-    🛒 {t("Your Products", "Bidhaa zako")}
+    🛒 {t("Your Products", "{t("Product", "Bidhaa")} zako")}
   </h2>
 
   <div className="space-y-3">
@@ -985,14 +985,14 @@ export default function CheckoutPage() {
 
         <div className="mt-6">
           <label className="mb-2 block text-xs font-bold text-slate-700">
-            {t("Delivery Method", "Njia ya kupokea bidhaa")}
+            {t("{t("Delivery", "Usafirishaji")} Method", "Njia ya kupokea bidhaa")}
           </label>
 
           <div className="grid grid-cols-2 gap-3">
             <button
               type="button"
               onClick={() => {
-                setDeliveryMethod(
+                set{t("Delivery", "Usafirishaji")}Method(
                   "delivery"
                 );
               }}
@@ -1009,7 +1009,7 @@ export default function CheckoutPage() {
             <button
               type="button"
               onClick={() => {
-                setDeliveryMethod(
+                set{t("Delivery", "Usafirishaji")}Method(
                   "pickup"
                 );
                 setDistanceKm(0);
@@ -1037,7 +1037,7 @@ export default function CheckoutPage() {
           <input
             required
             className="w-full rounded-lg border border-slate-200 p-3 text-xs outline-none transition focus:border-sky-700"
-            placeholder={t("Full Name", "Jina kamili")}
+            placeholder="Jina kamili"
             value={name}
             onChange={(e) =>
               setName(e.target.value)
@@ -1048,7 +1048,7 @@ export default function CheckoutPage() {
             required
             type="tel"
             className="w-full rounded-lg border border-slate-200 p-3 text-xs outline-none transition focus:border-sky-700"
-            placeholder={t("Phone Number", "Namba ya simu")}
+            placeholder="Namba ya simu"
             value={phone}
             onChange={(e) =>
               setPhone(e.target.value)
@@ -1060,14 +1060,14 @@ export default function CheckoutPage() {
             <>
               <div>
                 <label className="mb-2 block text-xs font-bold text-slate-700">
-                  {t("Shipping Address", "Anwani ya Usafirishaji")}
+                  {t("{t("Shipping Address", "Anwani ya Usafirishaji")}", "Anwani ya Usafirishaji")}
                 </label>
 
                 <textarea
                   required
                   rows={3}
                   className="w-full rounded-lg border border-slate-200 p-3 text-xs outline-none transition focus:border-sky-700"
-                  placeholder={t("Enter your location, e.g. Sinza Madukani", "Andika location yako, mfano: Sinza Madukani")}
+                  placeholder="Andika location yako, mfano: Sinza Madukani"
                   value={address}
                   onChange={(e) => {
                     setAddress(
@@ -1090,7 +1090,7 @@ export default function CheckoutPage() {
                   >
                     {locationLoading
                       ? "⏳ Inatafuta..."
-                      : t("🔎 Find Location & Calculate KM", "🔎 Tafuta Location & Hesabu KM")}
+                      : "🔎 {t("Find Location & Calculate KM", "Tafuta Location & Hesabu KM")}"}
                   </button>
 
                   <button
@@ -1118,7 +1118,7 @@ export default function CheckoutPage() {
                 {searchedLocationName && (
                   <div className="mt-2 rounded-lg bg-slate-50 p-3">
                     <p className="text-xs font-bold text-slate-400">
-                      {t("LOCATION FOUND", "LOCATION ILIYOPATIKANA")}
+                      LOCATION ILIYOPATIKANA
                     </p>
 
                     <p className="mt-1 text-xs text-slate-600">
@@ -1128,17 +1128,16 @@ export default function CheckoutPage() {
                 )}
 
                 <p className="mt-2 text-xs text-slate-400">
-                  {t(
-                    "Example: Sinza Madukani, Mwenge, Kariakoo, Mbezi Beach.",
-                    "Mfano: Sinza Madukani, Mwenge, Kariakoo, Mbezi Beach."
-                  )}
+                  Mfano: Sinza Madukani,
+                  Mwenge, Kariakoo, Mbezi
+                  Beach.
                 </p>
               </div>
 
               <input
                 required
                 className="w-full rounded-lg border border-slate-200 p-3 text-xs outline-none transition focus:border-sky-700"
-                placeholder={t("Street / Area / Ward", "Mtaa / Eneo / Kata")}
+                placeholder="Mtaa / Eneo / Kata"
                 value={area}
                 onChange={(e) =>
                   setArea(e.target.value)
@@ -1147,7 +1146,7 @@ export default function CheckoutPage() {
 
               <input
                 className="w-full rounded-lg border border-slate-200 p-3 text-xs outline-none transition focus:border-sky-700"
-                placeholder={t("Landmark (e.g. near...)", "Landmark (mfano: karibu na...)")}
+                placeholder="Landmark (mfano: karibu na...)"
                 value={landmark}
                 onChange={(e) =>
                   setLandmark(
@@ -1160,14 +1159,12 @@ export default function CheckoutPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs font-bold text-sky-800">
-                      📍 {t("Delivery Estimate", "Makadirio ya Usafirishaji")}
+                      📍 {t("{t("Delivery", "Usafirishaji")} Estimate", "Makadirio ya Usafirishaji")}
                     </p>
 
                     <p className="mt-1 text-xs text-slate-500">
-                      {t(
-                      "The system automatically estimates the road distance.",
-                      "Mfumo unakadiria umbali wa barabara automatically."
-                    )}
+                      Mfumo unakadiria umbali
+                      wa barabara automatically.
                     </p>
                   </div>
 
@@ -1180,7 +1177,7 @@ export default function CheckoutPage() {
                   <div className="mt-4 grid grid-cols-2 gap-3">
                     <div className="rounded-lg bg-white p-4">
                       <p className="text-xs font-bold text-slate-400">
-                        {t("DISTANCE", "UMBALI")}
+                        UMBALI
                       </p>
 
                       <p className="mt-1 text-base font-bold text-sky-700">
@@ -1216,10 +1213,7 @@ export default function CheckoutPage() {
                       {t("then click", "kisha bonyeza")}
                       <strong>
                         {" "}
-                        {t(
-                          "Find Location & Calculate KM",
-                          "Tafuta Location & Hesabu KM"
-                        )}
+                        Tafuta Location & Hesabu KM
                       </strong>
                     </p>
                   </div>

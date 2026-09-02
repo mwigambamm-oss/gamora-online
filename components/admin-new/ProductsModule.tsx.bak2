@@ -319,9 +319,21 @@ export default function ProductsModule() {
       }else{
 
 
-        await saveProduct(
-          product
-        );
+        const response = await fetch("/api/admin/products", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(product),
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+          throw new Error(
+            result.error || "Failed saving product"
+          );
+        }
 
         alert(
           "Product saved successfully"

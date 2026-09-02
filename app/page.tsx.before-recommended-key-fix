@@ -1,12 +1,9 @@
 "use client";
 
-import { useLanguage } from "@/components/providers/LanguageProvider";
-
 import { useRouter } from "next/navigation";
 import { FaFacebookF, FaInstagram, FaTiktok } from "react-icons/fa";
 
 import { translations, type Language } from "@/lib/translations";
-import { formatCurrency, type Currency } from "@/lib/currency";
 import { getProducts as getSupabaseProducts, type Product } from "@/lib/products";
 import { useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
 
@@ -79,8 +76,7 @@ const ALL_CATEGORIES = [
 
 export default function HomePage() {
   const router = useRouter();
-  const { language, setLanguage } = useLanguage();
-  const [currency, setCurrency] = useState<Currency>("TZS");
+  const [language, setLanguage] = useState<Language>("en");
   const [products, setProducts] = useState<Product[]>([]);
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -98,16 +94,9 @@ export default function HomePage() {
   const t = translations[language];
 
   useEffect(() => {
-
-    const savedCurrency = localStorage.getItem("gamora_currency");
-    if (savedCurrency === "TZS" || savedCurrency === "USD") {
-      setCurrency(savedCurrency);
-    }
+    const saved = localStorage.getItem("gamora_language");
+    if (saved === "sw" || saved === "en") setLanguage(saved);
   }, []);
-
-  useEffect(() => {
-    localStorage.setItem("gamora_currency", currency);
-  }, [currency]);
 
   useEffect(() => {
     const updateFlashTime = () => {
@@ -186,6 +175,7 @@ export default function HomePage() {
 
   function changeLanguage(next: Language) {
     setLanguage(next);
+    localStorage.setItem("gamora_language", next);
     window.dispatchEvent(new Event("gamora-language-changed"));
   }
 
@@ -393,23 +383,6 @@ export default function HomePage() {
                 <button onClick={() => changeLanguage("sw")} className={`rounded-md px-1.5 py-1 ${language === "sw" ? "bg-[#374151] text-white" : "text-[#666]"} sm:px-2.5 sm:py-1.5`}>SW</button>
               </div>
 
-              <div className="flex items-center rounded-lg border border-[#dedede] bg-white p-0.5 text-[9px] font-black sm:p-1 sm:text-[11px]">
-                <button
-                  type="button"
-                  onClick={() => setCurrency("TZS")}
-                  className={`rounded-md px-1.5 py-1 ${currency === "TZS" ? "bg-[#374151] text-white" : "text-[#666]"} sm:px-2.5 sm:py-1.5`}
-                >
-                  TZS
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setCurrency("USD")}
-                  className={`rounded-md px-1.5 py-1 ${currency === "USD" ? "bg-[#374151] text-white" : "text-[#666]"} sm:px-2.5 sm:py-1.5`}
-                >
-                  USD
-                </button>
-              </div>
-
               <a href="/account" className="flex h-9 items-center rounded-lg px-1.5 text-xs font-bold text-[#333] transition hover:bg-[#f1f1f1] sm:h-10 sm:px-2 sm:text-sm">
                 {language === "sw" ? "Akaunti" : "Account"}
               </a>
@@ -592,7 +565,6 @@ export default function HomePage() {
                   <ProductCard
                     product={product}
                     addToCart={addToCart}
-                    currency={currency}
                   />
                 </div>
               ))}
@@ -613,14 +585,7 @@ export default function HomePage() {
 
           {recommended.length > 0 ? (
             <div className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
-              {recommended.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  addToCart={addToCart}
-                  currency={currency}
-                />
-              ))}
+              {recommended.map((product) => <div className="min-w-[185px] shrink-0 sm:min-w-[205px] lg:min-w-[215px]"><div className="min-w-[185px] shrink-0 sm:min-w-[205px] lg:min-w-[215px]"><ProductCard key={product.id} product={product} addToCart={addToCart} /></div></div>)}
             </div>
           ) : <EmptySection text={t.noProducts} />}
         </div>
@@ -666,7 +631,6 @@ export default function HomePage() {
                   key={product.id}
                   product={product}
                   addToCart={addToCart}
-                  currency={currency}
                 />
               ))}
             </Carousel>
@@ -690,11 +654,7 @@ export default function HomePage() {
             <SectionHeading title={language === "sw" ? "Bidhaa Mpya" : "New Arrivals"} subtitle={language === "sw" ? "Bidhaa mpya zilizoongezwa hivi karibuni." : "Recently added products."} />
             <CarouselArrows onPrev={() => scrollCarousel(newRef, -1)} onNext={() => scrollCarousel(newRef, 1)} />
           </div>
-          <Carousel carouselRef={newRef} paused={false}>{newArrivals.map((product) => (
-  <div key={product.id} className="min-w-[185px] shrink-0 sm:min-w-[205px] lg:min-w-[215px]">
-    <ProductCard product={product} addToCart={addToCart} currency={currency} />
-  </div>
-))}</Carousel>
+          <Carousel carouselRef={newRef} paused={false}>{newArrivals.map((product) => <div className="min-w-[185px] shrink-0 sm:min-w-[205px] lg:min-w-[215px]"><div className="min-w-[185px] shrink-0 sm:min-w-[205px] lg:min-w-[215px]"><ProductCard key={product.id} product={product} addToCart={addToCart} /></div></div>)}</Carousel>
         </div>
       </section>
 
@@ -705,11 +665,7 @@ export default function HomePage() {
             <SectionHeading title={language === "sw" ? "Zinazouzwa Sana" : "Best Sellers"} subtitle={language === "sw" ? "Bidhaa zinazopendwa zaidi na wateja." : "Customer favorites."} />
             <CarouselArrows onPrev={() => scrollCarousel(bestRef, -1)} onNext={() => scrollCarousel(bestRef, 1)} />
           </div>
-          <Carousel carouselRef={bestRef} paused={false}>{bestSellers.map((product) => (
-  <div key={product.id} className="min-w-[185px] shrink-0 sm:min-w-[205px] lg:min-w-[215px]">
-    <ProductCard product={product} addToCart={addToCart} bestSeller currency={currency} />
-  </div>
-))}</Carousel>
+          <Carousel carouselRef={bestRef} paused={false}>{bestSellers.map((product) => <div className="min-w-[185px] shrink-0 sm:min-w-[205px] lg:min-w-[215px]"><div className="min-w-[185px] shrink-0 sm:min-w-[205px] lg:min-w-[215px]"><ProductCard key={product.id} product={product} addToCart={addToCart} bestSeller /></div></div>)}</Carousel>
         </div>
       </section>
 
@@ -858,12 +814,10 @@ function ProductCard({
   product,
   addToCart,
   bestSeller = false,
-  currency,
 }: {
   product: Product;
   addToCart: (product: Product) => void;
   bestSeller?: boolean;
-  currency: Currency;
 }) {
   const image = getProductImage(product);
   const discount = getDiscount(product);
@@ -871,22 +825,20 @@ function ProductCard({
   const orders = Number(product.orders_count || 0);
 
   return (
-    <article className="group w-[155px] shrink-0 overflow-hidden bg-white sm:w-[190px] lg:w-[215px]">
+    <article className="group min-w-0 overflow-hidden bg-white">
       <a
         href={`/product/${product.id}`}
         className="relative block overflow-hidden bg-white"
       >
         {image ? (
-          <div className="relative flex h-[185px] w-full items-center justify-center overflow-hidden bg-white sm:h-[215px] lg:h-[245px]">
-            <img
-              src={image}
-              alt={product.name}
-              loading="lazy"
-              className="h-full w-full object-contain p-1 transition-transform duration-300 group-hover:scale-[1.025]"
-            />
-          </div>
+          <img
+            src={image}
+            alt={product.name}
+            loading="lazy"
+            className="block h-[150px] w-full object-contain transition-transform duration-300 group-hover:scale-[1.025] sm:h-[175px] lg:h-[190px]"
+          />
         ) : (
-          <div className="flex h-[185px] w-full items-center justify-center bg-white text-4xl text-gray-300 sm:h-[215px] lg:h-[245px]">
+          <div className="flex h-[150px] w-full items-center justify-center bg-white text-4xl text-gray-300 sm:h-[175px] lg:h-[190px]">
             🛍️
           </div>
         )}
@@ -904,15 +856,17 @@ function ProductCard({
         )}
       </a>
 
-      <div className="px-1 pt-1 pb-1">
+      <div className="px-1 pt-0 pb-0.5">
         <a href={`/product/${product.id}`}>
           <h3 className="line-clamp-2 text-[11px] font-medium leading-[14px] text-[#222] sm:text-xs">
             {product.name}
           </h3>
         </a>
 
-        <div className="mt-1 flex items-center gap-1">
-          <span className="text-[10px] text-[#f59e0b]">★★★★★</span>
+        <div className="mt-0.5 flex items-center gap-1">
+          <span className="text-[10px] text-[#f59e0b]">
+            ★★★★★
+          </span>
 
           {rating > 0 && (
             <span className="text-[9px] text-[#777]">
@@ -927,15 +881,15 @@ function ProductCard({
           )}
         </div>
 
-        <div className="mt-1 flex flex-wrap items-baseline gap-1">
+        <div className="mt-0.5 flex flex-wrap items-baseline gap-1">
           <span className="text-xs font-bold text-[#e30613] sm:text-sm">
-            {formatCurrency(Number(product.price), currency)}
+            TSh {Number(product.price).toLocaleString()}
           </span>
 
           {typeof product.oldPrice === "number" &&
             product.oldPrice > product.price && (
               <span className="text-[9px] text-[#999] line-through">
-                {formatCurrency(Number(product.oldPrice), currency)}
+                TSh {product.oldPrice.toLocaleString()}
               </span>
             )}
         </div>

@@ -365,15 +365,9 @@ export default function HomePage() {
 
             <nav className="hidden items-center gap-6 text-xs font-normal lg:flex">
               <a href="/" className="border-b-2 border-black py-6">{t.home}</a>
-              <button
-                type="button"
-                onClick={() => setShowCategoryMenu((v) => !v)}
-                className="flex items-center gap-1 py-6 text-[#555] transition hover:text-[#374151]"
-              >
-                {t.categories}
-              </button>
               <a href="#new-arrivals" className="py-6 text-[#555] transition hover:text-[#374151]">{language === "sw" ? "Bidhaa Mpya" : "New Arrivals"}</a>
               <a href="#flash-sales" className="py-6 text-[#555] transition hover:text-[#374151]">{language === "sw" ? "Ofa" : "Deals"}</a>
+              <a href="/contact" className="py-6 text-[#555] transition hover:text-[#374151]">{language === "sw" ? "Wasiliana Nasi" : "Contact Us"}</a>
               <a href="#best-sellers" className="py-6 text-[#555] transition hover:text-[#374151]">{language === "sw" ? "Zinazouzwa Sana" : "Best Sellers"}</a>
             </nav>
 
@@ -435,67 +429,14 @@ export default function HomePage() {
             </div>
 
             <nav className="mt-2 flex gap-5 overflow-x-auto whitespace-nowrap pb-1 text-[11px] font-bold scrollbar-hide">
-              <button
-                type="button"
-                onClick={() => setShowCategoryMenu((v) => !v)}
-                className="shrink-0 font-bold text-[#333]"
-              >
-                {t.categories}
-              </button>
               <a href="#new-arrivals" className="shrink-0 text-[#333]">{language === "sw" ? "Bidhaa Mpya" : "New Arrivals"}</a>
               <a href="#flash-sales" className="shrink-0 text-[#333]">{language === "sw" ? "Ofa" : "Deals"}</a>
+              <a href="/contact" className="shrink-0 text-[#333]">{language === "sw" ? "Wasiliana Nasi" : "Contact Us"}</a>
               <a href="#best-sellers" className="shrink-0 text-[#333]">{language === "sw" ? "Zinazouzwa Sana" : "Best Sellers"}</a>
             </nav>
           </div>
         </div>
       </header>
-
-      {showCategoryMenu && (
-        <div className="absolute left-0 right-0 z-40 border-b border-[#e5e5e5] bg-white shadow-xl">
-          <div className="mx-auto max-w-[1280px] px-4 py-5 sm:py-7">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-base font-black text-[#222] sm:text-lg">
-                {language === "sw" ? "Makundi yote" : "All Categories"}
-              </h3>
-              <button
-                type="button"
-                onClick={() => setShowCategoryMenu(false)}
-                className="rounded-full px-3 py-1 text-lg text-[#555] hover:bg-[#f3f4f6]"
-                aria-label="Close categories"
-              >
-                ×
-              </button>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
-              {ALL_CATEGORIES.map((category) => (
-                <button
-                  key={category}
-                  type="button"
-                  onClick={() => {
-                    router.push(`/category/${encodeURIComponent(category)}`);
-                    setShowCategoryMenu(false);
-                  }}
-                  className="flex min-h-[58px] items-center gap-2 rounded-xl border border-[#e5e5e5] bg-white px-3 py-2 text-left text-xs font-bold text-[#333] transition hover:border-[#374151] hover:bg-[#f8f9fa] sm:text-sm"
-                >
-                  {CATEGORY_IMAGES[category] ? (
-                    <img
-                      src={CATEGORY_IMAGES[category]}
-                      alt={category}
-                      className="h-10 w-10 rounded-lg object-cover"
-                    />
-                  ) : (
-                    <span className="text-xl">
-                      {CATEGORY_ICONS[category] || "🛍️"}
-                    </span>
-                  )}
-                  <span>{category}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* HERO */}
       <section

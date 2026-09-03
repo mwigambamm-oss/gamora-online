@@ -16,6 +16,12 @@ export type Product = {
   cost_price?: number;
   colors?: string[];
   sizes?: string[];
+  storageOptions?: {
+    storage: string;
+    price: number;
+    stock: number;
+  }[];
+  specifications?: Record<string, string>;
   discount?: number;
   orders_count?: number;
   rating?: number;
@@ -41,6 +47,15 @@ function mapProduct(p: any): Product {
     cost_price: Number(p.cost_price || 0),
     colors: Array.isArray(p.colors) ? p.colors : [],
     sizes: Array.isArray(p.sizes) ? p.sizes : [],
+    storageOptions: Array.isArray(p.storage_options)
+      ? p.storage_options
+      : [],
+    specifications:
+      p.specifications &&
+      typeof p.specifications === "object" &&
+      !Array.isArray(p.specifications)
+        ? p.specifications
+        : {},
     discount: Number(p.discount || 0),
     orders_count: Number(p.orders_count || 0),
     rating: Number(p.rating || 0),
@@ -99,6 +114,7 @@ export async function saveProduct(product: Omit<Product, "id">) {
     images: product.images || [],
     colors: product.colors || [],
     sizes: product.sizes || [],
+    specifications: product.specifications || {},
     discount: Number(product.discount || 0),
   };
 
@@ -176,6 +192,10 @@ export async function updateProduct(
 
   if (product.sizes !== undefined) {
     dbProduct.sizes = product.sizes;
+  }
+
+  if (product.specifications !== undefined) {
+    dbProduct.specifications = product.specifications || {};
   }
 
   if (product.discount !== undefined) {

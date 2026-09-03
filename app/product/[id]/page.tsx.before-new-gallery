@@ -23,11 +23,6 @@ type Product = {
   images?: string[];
   colors?: string[];
   sizes?: string[];
-  storageOptions?: {
-    storage: string;
-    price: number;
-    stock: number;
-  }[];
   specifications?: Record<string, string>;
 };
 
@@ -77,7 +72,6 @@ const [cartCount, setCartCount] = useState(0);
 
   const [selectedColor, setSelectedColor] = useState("");
   const [selectedSize, setSelectedSize] = useState("");
-  const [selectedStorage, setSelectedStorage] = useState("");
   const [activeTab, setActiveTab] = useState("description");
 
   useEffect(() => {
@@ -106,10 +100,6 @@ if (!item) {
 }
 
 setProduct(item);
-
-      if (item.storageOptions && item.storageOptions.length > 0) {
-        setSelectedStorage(item.storageOptions[0].storage);
-      }
 
       if (item.colors && item.colors.length > 0) {
         setSelectedColor(item.colors[0]);
@@ -316,22 +306,16 @@ setProduct(item);
       images[0] ||
       "";
 
-    const selectedStorageOption =
-      product.storageOptions?.find(
-        (item) => item.storage === selectedStorage
-      );
-
     const cartItem = {
       id: product.id,
       name: product.name,
-      price: selectedStorageOption?.price ?? product.price,
+      price: product.price,
       oldPrice: product.oldPrice,
-      stock: selectedStorageOption?.stock ?? product.stock,
+      stock: product.stock,
       image: cartImage,
       quantity: quantity,
       selectedColor: selectedColor,
       selectedSize: selectedSize,
-      selectedStorage: selectedStorage,
     };
 
     try {
@@ -341,18 +325,16 @@ setProduct(item);
       const existingIndex = cart.findIndex(
         (item: {
           id: number;
-          selectedColor?: string;
-          selectedSize?: string;
-          selectedStorage?: string;
+          color?: string;
+          size?: string;
         }) =>
           item.id === product.id &&
-          item.selectedColor === selectedColor &&
-          item.selectedSize === selectedSize &&
-          item.selectedStorage === selectedStorage
+          item.color === selectedColor &&
+          item.size === selectedSize
       );
 
       if (existingIndex >= 0) {
-        cart[existingIndex].quantity += quantity;
+        cart[existingIndex].quantity += 1;
       } else {
         cart.push(cartItem);
       }
@@ -362,7 +344,7 @@ setProduct(item);
         JSON.stringify(cart)
       );
 
-      window.dispatchEvent(new Event("cartUpdated"));
+window.dispatchEvent(new Event("cartUpdated"));
 
       alert("Product added to cart.");
     } catch (error) {
@@ -379,22 +361,16 @@ setProduct(item);
       images[0] ||
       "";
 
-    const selectedStorageOption =
-      product.storageOptions?.find(
-        (item) => item.storage === selectedStorage
-      );
-
     const cartItem = {
       id: product.id,
       name: product.name,
-      price: selectedStorageOption?.price ?? product.price,
+      price: product.price,
       oldPrice: product.oldPrice,
-      stock: selectedStorageOption?.stock ?? product.stock,
+      stock: product.stock,
       image: cartImage,
       quantity: quantity,
       selectedColor: selectedColor,
       selectedSize: selectedSize,
-      selectedStorage: selectedStorage,
     };
 
     try {
@@ -430,20 +406,6 @@ setProduct(item);
    * ONLY SHOW 6 THUMBNAILS
    */
   const visibleThumbnails = images.slice(0, 6);
-
-  /*
-   * SELECTED STORAGE PRICE + STOCK
-   */
-  const selectedStorageOption =
-    product.storageOptions?.find(
-      (item) => item.storage === selectedStorage
-    );
-
-  const currentPrice =
-    selectedStorageOption?.price ?? product.price;
-
-  const currentStock =
-    selectedStorageOption?.stock ?? product.stock;
 
   /*
    * DISCOUNT
@@ -503,90 +465,119 @@ setProduct(item);
 
           <div className="min-w-0">
 
-            {/* MODERN ECOMMERCE PRODUCT GALLERY */}
+            {/* MAIN IMAGE */}
 
             <div
-              className="relative w-full rounded-xl bg-white"
+              className="relative flex  w-full items-center justify-center  bg-white sm: md: lg:"
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
             >
 
-              {/* ONE IMAGE ONLY */}
-              <div className="relative flex h-[340px] w-full items-center justify-center bg-white sm:h-[440px] lg:h-[520px]">
+              <div
+                className="flex h-full transition-transform duration-500 ease-out"
+                style={{
+                  transform: `translateX(-${
+                    activeImage * 100
+                  }%)`,
+                }}
+              >
 
-                {images.length > 0 ? (
-                  <img
-                    src={images[activeImage]}
-                    alt={`${displayName || "Product"} ${activeImage + 1}`}
-                    className="block h-full w-full object-contain object-center"
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center text-sm text-slate-400">
-                    No Image
-                  </div>
-                )}
-
-                {/* PREVIOUS */}
-                {images.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={previousImage}
-                    aria-label="Previous product image"
-                    className="absolute left-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white text-xl text-slate-700 shadow-md ring-1 ring-slate-200 transition hover:bg-slate-50 sm:left-3 sm:h-10 sm:w-10"
+                {images.map((img, index) => (
+                  <div
+                    key={`${img}-${index}`}
+                    className="flex h-full min-w-full items-center justify-center bg-white"
                   >
-                    ‹
-                  </button>
-                )}
 
-                {/* NEXT */}
-                {images.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={nextImage}
-                    aria-label="Next product image"
-                    className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white text-xl text-slate-700 shadow-md ring-1 ring-slate-200 transition hover:bg-slate-50 sm:right-3 sm:h-10 sm:w-10"
-                  >
-                    ›
-                  </button>
-                )}
+                    <img
+                      src={img}
+                      alt={`${displayName || ""} ${index + 1}`}
+                      className="h-full w-full object-contain object-center bg-white  transition-transform duration-300 group-hover:scale-105"
+                    />
 
-                {/* IMAGE COUNTER */}
-                {images.length > 1 && (
-                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-black/60 px-3 py-1 text-[10px] font-medium text-white">
-                    {activeImage + 1} / {images.length}
                   </div>
-                )}
+                ))}
 
               </div>
 
+              {/* PREVIOUS */}
+
+              {images.length > 1 && (
+                <button
+                  type="button"
+                  onClick={previousImage}
+                  aria-label="Previous image"
+                  className="absolute left-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-lg text-slate-700 shadow-sm transition hover:bg-slate-50 sm:left-3 sm:h-9 sm:w-9"
+                >
+                  ‹
+                </button>
+              )}
+
+              {/* NEXT */}
+
+              {images.length > 1 && (
+                <button
+                  type="button"
+                  onClick={nextImage}
+                  aria-label="Next image"
+                  className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-lg text-slate-700 shadow-sm transition hover:bg-slate-50 sm:right-3 sm:h-9 sm:w-9"
+                >
+                  ›
+                </button>
+              )}
+
+              {/* DOTS */}
+
+              {images.length > 1 && (
+                <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">
+                  {images.map((_, index) => (
+                    <button
+                      key={index}
+                      type="button"
+                      onClick={() =>
+                        setActiveImage(index)
+                      }
+                      aria-label={`Image ${index + 1}`}
+                      className={`h-1.5 rounded-full transition-all ${
+                        activeImage === index
+                          ? "w-5 bg-sky-700"
+                          : "w-1.5 bg-slate-300"
+                      }`}
+                    />
+                  ))}
+                </div>
+              )}
+
             </div>
 
-            {/* THUMBNAILS */}
+            {/* THUMBNAILS — MAX 6 */}
 
             {visibleThumbnails.length > 0 && (
-              <div className="mt-3 flex gap-2 overflow-x-auto pb-1 scrollbar-hide sm:gap-3">
-
-                {visibleThumbnails.map((img, index) => (
-                  <button
-                    key={`${img}-thumb-${index}`}
-                    type="button"
-                    onClick={() => setActiveImage(index)}
-                    aria-label={`View product image ${index + 1}`}
-                    className={`flex h-[58px] w-[58px] min-w-[58px] items-center justify-center bg-white transition sm:h-[68px] sm:w-[68px] sm:min-w-[68px] ${
-                      activeImage === index
-                        ? "ring-2 ring-sky-700"
-                        : "ring-1 ring-slate-200"
-                    }`}
-                  >
-                    <img
-                      src={img}
-                      alt={`${displayName || "Product"} thumbnail ${index + 1}`}
-                      className="block h-full w-full object-contain object-center"
-                    />
-                  </button>
-                ))}
-
+              <div className="mt-3 flex gap-2 overflow-x-auto pb-1 sm:gap-3">
+                {visibleThumbnails.map(
+                  (img, index) => (
+                    <button
+                      key={`${img}-thumb-${index}`}
+                      type="button"
+                      onClick={() =>
+                        setActiveImage(index)
+                      }
+                      className={`h-[54px] w-[54px] flex-shrink-0 overflow-hidden rounded-lg bg-white sm:h-[64px] sm:w-[64px] ${
+                        activeImage === index
+                          ? "border-2 border-sky-700"
+                          : "border border-slate-200"
+                      }`}
+                    >
+                      <img
+                        src={img}
+                        alt={`${displayName || ""} thumbnail ${
+                          index + 1
+                        }`}
+                        className="h-full w-full object-contain object-center bg-white  "
+                      />
+                    </button>
+                  )
+                )}
               </div>
             )}
 
@@ -609,7 +600,7 @@ setProduct(item);
               <div className="flex flex-wrap items-center gap-3">
 
                 <span className="text-lg font-bold text-sky-700 sm:text-xl">
-                  {formatCurrency(Number(currentPrice), currency)}
+                  {formatCurrency(Number(product.price), currency)}
                 </span>
 
                 {product.oldPrice && (
@@ -639,7 +630,7 @@ setProduct(item);
             {/* STOCK */}
 
             <div className="mt-4 text-xs font-medium text-green-600 sm:text-sm">
-              ✓ {t("In Stock", "Zinapatikana")} ({currentStock})
+              ✓ {t("In Stock", "Zinapatikana")} ({product.stock})
             </div>
 
             {/* COLORS */}
@@ -710,48 +701,6 @@ setProduct(item);
                 </div>
               )}
 
-            {/* STORAGE */}
-
-            {product.storageOptions &&
-              product.storageOptions.length > 0 && (
-                <div className="mt-2">
-
-                  <p className="mb-2 text-[13px] font-normal text-slate-600">
-                    {t("Storage", "Hifadhi")}
-                  </p>
-
-                  <div className="flex flex-wrap gap-2">
-
-                    {product.storageOptions.map((option) => (
-                      <button
-                        key={option.storage}
-                        type="button"
-                        onClick={() => {
-                          setSelectedStorage(option.storage);
-                          setQuantity((q) =>
-                            Math.min(q, Math.max(1, option.stock))
-                          );
-                        }}
-                        disabled={option.stock <= 0}
-                        className={`rounded-lg px-3 py-2 text-[13px] font-normal ${
-                          selectedStorage === option.storage
-                            ? "border-2 border-sky-700 bg-sky-50 text-sky-700"
-                            : "border border-slate-300 text-slate-600"
-                        } ${
-                          option.stock <= 0
-                            ? "cursor-not-allowed opacity-40"
-                            : ""
-                        }`}
-                      >
-                        {option.storage}
-                      </button>
-                    ))}
-
-                  </div>
-
-                </div>
-              )}
-
             {/* QUANTITY */}
 
             <div className="mt-2">
@@ -783,7 +732,7 @@ setProduct(item);
                   onClick={() =>
                     setQuantity((q) =>
                       Math.min(
-                        currentStock || 1,
+                        product.stock || 1,
                         q + 1
                       )
                     )
@@ -837,53 +786,55 @@ setProduct(item);
       {/* ================= RELATED PRODUCTS ================= */}
 
       {related.length > 0 && (
-        <section className="mx-auto mt-8 w-full max-w-7xl border-t border-slate-100 pt-5">
+        <section className="mx-auto max-w-6xl border-t border-slate-200 py-4">
 
-          <h2 className="mb-5 text-[15px] font-semibold text-slate-800 sm:text-[17px]">
+          <h2 className="mb-3 text-sm font-medium text-slate-800">
             {t("You May Also Like", "Unaweza Pia Kupenda")}
           </h2>
 
-          <div className="grid grid-cols-3 gap-x-3 gap-y-6 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-8">
+          <div className="grid grid-cols-2 gap-3  sm:grid-cols-3 md:grid-cols-4 lg:gap-4">
 
             {related.map((item) => (
               <button
                 type="button"
                 key={item.id}
-                onClick={() => router.push(`/product/${item.id}`)}
-                className="group min-w-0 bg-transparent p-0 text-left"
+                onClick={() =>
+                  router.push(
+                    `/product/${item.id}`
+                  )
+                }
+                className="group overflow-hidden rounded-xl border border-slate-200 bg-white text-left shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
               >
 
-                <div className="flex h-[145px] w-full items-center justify-center overflow-hidden bg-white sm:h-[165px] lg:h-[185px]">
+                <div className="relative h-32 overflow-hidden bg-slate-50 sm:h-36">
 
                   <img
                     src={
-                      item.images?.[0] ||
                       item.image ||
+                      item.images?.[0] ||
                       ""
                     }
                     alt={item.name}
-                    loading="lazy"
-                    className="h-full w-full object-contain object-center transition-transform duration-300 group-hover:scale-[1.04]"
+                    className="h-full w-full object-contain object-center bg-white  transition-transform duration-300 group-hover:scale-105"
                   />
 
                 </div>
 
-                <div className="pt-2">
+                <div className="">
 
-                  <p className="line-clamp-2 text-[10px] font-normal leading-[14px] text-slate-700 sm:text-[11px] sm:leading-[15px]">
+                  <p className="line-clamp-2 text-xs font-normal text-slate-600">
                     {item.name}
                   </p>
 
-                  <p className="mt-1 text-[12px] font-bold leading-4 text-red-600 sm:text-[13px]">
+                  <p className="mt-2 text-xs font-medium text-sky-700 sm:text-sm sm:text-sm">
                     {formatCurrency(Number(item.price), currency)}
                   </p>
 
-                  {item.oldPrice &&
-                    Number(item.oldPrice) > Number(item.price) && (
-                      <p className="mt-0.5 text-[9px] leading-3 text-slate-400 line-through sm:text-[10px]">
-                        {formatCurrency(Number(item.oldPrice), currency)}
-                      </p>
-                    )}
+                  {item.oldPrice && (
+                    <p className="text-[11px] text-slate-400 line-through">
+                      {formatCurrency(Number(item.oldPrice), currency)}
+                    </p>
+                  )}
 
                 </div>
 
@@ -980,7 +931,7 @@ setProduct(item);
       <div className="flex justify-between gap-4">
         <span>Stock</span>
         <span className="text-right text-green-600">
-          In Stock ({currentStock})
+          In Stock ({product.stock})
         </span>
       </div>
 

@@ -9,6 +9,7 @@ import {
   deleteProduct,
 } from "@/lib/products";
 import ProductImageUploader from "./product/ProductImageUploader";
+import { extractSpecifications } from "@/lib/specifications";
 
 const DEFAULT_CATEGORIES = [
   "Phones & Electronics",

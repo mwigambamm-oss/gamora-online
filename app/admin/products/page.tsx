@@ -8,6 +8,7 @@ import {
   updateProduct,
   deleteProduct,
 } from "@/lib/products";
+import { extractSpecifications } from "@/lib/specifications";
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -31,6 +32,11 @@ export default function ProductsPage() {
     images: [] as string[],
     colors: [] as string[],
     sizes: [] as string[],
+    storageOptions: [] as {
+      storage: string;
+      price: string;
+      stock: string;
+    }[],
     discount: 0,
   };
 
@@ -143,6 +149,12 @@ console.log("TOTAL UPLOADED:", uploadedImages.length);
       images: form.images,
       colors: form.colors,
       sizes: form.sizes,
+      storageOptions: form.storageOptions.map((item) => ({
+        storage: item.storage.trim(),
+        price: Number(item.price),
+        stock: Number(item.stock),
+      })),
+      specifications: extractSpecifications(form.description),
       discount: Number(form.discount || 0),
     };
 
@@ -185,6 +197,11 @@ console.log("TOTAL UPLOADED:", uploadedImages.length);
       images: product.images || [],
       colors: product.colors || [],
       sizes: product.sizes || [],
+      storageOptions: (product.storageOptions || []).map((item) => ({
+        storage: item.storage || "",
+        price: String(item.price ?? ""),
+        stock: String(item.stock ?? ""),
+      })),
       discount: Number(product.discount || 0),
     });
 

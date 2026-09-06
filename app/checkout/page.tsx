@@ -8,6 +8,7 @@ import { useLanguage } from "@/components/providers/LanguageProvider";
 type CartItem = {
   id: number;
   name: string;
+  name_sw?: string;
   price: number;
   quantity: number;
   stock?: number;
@@ -963,7 +964,7 @@ export default function CheckoutPage() {
       >
         <div>
           <p className="text-xs font-bold text-slate-800">
-            {item.name}
+            {language === "sw" ? (item.name_sw || item.name) : item.name}
           </p>
 
           <p className="text-xs text-slate-500">

@@ -869,9 +869,9 @@ export default function CheckoutPage() {
       <main className="min-h-screen bg-slate-50 p-5">
         
 <div className="mt-6 rounded-lg border bg-white p-4 text-xs">
-<h3 className="font-medium text-slate-900">Malipo</h3>
-<p className="mt-2">MIX BY YAS Lipa: <b>433064356</b></p>
-<p>MIX BY YAS Simu: <b>0676285283</b></p>
+<h3 className="font-medium text-slate-900">{t("Payment", "Malipo")}</h3>
+<p className="mt-2">MIX BY YAS {t("Pay", "Lipa")}: <b>433064356</b></p>
+<p>MIX BY YAS {t("Phone", "Simu")}: <b>0676285283</b></p>
 <p>VODA: <b>0798555221</b></p>
 </div>
 
@@ -914,7 +914,7 @@ export default function CheckoutPage() {
 
             {distanceKm > 0 && (
               <div className="mt-2 flex justify-between">
-                <span>Umbali</span>
+                <span>{t("Distance", "Umbali")}</span>
                 <strong>
                   {distanceKm.toFixed(1)} KM
                 </strong>
@@ -933,7 +933,7 @@ export default function CheckoutPage() {
             href="/"
             className="mt-4 inline-block rounded-lg bg-sky-700 px-4 py-2 font-bold text-white"
           >
-            Rudi Home
+            {t("Back Home", "Rudi Home")}
           </a>
         </div>
       </main>

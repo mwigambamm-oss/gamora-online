@@ -5,6 +5,7 @@ import Link from "next/link";
 type Product = {
   id: number;
   name: string;
+  name_sw?: string;
   price: number;
   oldPrice?: number;
   image?: string;
@@ -14,8 +15,10 @@ type Product = {
 
 export default function RelatedProducts({
   products,
+  language,
 }: {
   products: Product[];
+  language: "en" | "sw";
 }) {
   if (!products?.length) return null;
 
@@ -40,7 +43,7 @@ export default function RelatedProducts({
                 {image ? (
                   <img
                     src={image}
-                    alt={product.name}
+                    alt={language === "sw" ? (product.name_sw || product.name) : product.name}
                     loading="lazy"
                     className="h-full w-full object-contain object-center transition-transform duration-300 group-hover:scale-[1.04]"
                   />
@@ -54,7 +57,7 @@ export default function RelatedProducts({
               {/* TEXT DIRECTLY UNDER IMAGE */}
               <div className="pt-1.5">
                 <h3 className="line-clamp-2 text-[10px] font-normal leading-[14px] text-[#333] sm:text-[11px] sm:leading-[15px]">
-                  {product.name}
+                  {language === "sw" ? (product.name_sw || product.name) : product.name}
                 </h3>
 
                 <div className="mt-1 flex items-baseline gap-1">

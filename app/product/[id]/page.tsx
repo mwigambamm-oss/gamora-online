@@ -54,11 +54,11 @@ export default function ProductPage({
 
   const [product, setProduct] = useState<Product | null>(null);
 
-  const displayName = product?.name;
+  const displayName = language === "sw" ? (product?.name_sw || product?.name) : product?.name;
 
-  const displayCategory = product?.category;
+  const displayCategory = language === "sw" ? (product?.category_sw || product?.category) : product?.category;
 
-  const displayDescription = product?.description;
+  const displayDescription = language === "sw" ? (product?.description_sw || product?.description) : product?.description;
 
   const [related, setRelated] = useState<Product[]>([]);
 
@@ -861,7 +861,7 @@ setProduct(item);
                       item.image ||
                       ""
                     }
-                    alt={item.name}
+                    alt={language === "sw" ? (item.name_sw || item.name) : item.name}
                     loading="lazy"
                     className="h-full w-full object-contain object-center transition-transform duration-300 group-hover:scale-[1.04]"
                   />
@@ -871,7 +871,7 @@ setProduct(item);
                 <div className="pt-2">
 
                   <p className="line-clamp-2 text-[10px] font-normal leading-[14px] text-slate-700 sm:text-[11px] sm:leading-[15px]">
-                    {item.name}
+                    {language === "sw" ? (item.name_sw || item.name) : item.name}
                   </p>
 
                   <p className="mt-1 text-[12px] font-bold leading-4 text-red-600 sm:text-[13px]">

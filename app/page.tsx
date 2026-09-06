@@ -531,6 +531,7 @@ export default function HomePage() {
                   className="min-w-[185px] shrink-0 sm:min-w-[205px] lg:min-w-[215px]"
                 >
                   <ProductCard
+                    language={language}
                     product={product}
                     addToCart={addToCart}
                     currency={currency}
@@ -556,6 +557,7 @@ export default function HomePage() {
             <div className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
               {recommended.map((product) => (
                 <ProductCard
+                    language={language}
                   key={product.id}
                   product={product}
                   addToCart={addToCart}
@@ -604,6 +606,7 @@ export default function HomePage() {
             <Carousel carouselRef={dealsRef} paused={false}>
               {deals.map((product) => (
                 <ProductCard
+                    language={language}
                   key={product.id}
                   product={product}
                   addToCart={addToCart}
@@ -633,7 +636,7 @@ export default function HomePage() {
           </div>
           <Carousel carouselRef={newRef} paused={false}>{newArrivals.map((product) => (
   <div key={product.id} className="min-w-[185px] shrink-0 sm:min-w-[205px] lg:min-w-[215px]">
-    <ProductCard product={product} addToCart={addToCart} currency={currency} />
+    <ProductCard product={product} addToCart={addToCart} currency={currency} language={language} />
   </div>
 ))}</Carousel>
         </div>
@@ -648,7 +651,7 @@ export default function HomePage() {
           </div>
           <Carousel carouselRef={bestRef} paused={false}>{bestSellers.map((product) => (
   <div key={product.id} className="min-w-[185px] shrink-0 sm:min-w-[205px] lg:min-w-[215px]">
-    <ProductCard product={product} addToCart={addToCart} bestSeller currency={currency} />
+    <ProductCard product={product} addToCart={addToCart} bestSeller currency={currency} language={language} />
   </div>
 ))}</Carousel>
         </div>
@@ -800,11 +803,14 @@ function ProductCard({
   addToCart,
   bestSeller = false,
   currency,
+  language,
 }: {
+
   product: Product;
   addToCart: (product: Product) => void;
   bestSeller?: boolean;
   currency: Currency;
+  language: Language;
 }) {
   const image = getProductImage(product);
   const discount = getDiscount(product);
@@ -821,7 +827,7 @@ function ProductCard({
           <div className="relative flex h-[185px] w-full items-center justify-center overflow-hidden bg-white sm:h-[215px] lg:h-[245px]">
             <img
               src={image}
-              alt={product.name}
+              alt={language === "sw" ? (product.name_sw || product.name) : product.name}
               loading="lazy"
               className="h-full w-full object-contain p-1 transition-transform duration-300 group-hover:scale-[1.025]"
             />

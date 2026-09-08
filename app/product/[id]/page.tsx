@@ -648,7 +648,7 @@ setProduct(item);
               product.colors.length > 0 && (
                 <div className="mt-2">
 
-                  <p className="mb-2 text-[13px] font-normal text-slate-600">
+                  <p className="mb-3 text-lg font-normal text-slate-700">
                     {t("Color", "Rangi")}
                   </p>
 
@@ -695,7 +695,7 @@ setProduct(item);
                         onClick={() =>
                           setSelectedSize(size)
                         }
-                        className={`rounded-lg  py-2 text-[13px] font-normal ${
+                        className={`min-w-[64px] sm:min-w-14 rounded-lg px-4 py-2 text-[13px] font-normal ${
                           selectedSize === size
                             ? "border-2 border-sky-700 bg-sky-50 text-sky-700"
                             : "border border-slate-300 text-slate-600"
@@ -760,7 +760,7 @@ setProduct(item);
                 {t("Quantity", "Idadi")}
               </p>
 
-              <div className="flex w-fit items-center overflow-hidden rounded-lg border border-slate-200">
+              <div className="inline-flex h-7 items-center rounded-md border border-slate-200 bg-white">
 
                 <button
                   type="button"
@@ -769,12 +769,12 @@ setProduct(item);
                       Math.max(1, q - 1)
                     )
                   }
-                  className="h-7 w-7 text-sm font-normal text-slate-600 hover:bg-slate-50"
+                  className="flex h-7 w-7 items-center justify-center text-sm font-normal text-slate-600 hover:bg-slate-50"
                 >
                   −
                 </button>
 
-                <span className="flex h-7 w-8 items-center justify-center border-x border-slate-200 text-[11px] font-normal">
+                <span className="flex h-7 w-8 items-center justify-center border-x border-slate-200 text-xs font-normal text-slate-700">
                   {quantity}
                 </span>
 
@@ -788,7 +788,7 @@ setProduct(item);
                       )
                     )
                   }
-                  className="h-7 w-7 text-sm font-normal text-slate-600 hover:bg-slate-50"
+                  className="flex h-7 w-7 items-center justify-center text-sm font-normal text-slate-600 hover:bg-slate-50"
                 >
                   +
                 </button>
@@ -799,12 +799,12 @@ setProduct(item);
 
             {/* ACTION BUTTONS */}
 
-            <div className="mt-3 flex gap-3 w-full">
+            <div className="mt-4 flex items-center gap-2">
 
               <button
                 type="button"
                 onClick={addToCart}
-                className="rounded-md bg-sky-700  py-2.5 text-xs font-semibold text-white whitespace-nowrap shadow-sm hover:bg-sky-800"
+                className="h-[30px] w-[120px] rounded px-5 text-[10px] font-normal leading-none text-white bg-sky-700 hover:bg-sky-800 sm:w-auto"
               >
                 🛒 {t("Add", "Ongeza")}
               </button>
@@ -812,7 +812,7 @@ setProduct(item);
               <button
                 type="button"
                 onClick={buyNow}
-                className="rounded-md border border-sky-700  py-2.5 text-xs font-semibold text-sky-700 whitespace-nowrap hover:bg-sky-50"
+                className="h-[30px] w-[120px] rounded border border-sky-700 px-5 text-[10px] font-normal leading-none text-sky-700 hover:bg-sky-50 sm:w-auto"
               >
                 ⚡ {t("Buy", "Nunua")}
               </button>
@@ -823,7 +823,7 @@ setProduct(item);
 
             <a
               href="https://wa.me/255798555221"
-              className="mt-2 inline-flex rounded-md bg-green-600  py-1.5 text-[11px] font-normal text-white hover:bg-green-700"
+              className="mt-3 inline-flex h-[30px] w-[120px] items-center justify-center rounded bg-green-600 px-5 text-[10px] font-normal leading-none text-white hover:bg-green-700 sm:w-auto"
             >
               💬 {t("WhatsApp", "WhatsApp")}
             </a>

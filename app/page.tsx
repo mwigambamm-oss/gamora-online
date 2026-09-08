@@ -620,38 +620,85 @@ export default function HomePage() {
             </button>
           </div>
 
-          {/* MOBILE SEARCH */}
+          {/* MOBILE HEADER CONTROLS */}
           <div className="pb-3 lg:hidden">
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <input
-                  value={search}
-                  onChange={(e) =>
-                    setSearch(e.target.value)
-                  }
-                  placeholder={
-                    language === "sw"
-                      ? "Tafuta bidhaa..."
-                      : "Search products..."
-                  }
-                  className="h-10 w-full rounded-full border border-slate-300 px-4 pr-12 text-xs outline-none focus:border-[#2563eb]"
-                />
+            {/* MOBILE SEARCH */}
+            <div className="relative">
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder={
+                  language === "sw"
+                    ? "Tafuta bidhaa..."
+                    : "Search products..."
+                }
+                className="h-10 w-full rounded-full border-2 border-[#2563eb] bg-white px-4 pr-12 text-xs outline-none focus:shadow-md"
+              />
 
-                <span className="absolute right-4 top-1/2 -translate-y-1/2">
-                  ⌕
-                </span>
+              <button
+                type="button"
+                className="absolute right-1 top-1 flex h-8 w-10 items-center justify-center rounded-full bg-[#2563eb] text-lg text-white"
+              >
+                ⌕
+              </button>
+            </div>
+
+            {/* MOBILE CONTROLS */}
+            <div className="mt-2 flex items-center gap-2 overflow-x-auto scrollbar-hide">
+              {/* LANGUAGE */}
+              <div className="flex shrink-0 items-center rounded-full border border-slate-200 bg-white p-1">
+                <button
+                  onClick={() => changeLanguage("en")}
+                  className={`rounded-full px-3 py-1.5 text-[10px] font-black ${
+                    language === "en"
+                      ? "bg-[#1f2937] text-white"
+                      : "text-slate-500"
+                  }`}
+                >
+                  EN
+                </button>
+
+                <button
+                  onClick={() => changeLanguage("sw")}
+                  className={`rounded-full px-3 py-1.5 text-[10px] font-black ${
+                    language === "sw"
+                      ? "bg-[#1f2937] text-white"
+                      : "text-slate-500"
+                  }`}
+                >
+                  SW
+                </button>
               </div>
 
-              <button
-                onClick={() => setCurrency(currency === "TZS" ? "USD" : "TZS")}
-                className="rounded-full border border-slate-300 px-3 text-[10px] font-black"
-              >
-                {currency}
-              </button>
+              {/* CURRENCY */}
+              <div className="flex shrink-0 items-center rounded-full border border-slate-200 bg-white p-1">
+                <button
+                  onClick={() => setCurrency("TZS")}
+                  className={`rounded-full px-3 py-1.5 text-[10px] font-black ${
+                    currency === "TZS"
+                      ? "bg-[#2563eb] text-white"
+                      : "text-slate-500"
+                  }`}
+                >
+                  TZS
+                </button>
 
+                <button
+                  onClick={() => setCurrency("USD")}
+                  className={`rounded-full px-3 py-1.5 text-[10px] font-black ${
+                    currency === "USD"
+                      ? "bg-[#2563eb] text-white"
+                      : "text-slate-500"
+                  }`}
+                >
+                  USD
+                </button>
+              </div>
+
+              {/* ACCOUNT */}
               <button
                 onClick={() => router.push("/account")}
-                className="rounded-full border border-slate-300 px-3 text-[10px] font-black"
+                className="flex shrink-0 items-center rounded-full border border-slate-200 bg-white px-3 py-2 text-[10px] font-black text-slate-700"
               >
                 👤
                 <span className="ml-1">
@@ -659,14 +706,19 @@ export default function HomePage() {
                 </span>
               </button>
 
+              {/* CART */}
               <button
-                onClick={() => router.push("/account")}
-                className="rounded-full border border-slate-300 px-3 text-[10px] font-black"
+                onClick={() => router.push("/cart")}
+                className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-base"
+                aria-label="Cart"
               >
-                👤
-                <span className="ml-1">
-                  {language === "sw" ? "Akaunti" : "Account"}
-                </span>
+                🛒
+
+                {cartCount > 0 && (
+                  <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#ef4444] px-1 text-[9px] font-black text-white">
+                    {cartCount}
+                  </span>
+                )}
               </button>
             </div>
           </div>

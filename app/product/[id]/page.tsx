@@ -23,6 +23,8 @@ type Product = {
   images?: string[];
   colors?: string[];
   sizes?: string[];
+  orders_count?: number;
+  likes?: number;
 };
 
 type Review = {
@@ -72,6 +74,10 @@ const [cartCount, setCartCount] = useState(0);
   const [selectedColor, setSelectedColor] = useState("");
   const [selectedSize, setSelectedSize] = useState("");
   const [activeTab, setActiveTab] = useState("description");
+  const [likes, setLikes] = useState(200);
+  const [orders, setOrders] = useState(300);
+  const [liked, setLiked] = useState(false);
+  const [likeLoading, setLikeLoading] = useState(false);
 
   useEffect(() => {
     const savedCurrency = localStorage.getItem("gamora_currency");
@@ -99,6 +105,68 @@ if (!item) {
 }
 
 setProduct(item);
+
+      // LOAD PERSISTENT LIKES + ORDERS
+      try {
+        const likeResponse = await fetch(
+          `/api/products/${productId}/like`,
+          {
+            method: "GET",
+            cache: "no-store",
+          }
+        );
+
+        if (likeResponse.ok) {
+          const likeData = await likeResponse.json();
+
+          setLikes(
+            Math.max(
+              200,
+              Number(likeData.likes || item.likes || 200)
+            )
+          );
+
+          setOrders(
+            Math.max(
+              300,
+              Number(
+                likeData.orders ||
+                  item.orders_count ||
+                  300
+              )
+            )
+          );
+
+          setLiked(Boolean(likeData.liked));
+        } else {
+          setLikes(
+            Math.max(200, Number(item.likes || 200))
+          );
+
+          setOrders(
+            Math.max(
+              300,
+              Number(item.orders_count || 300)
+            )
+          );
+        }
+      } catch (error) {
+        console.error(
+          "Failed to load product social proof:",
+          error
+        );
+
+        setLikes(
+          Math.max(200, Number(item.likes || 200))
+        );
+
+        setOrders(
+          Math.max(
+            300,
+            Number(item.orders_count || 300)
+          )
+        );
+      }
 
       if (item.colors && item.colors.length > 0) {
         setSelectedColor(item.colors[0]);
@@ -433,6 +501,78 @@ window.dispatchEvent(new Event("cartUpdated"));
         ).toFixed(1)
       : "0.0";
 
+  async function loadLikeState(productId: number) {
+    try {
+      const response = await fetch(
+        `/api/products/${productId}/like`,
+        {
+          method: "GET",
+          cache: "no-store",
+        }
+      );
+
+      if (!response.ok) return;
+
+      const data = await response.json();
+
+      setLikes(Math.max(200, Number(data.likes || 200)));
+      setOrders(Math.max(300, Number(data.orders || 300)));
+      setLiked(Boolean(data.liked));
+    } catch (error) {
+      console.error("Failed to load like state:", error);
+    }
+  }
+
+  async function toggleLike() {
+    if (!product || likeLoading) return;
+
+    setLikeLoading(true);
+
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      const headers: HeadersInit = {};
+
+      if (session?.access_token) {
+        headers.Authorization = `Bearer ${session.access_token}`;
+      }
+
+      const response = await fetch(
+        `/api/products/${product.id}/like`,
+        {
+          method: "POST",
+          headers,
+        }
+      );
+
+      const data = await response.json();
+
+      if (response.status === 401) {
+        alert(
+          t(
+            "Please login to like this product.",
+            "Tafadhali ingia kwenye account yako ili ku-like bidhaa hii."
+          )
+        );
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error(data?.error || "Failed to update like");
+      }
+
+      setLiked(Boolean(data.liked));
+      setLikes(Math.max(200, Number(data.likes || 200)));
+      setOrders(Math.max(300, Number(data.orders || 300)));
+    } catch (error) {
+      console.error("Like error:", error);
+    } finally {
+      setLikeLoading(false);
+    }
+  }
+
   return (
     <main className="min-h-screen bg-white px-3 pb-24 pt-4 sm:px-5 md:px-8 md:pb-10 md:pt-6">
 
@@ -615,6 +755,44 @@ window.dispatchEvent(new Event("cartUpdated"));
                   -{discount}%
                 </span>
               )}
+
+            </div>
+
+            {/* SOCIAL PROOF */}
+
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+
+              <button
+                type="button"
+                onClick={toggleLike}
+                disabled={likeLoading}
+                aria-label={
+                  liked
+                    ? t("Unlike this product", "Ondoa Like")
+                    : t("Like this product", "Like bidhaa hii")
+                }
+                className={`inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-[11px] font-medium transition ${
+                  liked
+                    ? "border-red-200 bg-red-50 text-red-600"
+                    : "border-slate-200 bg-white text-slate-600 hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+                } ${likeLoading ? "opacity-60" : ""}`}
+              >
+                <span className="text-sm">
+                  {liked ? "❤️" : "♡"}
+                </span>
+
+                <span>
+                  {likes}+ {t("Likes", "Likes")}
+                </span>
+              </button>
+
+              <div className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-medium text-slate-600">
+                <span className="text-sm">🛒</span>
+
+                <span>
+                  {orders}+ {t("Orders", "Orders")}
+                </span>
+              </div>
 
             </div>
 

@@ -24,6 +24,7 @@ export type Product = {
   specifications?: Record<string, string>;
   discount?: number;
   orders_count?: number;
+  likes?: number;
   rating?: number;
 };
 
@@ -58,6 +59,7 @@ function mapProduct(p: any): Product {
         : {},
     discount: Number(p.discount || 0),
     orders_count: Number(p.orders_count || 0),
+    likes: Number(p.likes || 200),
     rating: Number(p.rating || 0),
   };
 }

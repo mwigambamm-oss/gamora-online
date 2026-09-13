@@ -868,7 +868,8 @@ function ProductCard({
   const image = getProductImage(product);
   const discount = getDiscount(product);
   const rating = Number(product.rating || 0);
-  const orders = Number(product.orders_count || 0);
+  const likes = Math.max(200, Number(product.likes || 200));
+  const orders = Math.max(300, Number(product.orders_count || 300));
 
   return (
     <article className="group w-[155px] shrink-0 overflow-hidden bg-white sm:w-[190px] lg:w-[215px]">
@@ -919,12 +920,11 @@ function ProductCard({
               {rating.toFixed(1)}
             </span>
           )}
+        </div>
 
-          {orders > 0 && (
-            <span className="text-[9px] text-[#999]">
-              ({orders})
-            </span>
-          )}
+        <div className="mt-0.5 flex items-center gap-2 text-[9px] text-[#888]">
+          <span>❤️ {likes}+ Likes</span>
+          <span>🛒 {orders}+ Orders</span>
         </div>
 
         <div className="mt-1 flex flex-wrap items-baseline gap-1">

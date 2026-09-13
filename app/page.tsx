@@ -1,18 +1,15 @@
 "use client";
 
 import { useLanguage } from "@/components/providers/LanguageProvider";
+
 import { useRouter } from "next/navigation";
 import { FaFacebookF, FaInstagram, FaTiktok } from "react-icons/fa";
+
 import { translations, type Language } from "@/lib/translations";
 import { formatCurrency, type Currency } from "@/lib/currency";
 import { getProducts as getSupabaseProducts, type Product } from "@/lib/products";
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type RefObject,
-} from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
+
 
 type CartItem = Product & { quantity: number };
 
@@ -35,6 +32,7 @@ const CATEGORY_IMAGES: Record<string, string> = {
   "Garden & Outdoor": "/images/categories/garden.jpg",
   "Health & Wellness": "/images/categories/health.jpg",
   Gaming: "/images/categories/gaming.jpg",
+
 };
 
 const CATEGORY_ICONS: Record<string, string> = {
@@ -82,7 +80,6 @@ const ALL_CATEGORIES = [
 export default function HomePage() {
   const router = useRouter();
   const { language, setLanguage } = useLanguage();
-
   const [currency, setCurrency] = useState<Currency>("TZS");
   const [products, setProducts] = useState<Product[]>([]);
   const [search, setSearch] = useState("");
@@ -91,20 +88,20 @@ export default function HomePage() {
   const [heroIndex, setHeroIndex] = useState(0);
   const [heroPaused, setHeroPaused] = useState(false);
   const [notice, setNotice] = useState("");
-  const [flashTime, setFlashTime] = useState("00:00:00");
+  const [showCategoryMenu, setShowCategoryMenu] = useState(false);
+  const [flashTime, setFlashTime] = useState("12:32:43");
 
-  const flashRef = useRef<HTMLDivElement>(null);
-  const trendingRef = useRef<HTMLDivElement>(null);
+  const dealsRef = useRef<HTMLDivElement>(null);
   const newRef = useRef<HTMLDivElement>(null);
   const bestRef = useRef<HTMLDivElement>(null);
 
   const t = translations[language];
 
   useEffect(() => {
-    const saved = localStorage.getItem("gamora_currency");
 
-    if (saved === "TZS" || saved === "USD") {
-      setCurrency(saved);
+    const savedCurrency = localStorage.getItem("gamora_currency");
+    if (savedCurrency === "TZS" || savedCurrency === "USD") {
+      setCurrency(savedCurrency);
     }
   }, []);
 
@@ -113,10 +110,9 @@ export default function HomePage() {
   }, [currency]);
 
   useEffect(() => {
-    const update = () => {
+    const updateFlashTime = () => {
       const now = new Date();
       const end = new Date(now);
-
       end.setHours(23, 59, 59, 999);
 
       const diff = Math.max(0, end.getTime() - now.getTime());
@@ -126,37 +122,14 @@ export default function HomePage() {
       const seconds = Math.floor((diff % 60000) / 1000);
 
       setFlashTime(
-        `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
-          2,
-          "0"
-        )}:${String(seconds).padStart(2, "0")}`
+        `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
       );
     };
 
-    update();
+    updateFlashTime();
+    const timer = window.setInterval(updateFlashTime, 1000);
 
-    const timer = window.setInterval(update, 1000);
-
-  
-
-  const marqueeStyle = `
-    @keyframes gamora-marquee {
-      from { transform: translateX(0); }
-      to { transform: translateX(-50%); }
-    }
-
-    .gamora-marquee {
-      animation: gamora-marquee 22s linear infinite;
-    }
-
-    .gamora-marquee:hover {
-      animation-play-state: paused;
-    }
-  `;
-
-
-
-  return () => window.clearInterval(timer);
+    return () => window.clearInterval(timer);
   }, []);
 
   useEffect(() => {
@@ -165,47 +138,37 @@ export default function HomePage() {
     async function loadProducts() {
       try {
         const data = await getSupabaseProducts();
-
-        if (active) {
-          setProducts(data);
-        }
+        if (active) setProducts(data);
       } catch (error) {
         console.error("Failed to load products:", error);
-
-        if (active) {
-          setProducts([]);
-        }
+        if (active) setProducts([]);
       }
     }
 
     loadProducts();
     updateCartCount();
 
-    const update = () => updateCartCount();
-
-    window.addEventListener("storage", update);
-    window.addEventListener("gamora-cart-updated", update);
+    const onStorage = () => updateCartCount();
+    window.addEventListener("storage", onStorage);
+    window.addEventListener("gamora-cart-updated", onStorage);
 
     return () => {
       active = false;
-      window.removeEventListener("storage", update);
-      window.removeEventListener("gamora-cart-updated", update);
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("gamora-cart-updated", onStorage);
     };
   }, []);
 
   useEffect(() => {
     if (heroPaused || heroSlides.length <= 1) return;
-
     const timer = window.setInterval(() => {
       setHeroIndex((current) => (current + 1) % heroSlides.length);
     }, 5500);
-
     return () => window.clearInterval(timer);
   });
 
   function updateCartCount() {
     const saved = localStorage.getItem("gamora_cart");
-
     if (!saved) {
       setCartCount(0);
       return;
@@ -213,12 +176,8 @@ export default function HomePage() {
 
     try {
       const cart: CartItem[] = JSON.parse(saved);
-
       setCartCount(
-        cart.reduce(
-          (total, item) => total + Number(item.quantity || 0),
-          0
-        )
+        cart.reduce((total, item) => total + Number(item.quantity || 0), 0)
       );
     } catch {
       setCartCount(0);
@@ -232,7 +191,6 @@ export default function HomePage() {
 
   function addToCart(product: Product) {
     const saved = localStorage.getItem("gamora_cart");
-
     let cart: CartItem[] = [];
 
     if (saved) {
@@ -243,23 +201,16 @@ export default function HomePage() {
       }
     }
 
-    const existingIndex = cart.findIndex(
-      (item) => item.id === product.id
-    );
+    const existingIndex = cart.findIndex((item) => item.id === product.id);
 
     if (existingIndex >= 0) {
       cart[existingIndex].quantity += 1;
     } else {
-      cart.push({
-        ...product,
-        quantity: 1,
-      });
+      cart.push({ ...product, quantity: 1 });
     }
 
     localStorage.setItem("gamora_cart", JSON.stringify(cart));
-
     updateCartCount();
-
     window.dispatchEvent(new Event("gamora-cart-updated"));
 
     setNotice(
@@ -267,874 +218,455 @@ export default function HomePage() {
         ? `${product.name} imeongezwa kwenye kikapu.`
         : `${product.name} has been added to your cart.`
     );
-
     window.setTimeout(() => setNotice(""), 2200);
   }
 
   function scrollCarousel(
-    ref: RefObject<HTMLDivElement | null>,
+    ref: React.RefObject<HTMLDivElement | null>,
     direction: number
   ) {
     const el = ref.current;
-
     if (!el) return;
 
+    const amount = Math.max(320, Math.floor(el.clientWidth * 0.9));
+
     el.scrollBy({
-      left:
-        direction *
-        Math.max(320, Math.floor(el.clientWidth * 0.9)),
+      left: direction * amount,
       behavior: "smooth",
     });
   }
 
   const categories = useMemo(() => {
-    const found = Array.from(
-      new Set(
-        products
-          .map((product) => product.category)
-          .filter(Boolean)
-      )
-    );
-
-    const extra = found.filter(
-      (name) => !ALL_CATEGORIES.includes(name)
-    );
-
+    const found = Array.from(new Set(products.map((p) => p.category).filter(Boolean)));
+    const extra = found.filter((name) => !ALL_CATEGORIES.includes(name));
     return [...ALL_CATEGORIES, ...extra];
   }, [products]);
 
   const filteredProducts = useMemo(() => {
     const query = search.toLowerCase().trim();
-
     return products.filter((product) => {
       const matchesSearch =
         !query ||
         product.name.toLowerCase().includes(query) ||
         product.category.toLowerCase().includes(query);
-
       const matchesCategory =
-        selectedCategory === "All" ||
-        product.category === selectedCategory;
-
+        selectedCategory === "All" || product.category === selectedCategory;
       return matchesSearch && matchesCategory;
     });
   }, [products, search, selectedCategory]);
 
-  const deals = useMemo(
-    () =>
-      [...filteredProducts]
-        .filter((product) => getDiscount(product) > 0)
-        .sort(
-          (a, b) => getDiscount(b) - getDiscount(a)
-        )
-        .slice(0, 20),
-    [filteredProducts]
-  );
+  const deals = useMemo(() => {
+    return [...filteredProducts]
+      .filter((p) => getDiscount(p) > 0)
+      .sort((a, b) => getDiscount(b) - getDiscount(a))
+      .slice(0, 10);
+  }, [filteredProducts]);
 
-  const trending = useMemo(
-    () =>
-      [...filteredProducts]
-        .sort(
-          (a, b) =>
-            Number(b.orders_count || 0) -
-            Number(a.orders_count || 0)
-        )
-        .slice(0, 20),
-    [filteredProducts]
-  );
+  const recommended = useMemo(() => filteredProducts.slice(0, 10), [filteredProducts]);
 
   const newArrivals = useMemo(
-    () =>
-      [...filteredProducts]
-        .sort((a, b) => Number(b.id) - Number(a.id))
-        .slice(0, 20),
+    () => [...filteredProducts].sort((a, b) => b.id - a.id).slice(0, 10),
     [filteredProducts]
   );
 
   const bestSellers = useMemo(
     () =>
       [...filteredProducts]
-        .sort(
-          (a, b) =>
-            Number(b.orders_count || 0) -
-            Number(a.orders_count || 0)
-        )
-        .slice(0, 20),
+        .sort((a, b) => Number(b.orders_count || 0) - Number(a.orders_count || 0))
+        .slice(0, 10),
     [filteredProducts]
   );
 
-  const categoryProducts = useMemo(() => {
-    const result: Record<string, Product[]> = {};
-
-    ALL_CATEGORIES.forEach((category) => {
-      result[category] = products
-        .filter(
-          (product) => product.category === category
-        )
-        .slice(0, 12);
-    });
-
-    return result;
-  }, [products]);
-
   const heroProducts = useMemo(
-    () =>
-      products
-        .filter((product) => getProductImage(product))
-        .slice(0, 5),
+    () => products.filter((p) => getProductImage(p)).slice(0, 3),
     [products]
   );
 
   const heroSlides = [
     {
-      eyebrow:
-        language === "sw"
-          ? "KARIBU GAMORA ONLINE"
-          : "WELCOME TO GAMORA ONLINE",
-      title:
-        language === "sw"
-          ? "Nunua smart. Chagua Gamora."
-          : "Shop smart. Choose Gamora.",
+      eyebrow: language === "sw" ? "KARIBU GAMORA ONLINE" : "WELCOME TO GAMORA ONLINE",
+      title: language === "sw" ? "Nunua smart. Chagua Gamora." : "Shop smart. Choose Gamora.",
       text:
         language === "sw"
-          ? "Gundua maelfu ya bidhaa kwa bei nzuri na uzoefu rahisi wa kununua."
-          : "Discover great products at great prices with a simple shopping experience.",
-      button:
-        language === "sw" ? "ANZA KUNUNUA" : "SHOP NOW",
+          ? "Gundua bidhaa unazopenda kwa bei nzuri, kwa uzoefu rahisi na salama."
+          : "Discover products you love at great prices with a simple, secure shopping experience.",
+      button: language === "sw" ? "ANZA KUNUNUA" : "SHOP NOW",
       product: heroProducts[0],
     },
     {
-      eyebrow:
-        language === "sw"
-          ? "BIDHAA MPYA"
-          : "NEW ARRIVALS",
-      title:
-        language === "sw"
-          ? "Vitu vipya vimefika."
-          : "Fresh finds have arrived.",
+      eyebrow: language === "sw" ? "BIDHAA MPYA" : "NEW ARRIVALS",
+      title: language === "sw" ? "Vitu vipya vimefika." : "Fresh finds have arrived.",
       text:
         language === "sw"
-          ? "Gundua bidhaa mpya zilizowekwa kwenye Gamora."
-          : "Explore the latest products added to Gamora.",
-      button:
-        language === "sw"
-          ? "ANGALIA MPYA"
-          : "EXPLORE NEW",
-      product:
-        heroProducts[1] || heroProducts[0],
+          ? "Angalia bidhaa mpya na uongeze kitu kipya kwenye kikapu chako."
+          : "Explore the latest products and find something new for your cart.",
+      button: language === "sw" ? "ANGALIA BIDHAA MPYA" : "EXPLORE NEW ARRIVALS",
+      product: heroProducts[1] || heroProducts[0],
     },
     {
-      eyebrow:
-        language === "sw"
-          ? "FLASH DEALS"
-          : "FLASH DEALS",
-      title:
-        language === "sw"
-          ? "Ofa kali za leo."
-          : "Today's biggest deals.",
+      eyebrow: language === "sw" ? "OFa MAALUM" : "SPECIAL DEALS",
+      title: language === "sw" ? "Bei nzuri. Ofa kali." : "Better prices. Bigger deals.",
       text:
         language === "sw"
-          ? "Pata punguzo kwenye bidhaa zilizochaguliwa kabla muda haujaisha."
-          : "Save more on selected products before the deals end.",
-      button:
-        language === "sw"
-          ? "ANGALIA OFA"
-          : "VIEW DEALS",
-      product:
-        deals[0] ||
-        heroProducts[2] ||
-        heroProducts[0],
+          ? "Pata punguzo kwenye bidhaa zilizochaguliwa kabla hazijaisha."
+          : "Save more on selected products while the deals last.",
+      button: language === "sw" ? "ANGALIA OFA" : "VIEW DEALS",
+      product: deals[0] || heroProducts[2] || heroProducts[0],
     },
   ];
 
   const hero = heroSlides[heroIndex] || heroSlides[0];
 
-  function goCategory(category: string) {
-    router.push(
-      `/category/${encodeURIComponent(category)}`
-    );
-  }
-
-  function handleHeroButton() {
-    if (hero.product) {
-      router.push(`/product/${hero.product.id}`);
-      return;
-    }
-
-    document
-      .getElementById("products")
-      ?.scrollIntoView({
-        behavior: "smooth",
-      });
+  function goToCategory(category: string) {
+    setSelectedCategory(category);
+    document.getElementById("products")?.scrollIntoView({ behavior: "smooth" });
   }
 
   return (
-    <main className="min-h-screen bg-[#f3f4f6] text-[#1f2937]">
-      <style>{`
-        @keyframes gamora-marquee {
-          from { transform: translateX(100vw); }
-          to { transform: translateX(-100%); }
-        }
-      `}</style>
+    <main className="min-h-screen bg-[#f3f4f6] text-[#374151]">
       {notice && (
-        <div className="fixed left-1/2 top-5 z-[100] -translate-x-1/2 rounded-full bg-[#1f2937] px-5 py-3 text-xs font-bold text-white shadow-2xl sm:text-sm">
+        <div className="fixed left-1/2 top-5 z-[100] -translate-x-1/2 rounded-full bg-[#374151] px-5 py-3 text-xs font-bold text-white shadow-2xl sm:text-sm">
           ✓ {notice}
         </div>
       )}
 
-      {/* ANNOUNCEMENT */}
-      <div className="bg-[#1f2937] text-white">
-        <div className="mx-auto max-w-[1440px] overflow-hidden">
-          <div className="flex min-h-[38px] w-max items-center whitespace-nowrap text-[11px] font-bold sm:text-xs animate-[gamora-marquee_18s_linear_infinite]">
+      {/* TOP WELCOME ANNOUNCEMENT */}
+      <div className="overflow-hidden bg-[#171a1f] text-white">
+        <div className="announcement-marquee flex min-h-[36px] w-max items-center py-2 text-[13px] font-medium text-white sm:min-h-[40px] sm:text-sm">
+          <span className="px-8 text-white">
             {language === "sw"
-              ? "Karibu Gamora Online • Ofa kubwa • Bidhaa nyingi • Nunua kwa urahisi na usalama"
-              : "Welcome to Gamora Online • Great deals • Thousands of products • Shop easily and securely"}
-          </div>
+              ? "Karibu Gamora Online • Gundua bidhaa unazozipenda kwa bei nzuri • Pata ofa nzuri • Nunua kwa urahisi na kwa usalama."
+              : "Welcome to Gamora Online • Discover products you love at great prices • Get great deals • Shop easily and securely."}
+          </span>
+          <span className="px-8 text-white">
+            {language === "sw"
+              ? "Karibu Gamora Online • Gundua bidhaa mpya • Pata ofa nzuri • Nunua kwa urahisi na kwa usalama."
+              : "Welcome to Gamora Online • Discover new products • Get great deals • Shop easily and securely."}
+          </span>
         </div>
       </div>
 
       {/* HEADER */}
-      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white">
-        <div className="mx-auto max-w-[1440px] px-3 sm:px-5">
-          <div className="flex min-h-[70px] items-center gap-3 lg:gap-7">
-            <button
-              onClick={() => router.push("/")}
-              className="shrink-0"
-            >
-            </button>
-
-            <div className="hidden lg:block">
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-300">
-                Gamora Online
-              </p>
-              <p className="text-xs font-bold text-slate-700">
-                {language === "sw"
-                  ? "Soko lako la mtandaoni"
-                  : "Your online marketplace"}
-              </p>
-            </div>
-
-            {/* BIG SEARCH */}
-            <div className="relative hidden flex-1 lg:block">
-              <input
-                value={search}
-                onChange={(e) =>
-                  setSearch(e.target.value)
-                }
-                placeholder={
-                  language === "sw"
-                    ? "Unatafuta nini leo?"
-                    : "What are you looking for today?"
-                }
-                className="h-11 w-full rounded-full border-2 border-[#2563eb] bg-white px-5 pr-14 text-sm outline-none transition focus:shadow-lg"
-              />
-
-              <button
-                type="button"
-                className="absolute right-1 top-1 flex h-9 w-12 items-center justify-center rounded-full bg-[#2563eb] text-lg text-white"
-              >
-                ⌕
-              </button>
-            </div>
-
-            {/* LANGUAGE */}
-            <div className="hidden items-center rounded-lg border border-slate-200 p-1 sm:flex">
-              <button
-                onClick={() => changeLanguage("en")}
-                className={`rounded-md px-2.5 py-1.5 text-[10px] font-black ${
-                  language === "en"
-                    ? "bg-[#1f2937] text-white"
-                    : "text-slate-500"
-                }`}
-              >
-                EN
-              </button>
-
-              <button
-                onClick={() => changeLanguage("sw")}
-                className={`rounded-md px-2.5 py-1.5 text-[10px] font-black ${
-                  language === "sw"
-                    ? "bg-[#1f2937] text-white"
-                    : "text-slate-500"
-                }`}
-              >
-                SW
-              </button>
-            </div>
-
-            {/* CURRENCY */}
-            <div className="hidden items-center rounded-lg border border-slate-200 p-1 md:flex">
-              <button
-                onClick={() => setCurrency("TZS")}
-                className={`rounded-md px-2 py-1.5 text-[10px] font-black ${
-                  currency === "TZS"
-                    ? "bg-[#2563eb] text-white"
-                    : "text-slate-500"
-                }`}
-              >
-                TZS
-              </button>
-
-              <button
-                onClick={() => setCurrency("USD")}
-                className={`rounded-md px-2 py-1.5 text-[10px] font-black ${
-                  currency === "USD"
-                    ? "bg-[#2563eb] text-white"
-                    : "text-slate-500"
-                }`}
-              >
-                USD
-              </button>
-            </div>
-
-            {/* ACCOUNT */}
-            <button
-              onClick={() => router.push("/account")}
-              className="hidden text-left lg:block"
-            >
-              <p className="text-[10px] text-slate-300">
-                {language === "sw"
-                  ? "Karibu"
-                  : "Welcome"}
-              </p>
-              <p className="text-xs font-black text-slate-800">
-                {language === "sw"
-                  ? "Akaunti"
-                  : "Account"}
-              </p>
-            </button>
-
-            {/* CART */}
-            <button
-              onClick={() => router.push("/cart")}
-              className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 text-xl transition hover:bg-slate-50"
-              aria-label="Cart"
-            >
-              🛒
-
-              {cartCount > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#ef4444] px-1 text-[10px] font-black text-white">
-                  {cartCount}
+      <header className="sticky top-0 z-50 border-b border-[#e5e5e5] bg-white/95 backdrop-blur">
+        <div className="mx-auto max-w-[1280px] px-4">
+          <div className="flex min-h-[64px] items-center gap-2 sm:min-h-[72px] sm:gap-5">
+            <a href="/" className="shrink-0 flex items-center gap-2" aria-label="Gamora Online home">
+              <div className="flex flex-col">
+                <img 
+                  src="/gamora-logo.png" 
+                  alt="Gamora Online" 
+                  className="h-16 w-auto object-contain sm:h-20" 
+                />
+                <span className="text-[10px] font-semibold text-[#374151] sm:text-xs">
+                  Nunua smart. Chagua Gamora.
                 </span>
-              )}
-            </button>
-          </div>
+              </div>
+            </a>
 
-          {/* MOBILE HEADER CONTROLS */}
-          <div className="pb-3 lg:hidden">
-            {/* MOBILE SEARCH */}
-            <div className="relative">
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder={
-                  language === "sw"
-                    ? "Tafuta bidhaa..."
-                    : "Search products..."
-                }
-                className="h-10 w-full rounded-full border-2 border-[#2563eb] bg-white px-4 pr-12 text-xs outline-none focus:shadow-md"
-              />
-
+            <nav className="hidden items-center gap-6 text-xs font-normal lg:flex">
+              <a href="/" className="border-b-2 border-black py-6">{t.home}</a>
               <button
                 type="button"
-                className="absolute right-1 top-1 flex h-8 w-10 items-center justify-center rounded-full bg-[#2563eb] text-lg text-white"
+                onClick={() => setShowCategoryMenu((v) => !v)}
+                className="flex items-center gap-1 py-6 text-[#555] transition hover:text-[#374151]"
               >
-                ⌕
+                {t.categories}
               </button>
-            </div>
+              <a href="#new-arrivals" className="py-6 text-[#555] transition hover:text-[#374151]">{language === "sw" ? "Bidhaa Mpya" : "New Arrivals"}</a>
+              <a href="#flash-sales" className="py-6 text-[#555] transition hover:text-[#374151]">{language === "sw" ? "Ofa" : "Deals"}</a>
+              <a href="#best-sellers" className="py-6 text-[#555] transition hover:text-[#374151]">{language === "sw" ? "Zinazouzwa Sana" : "Best Sellers"}</a>
+            </nav>
 
-            {/* MOBILE CONTROLS */}
-            <div className="mt-2 flex items-center gap-2 overflow-x-auto scrollbar-hide">
-              {/* LANGUAGE */}
-              <div className="flex shrink-0 items-center rounded-full border border-slate-200 bg-white p-1">
-                <button
-                  onClick={() => changeLanguage("en")}
-                  className={`rounded-full px-3 py-1.5 text-[10px] font-black ${
-                    language === "en"
-                      ? "bg-[#1f2937] text-white"
-                      : "text-slate-500"
-                  }`}
-                >
-                  EN
-                </button>
-
-                <button
-                  onClick={() => changeLanguage("sw")}
-                  className={`rounded-full px-3 py-1.5 text-[10px] font-black ${
-                    language === "sw"
-                      ? "bg-[#1f2937] text-white"
-                      : "text-slate-500"
-                  }`}
-                >
-                  SW
-                </button>
+            <div className="ml-auto flex min-w-0 items-center gap-1.5 sm:gap-3">
+              <div className="relative hidden w-56 md:block xl:w-72">
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder={t.search}
+                  className="w-full rounded-full border border-[#d8d8d8] bg-[#f7f7f7] py-2.5 pl-4 pr-11 text-sm outline-none transition focus:border-[#777] focus:bg-white"
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-lg text-[#555]">⌕</span>
               </div>
 
-              {/* CURRENCY */}
-              <div className="flex shrink-0 items-center rounded-full border border-slate-200 bg-white p-1">
+              <div className="flex items-center rounded-lg border border-[#dedede] bg-white p-0.5 text-[9px] font-black sm:p-1 sm:text-[11px]">
+                <button onClick={() => changeLanguage("en")} className={`rounded-md px-1.5 py-1 ${language === "en" ? "bg-[#374151] text-white" : "text-[#666]"} sm:px-2.5 sm:py-1.5`}>EN</button>
+                <button onClick={() => changeLanguage("sw")} className={`rounded-md px-1.5 py-1 ${language === "sw" ? "bg-[#374151] text-white" : "text-[#666]"} sm:px-2.5 sm:py-1.5`}>SW</button>
+              </div>
+
+              <div className="flex items-center rounded-lg border border-[#dedede] bg-white p-0.5 text-[9px] font-black sm:p-1 sm:text-[11px]">
                 <button
+                  type="button"
                   onClick={() => setCurrency("TZS")}
-                  className={`rounded-full px-3 py-1.5 text-[10px] font-black ${
-                    currency === "TZS"
-                      ? "bg-[#2563eb] text-white"
-                      : "text-slate-500"
-                  }`}
+                  className={`rounded-md px-1.5 py-1 ${currency === "TZS" ? "bg-[#374151] text-white" : "text-[#666]"} sm:px-2.5 sm:py-1.5`}
                 >
                   TZS
                 </button>
-
                 <button
+                  type="button"
                   onClick={() => setCurrency("USD")}
-                  className={`rounded-full px-3 py-1.5 text-[10px] font-black ${
-                    currency === "USD"
-                      ? "bg-[#2563eb] text-white"
-                      : "text-slate-500"
-                  }`}
+                  className={`rounded-md px-1.5 py-1 ${currency === "USD" ? "bg-[#374151] text-white" : "text-[#666]"} sm:px-2.5 sm:py-1.5`}
                 >
                   USD
                 </button>
               </div>
 
-              {/* ACCOUNT */}
-              <button
-                onClick={() => router.push("/account")}
-                className="flex shrink-0 items-center rounded-full border border-slate-200 bg-white px-3 py-2 text-[10px] font-black text-slate-700"
-              >
-                👤
-                <span className="ml-1">
-                  {language === "sw" ? "Akaunti" : "Account"}
-                </span>
-              </button>
+              <a href="/account" className="flex h-9 items-center rounded-lg px-1.5 text-xs font-bold text-[#333] transition hover:bg-[#f1f1f1] sm:h-10 sm:px-2 sm:text-sm">
+                {language === "sw" ? "Akaunti" : "Account"}
+              </a>
 
-              {/* CART */}
-              <button
-                onClick={() => router.push("/cart")}
-                className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-base"
-                aria-label="Cart"
-              >
+              <a href="/cart" className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-lg transition hover:bg-[#f1f1f1] sm:h-10 sm:w-10 sm:text-xl" aria-label={`${t.cart}: ${cartCount}`}>
                 🛒
-
                 {cartCount > 0 && (
-                  <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#ef4444] px-1 text-[9px] font-black text-white">
-                    {cartCount}
-                  </span>
+                  <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#e30613] px-1 text-[10px] font-black text-white">{cartCount}</span>
                 )}
-              </button>
+              </a>
             </div>
           </div>
-        </div>
 
-        {/* NAVIGATION */}
-        <div className="border-t border-slate-100 bg-white">
-          <div className="mx-auto flex max-w-[1440px] items-center gap-6 overflow-x-auto px-4 py-3 scrollbar-hide">
-            <button
-              onClick={() => router.push("/")}
-              className="shrink-0 text-xs font-black text-[#2563eb]"
-            >
-              {language === "sw"
-                ? "NYUMBANI"
-                : "HOME"}
-            </button>
+          <div className="pb-2 md:hidden">
+            <div className="relative">
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder={t.search}
+                className="w-full rounded-full border border-[#d8d8d8] bg-[#f7f7f7] py-2.5 pl-4 pr-11 text-sm outline-none focus:border-[#777] focus:bg-white"
+              />
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-lg text-[#555]">⌕</span>
+            </div>
 
-            <button
-              onClick={() =>
-                document
-                  .getElementById("categories")
-                  ?.scrollIntoView({ behavior: "smooth" })
-              }
-              className="shrink-0 text-xs font-bold text-slate-600"
-            >
-              {language === "sw"
-                ? "MAKUNDI"
-                : "CATEGORIES"}
-            </button>
-
-            <button
-              onClick={() =>
-                document
-                  .getElementById("flash-sales")
-                  ?.scrollIntoView({ behavior: "smooth" })
-              }
-              className="shrink-0 text-xs font-bold text-slate-600"
-            >
-              🔥 {language === "sw" ? "OFA" : "FLASH DEALS"}
-            </button>
-
-            <button
-              onClick={() =>
-                document
-                  .getElementById("new-arrivals")
-                  ?.scrollIntoView({ behavior: "smooth" })
-              }
-              className="shrink-0 text-xs font-bold text-slate-600"
-            >
-              {language === "sw"
-                ? "MPYA"
-                : "NEW ARRIVALS"}
-            </button>
-
-            <button
-              onClick={() =>
-                document
-                  .getElementById("best-sellers")
-                  ?.scrollIntoView({ behavior: "smooth" })
-              }
-              className="shrink-0 text-xs font-bold text-slate-600"
-            >
-              {language === "sw"
-                ? "ZINAZOUZWA SANA"
-                : "BEST SELLERS"}
-            </button>
-
-            <button
-              onClick={() => router.push("/contact")}
-              className="shrink-0 text-xs font-bold text-slate-600"
-            >
-              {language === "sw"
-                ? "WASILIANA NASI"
-                : "CONTACT US"}
-            </button>
+            <nav className="mt-2 flex gap-5 overflow-x-auto whitespace-nowrap pb-1 text-[11px] font-bold scrollbar-hide">
+              <button
+                type="button"
+                onClick={() => setShowCategoryMenu((v) => !v)}
+                className="shrink-0 font-bold text-[#333]"
+              >
+                {t.categories}
+              </button>
+              <a href="#new-arrivals" className="shrink-0 text-[#333]">{language === "sw" ? "Bidhaa Mpya" : "New Arrivals"}</a>
+              <a href="#flash-sales" className="shrink-0 text-[#333]">{language === "sw" ? "Ofa" : "Deals"}</a>
+              <a href="#best-sellers" className="shrink-0 text-[#333]">{language === "sw" ? "Zinazouzwa Sana" : "Best Sellers"}</a>
+            </nav>
           </div>
         </div>
       </header>
 
-      {/* HERO */}
-      <section
-        className="bg-[#eef2ff] py-4 sm:py-6"
-        onMouseEnter={() => setHeroPaused(true)}
-        onMouseLeave={() => setHeroPaused(false)}
-      >
-        <div className="mx-auto max-w-[1440px] px-3 sm:px-5">
-          <div className="grid overflow-hidden rounded-2xl bg-white shadow-sm lg:grid-cols-[250px_1fr_270px]">
-            
-            {/* LEFT CATEGORIES */}
-            <aside className="hidden border-r border-slate-100 bg-white lg:block">
-              <div className="border-b border-slate-100 px-5 py-4">
-                <h2 className="text-sm font-black text-slate-900">
-                  {language === "sw"
-                    ? "Makundi yote"
-                    : "All Categories"}
-                </h2>
-              </div>
-
-              <div className="py-2">
-                {ALL_CATEGORIES.slice(0, 12).map(
-                  (category) => (
-                    <button
-                      key={category}
-                      onClick={() =>
-                        goCategory(category)
-                      }
-                      className="flex w-full items-center gap-3 px-5 py-2.5 text-left text-xs font-semibold text-slate-600 transition hover:bg-blue-50 hover:text-[#2563eb]"
-                    >
-                      <span className="flex h-8 w-10 shrink-0 items-center justify-center overflow-hidden rounded-md bg-slate-50">
-                        {CATEGORY_IMAGES[category] ? (
-                          <img
-                            src={CATEGORY_IMAGES[category]}
-                            alt={category}
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          <img
-                            src={
-                              category === "Women's Fashion"
-                                ? "/images/womens-fashion.jpg"
-                                : category === "Men's Fashion"
-                                ? "/images/mens-fashion.jpg"
-                                : category === "Shoes"
-                                ? "/images/shoes.jpg"
-                                : category === "Phones & Electronics"
-                                ? "/images/phone.jpg"
-                                : category === "Home & Kitchen"
-                                ? "/images/categories/kitchen.jpg"
-                                : category === "Accessories"
-                                ? "/images/categories/jewelry.jpg"
-                                : category === "Beauty & Personal Care"
-                                ? "/images/categories/beauty.jpg"
-                                : category === "Computers & Accessories"
-                                ? "/images/categories/computers.jpg"
-                                : category === "Baby & Kids"
-                                ? "/images/categories/baby.jpg"
-                                : category === "Sports & Fitness"
-                                ? "/images/categories/sports.jpg"
-                                : category === "Automotive"
-                                ? "/images/categories/automotive.jpg"
-                                : category === "Tools & Hardware"
-                                ? "/images/categories/garden.jpg"
-                                : "/images/categories/furniture.jpg"
-                            }
-                            alt={category}
-                            className="h-full w-full object-cover"
-                          />
-                        )}
-                      </span>
-
-                      <span className="flex-1 truncate">
-                        {category}
-                      </span>
-
-                      <span>›</span>
-                    </button>
-                  )
-                )}
-              </div>
-            </aside>
-
-            {/* HERO CENTER */}
-            <div className="relative min-h-[360px] overflow-hidden bg-gradient-to-br from-[#eff6ff] via-white to-[#dbeafe] sm:min-h-[430px]">
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_50%,rgba(37,99,235,.15),transparent_45%)]" />
-
-              <div className="relative grid h-full items-center gap-5 px-7 py-8 sm:px-12 lg:grid-cols-2 lg:px-10">
-                <div className="z-10">
-                  <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#2563eb] sm:text-xs">
-                    {hero.eyebrow}
-                  </p>
-
-                  <h1 className="mt-3 max-w-xl text-4xl font-black leading-[0.98] tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
-                    {hero.title}
-                  </h1>
-
-                  <p className="mt-5 max-w-lg text-sm leading-6 text-slate-600 sm:text-base">
-                    {hero.text}
-                  </p>
-
-                  <button
-                    onClick={handleHeroButton}
-                    className="mt-7 rounded-lg bg-[#2563eb] px-6 py-3.5 text-xs font-black text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-[#1d4ed8]"
-                  >
-                    {hero.button} →
-                  </button>
-                </div>
-
-                <div className="relative flex h-full min-h-[210px] items-center justify-center">
-                  <div className="absolute h-60 w-60 rounded-full bg-white/80 blur-3xl sm:h-80 sm:w-80" />
-
-                  {hero.product &&
-                  getProductImage(hero.product) ? (
-                    <img
-                      src={getProductImage(hero.product)}
-                      alt={hero.product.name}
-                      className="relative z-10 max-h-[270px] max-w-[90%] object-contain drop-shadow-2xl transition-all duration-700 sm:max-h-[350px]"
-                    />
-                  ) : (
-                    <div className="text-8xl opacity-30">
-                      🛍️
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <button
-                onClick={() =>
-                  setHeroIndex(
-                    (heroIndex -
-                      1 +
-                      heroSlides.length) %
-                      heroSlides.length
-                  )
-                }
-                className="absolute left-3 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white text-xl shadow-lg"
-              >
-                ‹
-              </button>
-
-              <button
-                onClick={() =>
-                  setHeroIndex(
-                    (heroIndex + 1) %
-                      heroSlides.length
-                  )
-                }
-                className="absolute right-3 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white text-xl shadow-lg"
-              >
-                ›
-              </button>
-
-              <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 gap-2">
-                {heroSlides.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() =>
-                      setHeroIndex(index)
-                    }
-                    className={`h-2 rounded-full transition-all ${
-                      heroIndex === index
-                        ? "w-7 bg-[#2563eb]"
-                        : "w-2 bg-slate-300"
-                    }`}
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* RIGHT PANEL */}
-            <div className="hidden bg-[#1f2937] p-6 text-white lg:block">
-              <p className="text-[10px] font-black uppercase tracking-widest text-blue-300">
-                Gamora Online
-              </p>
-
-              <h3 className="mt-3 text-2xl font-black leading-tight">
-                {language === "sw"
-                  ? "Pata bidhaa zako kwa bei nzuri."
-                  : "Find your products at great prices."}
+      {showCategoryMenu && (
+        <div className="absolute left-0 right-0 z-40 border-b border-[#e5e5e5] bg-white shadow-xl">
+          <div className="mx-auto max-w-[1280px] px-4 py-5 sm:py-7">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-base font-black text-[#222] sm:text-lg">
+                {language === "sw" ? "Makundi yote" : "All Categories"}
               </h3>
-
-              <div className="mt-7 rounded-xl bg-white/10 p-4">
-                <p className="text-[10px] font-bold uppercase text-slate-300">
-                  🔥 {language === "sw" ? "Flash Sale" : "Flash Sale"}
-                </p>
-
-                <p className="mt-2 font-mono text-2xl font-black">
-                  {flashTime}
-                </p>
-
-                <button
-                  onClick={() =>
-                    document
-                      .getElementById("flash-sales")
-                      ?.scrollIntoView({
-                        behavior: "smooth",
-                      })
-                  }
-                  className="mt-4 w-full rounded-lg bg-white py-3 text-xs font-black text-[#111827] shadow-md transition hover:bg-blue-50 hover:text-[#2563eb]"
-                >
-                  {language === "sw"
-                    ? "ANGALIA OFA"
-                    : "SHOP DEALS"}
-                </button>
-              </div>
-
-              <div className="mt-5 grid grid-cols-2 gap-2">
-                <div className="rounded-lg bg-white/10 p-3">
-                  <img
-                    src="/images/delivery-van.jpg"
-                    alt="Delivery"
-                    className="mx-auto h-10 w-14 rounded-md object-cover"
-                  />
-                  <p className="mt-1 text-[10px] font-bold">
-                    {language === "sw"
-                      ? "Delivery"
-                      : "Delivery"}
-                  </p>
-                </div>
-
-                <div className="rounded-lg bg-white/10 p-3">
-                  <img
-                    src="/images/secure-payment.jpg"
-                    alt="Secure payment"
-                    className="mx-auto h-10 w-14 rounded-md object-cover"
-                  />
-                  <p className="mt-1 text-[10px] font-bold">
-                    {language === "sw"
-                      ? "Salama"
-                      : "Secure"}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CATEGORY STRIP */}
-      <section
-        id="categories"
-        className="bg-white py-7 sm:py-10"
-      >
-        <div className="mx-auto max-w-[1440px] px-4 sm:px-5">
-          <SectionHeading
-            title={
-              language === "sw"
-                ? "Nunua kwa makundi"
-                : "Shop by Category"
-            }
-            subtitle={
-              language === "sw"
-                ? "Chagua kundi unalotaka."
-                : "Explore our popular categories."
-            }
-          />
-
-          <div className="mt-6 flex gap-4 overflow-x-auto pb-3 scrollbar-hide lg:grid lg:grid-cols-9 lg:overflow-visible">
-            {categories.map((category) => (
               <button
-                key={category}
-                onClick={() => goCategory(category)}
-                className="group min-w-[110px] text-center"
+                type="button"
+                onClick={() => setShowCategoryMenu(false)}
+                className="rounded-full px-3 py-1 text-lg text-[#555] hover:bg-[#f3f4f6]"
+                aria-label="Close categories"
               >
-                <div className="mx-auto h-20 w-20 overflow-hidden rounded-full border border-slate-200 bg-white shadow-sm transition group-hover:-translate-y-1 group-hover:border-blue-300 group-hover:shadow-md sm:h-24 sm:w-24">
+                ×
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+              {ALL_CATEGORIES.map((category) => (
+                <button
+                  key={category}
+                  type="button"
+                  onClick={() => {
+                    router.push(`/category/${encodeURIComponent(category)}`);
+                    setShowCategoryMenu(false);
+                  }}
+                  className="flex min-h-[58px] items-center gap-2 rounded-xl border border-[#e5e5e5] bg-white px-3 py-2 text-left text-xs font-bold text-[#333] transition hover:border-[#374151] hover:bg-[#f8f9fa] sm:text-sm"
+                >
                   {CATEGORY_IMAGES[category] ? (
                     <img
                       src={CATEGORY_IMAGES[category]}
                       alt={category}
-                      className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
+                      className="h-10 w-10 rounded-lg object-cover"
                     />
                   ) : (
-                    <div className="flex h-full items-center justify-center text-3xl">
+                    <span className="text-xl">
                       {CATEGORY_ICONS[category] || "🛍️"}
-                    </div>
+                    </span>
                   )}
-                </div>
+                  <span>{category}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
-                <p className="mt-2 line-clamp-2 text-[10px] font-bold text-slate-700 sm:text-xs">
-                  {category}
-                </p>
-              </button>
-            ))}
+      {/* HERO */}
+      <section
+        className="relative overflow-hidden bg-[#e8e9eb]"
+        onMouseEnter={() => setHeroPaused(true)}
+        onMouseLeave={() => setHeroPaused(false)}
+      >
+        <div className="mx-auto max-w-[1280px] px-4 py-8 sm:py-6 lg:py-8">
+          <div className="relative min-h-[390px] overflow-hidden rounded-[28px] bg-[#e8e9eb] sm:min-h-[440px] lg:min-h-[500px]">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_45%,#ffffff_0%,#e8e9eb_43%,#d9dbde_100%)]" />
+
+            <div className="relative grid min-h-[390px] items-center gap-6 px-6 py-5 sm:min-h-[440px] sm:px-10 lg:min-h-[500px] lg:grid-cols-[1.05fr_.95fr] lg:px-16">
+              <div className="relative z-10 max-w-xl">
+                <p className="mb-4 text-xs font-black uppercase tracking-[0.22em] text-[#666] sm:text-sm">{hero.eyebrow}</p>
+                <h1 className="max-w-xl text-4xl font-black leading-[0.98] tracking-tight text-[#111] sm:text-5xl lg:text-7xl">{hero.title}</h1>
+                <p className="mt-5 max-w-lg text-sm leading-6 text-[#555] sm:text-base sm:leading-7">{hero.text}</p>
+                <a href={hero.product ? `/product/${hero.product.id}` : "#products"} className="mt-7 inline-flex rounded-xl bg-[#374151] px-6 py-3.5 text-xs font-medium text-white shadow-xl transition hover:-translate-y-0.5 hover:bg-[#374151]">{hero.button} <span className="ml-2">→</span></a>
+              </div>
+
+              <div className="relative flex min-h-[210px] items-center justify-center lg:min-h-[360px]">
+                <div className="absolute h-56 w-56 rounded-full bg-white/70 blur-2xl sm:h-72 sm:w-72 lg:h-96 lg:w-96" />
+                {hero.product && getProductImage(hero.product) ? (
+                  <img src={getProductImage(hero.product)} alt={hero.product.name} className="relative z-10 max-h-[280px] max-w-[88%] object-contain drop-shadow-2xl transition duration-700 sm:max-h-[350px] lg:max-h-[430px]" />
+                ) : (
+                  <div className="relative z-10 text-8xl opacity-30">🛍️</div>
+                )}
+              </div>
+            </div>
+
+            <button aria-label="Previous slide" onClick={() => setHeroIndex((heroIndex - 1 + heroSlides.length) % heroSlides.length)} className="absolute left-3 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-xl shadow-lg transition hover:bg-white">‹</button>
+            <button aria-label="Next slide" onClick={() => setHeroIndex((heroIndex + 1) % heroSlides.length)} className="absolute right-3 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-xl shadow-lg transition hover:bg-white">›</button>
+
+            <div className="absolute bottom-5 left-1/2 z-20 flex -translate-x-1/2 gap-2">
+              {heroSlides.map((_, index) => (
+                <button key={index} onClick={() => setHeroIndex(index)} aria-label={`Go to slide ${index + 1}`} className={`h-2 rounded-full transition-all ${index === heroIndex ? "w-7 bg-[#374151]" : "w-2 bg-[#999]"}`} />
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* FLASH DEALS */}
-      <section
-        id="flash-sales"
-        className="bg-[#f3f4f6] py-8 sm:py-12"
-      >
-        <div className="mx-auto max-w-[1440px] px-4 sm:px-5">
+      {/* CATEGORIES */}
+      <section id="categories" className="bg-white py-5 sm:py-14">
+        <div className="mx-auto max-w-[1280px] px-4">
+          <SectionHeading title={language === "sw" ? "Nunua kwa Kundi" : "Shop by Category"} subtitle={language === "sw" ? "Chagua unachotafuta kwa haraka." : "Find what you need quickly."} />
+
+          {categories.length > 0 ? (
+            <div className="relative mt-7"><button type="button" aria-label="Previous categories" onClick={() => document.getElementById("category-scroll")?.scrollBy({ left: -260, behavior: "smooth" })} className="absolute left-0 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-[#ddd] bg-white text-xl shadow-md sm:hidden">‹</button><div id="category-scroll" className="flex gap-4 overflow-x-auto pb-3 scrollbar-hide lg:grid lg:grid-cols-6 lg:overflow-visible">
+              {categories.map((category) => (
+                <button key={category} onClick={() => router.push(`/category/${encodeURIComponent(category)}`)} className={`group cursor-pointer min-w-[120px] rounded-xl border bg-white p-2 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-lg lg:min-w-0 ${selectedCategory === category ? "border-[#374151] ring-2 ring-[#374151]/10" : "border-[#e5e5e5]"}`}>
+                  <div className="relative h-36 overflow-hidden rounded-lg bg-white sm:h-40 lg:h-44">
+                    {CATEGORY_IMAGES[category] ? (
+                      <img
+                        src={CATEGORY_IMAGES[category]}
+                        alt={category}
+                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-5xl">
+                        {CATEGORY_ICONS[category] || "🛍️"}
+                      </div>
+                    )}
+                  </div>
+                  <div className="px-1 pt-2 pb-1">
+                    <p className="line-clamp-1 text-xs font-semibold text-[#333]">{category}</p>
+                    <p className="mt-0.5 text-[10px] text-[#777]">{language === "sw" ? "Angalia bidhaa →" : "Explore products →"}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+            <button type="button" aria-label="Next categories" onClick={() => document.getElementById("category-scroll")?.scrollBy({ left: 260, behavior: "smooth" })} className="absolute right-0 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-[#ddd] bg-white text-xl shadow-md sm:hidden">›</button>
+          </div>
+          ) : (
+            <div className="mt-7 rounded-2xl border border-dashed border-[#ddd] p-5 text-center text-sm text-[#777]">{t.noProducts}</div>
+          )}
+        </div>
+      </section>
+
+      {/* DEALS */}
+      <section id="deals" className="bg-[#f3f4f6] py-5 sm:py-14 text-white">
+        <div className="mx-auto max-w-[1280px] px-4">
+          <div className="flex items-end justify-between gap-4">
+            <SectionHeading title={language === "sw" ? "Ofa za Leo" : "Today's Deals"} subtitle={language === "sw" ? "Punguzo kwenye bidhaa zilizochaguliwa." : "Save on selected products."} />
+            <CarouselArrows onPrev={() => scrollCarousel(dealsRef, -1)} onNext={() => scrollCarousel(dealsRef, 1)} />
+          </div>
+
+          {deals.length > 0 ? (
+            <Carousel carouselRef={dealsRef} paused={false}>
+              {deals.map((product) => (
+                <div
+                  key={product.id}
+                  className="min-w-[185px] shrink-0 sm:min-w-[205px] lg:min-w-[215px]"
+                >
+                  <ProductCard
+                    product={product}
+                    addToCart={addToCart}
+                    currency={currency}
+                  />
+                </div>
+              ))}
+            </Carousel>
+          ) : (
+            <EmptySection text={language === "sw" ? "Hakuna ofa kwa sasa." : "No active deals right now."} />
+          )}
+        </div>
+      </section>
+
+      {/* RECOMMENDED */}
+      <section id="products" className="bg-[#f3f4f6] pb-10 sm:pb-14">
+        <div className="mx-auto max-w-[1280px] px-4">
+          <div className="flex items-end justify-between gap-4">
+            <SectionHeading title={language === "sw" ? "Mapendekezo Kwako" : "Recommended For You"} subtitle={selectedCategory !== "All" ? selectedCategory : language === "sw" ? "Bidhaa zilizochaguliwa kwa ajili yako." : "Popular picks from our store."} />
+            {selectedCategory !== "All" && <button onClick={() => setSelectedCategory("All")} className="text-xs font-black text-[#555] hover:text-[#374151]">{language === "sw" ? "Ondoa filter" : "Clear filter"} ×</button>}
+          </div>
+
+          {recommended.length > 0 ? (
+            <div className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
+              {recommended.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  addToCart={addToCart}
+                  currency={currency}
+                />
+              ))}
+            </div>
+          ) : <EmptySection text={t.noProducts} />}
+        </div>
+      </section>
+
+      {/* FLASH SALES */}
+      <section id="flash-sales" className="bg-[#f3f4f6] py-6 sm:py-12">
+        <div className="mx-auto max-w-[1280px] px-4">
+
           <div className="flex items-end justify-between gap-4">
             <div>
-              <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-3">
                 <SectionHeading
-                  title="🔥 Flash Deals"
+                  title="🔥 Flash Sales"
                   subtitle={
                     language === "sw"
-                      ? "Ofa za muda mfupi."
-                      : "Limited-time deals."
+                      ? "Ofa za muda mfupi — nunua kabla hazijaisha."
+                      : "Limited-time deals — shop before they're gone."
                   }
                 />
 
-                <div className="rounded-lg bg-[#1f2937] px-3 py-2 text-white">
-                  <p className="text-[8px] font-bold uppercase text-slate-300">
-                    {language === "sw"
-                      ? "Inaisha ndani"
-                      : "Ends in"}
-                  </p>
-                  <p className="font-mono text-sm font-black">
+                <div className="rounded-lg bg-[#111827] px-3 py-2 text-white shadow-sm">
+                  <div className="text-[8px] font-bold uppercase tracking-wider text-[#d1d5db]">
+                    {language === "sw" ? "Inaisha ndani" : "Ends in"}
+                  </div>
+                  <div className="mt-0.5 font-mono text-sm font-black tracking-wider sm:text-base">
                     {flashTime}
-                  </p>
+                  </div>
                 </div>
               </div>
             </div>
 
             <CarouselArrows
-              onPrev={() =>
-                scrollCarousel(flashRef, -1)
-              }
-              onNext={() =>
-                scrollCarousel(flashRef, 1)
-              }
+              onPrev={() => scrollCarousel(dealsRef, -1)}
+              onNext={() => scrollCarousel(dealsRef, 1)}
             />
           </div>
 
           {deals.length > 0 ? (
-            <Carousel carouselRef={flashRef}>
+            <Carousel carouselRef={dealsRef} paused={false}>
               {deals.map((product) => (
                 <ProductCard
                   key={product.id}
                   product={product}
                   addToCart={addToCart}
                   currency={currency}
-                  language={language}
                 />
               ))}
             </Carousel>
@@ -1142,408 +674,109 @@ export default function HomePage() {
             <EmptySection
               text={
                 language === "sw"
-                  ? "Hakuna ofa kwa sasa."
-                  : "No active deals right now."
+                  ? "Hakuna Flash Sales kwa sasa."
+                  : "No Flash Sales available right now."
               }
             />
           )}
-        </div>
-      </section>
 
-      {/* TRENDING */}
-      <section className="bg-white py-8 sm:py-12">
-        <div className="mx-auto max-w-[1440px] px-4 sm:px-5">
-          <div className="flex items-end justify-between">
-            <SectionHeading
-              title={
-                language === "sw"
-                  ? "🔥 Zinazotrend"
-                  : "🔥 Trending Now"
-              }
-              subtitle={
-                language === "sw"
-                  ? "Bidhaa zinazopendwa sasa."
-                  : "Products customers are loving right now."
-              }
-            />
-
-            <CarouselArrows
-              onPrev={() =>
-                scrollCarousel(trendingRef, -1)
-              }
-              onNext={() =>
-                scrollCarousel(trendingRef, 1)
-              }
-            />
-          </div>
-
-          <Carousel carouselRef={trendingRef}>
-            {trending.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                addToCart={addToCart}
-                currency={currency}
-                language={language}
-              />
-            ))}
-          </Carousel>
         </div>
       </section>
 
       {/* NEW ARRIVALS */}
-      <section
-        id="new-arrivals"
-        className="bg-[#f3f4f6] py-8 sm:py-12"
-      >
-        <div className="mx-auto max-w-[1440px] px-4 sm:px-5">
-          <div className="flex items-end justify-between">
-            <SectionHeading
-              title={
-                language === "sw"
-                  ? "✨ Bidhaa Mpya"
-                  : "✨ New Arrivals"
-              }
-              subtitle={
-                language === "sw"
-                  ? "Bidhaa zilizoongezwa hivi karibuni."
-                  : "Fresh products added recently."
-              }
-            />
-
-            <CarouselArrows
-              onPrev={() =>
-                scrollCarousel(newRef, -1)
-              }
-              onNext={() =>
-                scrollCarousel(newRef, 1)
-              }
-            />
+      <section id="new-arrivals" className="bg-white py-5 sm:py-14">
+        <div className="mx-auto max-w-[1280px] px-4">
+          <div className="flex items-end justify-between gap-4">
+            <SectionHeading title={language === "sw" ? "Bidhaa Mpya" : "New Arrivals"} subtitle={language === "sw" ? "Bidhaa mpya zilizoongezwa hivi karibuni." : "Recently added products."} />
+            <CarouselArrows onPrev={() => scrollCarousel(newRef, -1)} onNext={() => scrollCarousel(newRef, 1)} />
           </div>
-
-          <Carousel carouselRef={newRef}>
-            {newArrivals.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                addToCart={addToCart}
-                currency={currency}
-                language={language}
-              />
-            ))}
-          </Carousel>
+          <Carousel carouselRef={newRef} paused={false}>{newArrivals.map((product) => (
+  <div key={product.id} className="min-w-[185px] shrink-0 sm:min-w-[205px] lg:min-w-[215px]">
+    <ProductCard product={product} addToCart={addToCart} currency={currency} />
+  </div>
+))}</Carousel>
         </div>
       </section>
 
       {/* BEST SELLERS */}
-      <section
-        id="best-sellers"
-        className="bg-white py-8 sm:py-12"
-      >
-        <div className="mx-auto max-w-[1440px] px-4 sm:px-5">
-          <div className="flex items-end justify-between">
-            <SectionHeading
-              title={
-                language === "sw"
-                  ? "🏆 Zinazouzwa Sana"
-                  : "🏆 Best Sellers"
-              }
-              subtitle={
-                language === "sw"
-                  ? "Bidhaa zinazopendwa zaidi."
-                  : "Customer favorites."
-              }
-            />
-
-            <CarouselArrows
-              onPrev={() =>
-                scrollCarousel(bestRef, -1)
-              }
-              onNext={() =>
-                scrollCarousel(bestRef, 1)
-              }
-            />
-          </div>
-
-          <Carousel carouselRef={bestRef}>
-            {bestSellers.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                addToCart={addToCart}
-                bestSeller
-                currency={currency}
-                language={language}
-              />
-            ))}
-          </Carousel>
-        </div>
-      </section>
-
-      {/* CATEGORY SECTIONS */}
-      {ALL_CATEGORIES.map((category) => {
-        const categoryItems =
-          categoryProducts[category] || [];
-
-        if (categoryItems.length === 0) {
-          return null;
-        }
-
-        return (
-          <section
-            key={category}
-            className="border-t border-slate-100 bg-[#f3f4f6] py-8 sm:py-12"
-          >
-            <div className="mx-auto max-w-[1440px] px-4 sm:px-5">
-              <div className="flex items-end justify-between gap-4">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xl">
-                      {CATEGORY_ICONS[category]}
-                    </span>
-
-                    <h2 className="text-xl font-black tracking-tight text-slate-900 sm:text-2xl">
-                      {category}
-                    </h2>
-                  </div>
-
-                  <p className="mt-1 text-xs text-slate-500">
-                    {language === "sw"
-                      ? `Bidhaa za ${category}`
-                      : `Explore ${category}`}
-                  </p>
-                </div>
-
-                <button
-                  onClick={() => goCategory(category)}
-                  className="shrink-0 rounded-full border border-slate-300 bg-white px-4 py-2 text-[10px] font-black text-slate-700 transition hover:border-blue-400 hover:text-blue-600"
-                >
-                  {language === "sw"
-                    ? "ONA ZOTE →"
-                    : "VIEW ALL →"}
-                </button>
-              </div>
-
-              <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-6">
-                {categoryItems.map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    addToCart={addToCart}
-                    currency={currency}
-                    language={language}
-                  />
-                ))}
-              </div>
-            </div>
-          </section>
-        );
-      })}
-
-      {/* LONG PRODUCT FEED */}
-      <section
-        id="products"
-        className="bg-white py-10 sm:py-14"
-      >
-        <div className="mx-auto max-w-[1440px] px-4 sm:px-5">
+      <section id="best-sellers" className="bg-[#f3f4f6] py-5 sm:py-14 text-white">
+        <div className="mx-auto max-w-[1280px] px-4">
           <div className="flex items-end justify-between gap-4">
-            <div>
-              <h2 className="text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
-                {selectedCategory !== "All"
-                  ? selectedCategory
-                  : language === "sw"
-                  ? "Bidhaa Zote"
-                  : "More Products"}
-              </h2>
-
-              <p className="mt-1 text-xs text-slate-500">
-                {search
-                  ? `${filteredProducts.length} ${
-                      language === "sw"
-                        ? "bidhaa zimepatikana"
-                        : "products found"
-                    }`
-                  : language === "sw"
-                  ? "Endelea kugundua bidhaa zaidi."
-                  : "Keep exploring more products."}
-              </p>
-            </div>
-
-            {selectedCategory !== "All" && (
-              <button
-                onClick={() =>
-                  setSelectedCategory("All")
-                }
-                className="rounded-full border border-slate-300 px-4 py-2 text-[10px] font-black"
-              >
-                {language === "sw"
-                  ? "ONDOA FILTER"
-                  : "CLEAR FILTER"}{" "}
-                ×
-              </button>
-            )}
+            <SectionHeading title={language === "sw" ? "Zinazouzwa Sana" : "Best Sellers"} subtitle={language === "sw" ? "Bidhaa zinazopendwa zaidi na wateja." : "Customer favorites."} />
+            <CarouselArrows onPrev={() => scrollCarousel(bestRef, -1)} onNext={() => scrollCarousel(bestRef, 1)} />
           </div>
-
-          {filteredProducts.length > 0 ? (
-            <div className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-              {filteredProducts.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  addToCart={addToCart}
-                  currency={currency}
-                  language={language}
-                />
-              ))}
-            </div>
-          ) : (
-            <EmptySection text={t.noProducts} />
-          )}
+          <Carousel carouselRef={bestRef} paused={false}>{bestSellers.map((product) => (
+  <div key={product.id} className="min-w-[185px] shrink-0 sm:min-w-[205px] lg:min-w-[215px]">
+    <ProductCard product={product} addToCart={addToCart} bestSeller currency={currency} />
+  </div>
+))}</Carousel>
         </div>
       </section>
 
       {/* FOOTER */}
-      <footer className="border-t border-slate-200 bg-[#1f2937] py-10 text-white">
-        <div className="mx-auto max-w-[1440px] px-4 sm:px-5">
-          <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
-            <div>
-              <img
-                src="/gamora-logo.png"
-                alt="Gamora Online"
-                className="h-14 w-auto rounded bg-white px-2"
-              />
+<footer id="about" className="border-t border-slate-200 bg-white py-8 text-slate-700 sm:py-5">
+  <div className="mx-auto max-w-[1280px] px-4">
 
-              <p className="mt-4 max-w-xs text-xs leading-5 text-slate-200">
-                {language === "sw"
-                  ? ""
-                  : "Gamora Online — shop smart, choose Gamora."}
-              </p>
+    <div className="grid grid-cols-3 gap-3 sm:gap-4">
 
-              <div className="mt-5 flex gap-2">
-                <SocialButton
-                  label="Facebook"
-                  icon={<FaFacebookF />}
-                />
-                <SocialButton
-                  label="Instagram"
-                  icon={<FaInstagram />}
-                />
-                <SocialButton
-                  label="TikTok"
-                  icon={<FaTiktok />}
-                />
-              </div>
-            </div>
+      <FooterColumn
+        title={language === "sw" ? "Duka" : "Shop"}
+        links={[
+          [language === "sw" ? "Makundi" : "Categories", "#categories"],
+          [language === "sw" ? "Bidhaa Mpya" : "New Arrivals", "#new-arrivals"],
+          [language === "sw" ? "Ofa" : "Deals", "#deals"],
+          [language === "sw" ? "Zinazouzwa Sana" : "Best Sellers", "#best-sellers"],
+        ]}
+      />
 
-            <FooterColumn
-              title={
-                language === "sw"
-                  ? "Duka"
-                  : "Shop"
-              }
-              links={[
-                [
-                  language === "sw"
-                    ? "Makundi"
-                    : "Categories",
-                  "#categories",
-                ],
-                [
-                  language === "sw"
-                    ? "Bidhaa Mpya"
-                    : "New Arrivals",
-                  "#new-arrivals",
-                ],
-                [
-                  language === "sw"
-                    ? "Ofa"
-                    : "Deals",
-                  "#flash-sales",
-                ],
-                [
-                  language === "sw"
-                    ? "Zinazouzwa Sana"
-                    : "Best Sellers",
-                  "#best-sellers",
-                ],
-              ]}
-            />
+      <FooterColumn
+        title={language === "sw" ? "Mteja" : "Customer"}
+        links={[
+          [language === "sw" ? "Tengeneza Account" : "Create Account", "/profile"],
+          [language === "sw" ? "Oda Zangu" : "My Orders", "/orders"],
+          [language === "sw" ? "Orodha ya Matamanio" : "Wishlist", "/wishlist"],
+          [language === "sw" ? "Kikapu" : "Cart", "/cart"],
+        ]}
+      />
 
-            <FooterColumn
-              title={
-                language === "sw"
-                  ? "Mteja"
-                  : "Customer"
-              }
-              links={[
-                [
-                  language === "sw"
-                    ? "Akaunti"
-                    : "Account",
-                  "/account",
-                ],
-                [
-                  language === "sw"
-                    ? "Oda Zangu"
-                    : "My Orders",
-                  "/orders",
-                ],
-                [
-                  language === "sw"
-                    ? "Wishlist"
-                    : "Wishlist",
-                  "/wishlist",
-                ],
-                [
-                  language === "sw"
-                    ? "Kikapu"
-                    : "Cart",
-                  "/cart",
-                ],
-              ]}
-            />
+      <FooterColumn
+        title={language === "sw" ? "Msaada" : "Support"}
+        links={[
+          [language === "sw" ? "Jinsi ya Kununua" : "How to Buy", "/help"],
+          [language === "sw" ? "Sera ya Uwasilishaji" : "Delivery Policy", "/delivery"],
+          [language === "sw" ? "Vigezo na Masharti" : "Terms & Conditions", "/terms"],
+          [language === "sw" ? "Wasiliana Nasi" : "Contact Us", "/contact"],
+        ]}
+      />
 
-            <FooterColumn
-              title={
-                language === "sw"
-                  ? "Msaada"
-                  : "Support"
-              }
-              links={[
-                [
-                  language === "sw"
-                    ? "Jinsi ya Kununua"
-                    : "How to Buy",
-                  "/help",
-                ],
-                [
-                  language === "sw"
-                    ? "Delivery"
-                    : "Delivery Policy",
-                  "/delivery",
-                ],
-                [
-                  language === "sw"
-                    ? "Masharti"
-                    : "Terms & Conditions",
-                  "/terms",
-                ],
-                [
-                  language === "sw"
-                    ? "Wasiliana Nasi"
-                    : "Contact Us",
-                  "/contact",
-                ],
-              ]}
-            />
-          </div>
+    </div>
 
-          <div className="mt-10 border-t border-white/10 pt-5 text-center text-[10px] text-slate-300">
-            © {new Date().getFullYear()} Gamora Online. All rights reserved.
-          </div>
-        </div>
-      </footer>
-    </main>
+    <div className="mt-6 flex justify-center gap-3">
+      <SocialButton 
+        label="Facebook" 
+        href="https://web.facebook.com/gamoraonline/" 
+        icon="Facebook"
+      />
+      <SocialButton 
+        label="Instagram" 
+        href="https://www.instagram.com/gamoraonline_store/" 
+        icon="Instagram"
+      />
+      <SocialButton 
+        label="TikTok" 
+        href="https://www.tiktok.com/@officialgamoraonline" 
+        icon="TikTok"
+      />
+    </div>
+
+    <div className="mt-6 border-t border-slate-200 pt-4 text-center text-xs text-slate-500">
+      © 2026 Gamora Online. {t.rights}
+    </div>
+
+  </div>
+</footer>
+
+</main>
   );
 }
 
@@ -1552,63 +785,44 @@ function getProductImage(product: Product) {
 }
 
 function getDiscount(product: Product) {
-  if (
-    typeof product.discount === "number" &&
-    product.discount > 0
-  ) {
-    return product.discount;
+  if (typeof product.discount === "number" && product.discount > 0) return product.discount;
+  if (typeof product.oldPrice === "number" && product.oldPrice > product.price) {
+    return Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100);
   }
-
-  if (
-    typeof product.oldPrice === "number" &&
-    product.oldPrice > product.price
-  ) {
-    return Math.round(
-      ((product.oldPrice - product.price) /
-        product.oldPrice) *
-        100
-    );
-  }
-
   return 0;
 }
 
-function SectionHeading({
-  title,
-  subtitle,
-}: {
-  title: string;
-  subtitle: string;
-}) {
+function SectionHeading({ title, subtitle, centered = false }: { title: string; subtitle?: string; centered?: boolean }) {
   return (
-    <div>
-      <h2 className="text-xl font-black tracking-tight text-slate-950 sm:text-2xl">
-        {title}
-      </h2>
-
-      <p className="mt-1 text-xs text-slate-500">
-        {subtitle}
-      </p>
+    <div className={centered ? "text-center" : ""}>
+      <h2 className="text-lg font-black tracking-tight text-[#374151] sm:text-xl">{title}</h2>
+      {subtitle && <p className="mt-1.5 text-sm text-[#777]">{subtitle}</p>}
     </div>
   );
 }
 
 function Carousel({
-  carouselRef,
   children,
+  carouselRef,
 }: {
+  children: ReactNode;
   carouselRef: RefObject<HTMLDivElement | null>;
-  children: React.ReactNode;
+  paused?: boolean;
 }) {
   return (
     <div
       ref={carouselRef}
-      className="mt-6 flex gap-3 overflow-x-auto pb-4 scrollbar-hide"
+      className="mt-5 flex w-full gap-3 overflow-x-auto scroll-smooth pb-2 scrollbar-hide sm:gap-4"
+      style={{
+        scrollSnapType: "x mandatory",
+        WebkitOverflowScrolling: "touch",
+      }}
     >
       {children}
     </div>
   );
 }
+
 
 function CarouselArrows({
   onPrev,
@@ -1618,17 +832,21 @@ function CarouselArrows({
   onNext: () => void;
 }) {
   return (
-    <div className="hidden gap-2 sm:flex">
+    <div className="flex shrink-0 items-center gap-2">
       <button
+        type="button"
+        aria-label="Previous"
         onClick={onPrev}
-        className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-lg shadow-sm transition hover:border-blue-300 hover:text-blue-600"
+        className="flex h-9 w-9 items-center justify-center rounded-full border border-[#d9d9d9] bg-white text-xl font-bold text-[#333] shadow-sm transition hover:bg-[#f3f4f6] active:scale-95"
       >
         ‹
       </button>
 
       <button
+        type="button"
+        aria-label="Next"
         onClick={onNext}
-        className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-lg shadow-sm transition hover:border-blue-300 hover:text-blue-600"
+        className="flex h-9 w-9 items-center justify-center rounded-full border border-[#d9d9d9] bg-white text-xl font-bold text-[#333] shadow-sm transition hover:bg-[#f3f4f6] active:scale-95"
       >
         ›
       </button>
@@ -1641,158 +859,147 @@ function ProductCard({
   addToCart,
   bestSeller = false,
   currency,
-  language,
 }: {
   product: Product;
   addToCart: (product: Product) => void;
   bestSeller?: boolean;
   currency: Currency;
-  language: Language;
 }) {
   const image = getProductImage(product);
   const discount = getDiscount(product);
+  const rating = Number(product.rating || 0);
+  const orders = Number(product.orders_count || 0);
 
   return (
-    <article className="group relative min-w-[180px] shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg sm:min-w-[205px] lg:min-w-0">
-      <button
-        type="button"
-        className="absolute right-2 top-2 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-white/95 text-sm shadow"
-        onClick={() => addToCart(product)}
-        aria-label="Add to cart"
+    <article className="group w-[155px] shrink-0 overflow-hidden bg-white sm:w-[190px] lg:w-[215px]">
+      <a
+        href={`/product/${product.id}`}
+        className="relative block overflow-hidden bg-white"
       >
-        🛒
-      </button>
-
-      {discount > 0 && (
-        <span className="absolute left-2 top-2 z-20 rounded-md bg-[#ef4444] px-2 py-1 text-[9px] font-black text-white">
-          -{discount}%
-        </span>
-      )}
-
-      {bestSeller && (
-        <span className="absolute left-2 top-9 z-20 rounded-md bg-[#1f2937] px-2 py-1 text-[8px] font-black text-white">
-          {language === "sw"
-            ? "BEST SELLER"
-            : "BEST SELLER"}
-        </span>
-      )}
-
-      <button
-        type="button"
-        onClick={() =>
-          window.location.href = `/product/${product.id}`
-        }
-        className="block w-full text-left"
-      >
-        <div className="flex h-[145px] items-center justify-center overflow-hidden bg-white sm:h-[160px]">
-          {image ? (
+        {image ? (
+          <div className="relative flex h-[185px] w-full items-center justify-center overflow-hidden bg-white sm:h-[215px] lg:h-[245px]">
             <img
               src={image}
               alt={product.name}
-              className="h-full w-full object-contain p-0 transition duration-500 group-hover:scale-105"
+              loading="lazy"
+              className="h-full w-full object-contain p-1 transition-transform duration-300 group-hover:scale-[1.025]"
             />
-          ) : (
-            <div className="text-5xl opacity-20">
-              🛍️
-            </div>
+          </div>
+        ) : (
+          <div className="flex h-[185px] w-full items-center justify-center bg-white text-4xl text-gray-300 sm:h-[215px] lg:h-[245px]">
+            🛍️
+          </div>
+        )}
+
+        {discount > 0 && (
+          <span className="absolute left-1 top-1 bg-[#e30613] px-1.5 py-0.5 text-[9px] font-bold text-white">
+            -{discount}%
+          </span>
+        )}
+
+        {bestSeller && (
+          <span className="absolute right-1 top-1 bg-[#374151] px-1.5 py-0.5 text-[8px] font-bold text-white">
+            BEST
+          </span>
+        )}
+      </a>
+
+      <div className="px-1 pt-1 pb-1">
+        <a href={`/product/${product.id}`}>
+          <h3 className="line-clamp-2 text-[11px] font-medium leading-[14px] text-[#222] sm:text-xs">
+            {product.name}
+          </h3>
+        </a>
+
+        <div className="mt-1 flex items-center gap-1">
+          <span className="text-[10px] text-[#f59e0b]">★★★★★</span>
+
+          {rating > 0 && (
+            <span className="text-[9px] text-[#777]">
+              {rating.toFixed(1)}
+            </span>
+          )}
+
+          {orders > 0 && (
+            <span className="text-[9px] text-[#999]">
+              ({orders})
+            </span>
           )}
         </div>
 
-        <div className="px-3 py-2">
-          <div className="flex items-end justify-between gap-2">
-            <div>
-              <p className="text-sm font-medium text-[#e30613]">
-                {formatCurrency(
-                  Number(product.price || 0),
-                  currency
-                )}
-              </p>
+        <div className="mt-1 flex flex-wrap items-baseline gap-1">
+          <span className="text-xs font-bold text-[#e30613] sm:text-sm">
+            {formatCurrency(Number(product.price), currency)}
+          </span>
 
-              {typeof product.oldPrice ===
-                "number" &&
-                product.oldPrice >
-                  Number(product.price || 0) && (
-                  <p className="text-[9px] text-slate-400 line-through">
-                    {formatCurrency(
-                      product.oldPrice,
-                      currency
-                    )}
-                  </p>
-                )}
-            </div>
-          </div>
+          {typeof product.oldPrice === "number" &&
+            product.oldPrice > product.price && (
+              <span className="text-[9px] text-[#999] line-through">
+                {formatCurrency(Number(product.oldPrice), currency)}
+              </span>
+            )}
         </div>
-      </button>
-
-      <div className="px-3 pb-3">
-        <button
-          type="button"
-          onClick={() => addToCart(product)}
-          className="w-full rounded-lg bg-[#2563eb] py-2 text-[9px] font-medium text-white transition hover:bg-[#1d4ed8]"
-        >
-          {language === "sw"
-            ? "ONGEZA KIKAPUNI"
-            : "ADD TO CART"}
-        </button>
       </div>
     </article>
   );
 }
 
-function EmptySection({
-  text,
-}: {
-  text: string;
-}) {
+function Benefit({ icon, title, text }: { icon: string; title: string; text: string }) {
   return (
-    <div className="mt-6 rounded-xl border border-dashed border-slate-300 bg-white p-10 text-center text-sm text-slate-300">
-      {text}
+    <div className="px-4 py-5 text-center">
+      <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-[#f3f6fb] text-base font-bold text-[#2563eb]">
+        {icon}
+      </div>
+      <h3 className="mt-2 text-[10px] font-semibold text-[#222] sm:text-xs">
+        {title}
+      </h3>
+      <p className="mx-auto mt-1 max-w-xs text-[10px] leading-4 text-[#777]">
+        {text}
+      </p>
     </div>
   );
 }
 
-function FooterColumn({
-  title,
-  links,
-}: {
-  title: string;
-  links: [string, string][];
-}) {
+function EmptySection({ text }: { text: string }) {
+  return <div className="mt-7 rounded-2xl border border-dashed border-[#d7d7d7] bg-white py-8 text-center text-sm text-[#777]">{text}</div>;
+}
+
+function FooterColumn({ title, links }: { title: string; links: Array<[string, string]> }) {
   return (
     <div>
-      <h3 className="text-sm font-black text-white">
-        {title}
-      </h3>
-
-      <div className="mt-4 space-y-3">
-        {links.map(([label, href]) => (
-          <a
-            key={`${label}-${href}`}
-            href={href}
-            className="block text-xs font-medium text-slate-200 transition hover:text-white"
-          >
-            {label}
-          </a>
-        ))}
+      <h3 className="text-[10px] sm:text-sm text-[11px] font-black sm:text-sm text-white">{title}</h3>
+      <div className="mt-4 space-y-3 text-[11px] sm:text-xs text-[#999]">
+        {links.map(([label, href]) => <a key={`${label}-${href}`} href={href} className="block transition hover:text-white">{label}</a>)}
       </div>
     </div>
   );
 }
 
-function SocialButton({
-  label,
-  icon,
-}: {
-  label: string;
-  icon: React.ReactNode;
-}) {
+function SocialButton({ icon, label, href }: { icon: string; label: string; href: string }) {
+  const Icon =
+    icon === "Facebook"
+      ? FaFacebookF
+      : icon === "Instagram"
+      ? FaInstagram
+      : FaTiktok;
+
   return (
     <a
-      href="#"
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
       aria-label={label}
-      className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-sm text-white transition hover:bg-white/20"
+      className="flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm transition hover:scale-110"
     >
-      {icon}
+      <Icon
+        className={`h-4 w-4 ${
+          icon === "Facebook"
+            ? "text-[#1877F2]"
+            : icon === "Instagram"
+            ? "text-[#E4405F]"
+            : "text-black"
+        }`}
+      />
     </a>
   );
 }

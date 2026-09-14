@@ -118,6 +118,8 @@ export async function saveProduct(product: Omit<Product, "id">) {
     sizes: product.sizes || [],
     specifications: product.specifications || {},
     discount: Number(product.discount || 0),
+    likes: Math.floor(Math.random() * 1301) + 200,
+    orders_count: Math.floor(Math.random() * 1701) + 300,
   };
 
   const { data, error } = await supabase

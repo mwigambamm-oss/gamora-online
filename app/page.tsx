@@ -92,6 +92,7 @@ export default function HomePage() {
   const [flashTime, setFlashTime] = useState("12:32:43");
 
   const dealsRef = useRef<HTMLDivElement>(null);
+  const flashRef = useRef<HTMLDivElement>(null);
   const newRef = useRef<HTMLDivElement>(null);
   const bestRef = useRef<HTMLDivElement>(null);
 
@@ -497,42 +498,147 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* HERO */}
-      <section
-        className="relative overflow-hidden bg-[#e8e9eb]"
-        onMouseEnter={() => setHeroPaused(true)}
-        onMouseLeave={() => setHeroPaused(false)}
-      >
-        <div className="mx-auto max-w-[1280px] px-4 py-8 sm:py-6 lg:py-8">
-          <div className="relative min-h-[390px] overflow-hidden rounded-[28px] bg-[#e8e9eb] sm:min-h-[440px] lg:min-h-[500px]">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_45%,#ffffff_0%,#e8e9eb_43%,#d9dbde_100%)]" />
+      {/* MARKETPLACE HERO + CATEGORIES */}
+      <section className="bg-white py-3 sm:py-5">
+        <div className="mx-auto max-w-[1280px] px-3 sm:px-4">
+          <div className="grid gap-3 lg:grid-cols-[205px_minmax(0,1fr)]">
 
-            <div className="relative grid min-h-[390px] items-center gap-6 px-6 py-5 sm:min-h-[440px] sm:px-10 lg:min-h-[500px] lg:grid-cols-[1.05fr_.95fr] lg:px-16">
-              <div className="relative z-10 max-w-xl">
-                <p className="mb-4 text-xs font-black uppercase tracking-[0.22em] text-[#666] sm:text-sm">{hero.eyebrow}</p>
-                <h1 className="max-w-xl text-4xl font-black leading-[0.98] tracking-tight text-[#111] sm:text-5xl lg:text-7xl">{hero.title}</h1>
-                <p className="mt-5 max-w-lg text-sm leading-6 text-[#555] sm:text-base sm:leading-7">{hero.text}</p>
-                <a href={hero.product ? `/product/${hero.product.id}` : "#products"} className="mt-7 inline-flex rounded-xl bg-[#374151] px-6 py-3.5 text-xs font-medium text-white shadow-xl transition hover:-translate-y-0.5 hover:bg-[#374151]">{hero.button} <span className="ml-2">→</span></a>
+            {/* SMALL CATEGORY PANEL */}
+            <aside className="hidden overflow-hidden rounded-xl border border-[#e5e5e5] bg-white lg:block">
+              <div className="border-b border-[#eeeeee] px-4 py-3">
+                <h2 className="text-sm font-black text-[#111]">
+                  {language === "sw" ? "Makundi" : "Categories"}
+                </h2>
               </div>
 
-              <div className="relative flex min-h-[210px] items-center justify-center lg:min-h-[360px]">
-                <div className="absolute h-56 w-56 rounded-full bg-white/70 blur-2xl sm:h-72 sm:w-72 lg:h-96 lg:w-96" />
-                {hero.product && getProductImage(hero.product) ? (
-                  <img src={getProductImage(hero.product)} alt={hero.product.name} className="relative z-10 max-h-[280px] max-w-[88%] object-contain drop-shadow-2xl transition duration-700 sm:max-h-[350px] lg:max-h-[430px]" />
-                ) : (
-                  <div className="relative z-10 text-8xl opacity-30">🛍️</div>
-                )}
+              <div className="py-1">
+                {ALL_CATEGORIES.slice(0, 12).map((category) => (
+                  <button
+                    key={category}
+                    type="button"
+                    onClick={() =>
+                      router.push(`/category/${encodeURIComponent(category)}`)
+                    }
+                    className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-[11px] font-semibold text-[#333] transition hover:bg-[#fff1f2] hover:text-[#e30613]"
+                  >
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-[#f7f7f7] text-sm">
+                      {CATEGORY_ICONS[category] || "🛍️"}
+                    </span>
+                    <span className="line-clamp-1">{category}</span>
+                    <span className="ml-auto text-[#aaa]">›</span>
+                  </button>
+                ))}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowCategoryMenu(true)}
+                className="w-full border-t border-[#eeeeee] px-3 py-3 text-left text-[11px] font-black text-[#e30613] hover:bg-[#fff7f7]"
+              >
+                {language === "sw" ? "Makundi yote →" : "All Categories →"}
+              </button>
+            </aside>
+
+            {/* HERO SLIDER */}
+            <div
+              className="relative min-w-0 overflow-hidden rounded-xl bg-[#f3f4f6]"
+              onMouseEnter={() => setHeroPaused(true)}
+              onMouseLeave={() => setHeroPaused(false)}
+            >
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_78%_45%,#ffffff_0%,#f3f4f6_48%,#e5e7eb_100%)]" />
+
+              <div className="relative grid min-h-[275px] items-center gap-2 px-5 py-5 sm:min-h-[330px] sm:px-8 lg:min-h-[365px] lg:grid-cols-[1fr_.8fr] lg:px-12">
+                <div className="relative z-10 max-w-xl">
+                  <p className="mb-2 text-[10px] font-black uppercase tracking-[0.18em] text-[#e30613] sm:text-xs">
+                    {hero.eyebrow}
+                  </p>
+
+                  <h1 className="max-w-xl text-3xl font-black leading-[1] tracking-tight text-[#111] sm:text-4xl lg:text-6xl">
+                    {hero.title}
+                  </h1>
+
+                  <p className="mt-3 max-w-lg text-xs leading-5 text-[#666] sm:text-sm sm:leading-6">
+                    {hero.text}
+                  </p>
+
+                  <a
+                    href={hero.product ? `/product/${hero.product.id}` : "#products"}
+                    className="mt-5 inline-flex rounded-lg bg-[#e30613] px-5 py-3 text-[11px] font-black text-white shadow-lg transition hover:bg-[#c80511] sm:px-6 sm:text-xs"
+                  >
+                    {hero.button}
+                    <span className="ml-2">→</span>
+                  </a>
+                </div>
+
+                <div className="relative flex min-h-[145px] items-center justify-center sm:min-h-[190px] lg:min-h-[280px]">
+                  <div className="absolute h-40 w-40 rounded-full bg-white/80 blur-2xl sm:h-56 sm:w-56 lg:h-72 lg:w-72" />
+
+                  {hero.product && getProductImage(hero.product) ? (
+                    <img
+                      src={getProductImage(hero.product)}
+                      alt={hero.product.name}
+                      className="relative z-10 max-h-[190px] max-w-[88%] object-contain drop-shadow-2xl transition duration-700 sm:max-h-[245px] lg:max-h-[320px]"
+                    />
+                  ) : (
+                    <div className="relative z-10 text-7xl opacity-30">🛍️</div>
+                  )}
+                </div>
+              </div>
+
+              <button
+                aria-label="Previous slide"
+                onClick={() =>
+                  setHeroIndex(
+                    (heroIndex - 1 + heroSlides.length) % heroSlides.length
+                  )
+                }
+                className="absolute left-2 top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-lg shadow-md transition hover:bg-white sm:left-3 sm:h-10 sm:w-10 sm:text-xl"
+              >
+                ‹
+              </button>
+
+              <button
+                aria-label="Next slide"
+                onClick={() =>
+                  setHeroIndex((heroIndex + 1) % heroSlides.length)
+                }
+                className="absolute right-2 top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-lg shadow-md transition hover:bg-white sm:right-3 sm:h-10 sm:w-10 sm:text-xl"
+              >
+                ›
+              </button>
+
+              <div className="absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 gap-1.5">
+                {heroSlides.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setHeroIndex(index)}
+                    aria-label={`Go to slide ${index + 1}`}
+                    className={`h-1.5 rounded-full transition-all ${
+                      index === heroIndex
+                        ? "w-6 bg-[#e30613]"
+                        : "w-1.5 bg-[#999]"
+                    }`}
+                  />
+                ))}
               </div>
             </div>
+          </div>
 
-            <button aria-label="Previous slide" onClick={() => setHeroIndex((heroIndex - 1 + heroSlides.length) % heroSlides.length)} className="absolute left-3 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-xl shadow-lg transition hover:bg-white">‹</button>
-            <button aria-label="Next slide" onClick={() => setHeroIndex((heroIndex + 1) % heroSlides.length)} className="absolute right-3 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-xl shadow-lg transition hover:bg-white">›</button>
-
-            <div className="absolute bottom-5 left-1/2 z-20 flex -translate-x-1/2 gap-2">
-              {heroSlides.map((_, index) => (
-                <button key={index} onClick={() => setHeroIndex(index)} aria-label={`Go to slide ${index + 1}`} className={`h-2 rounded-full transition-all ${index === heroIndex ? "w-7 bg-[#374151]" : "w-2 bg-[#999]"}`} />
-              ))}
-            </div>
+          {/* MOBILE CATEGORIES STRIP */}
+          <div className="mt-3 flex gap-2 overflow-x-auto pb-1 scrollbar-hide lg:hidden">
+            {ALL_CATEGORIES.slice(0, 12).map((category) => (
+              <button
+                key={category}
+                type="button"
+                onClick={() =>
+                  router.push(`/category/${encodeURIComponent(category)}`)
+                }
+                className="flex min-w-fit items-center gap-1.5 rounded-full border border-[#e5e5e5] bg-white px-3 py-2 text-[10px] font-bold text-[#333]"
+              >
+                <span>{CATEGORY_ICONS[category] || "🛍️"}</span>
+                <span>{category}</span>
+              </button>
+            ))}
           </div>
         </div>
       </section>
@@ -654,13 +760,13 @@ export default function HomePage() {
             </div>
 
             <CarouselArrows
-              onPrev={() => scrollCarousel(dealsRef, -1)}
-              onNext={() => scrollCarousel(dealsRef, 1)}
+              onPrev={() => scrollCarousel(flashRef, -1)}
+              onNext={() => scrollCarousel(flashRef, 1)}
             />
           </div>
 
           {deals.length > 0 ? (
-            <Carousel carouselRef={dealsRef} paused={false}>
+            <Carousel carouselRef={flashRef} paused={false}>
               {deals.map((product) => (
                 <ProductCard
                   key={product.id}

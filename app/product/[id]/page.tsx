@@ -23,12 +23,6 @@ type Product = {
   images?: string[];
   colors?: string[];
   sizes?: string[];
-  storageOptions?: {
-    storage: string;
-    price: number;
-    stock: number;
-  }[];
-  specifications?: Record<string, string>;
   orders_count?: number;
   likes?: number;
 };
@@ -55,222 +49,14 @@ export default function ProductPage({
   const t = (en: string, sw: string) => (language === "sw" ? sw : en);
 
   const [product, setProduct] = useState<Product | null>(null);
-  const [likes, setLikes] = useState(200);
-  const [orders, setOrders] = useState(300);
-  const [liked, setLiked] = useState(false);
-  const [likeLoading, setLikeLoading] = useState(false);
 
-  const loadSocialProof = async (id: number) => {
-    try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+  const displayName = product?.name;
 
-      const headers: HeadersInit = session?.access_token
-        ? { Authorization: `Bearer ${session.access_token}` }
-        : {};
+  const displayCategory = product?.category;
 
-      const response = await fetch(`/api/products/${id}/like`, {
-        headers,
-        cache: "no-store",
-      });
-
-      if (!response.ok) return;
-
-      const data = await response.json();
-
-      setLikes(Math.max(200, Number(data.likes || 200)));
-      setOrders(Math.max(300, Number(data.orders || 300)));
-      setLiked(Boolean(data.liked));
-    } catch (error) {
-      console.error("Failed to load social proof:", error);
-    }
-  };
-
-  const toggleLike = async () => {
-    if (!product || likeLoading) return;
-
-    setLikeLoading(true);
-
-    try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (!session?.access_token) {
-        alert(
-          t(
-            "Please login to like this product.",
-            "Tafadhali ingia kwenye akaunti ili kuweka Like kwenye bidhaa hii."
-          )
-        );
-        return;
-      }
-
-      const response = await fetch(`/api/products/${product.id}/like`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        alert(data?.error || "Unable to update like.");
-        return;
-      }
-
-      await loadSocialProof(product.id);
-    } catch (error) {
-      console.error("Failed to toggle like:", error);
-      alert(
-        t(
-          "Unable to update like. Please try again.",
-          "Imeshindikana kuweka Like. Tafadhali jaribu tena."
-        )
-      );
-    } finally {
-      setLikeLoading(false);
-    }
-  };
-
-
-
-  const displayName = language === "sw" ? (product?.name_sw || product?.name) : product?.name;
-
-  const displayCategory = language === "sw" ? (product?.category_sw || product?.category) : product?.category;
-
-  const displayDescription = language === "sw"
-    ? (product?.description_sw || product?.description)
-    : product?.description;
-
-  const renderDescription = (description?: string) => {
-    if (!description) return null;
-
-    const cleanedDescription = description
-      .replace(/<br\s*\/?>/gi, "\n")
-      .replace(/&nbsp;/gi, " ");
-
-    const marker = /(?:Key Features|Features\s*\/\s*Specifications|Features):?/i;
-    const match = cleanedDescription.match(marker);
-
-    if (!match || match.index === undefined) {
-      return cleanedDescription;
-    }
-
-    const intro = cleanedDescription.slice(0, match.index).trim();
-    const featuresText = cleanedDescription
-      .slice(match.index + match[0].length)
-      .trim();
-
-    const features = featuresText
-      .split(/\r?\n|[,•]+/)
-      .map((item) => item.trim())
-      .filter(Boolean);
-
-    return (
-      <div>
-        {intro && (
-          <p className="mb-3">
-            {intro}
-          </p>
-        )}
-
-        <p className="font-bold text-slate-800">
-          Key Features
-        </p>
-
-        {features.length > 0 && (
-          <div className="mt-1 space-y-0.5">
-            {features.map((feature, index) => (
-              <div key={index}>
-                • {feature}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  };
+  const displayDescription = product?.description;
 
   const [related, setRelated] = useState<Product[]>([]);
-  const [relatedSocialProof, setRelatedSocialProof] = useState<
-    Record<number, { likes: number; orders: number }>
-  >({});
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const loadRelatedSocialProof = async () => {
-      if (!related.length) return;
-
-      try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-
-        const headers: HeadersInit = session?.access_token
-          ? { Authorization: `Bearer ${session.access_token}` }
-          : {};
-
-        const results = await Promise.all(
-          related.map(async (item) => {
-            try {
-              const response = await fetch(
-                `/api/products/${item.id}/like`,
-                {
-                  headers,
-                  cache: "no-store",
-                }
-              );
-
-              if (!response.ok) return null;
-
-              const data = await response.json();
-
-              return {
-                id: item.id,
-                likes: Math.max(200, Number(data.likes || 200)),
-                orders: Math.max(300, Number(data.orders || 300)),
-              };
-            } catch {
-              return null;
-            }
-          })
-        );
-
-        if (cancelled) return;
-
-        const next: Record<
-          number,
-          { likes: number; orders: number }
-        > = {};
-
-        for (const result of results) {
-          if (result) {
-            next[result.id] = {
-              likes: result.likes,
-              orders: result.orders,
-            };
-          }
-        }
-
-        setRelatedSocialProof(next);
-      } catch (error) {
-        console.error(
-          "Failed to load related product social proof:",
-          error
-        );
-      }
-    };
-
-    loadRelatedSocialProof();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [related]);
 
   const [activeImage, setActiveImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
@@ -287,8 +73,11 @@ const [cartCount, setCartCount] = useState(0);
 
   const [selectedColor, setSelectedColor] = useState("");
   const [selectedSize, setSelectedSize] = useState("");
-  const [selectedStorage, setSelectedStorage] = useState("");
   const [activeTab, setActiveTab] = useState("description");
+  const [likes, setLikes] = useState(200);
+  const [orders, setOrders] = useState(300);
+  const [liked, setLiked] = useState(false);
+  const [likeLoading, setLikeLoading] = useState(false);
 
   useEffect(() => {
     const savedCurrency = localStorage.getItem("gamora_currency");
@@ -316,10 +105,67 @@ if (!item) {
 }
 
 setProduct(item);
-      await loadSocialProof(productId);
 
-      if (item.storageOptions && item.storageOptions.length > 0) {
-        setSelectedStorage(item.storageOptions[0].storage);
+      // LOAD PERSISTENT LIKES + ORDERS
+      try {
+        const likeResponse = await fetch(
+          `/api/products/${productId}/like`,
+          {
+            method: "GET",
+            cache: "no-store",
+          }
+        );
+
+        if (likeResponse.ok) {
+          const likeData = await likeResponse.json();
+
+          setLikes(
+            Math.max(
+              200,
+              Number(likeData.likes || item.likes || 200)
+            )
+          );
+
+          setOrders(
+            Math.max(
+              300,
+              Number(
+                likeData.orders ||
+                  item.orders_count ||
+                  300
+              )
+            )
+          );
+
+          setLiked(Boolean(likeData.liked));
+        } else {
+          setLikes(
+            Math.max(200, Number(item.likes || 200))
+          );
+
+          setOrders(
+            Math.max(
+              300,
+              Number(item.orders_count || 300)
+            )
+          );
+        }
+      } catch (error) {
+        console.error(
+          "Failed to load product social proof:",
+          error
+        );
+
+        setLikes(
+          Math.max(200, Number(item.likes || 200))
+        );
+
+        setOrders(
+          Math.max(
+            300,
+            Number(item.orders_count || 300)
+          )
+        );
       }
 
       if (item.colors && item.colors.length > 0) {
@@ -527,22 +373,16 @@ setProduct(item);
       images[0] ||
       "";
 
-    const selectedStorageOption =
-      product.storageOptions?.find(
-        (item) => item.storage === selectedStorage
-      );
-
     const cartItem = {
       id: product.id,
       name: product.name,
-      price: selectedStorageOption?.price ?? product.price,
+      price: product.price,
       oldPrice: product.oldPrice,
-      stock: selectedStorageOption?.stock ?? product.stock,
+      stock: product.stock,
       image: cartImage,
       quantity: quantity,
       selectedColor: selectedColor,
       selectedSize: selectedSize,
-      selectedStorage: selectedStorage,
     };
 
     try {
@@ -552,18 +392,16 @@ setProduct(item);
       const existingIndex = cart.findIndex(
         (item: {
           id: number;
-          selectedColor?: string;
-          selectedSize?: string;
-          selectedStorage?: string;
+          color?: string;
+          size?: string;
         }) =>
           item.id === product.id &&
-          item.selectedColor === selectedColor &&
-          item.selectedSize === selectedSize &&
-          item.selectedStorage === selectedStorage
+          item.color === selectedColor &&
+          item.size === selectedSize
       );
 
       if (existingIndex >= 0) {
-        cart[existingIndex].quantity += quantity;
+        cart[existingIndex].quantity += 1;
       } else {
         cart.push(cartItem);
       }
@@ -573,7 +411,7 @@ setProduct(item);
         JSON.stringify(cart)
       );
 
-      window.dispatchEvent(new Event("cartUpdated"));
+window.dispatchEvent(new Event("cartUpdated"));
 
       alert("Product added to cart.");
     } catch (error) {
@@ -590,22 +428,16 @@ setProduct(item);
       images[0] ||
       "";
 
-    const selectedStorageOption =
-      product.storageOptions?.find(
-        (item) => item.storage === selectedStorage
-      );
-
     const cartItem = {
       id: product.id,
       name: product.name,
-      price: selectedStorageOption?.price ?? product.price,
+      price: product.price,
       oldPrice: product.oldPrice,
-      stock: selectedStorageOption?.stock ?? product.stock,
+      stock: product.stock,
       image: cartImage,
       quantity: quantity,
       selectedColor: selectedColor,
       selectedSize: selectedSize,
-      selectedStorage: selectedStorage,
     };
 
     try {
@@ -629,7 +461,7 @@ setProduct(item);
    */
   if (!product) {
     return (
-      <main className="min-h-screen bg-white  text-center">
+      <main className="min-h-screen bg-white p-5 text-center">
         <p className="text-sm font-normal text-slate-500">
           Loading...
         </p>
@@ -641,20 +473,6 @@ setProduct(item);
    * ONLY SHOW 6 THUMBNAILS
    */
   const visibleThumbnails = images.slice(0, 6);
-
-  /*
-   * SELECTED STORAGE PRICE + STOCK
-   */
-  const selectedStorageOption =
-    product.storageOptions?.find(
-      (item) => item.storage === selectedStorage
-    );
-
-  const currentPrice =
-    selectedStorageOption?.price ?? product.price;
-
-  const currentStock =
-    selectedStorageOption?.stock ?? product.stock;
 
   /*
    * DISCOUNT
@@ -683,8 +501,80 @@ setProduct(item);
         ).toFixed(1)
       : "0.0";
 
+  async function loadLikeState(productId: number) {
+    try {
+      const response = await fetch(
+        `/api/products/${productId}/like`,
+        {
+          method: "GET",
+          cache: "no-store",
+        }
+      );
+
+      if (!response.ok) return;
+
+      const data = await response.json();
+
+      setLikes(Math.max(200, Number(data.likes || 200)));
+      setOrders(Math.max(300, Number(data.orders || 300)));
+      setLiked(Boolean(data.liked));
+    } catch (error) {
+      console.error("Failed to load like state:", error);
+    }
+  }
+
+  async function toggleLike() {
+    if (!product || likeLoading) return;
+
+    setLikeLoading(true);
+
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      const headers: HeadersInit = {};
+
+      if (session?.access_token) {
+        headers.Authorization = `Bearer ${session.access_token}`;
+      }
+
+      const response = await fetch(
+        `/api/products/${product.id}/like`,
+        {
+          method: "POST",
+          headers,
+        }
+      );
+
+      const data = await response.json();
+
+      if (response.status === 401) {
+        alert(
+          t(
+            "Please login to like this product.",
+            "Tafadhali ingia kwenye account yako ili ku-like bidhaa hii."
+          )
+        );
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error(data?.error || "Failed to update like");
+      }
+
+      setLiked(Boolean(data.liked));
+      setLikes(Math.max(200, Number(data.likes || 200)));
+      setOrders(Math.max(300, Number(data.orders || 300)));
+    } catch (error) {
+      console.error("Like error:", error);
+    } finally {
+      setLikeLoading(false);
+    }
+  }
+
   return (
-    <main className="min-h-screen bg-white  pb-24 pt-4 sm: md: md:pb-10 md:pt-6">
+    <main className="min-h-screen bg-white px-3 pb-24 pt-4 sm:px-5 md:px-8 md:pb-10 md:pt-6">
 
       {/* ================= PRODUCT HERO ================= */}
 
@@ -692,7 +582,7 @@ setProduct(item);
 
         {/* BREADCRUMB */}
 
-        <div className="mb-4  whitespace-nowrap text-[11px] text-slate-400 sm:mb-5 sm:text-xs">
+        <div className="mb-4 overflow-hidden whitespace-nowrap text-[11px] text-slate-400 sm:mb-5 sm:text-xs">
           <span>{t("Home", "Nyumbani")}</span>
 
           <span className="mx-2">›</span>
@@ -714,114 +604,119 @@ setProduct(item);
 
           <div className="min-w-0">
 
-            {/* MODERN ECOMMERCE PRODUCT GALLERY */}
+            {/* MAIN IMAGE */}
 
             <div
-              className="relative w-full rounded-xl bg-white"
+              className="relative flex h-[300px] w-full items-center justify-center overflow-hidden bg-white sm:h-[390px] md:h-[500px] lg:h-[520px]"
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
             >
 
-              {/* ONE IMAGE ONLY */}
-              <div className="relative flex h-[340px] w-full items-center justify-center bg-white sm:h-[440px] lg:h-[520px]">
+              <div
+                className="flex h-full transition-transform duration-500 ease-out"
+                style={{
+                  transform: `translateX(-${
+                    activeImage * 100
+                  }%)`,
+                }}
+              >
 
-                {/* PRODUCT ACTIONS */}
-                <div className="absolute right-3 top-3 z-20 flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={toggleLike}
-                    disabled={likeLoading}
-                    aria-label={liked ? "Unlike product" : "Like product"}
-                    className={`flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-base shadow-md ring-1 ring-slate-200 transition hover:bg-slate-50 ${
-                      liked ? "text-red-600" : "text-slate-700"
-                    }`}
+                {images.map((img, index) => (
+                  <div
+                    key={`${img}-${index}`}
+                    className="flex h-full min-w-full items-center justify-center bg-white"
                   >
-                    {liked ? "❤️" : "♡"}
-                  </button>
 
-                  <button
-                    type="button"
-                    onClick={addToCart}
-                    aria-label="Add product to cart"
-                    className="flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-base shadow-md ring-1 ring-slate-200 transition hover:bg-slate-50"
-                  >
-                    🛒
-                  </button>
-                </div>
+                    <img
+                      src={img}
+                      alt={`${displayName || ""} ${index + 1}`}
+                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
 
-                {images.length > 0 ? (
-                  <img
-                    src={images[activeImage]}
-                    alt={`${displayName || "Product"} ${activeImage + 1}`}
-                    className="block h-full w-full object-contain object-center"
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center text-sm text-slate-400">
-                    No Image
                   </div>
-                )}
-
-                {/* PREVIOUS */}
-                {images.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={previousImage}
-                    aria-label="Previous product image"
-                    className="absolute left-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white text-xl text-slate-700 shadow-md ring-1 ring-slate-200 transition hover:bg-slate-50 sm:left-3 sm:h-10 sm:w-10"
-                  >
-                    ‹
-                  </button>
-                )}
-
-                {/* NEXT */}
-                {images.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={nextImage}
-                    aria-label="Next product image"
-                    className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white text-xl text-slate-700 shadow-md ring-1 ring-slate-200 transition hover:bg-slate-50 sm:right-3 sm:h-10 sm:w-10"
-                  >
-                    ›
-                  </button>
-                )}
-
-                {/* IMAGE COUNTER */}
-                {images.length > 1 && (
-                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-black/60 px-3 py-1 text-[10px] font-medium text-white">
-                    {activeImage + 1} / {images.length}
-                  </div>
-                )}
+                ))}
 
               </div>
 
+              {/* PREVIOUS */}
+
+              {images.length > 1 && (
+                <button
+                  type="button"
+                  onClick={previousImage}
+                  aria-label="Previous image"
+                  className="absolute left-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-lg text-slate-700 shadow-sm transition hover:bg-slate-50 sm:left-3 sm:h-9 sm:w-9"
+                >
+                  ‹
+                </button>
+              )}
+
+              {/* NEXT */}
+
+              {images.length > 1 && (
+                <button
+                  type="button"
+                  onClick={nextImage}
+                  aria-label="Next image"
+                  className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-lg text-slate-700 shadow-sm transition hover:bg-slate-50 sm:right-3 sm:h-9 sm:w-9"
+                >
+                  ›
+                </button>
+              )}
+
+              {/* DOTS */}
+
+              {images.length > 1 && (
+                <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">
+                  {images.map((_, index) => (
+                    <button
+                      key={index}
+                      type="button"
+                      onClick={() =>
+                        setActiveImage(index)
+                      }
+                      aria-label={`Image ${index + 1}`}
+                      className={`h-1.5 rounded-full transition-all ${
+                        activeImage === index
+                          ? "w-5 bg-sky-700"
+                          : "w-1.5 bg-slate-300"
+                      }`}
+                    />
+                  ))}
+                </div>
+              )}
+
             </div>
 
-            {/* THUMBNAILS */}
+            {/* THUMBNAILS — MAX 6 */}
 
             {visibleThumbnails.length > 0 && (
-              <div className="mt-3 flex gap-2 overflow-x-auto pb-1 scrollbar-hide sm:gap-3">
-
-                {visibleThumbnails.map((img, index) => (
-                  <button
-                    key={`${img}-thumb-${index}`}
-                    type="button"
-                    onClick={() => setActiveImage(index)}
-                    aria-label={`View product image ${index + 1}`}
-                    className={`flex h-[58px] w-[58px] min-w-[58px] items-center justify-center bg-white transition sm:h-[68px] sm:w-[68px] sm:min-w-[68px] ${
-                      activeImage === index
-                        ? "ring-2 ring-sky-700"
-                        : "ring-1 ring-slate-200"
-                    }`}
-                  >
-                    <img
-                      src={img}
-                      alt={`${displayName || "Product"} thumbnail ${index + 1}`}
-                      className="block h-full w-full object-contain object-center"
-                    />
-                  </button>
-                ))}
-
+              <div className="mt-3 flex gap-2 overflow-x-auto pb-1 sm:gap-3">
+                {visibleThumbnails.map(
+                  (img, index) => (
+                    <button
+                      key={`${img}-thumb-${index}`}
+                      type="button"
+                      onClick={() =>
+                        setActiveImage(index)
+                      }
+                      className={`h-[54px] w-[54px] flex-shrink-0 overflow-hidden rounded-lg bg-white sm:h-[64px] sm:w-[64px] ${
+                        activeImage === index
+                          ? "border-2 border-sky-700"
+                          : "border border-slate-200"
+                      }`}
+                    >
+                      <img
+                        src={img}
+                        alt={`${displayName || ""} thumbnail ${
+                          index + 1
+                        }`}
+                        className="h-full w-full object-contain p-1"
+                      />
+                    </button>
+                  )
+                )}
               </div>
             )}
 
@@ -839,12 +734,12 @@ setProduct(item);
 
             {/* PRICE */}
 
-            <div className="mt-3 rounded-lg border border-slate-100 bg-slate-50  py-3 sm:">
+            <div className="mt-3 rounded-lg border border-slate-100 bg-slate-50 px-3 py-3 sm:px-4">
 
               <div className="flex flex-wrap items-center gap-3">
 
                 <span className="text-lg font-bold text-sky-700 sm:text-xl">
-                  {formatCurrency(Number(currentPrice), currency)}
+                  {formatCurrency(Number(product.price), currency)}
                 </span>
 
                 {product.oldPrice && (
@@ -856,25 +751,63 @@ setProduct(item);
               </div>
 
               {discount > 0 && (
-                <span className="mt-1 inline-block rounded bg-red-100  py-1 text-[11px] font-normal text-red-600">
+                <span className="mt-1 inline-block rounded bg-red-100 px-2 py-1 text-[11px] font-normal text-red-600">
                   -{discount}%
                 </span>
               )}
 
             </div>
 
+            {/* SOCIAL PROOF */}
+
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+
+              <button
+                type="button"
+                onClick={toggleLike}
+                disabled={likeLoading}
+                aria-label={
+                  liked
+                    ? t("Unlike this product", "Ondoa Like")
+                    : t("Like this product", "Like bidhaa hii")
+                }
+                className={`inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-[11px] font-medium transition ${
+                  liked
+                    ? "border-red-200 bg-red-50 text-red-600"
+                    : "border-slate-200 bg-white text-slate-600 hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+                } ${likeLoading ? "opacity-60" : ""}`}
+              >
+                <span className="text-sm">
+                  {liked ? "❤️" : "♡"}
+                </span>
+
+                <span>
+                  {likes}+ {t("Likes", "Likes")}
+                </span>
+              </button>
+
+              <div className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-medium text-slate-600">
+                <span className="text-sm">🛒</span>
+
+                <span>
+                  {orders}+ {t("Orders", "Orders")}
+                </span>
+              </div>
+
+            </div>
+
             {/* DESCRIPTION */}
 
             {product.description && (
-              <div className="mt-4 text-xs font-normal leading-5 text-slate-600 sm:text-sm sm:leading-6">
-                {renderDescription(displayDescription)}
-              </div>
+              <p className="mt-4 text-xs font-normal leading-5 text-slate-600 sm:text-sm sm:leading-6">
+                {displayDescription}
+              </p>
             )}
 
             {/* STOCK */}
 
             <div className="mt-4 text-xs font-medium text-green-600 sm:text-sm">
-              ✓ {t("In Stock", "Zinapatikana")} ({currentStock})
+              ✓ {t("In Stock", "Zinapatikana")} ({product.stock})
             </div>
 
             {/* COLORS */}
@@ -883,7 +816,7 @@ setProduct(item);
               product.colors.length > 0 && (
                 <div className="mt-2">
 
-                  <p className="mb-3 text-lg font-normal text-slate-700">
+                  <p className="mb-2 text-[13px] font-normal text-slate-600">
                     {t("Color", "Rangi")}
                   </p>
 
@@ -896,7 +829,7 @@ setProduct(item);
                         onClick={() =>
                           setSelectedColor(color)
                         }
-                        className={`rounded-lg  py-2 text-[13px] font-normal ${
+                        className={`rounded-lg px-3 py-2 text-[13px] font-normal ${
                           selectedColor === color
                             ? "border-2 border-sky-700 bg-sky-50 text-sky-700"
                             : "border border-slate-300 text-slate-600"
@@ -930,55 +863,13 @@ setProduct(item);
                         onClick={() =>
                           setSelectedSize(size)
                         }
-                        className={`min-w-[64px] sm:min-w-14 rounded-lg px-4 py-2 text-[13px] font-normal ${
+                        className={`rounded-lg px-3 py-2 text-[13px] font-normal ${
                           selectedSize === size
                             ? "border-2 border-sky-700 bg-sky-50 text-sky-700"
                             : "border border-slate-300 text-slate-600"
                         }`}
                       >
                         {size}
-                      </button>
-                    ))}
-
-                  </div>
-
-                </div>
-              )}
-
-            {/* STORAGE */}
-
-            {product.storageOptions &&
-              product.storageOptions.length > 0 && (
-                <div className="mt-2">
-
-                  <p className="mb-2 text-[13px] font-normal text-slate-600">
-                    {t("Storage", "Hifadhi")}
-                  </p>
-
-                  <div className="flex flex-wrap gap-2">
-
-                    {product.storageOptions.map((option) => (
-                      <button
-                        key={option.storage}
-                        type="button"
-                        onClick={() => {
-                          setSelectedStorage(option.storage);
-                          setQuantity((q) =>
-                            Math.min(q, Math.max(1, option.stock))
-                          );
-                        }}
-                        disabled={option.stock <= 0}
-                        className={`rounded-lg px-3 py-2 text-[13px] font-normal ${
-                          selectedStorage === option.storage
-                            ? "border-2 border-sky-700 bg-sky-50 text-sky-700"
-                            : "border border-slate-300 text-slate-600"
-                        } ${
-                          option.stock <= 0
-                            ? "cursor-not-allowed opacity-40"
-                            : ""
-                        }`}
-                      >
-                        {option.storage}
                       </button>
                     ))}
 
@@ -995,7 +886,7 @@ setProduct(item);
                 {t("Quantity", "Idadi")}
               </p>
 
-              <div className="inline-flex h-7 items-center rounded-md border border-slate-200 bg-white">
+              <div className="flex w-fit items-center overflow-hidden rounded-lg border border-slate-200">
 
                 <button
                   type="button"
@@ -1004,12 +895,12 @@ setProduct(item);
                       Math.max(1, q - 1)
                     )
                   }
-                  className="flex h-7 w-7 items-center justify-center text-sm font-normal text-slate-600 hover:bg-slate-50"
+                  className="h-7 w-7 text-sm font-normal text-slate-600 hover:bg-slate-50"
                 >
                   −
                 </button>
 
-                <span className="flex h-7 w-8 items-center justify-center border-x border-slate-200 text-xs font-normal text-slate-700">
+                <span className="flex h-7 w-8 items-center justify-center border-x border-slate-200 text-[11px] font-normal">
                   {quantity}
                 </span>
 
@@ -1018,12 +909,12 @@ setProduct(item);
                   onClick={() =>
                     setQuantity((q) =>
                       Math.min(
-                        currentStock || 1,
+                        product.stock || 1,
                         q + 1
                       )
                     )
                   }
-                  className="flex h-7 w-7 items-center justify-center text-sm font-normal text-slate-600 hover:bg-slate-50"
+                  className="h-7 w-7 text-sm font-normal text-slate-600 hover:bg-slate-50"
                 >
                   +
                 </button>
@@ -1034,12 +925,12 @@ setProduct(item);
 
             {/* ACTION BUTTONS */}
 
-            <div className="mt-4 flex items-center gap-2">
+            <div className="mt-3 flex gap-3 w-full">
 
               <button
                 type="button"
                 onClick={addToCart}
-                className="h-[30px] w-[120px] rounded px-5 text-[10px] font-normal leading-none text-white bg-sky-700 hover:bg-sky-800 sm:w-auto"
+                className="rounded-md bg-sky-700 px-6 py-2.5 text-xs font-semibold text-white whitespace-nowrap shadow-sm hover:bg-sky-800"
               >
                 🛒 {t("Add", "Ongeza")}
               </button>
@@ -1047,7 +938,7 @@ setProduct(item);
               <button
                 type="button"
                 onClick={buyNow}
-                className="h-[30px] w-[120px] rounded border border-sky-700 px-5 text-[10px] font-normal leading-none text-sky-700 hover:bg-sky-50 sm:w-auto"
+                className="rounded-md border border-sky-700 px-6 py-2.5 text-xs font-semibold text-sky-700 whitespace-nowrap hover:bg-sky-50"
               >
                 ⚡ {t("Buy", "Nunua")}
               </button>
@@ -1058,7 +949,7 @@ setProduct(item);
 
             <a
               href="https://wa.me/255798555221"
-              className="mt-3 inline-flex h-[30px] w-[120px] items-center justify-center rounded bg-green-600 px-5 text-[10px] font-normal leading-none text-white hover:bg-green-700 sm:w-auto"
+              className="mt-2 inline-flex rounded-md bg-green-600 px-3.5 py-1.5 text-[11px] font-normal text-white hover:bg-green-700"
             >
               💬 {t("WhatsApp", "WhatsApp")}
             </a>
@@ -1072,62 +963,55 @@ setProduct(item);
       {/* ================= RELATED PRODUCTS ================= */}
 
       {related.length > 0 && (
-        <section className="mx-auto mt-8 w-full max-w-7xl border-t border-slate-100 pt-5">
+        <section className="mx-auto max-w-6xl border-t border-slate-200 py-4">
 
-          <h2 className="mb-5 text-[15px] font-semibold text-slate-800 sm:text-[17px]">
+          <h2 className="mb-3 text-sm font-medium text-slate-800">
             {t("You May Also Like", "Unaweza Pia Kupenda")}
           </h2>
 
-          <div className="grid grid-cols-3 gap-x-3 gap-y-6 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-8">
+          <div className="grid grid-cols-2 gap-3 px-1 sm:grid-cols-3 md:grid-cols-4 lg:gap-4">
 
             {related.map((item) => (
               <button
                 type="button"
                 key={item.id}
-                onClick={() => router.push(`/product/${item.id}`)}
-                className="group min-w-0 bg-transparent p-0 text-left"
+                onClick={() =>
+                  router.push(
+                    `/product/${item.id}`
+                  )
+                }
+                className="group overflow-hidden rounded-xl border border-slate-200 bg-white text-left shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
               >
 
-                <div className="flex h-[145px] w-full items-center justify-center overflow-hidden bg-white sm:h-[165px] lg:h-[185px]">
+                <div className="relative h-32 overflow-hidden bg-slate-50 sm:h-36">
 
                   <img
                     src={
-                      item.images?.[0] ||
                       item.image ||
+                      item.images?.[0] ||
                       ""
                     }
-                    alt={language === "sw" ? (item.name_sw || item.name) : item.name}
-                    loading="lazy"
-                    className="h-full w-full object-contain object-center transition-transform duration-300 group-hover:scale-[1.04]"
+                    alt={item.name}
+                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                   />
 
                 </div>
 
-                <div className="pt-2">
+                <div className="p-1.5">
 
-                  <p className="line-clamp-2 text-[10px] font-normal leading-[14px] text-slate-700 sm:text-[11px] sm:leading-[15px]">
-                    {language === "sw" ? (item.name_sw || item.name) : item.name}
+                  <p className="line-clamp-2 text-xs font-normal text-slate-600">
+                    {item.name}
                   </p>
 
-                  <p className="mt-1 text-[12px] font-bold leading-4 text-red-600 sm:text-[13px]">
+                  <p className="mt-2 text-xs font-medium text-sky-700 sm:text-sm sm:text-sm">
                     {formatCurrency(Number(item.price), currency)}
                   </p>
 
-                  {item.oldPrice &&
-                    Number(item.oldPrice) > Number(item.price) && (
-                      <p className="mt-0.5 text-[9px] leading-3 text-slate-400 line-through sm:text-[10px]">
-                        {formatCurrency(Number(item.oldPrice), currency)}
-                      </p>
-                    )}
-
-                  <div className="mt-1 flex items-center gap-2 text-[8px] text-slate-500 sm:text-[9px]">
-                    <span>
-                      ❤️ {relatedSocialProof[item.id]?.likes ?? Math.max(200, Number(item.likes || 200))} Likes
-                    </span>
-                    <span>
-                      🛒 {relatedSocialProof[item.id]?.orders ?? Math.max(300, Number(item.orders_count || 300))} Ordered
-                    </span>
-                  </div>
+                  {item.oldPrice && (
+                    <p className="text-[11px] text-slate-400 line-through">
+                      {formatCurrency(Number(item.oldPrice), currency)}
+                    </p>
+                  )}
 
                 </div>
 
@@ -1195,19 +1079,18 @@ setProduct(item);
       {t("Product Description", "Maelezo ya Bidhaa")}
     </h2>
 
-    <div className="mt-3 max-w-4xl text-xs leading-5 text-slate-500">
-      {displayDescription
-        ? renderDescription(displayDescription)
-        : t(
-            "No additional product description available.",
-            "Hakuna maelezo ya ziada ya bidhaa yaliyowekwa."
-          )}
-    </div>
+    <p className="mt-3 max-w-4xl text-xs leading-5 text-slate-500">
+      {displayDescription ||
+        t(
+          "No additional product description available.",
+          "Hakuna maelezo ya ziada ya bidhaa yaliyowekwa."
+        )}
+    </p>
   </>
 )}
 
 {activeTab === "specifications" && (
-  <div className="rounded-lg border border-slate-200 bg-white ">
+  <div className="rounded-lg border border-slate-200 bg-white p-3">
 
     <h2 className="text-sm font-medium text-slate-800">
       {t("Specifications", "Vipengele")}
@@ -1215,55 +1098,33 @@ setProduct(item);
 
     <div className="mt-3 space-y-2 text-xs text-slate-500">
 
-      <div className="flex justify-between gap-4">
+      <div className="flex justify-between">
         <span>Category</span>
-        <span className="text-right text-slate-700">
+        <span className="text-slate-700">
           {displayCategory || "N/A"}
         </span>
       </div>
 
-      <div className="flex justify-between gap-4">
+      <div className="flex justify-between">
         <span>Stock</span>
-        <span className="text-right text-green-600">
-          In Stock ({currentStock})
+        <span className="text-green-600">
+          In Stock ({product.stock})
         </span>
       </div>
 
-      <div className="flex justify-between gap-4">
+      <div className="flex justify-between">
         <span>{t("Colors", "Rangi")}</span>
-        <span className="text-right text-slate-700">
+        <span className="text-slate-700">
           {product.colors?.join(", ") || "N/A"}
         </span>
       </div>
 
-      <div className="flex justify-between gap-4">
+      <div className="flex justify-between">
         <span>{t("Sizes", "Ukubwa")}</span>
-        <span className="text-right text-slate-700">
+        <span className="text-slate-700">
           {product.sizes?.join(", ") || "N/A"}
         </span>
       </div>
-
-      {product.specifications &&
-        Object.entries(product.specifications).map(([key, value]) => (
-          <div
-            key={key}
-            className="border-t border-slate-100 pt-2 text-slate-700"
-          >
-            <span className="block">
-              • {key}: {value}
-            </span>
-          </div>
-        ))}
-
-      {(!product.specifications ||
-        Object.keys(product.specifications).length === 0) && (
-        <div className="border-t border-slate-100 pt-2 text-slate-400">
-          {t(
-            "No additional specifications available.",
-            "Hakuna vipengele vya ziada vilivyowekwa."
-          )}
-        </div>
-      )}
 
       <div className="flex justify-between">
         <span>{t("Shipping", "Usafirishaji")}</span>
@@ -1334,7 +1195,7 @@ setProduct(item);
 
         {/* WRITE REVIEW */}
 
-        <div className="mt-6 rounded-lg border border-slate-200 ">
+        <div className="mt-6 rounded-lg border border-slate-200 p-3">
 
           <h3 className="text-[14px] font-normal text-slate-800">
             {t("Leave a Review", "Acha Maoni")}
@@ -1372,7 +1233,7 @@ setProduct(item);
               setReviewComment(e.target.value)
             }
             placeholder="Write your comment..."
-            className="mt-4 min-h-[110px] w-full resize-y rounded-xl border border-slate-200  text-[13px] text-slate-700 outline-none placeholder:text-slate-400 focus:border-sky-700"
+            className="mt-4 min-h-[110px] w-full resize-y rounded-xl border border-slate-200 p-3 text-[13px] text-slate-700 outline-none placeholder:text-slate-400 focus:border-sky-700"
           />
 
           {/* SUBMIT */}
@@ -1381,7 +1242,7 @@ setProduct(item);
             type="button"
             onClick={submitReview}
             disabled={reviewLoading}
-            className="mt-3 rounded-xl bg-sky-700  py-3 text-[13px] font-normal text-white hover:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-60"
+            className="mt-3 rounded-xl bg-sky-700 px-5 py-3 text-[13px] font-normal text-white hover:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {reviewLoading
               ? "Submitting..."
@@ -1398,7 +1259,7 @@ setProduct(item);
             reviews.map((review) => (
               <div
                 key={review.id}
-                className="rounded-lg border border-slate-200 "
+                className="rounded-lg border border-slate-200 p-3"
               >
 
                 <div className="text-[15px] text-amber-400">
@@ -1426,7 +1287,7 @@ setProduct(item);
               </div>
             ))
           ) : (
-            <div className="rounded-xl border border-dashed border-slate-200  text-center">
+            <div className="rounded-xl border border-dashed border-slate-200 p-6 text-center">
 
               <div className="text-lg text-slate-300">
                 ★★★★★
@@ -1453,7 +1314,7 @@ setProduct(item);
   <button
     type="button"
     onClick={() => router.push("/cart")}
-    className="rounded-full bg-slate-900  py-3 text-xs font-medium text-white shadow-lg hover:bg-slate-800"
+    className="rounded-full bg-slate-900 px-5 py-3 text-xs font-medium text-white shadow-lg hover:bg-slate-800"
   >
     🛒 Cart ({cartCount})
   </button>

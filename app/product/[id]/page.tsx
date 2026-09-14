@@ -29,6 +29,8 @@ type Product = {
     stock: number;
   }[];
   specifications?: Record<string, string>;
+  orders_count?: number;
+  likes?: number;
 };
 
 type Review = {
@@ -53,14 +55,222 @@ export default function ProductPage({
   const t = (en: string, sw: string) => (language === "sw" ? sw : en);
 
   const [product, setProduct] = useState<Product | null>(null);
+  const [likes, setLikes] = useState(200);
+  const [orders, setOrders] = useState(300);
+  const [liked, setLiked] = useState(false);
+  const [likeLoading, setLikeLoading] = useState(false);
+
+  const loadSocialProof = async (id: number) => {
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      const headers: HeadersInit = session?.access_token
+        ? { Authorization: `Bearer ${session.access_token}` }
+        : {};
+
+      const response = await fetch(`/api/products/${id}/like`, {
+        headers,
+        cache: "no-store",
+      });
+
+      if (!response.ok) return;
+
+      const data = await response.json();
+
+      setLikes(Math.max(200, Number(data.likes || 200)));
+      setOrders(Math.max(300, Number(data.orders || 300)));
+      setLiked(Boolean(data.liked));
+    } catch (error) {
+      console.error("Failed to load social proof:", error);
+    }
+  };
+
+  const toggleLike = async () => {
+    if (!product || likeLoading) return;
+
+    setLikeLoading(true);
+
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        alert(
+          t(
+            "Please login to like this product.",
+            "Tafadhali ingia kwenye akaunti ili kuweka Like kwenye bidhaa hii."
+          )
+        );
+        return;
+      }
+
+      const response = await fetch(`/api/products/${product.id}/like`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data?.error || "Unable to update like.");
+        return;
+      }
+
+      await loadSocialProof(product.id);
+    } catch (error) {
+      console.error("Failed to toggle like:", error);
+      alert(
+        t(
+          "Unable to update like. Please try again.",
+          "Imeshindikana kuweka Like. Tafadhali jaribu tena."
+        )
+      );
+    } finally {
+      setLikeLoading(false);
+    }
+  };
+
+
 
   const displayName = language === "sw" ? (product?.name_sw || product?.name) : product?.name;
 
   const displayCategory = language === "sw" ? (product?.category_sw || product?.category) : product?.category;
 
-  const displayDescription = language === "sw" ? (product?.description_sw || product?.description) : product?.description;
+  const displayDescription = language === "sw"
+    ? (product?.description_sw || product?.description)
+    : product?.description;
+
+  const renderDescription = (description?: string) => {
+    if (!description) return null;
+
+    const cleanedDescription = description
+      .replace(/<br\s*\/?>/gi, "\n")
+      .replace(/&nbsp;/gi, " ");
+
+    const marker = /(?:Key Features|Features\s*\/\s*Specifications|Features):?/i;
+    const match = cleanedDescription.match(marker);
+
+    if (!match || match.index === undefined) {
+      return cleanedDescription;
+    }
+
+    const intro = cleanedDescription.slice(0, match.index).trim();
+    const featuresText = cleanedDescription
+      .slice(match.index + match[0].length)
+      .trim();
+
+    const features = featuresText
+      .split(/\r?\n|[,•]+/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+    return (
+      <div>
+        {intro && (
+          <p className="mb-3">
+            {intro}
+          </p>
+        )}
+
+        <p className="font-bold text-slate-800">
+          Key Features
+        </p>
+
+        {features.length > 0 && (
+          <div className="mt-1 space-y-0.5">
+            {features.map((feature, index) => (
+              <div key={index}>
+                • {feature}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const [related, setRelated] = useState<Product[]>([]);
+  const [relatedSocialProof, setRelatedSocialProof] = useState<
+    Record<number, { likes: number; orders: number }>
+  >({});
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadRelatedSocialProof = async () => {
+      if (!related.length) return;
+
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        const headers: HeadersInit = session?.access_token
+          ? { Authorization: `Bearer ${session.access_token}` }
+          : {};
+
+        const results = await Promise.all(
+          related.map(async (item) => {
+            try {
+              const response = await fetch(
+                `/api/products/${item.id}/like`,
+                {
+                  headers,
+                  cache: "no-store",
+                }
+              );
+
+              if (!response.ok) return null;
+
+              const data = await response.json();
+
+              return {
+                id: item.id,
+                likes: Math.max(200, Number(data.likes || 200)),
+                orders: Math.max(300, Number(data.orders || 300)),
+              };
+            } catch {
+              return null;
+            }
+          })
+        );
+
+        if (cancelled) return;
+
+        const next: Record<
+          number,
+          { likes: number; orders: number }
+        > = {};
+
+        for (const result of results) {
+          if (result) {
+            next[result.id] = {
+              likes: result.likes,
+              orders: result.orders,
+            };
+          }
+        }
+
+        setRelatedSocialProof(next);
+      } catch (error) {
+        console.error(
+          "Failed to load related product social proof:",
+          error
+        );
+      }
+    };
+
+    loadRelatedSocialProof();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [related]);
 
   const [activeImage, setActiveImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
@@ -106,6 +316,7 @@ if (!item) {
 }
 
 setProduct(item);
+      await loadSocialProof(productId);
 
       if (item.storageOptions && item.storageOptions.length > 0) {
         setSelectedStorage(item.storageOptions[0].storage);
@@ -515,6 +726,30 @@ setProduct(item);
               {/* ONE IMAGE ONLY */}
               <div className="relative flex h-[340px] w-full items-center justify-center bg-white sm:h-[440px] lg:h-[520px]">
 
+                {/* PRODUCT ACTIONS */}
+                <div className="absolute right-3 top-3 z-20 flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={toggleLike}
+                    disabled={likeLoading}
+                    aria-label={liked ? "Unlike product" : "Like product"}
+                    className={`flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-base shadow-md ring-1 ring-slate-200 transition hover:bg-slate-50 ${
+                      liked ? "text-red-600" : "text-slate-700"
+                    }`}
+                  >
+                    {liked ? "❤️" : "♡"}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={addToCart}
+                    aria-label="Add product to cart"
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-base shadow-md ring-1 ring-slate-200 transition hover:bg-slate-50"
+                  >
+                    🛒
+                  </button>
+                </div>
+
                 {images.length > 0 ? (
                   <img
                     src={images[activeImage]}
@@ -631,9 +866,9 @@ setProduct(item);
             {/* DESCRIPTION */}
 
             {product.description && (
-              <p className="mt-4 text-xs font-normal leading-5 text-slate-600 sm:text-sm sm:leading-6">
-                {displayDescription}
-              </p>
+              <div className="mt-4 text-xs font-normal leading-5 text-slate-600 sm:text-sm sm:leading-6">
+                {renderDescription(displayDescription)}
+              </div>
             )}
 
             {/* STOCK */}
@@ -885,6 +1120,15 @@ setProduct(item);
                       </p>
                     )}
 
+                  <div className="mt-1 flex items-center gap-2 text-[8px] text-slate-500 sm:text-[9px]">
+                    <span>
+                      ❤️ {relatedSocialProof[item.id]?.likes ?? Math.max(200, Number(item.likes || 200))} Likes
+                    </span>
+                    <span>
+                      🛒 {relatedSocialProof[item.id]?.orders ?? Math.max(300, Number(item.orders_count || 300))} Ordered
+                    </span>
+                  </div>
+
                 </div>
 
               </button>
@@ -951,13 +1195,14 @@ setProduct(item);
       {t("Product Description", "Maelezo ya Bidhaa")}
     </h2>
 
-    <p className="mt-3 max-w-4xl text-xs leading-5 text-slate-500">
-      {displayDescription ||
-        t(
-          "No additional product description available.",
-          "Hakuna maelezo ya ziada ya bidhaa yaliyowekwa."
-        )}
-    </p>
+    <div className="mt-3 max-w-4xl text-xs leading-5 text-slate-500">
+      {displayDescription
+        ? renderDescription(displayDescription)
+        : t(
+            "No additional product description available.",
+            "Hakuna maelezo ya ziada ya bidhaa yaliyowekwa."
+          )}
+    </div>
   </>
 )}
 
@@ -1002,14 +1247,10 @@ setProduct(item);
         Object.entries(product.specifications).map(([key, value]) => (
           <div
             key={key}
-            className="flex justify-between gap-4 border-t border-slate-100 pt-2"
+            className="border-t border-slate-100 pt-2 text-slate-700"
           >
-            <span className="font-medium text-slate-600">
-              {key}
-            </span>
-
-            <span className="text-right text-slate-700">
-              {value}
+            <span className="block">
+              • {key}: {value}
             </span>
           </div>
         ))}

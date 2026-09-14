@@ -24,6 +24,7 @@ export type Product = {
   specifications?: Record<string, string>;
   discount?: number;
   orders_count?: number;
+  likes?: number;
   rating?: number;
 };
 
@@ -58,6 +59,7 @@ function mapProduct(p: any): Product {
         : {},
     discount: Number(p.discount || 0),
     orders_count: Number(p.orders_count || 0),
+    likes: Number(p.likes || 200),
     rating: Number(p.rating || 0),
   };
 }
@@ -116,6 +118,8 @@ export async function saveProduct(product: Omit<Product, "id">) {
     sizes: product.sizes || [],
     specifications: product.specifications || {},
     discount: Number(product.discount || 0),
+    likes: Math.floor(Math.random() * 1301) + 200,
+    orders_count: Math.floor(Math.random() * 1701) + 300,
   };
 
   const { data, error } = await supabase

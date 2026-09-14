@@ -6,6 +6,7 @@ import { FaFacebookF, FaInstagram, FaTiktok } from "react-icons/fa";
 import { translations, type Language } from "@/lib/translations";
 import { formatCurrency, type Currency } from "@/lib/currency";
 import { getProducts as getSupabaseProducts, type Product } from "@/lib/products";
+import { supabase } from "@/lib/supabase";
 import {
   useEffect,
   useMemo,
@@ -1652,16 +1653,143 @@ function ProductCard({
   const image = getProductImage(product);
   const discount = getDiscount(product);
 
+  const [likes, setLikes] = useState(
+    Math.max(200, Number(product.likes || 200))
+  );
+  const [orders, setOrders] = useState(
+    Math.max(300, Number(product.orders_count || 300))
+  );
+  const [liked, setLiked] = useState(false);
+  const [likeLoading, setLikeLoading] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadLikeState = async () => {
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        const headers: HeadersInit = session?.access_token
+          ? { Authorization: `Bearer ${session.access_token}` }
+          : {};
+
+        const response = await fetch(
+          `/api/products/${product.id}/like`,
+          {
+            headers,
+            cache: "no-store",
+          }
+        );
+
+        if (!response.ok) return;
+
+        const data = await response.json();
+
+        if (!cancelled) {
+          setLikes(Math.max(200, Number(data.likes || 200)));
+          setOrders(Math.max(300, Number(data.orders || 300)));
+          setLiked(Boolean(data.liked));
+        }
+      } catch (error) {
+        console.error("Failed to load product like state:", error);
+      }
+    };
+
+    loadLikeState();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [product.id]);
+
+  const toggleLike = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+
+    if (likeLoading) return;
+
+    setLikeLoading(true);
+
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        alert(
+          language === "sw"
+            ? "Tafadhali ingia kwenye akaunti ili kuweka Like kwenye bidhaa hii."
+            : "Please login to like this product."
+        );
+        return;
+      }
+
+      const response = await fetch(
+        `/api/products/${product.id}/like`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(
+          data?.error ||
+            (language === "sw"
+              ? "Imeshindikana kusasisha Like."
+              : "Unable to update like.")
+        );
+        return;
+      }
+
+      setLiked(Boolean(data.liked));
+    } catch (error) {
+      console.error("Failed to toggle product like:", error);
+
+      alert(
+        language === "sw"
+          ? "Imeshindikana kuweka Like. Tafadhali jaribu tena."
+          : "Unable to update like. Please try again."
+      );
+    } finally {
+      setLikeLoading(false);
+    }
+  };
+
   return (
     <article className="group relative min-w-[180px] shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg sm:min-w-[205px] lg:min-w-0">
-      <button
-        type="button"
-        className="absolute right-2 top-2 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-white/95 text-sm shadow"
-        onClick={() => addToCart(product)}
-        aria-label="Add to cart"
-      >
-        🛒
-      </button>
+      <div className="absolute right-2 top-2 z-20 flex flex-col items-center gap-2">
+        <button
+          type="button"
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-[#2563eb] text-sm text-white shadow-md transition hover:bg-[#1d4ed8]"
+          onClick={(e) => {
+            e.stopPropagation();
+            addToCart(product);
+          }}
+          aria-label="Add to cart"
+        >
+          🛒
+        </button>
+
+        <button
+          type="button"
+          className={`flex h-9 w-9 items-center justify-center rounded-full text-sm text-white shadow-md transition ${
+            liked
+              ? "bg-[#E30613] hover:bg-[#c80511]"
+              : "bg-[#ef4444] hover:bg-[#dc2626]"
+          }`}
+          onClick={toggleLike}
+          disabled={likeLoading}
+          aria-label={liked ? "Unlike product" : "Like product"}
+        >
+          {liked ? "❤️" : "♡"}
+        </button>
+      </div>
 
       {discount > 0 && (
         <span className="absolute left-2 top-2 z-20 rounded-md bg-[#ef4444] px-2 py-1 text-[9px] font-black text-white">
@@ -1708,8 +1836,7 @@ function ProductCard({
                 )}
               </p>
 
-              {typeof product.oldPrice ===
-                "number" &&
+              {typeof product.oldPrice === "number" &&
                 product.oldPrice >
                   Number(product.price || 0) && (
                   <p className="text-[9px] text-slate-400 line-through">
@@ -1720,6 +1847,11 @@ function ProductCard({
                   </p>
                 )}
             </div>
+          </div>
+
+          <div className="mt-1 flex items-center gap-3 text-[9px] text-slate-500">
+            <span>❤️ {likes} Likes</span>
+            <span>🛒 {orders} Ordered</span>
           </div>
         </div>
       </button>

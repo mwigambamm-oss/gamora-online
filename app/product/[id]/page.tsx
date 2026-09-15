@@ -742,42 +742,31 @@ window.dispatchEvent(new Event("cartUpdated"));
 
           <div className="min-w-0 text-left">
 
-            {/* TITLE */}
+            <div>
+              <h1 className="text-base font-semibold leading-6 text-slate-900 sm:text-xl md:text-2xl">
+                {displayName}
+              </h1>
 
-            <h1 className="text-base font-semibold leading-6 text-slate-900 sm:text-xl md:text-2xl md:leading-8">
-              {displayName}
-            </h1>
-
-            {/* PRICE */}
-
-            <div className="mt-3 rounded-lg border border-slate-100 bg-slate-50 px-3 py-3 sm:px-4">
-
-              <div className="flex flex-wrap items-center gap-3">
-
-                <span className="text-lg font-bold text-sky-700 sm:text-xl">
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <span className="text-lg font-bold text-[#E30613] sm:text-xl">
                   {formatCurrency(Number(product.price), currency)}
                 </span>
 
                 {product.oldPrice && (
-                  <span className="text-[12px] text-slate-400 line-through">
+                  <span className="text-xs text-slate-400 line-through">
                     {formatCurrency(Number(product.oldPrice), currency)}
                   </span>
                 )}
 
+                {discount > 0 && (
+                  <span className="rounded bg-red-50 px-2 py-0.5 text-[10px] font-semibold text-[#E30613]">
+                    -{discount}%
+                  </span>
+                )}
               </div>
-
-              {discount > 0 && (
-                <span className="mt-1 inline-block rounded bg-red-100 px-2 py-1 text-[11px] font-normal text-red-600">
-                  -{discount}%
-                </span>
-              )}
-
             </div>
 
-            {/* SOCIAL PROOF */}
-
             <div className="mt-3 flex flex-wrap items-center gap-2">
-
               <button
                 type="button"
                 onClick={toggleLike}
@@ -793,130 +782,154 @@ window.dispatchEvent(new Event("cartUpdated"));
                     : "border-slate-200 bg-white text-slate-600 hover:border-red-200 hover:bg-red-50 hover:text-red-600"
                 } ${likeLoading ? "opacity-60" : ""}`}
               >
-                <span className="text-sm">
-                  {liked ? "❤️" : "♡"}
-                </span>
-
-                <span>
-                  {likes}+ {t("Likes", "Likes")}
-                </span>
+                <span className="text-sm">{liked ? "❤️" : "♡"}</span>
+                <span>{likes}+ {t("Likes", "Likes")}</span>
               </button>
 
               <div className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-medium text-slate-600">
                 <span className="text-sm">🛒</span>
-
-                <span>
-                  {orders}+ {t("Orders", "Orders")}
-                </span>
+                <span>{orders}+ {t("Orders", "Orders")}</span>
               </div>
-
             </div>
 
-            {/* DESCRIPTION */}
+            {displayDescription && (
+              <div className="mt-4">
+                <h3 className="text-sm font-bold text-slate-900 sm:text-base">
+                  {t("Description", "Maelezo")}
+                </h3>
 
-            {product.description && (
-              <p className="mt-4 text-xs font-normal leading-5 text-slate-600 sm:text-sm sm:leading-6">
-                {displayDescription}
-              </p>
+                <p className="mt-1.5 max-w-3xl text-xs leading-5 text-slate-600 sm:text-sm sm:leading-6">
+                  {displayDescription}
+                </p>
+              </div>
             )}
 
-            {/* STOCK */}
+            {(displayKeyFeatures.length > 0 ||
+              Object.keys(displaySpecifications).length > 0) && (
+              <div className="mt-5 border-t border-slate-100 pt-4">
+                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+
+                  {displayKeyFeatures.length > 0 && (
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-900 sm:text-base">
+                        <span className="mr-1.5 text-[#E30613]">✓</span>
+                        {t("Key Features", "Vipengele Muhimu")}
+                      </h3>
+
+                      <ul className="mt-2 space-y-1.5 pl-4 text-xs leading-5 text-slate-600 sm:text-sm">
+                        {displayKeyFeatures.map((feature, index) => (
+                          <li
+                            key={`${feature}-${index}`}
+                            className="list-disc"
+                          >
+                            {feature}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {Object.keys(displaySpecifications).length > 0 && (
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-900 sm:text-base">
+                        <span className="mr-1.5 text-[#E30613]">⚙</span>
+                        {t("Specifications", "Specifications")}
+                      </h3>
+
+                      <div className="mt-2 overflow-hidden rounded-md border border-slate-100">
+                        {Object.entries(displaySpecifications).map(
+                          ([key, value]) => (
+                            <div
+                              key={key}
+                              className="grid grid-cols-[minmax(90px,0.8fr)_minmax(0,1.2fr)] gap-3 border-b border-slate-100 px-3 py-1.5 text-xs last:border-b-0 sm:text-sm"
+                            >
+                              <span className="font-medium text-slate-700">
+                                {key}
+                              </span>
+
+                              <span className="text-slate-600">
+                                {String(value)}
+                              </span>
+                            </div>
+                          )
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                </div>
+              </div>
+            )}
 
             <div className="mt-4 text-xs font-medium text-green-600 sm:text-sm">
               ✓ {t("In Stock", "Zinapatikana")} ({product.stock})
             </div>
 
-            {/* COLORS */}
+            {product.colors && product.colors.length > 0 && (
+              <div className="mt-3">
+                <p className="mb-1.5 text-xs font-medium text-slate-600">
+                  {t("Color", "Rangi")}
+                </p>
 
-            {product.colors &&
-              product.colors.length > 0 && (
-                <div className="mt-2">
-
-                  <p className="mb-2 text-[13px] font-normal text-slate-600">
-                    {t("Color", "Rangi")}
-                  </p>
-
-                  <div className="flex flex-wrap gap-2">
-
-                    {product.colors.map((color) => (
-                      <button
-                        key={color}
-                        type="button"
-                        onClick={() =>
-                          setSelectedColor(color)
-                        }
-                        className={`rounded-lg px-3 py-2 text-[13px] font-normal ${
-                          selectedColor === color
-                            ? "border-2 border-sky-700 bg-sky-50 text-sky-700"
-                            : "border border-slate-300 text-slate-600"
-                        }`}
-                      >
-                        {color}
-                      </button>
-                    ))}
-
-                  </div>
-
+                <div className="flex flex-wrap gap-1.5">
+                  {product.colors.map((color) => (
+                    <button
+                      key={color}
+                      type="button"
+                      onClick={() => setSelectedColor(color)}
+                      className={`rounded-md px-3 py-1.5 text-xs transition ${
+                        selectedColor === color
+                          ? "border border-[#E30613] bg-red-50 text-[#E30613]"
+                          : "border border-slate-200 bg-white text-slate-600 hover:border-red-200"
+                      }`}
+                    >
+                      {color}
+                    </button>
+                  ))}
                 </div>
-              )}
+              </div>
+            )}
 
-            {/* SIZES */}
+            {product.sizes && product.sizes.length > 0 && (
+              <div className="mt-3">
+                <p className="mb-1.5 text-xs font-medium text-slate-600">
+                  {t("Size", "Ukubwa")}
+                </p>
 
-            {product.sizes &&
-              product.sizes.length > 0 && (
-                <div className="mt-2">
-
-                  <p className="mb-2 text-[13px] font-normal text-slate-600">
-                    {t("Size", "Ukubwa")}
-                  </p>
-
-                  <div className="flex flex-wrap gap-2">
-
-                    {product.sizes.map((size) => (
-                      <button
-                        key={size}
-                        type="button"
-                        onClick={() =>
-                          setSelectedSize(size)
-                        }
-                        className={`rounded-lg px-3 py-2 text-[13px] font-normal ${
-                          selectedSize === size
-                            ? "border-2 border-sky-700 bg-sky-50 text-sky-700"
-                            : "border border-slate-300 text-slate-600"
-                        }`}
-                      >
-                        {size}
-                      </button>
-                    ))}
-
-                  </div>
-
+                <div className="flex flex-wrap gap-1.5">
+                  {product.sizes.map((size) => (
+                    <button
+                      key={size}
+                      type="button"
+                      onClick={() => setSelectedSize(size)}
+                      className={`rounded-md px-3 py-1.5 text-xs transition ${
+                        selectedSize === size
+                          ? "border border-[#E30613] bg-red-50 text-[#E30613]"
+                          : "border border-slate-200 bg-white text-slate-600 hover:border-red-200"
+                      }`}
+                    >
+                      {size}
+                    </button>
+                  ))}
                 </div>
-              )}
+              </div>
+            )}
 
-            {/* QUANTITY */}
-
-            <div className="mt-2">
-
-              <p className="mb-2 text-[13px] font-normal text-slate-600">
+            <div className="mt-3">
+              <p className="mb-1.5 text-xs font-medium text-slate-600">
                 {t("Quantity", "Idadi")}
               </p>
 
-              <div className="flex w-fit items-center overflow-hidden rounded-lg border border-slate-200">
-
+              <div className="flex w-fit items-center overflow-hidden rounded-md border border-slate-200">
                 <button
                   type="button"
-                  onClick={() =>
-                    setQuantity((q) =>
-                      Math.max(1, q - 1)
-                    )
-                  }
-                  className="h-7 w-7 text-sm font-normal text-slate-600 hover:bg-slate-50"
+                  onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                  className="h-8 w-8 text-sm text-slate-600 hover:bg-slate-50"
                 >
                   −
                 </button>
 
-                <span className="flex h-7 w-8 items-center justify-center border-x border-slate-200 text-[11px] font-normal">
+                <span className="flex h-8 w-9 items-center justify-center border-x border-slate-200 text-xs">
                   {quantity}
                 </span>
 
@@ -924,29 +937,21 @@ window.dispatchEvent(new Event("cartUpdated"));
                   type="button"
                   onClick={() =>
                     setQuantity((q) =>
-                      Math.min(
-                        product.stock || 1,
-                        q + 1
-                      )
+                      Math.min(product.stock || 1, q + 1)
                     )
                   }
-                  className="h-7 w-7 text-sm font-normal text-slate-600 hover:bg-slate-50"
+                  className="h-8 w-8 text-sm text-slate-600 hover:bg-slate-50"
                 >
                   +
                 </button>
-
               </div>
-
             </div>
 
-            {/* ACTION BUTTONS */}
-
-            <div className="mt-3 flex gap-3 w-full">
-
+            <div className="mt-4 flex w-full gap-2 sm:w-auto">
               <button
                 type="button"
                 onClick={addToCart}
-                className="rounded-md bg-sky-700 px-6 py-2.5 text-xs font-semibold text-white whitespace-nowrap shadow-sm hover:bg-sky-800"
+                className="rounded-md bg-[#E30613] px-5 py-2.5 text-xs font-semibold text-white shadow-sm hover:bg-red-700"
               >
                 🛒 {t("Add", "Ongeza")}
               </button>
@@ -954,18 +959,15 @@ window.dispatchEvent(new Event("cartUpdated"));
               <button
                 type="button"
                 onClick={buyNow}
-                className="rounded-md border border-sky-700 px-6 py-2.5 text-xs font-semibold text-sky-700 whitespace-nowrap hover:bg-sky-50"
+                className="rounded-md border border-[#E30613] px-5 py-2.5 text-xs font-semibold text-[#E30613] hover:bg-red-50"
               >
                 ⚡ {t("Buy", "Nunua")}
               </button>
-
             </div>
-
-            {/* WHATSAPP */}
 
             <a
               href="https://wa.me/255798555221"
-              className="mt-2 inline-flex rounded-md bg-green-600 px-3.5 py-1.5 text-[11px] font-normal text-white hover:bg-green-700"
+              className="mt-2 inline-flex rounded-md bg-green-600 px-4 py-2 text-[11px] font-medium text-white hover:bg-green-700"
             >
               💬 {t("WhatsApp", "WhatsApp")}
             </a>
@@ -978,196 +980,10 @@ window.dispatchEvent(new Event("cartUpdated"));
 
       {/* ================= RELATED PRODUCTS ================= */}
 
-      {related.length > 0 && (
-        <section className="mx-auto max-w-6xl border-t border-slate-200 py-4">
-
-          <h2 className="mb-3 text-sm font-medium text-slate-800">
-            {t("You May Also Like", "Unaweza Pia Kupenda")}
-          </h2>
-
-          <div className="grid grid-cols-2 gap-3 px-1 sm:grid-cols-3 md:grid-cols-4 lg:gap-4">
-
-            {related.map((item) => (
-              <button
-                type="button"
-                key={item.id}
-                onClick={() =>
-                  router.push(
-                    `/product/${item.id}`
-                  )
-                }
-                className="group overflow-hidden rounded-xl border border-slate-200 bg-white text-left shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
-              >
-
-                <div className="relative h-32 overflow-hidden bg-slate-50 sm:h-36">
-
-                  <img
-                    src={
-                      item.image ||
-                      item.images?.[0] ||
-                      ""
-                    }
-                    alt={item.name}
-                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                  />
-
-                </div>
-
-                <div className="p-1.5">
-
-                  <p className="line-clamp-2 text-xs font-normal text-slate-600">
-                    {item.name}
-                  </p>
-
-                  <p className="mt-2 text-xs font-medium text-sky-700 sm:text-sm sm:text-sm">
-                    {formatCurrency(Number(item.price), currency)}
-                  </p>
-
-                  {item.oldPrice && (
-                    <p className="text-[11px] text-slate-400 line-through">
-                      {formatCurrency(Number(item.oldPrice), currency)}
-                    </p>
-                  )}
-
-                </div>
-
-              </button>
-            ))}
-
-          </div>
-
-        </section>
-      )}
-
-      
-
-{/* ================= DESCRIPTION ================= */}
-
-      <section className="mx-auto mt-5 max-w-6xl border-t border-slate-200">
-
-        <div className="flex gap-5 overflow-x-auto border-b border-slate-200 pt-3 text-xs font-normal">
-
-          <button
-            type="button"
-            onClick={() => setActiveTab("description")}
-            className={`pb-2 ${
-              activeTab === "description"
-                ? "border-b-2 border-sky-700 text-sky-700"
-                : "text-slate-400"
-            }`}
-          >
-            {t("Description", "Maelezo")}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab("specifications")}
-            className={`pb-2 ${
-              activeTab === "specifications"
-                ? "border-b-2 border-sky-700 text-sky-700"
-                : "text-slate-400"
-            }`}
-          >
-            {t("Specifications", "Specifications")}
-          </button>
-
-          <button
-            type="button"
-            onClick={() =>
-              document
-                .getElementById("reviews")
-                ?.scrollIntoView({
-                  behavior: "smooth",
-                })
-            }
-            className="pb-2 text-slate-400"
-          >
-            {t("Reviews", "Maoni")}
-          </button>
-
-        </div>
-
-        <div className="py-4">
-
-          {activeTab === "description" && (
-            <div>
-
-              <h2 className="text-sm font-bold text-slate-900">
-                {t("Product Description", "Maelezo ya Bidhaa")}
-              </h2>
-
-              <p className="mt-3 max-w-4xl whitespace-pre-line text-xs leading-5 text-slate-500">
-                {displayDescription ||
-                  t(
-                    "No additional product description available.",
-                    "Hakuna maelezo ya ziada ya bidhaa yaliyowekwa."
-                  )}
-              </p>
-
-              {displayKeyFeatures.length > 0 && (
-                <div className="mt-6 max-w-4xl">
-
-                  <h3 className="text-sm font-bold text-slate-900">
-                    {t("Key Features", "Key Features")}
-                  </h3>
-
-                  <ul className="mt-3 list-disc space-y-2 pl-5 text-xs leading-5 text-slate-600">
-                    {displayKeyFeatures.map((feature, index) => (
-                      <li key={`${feature}-${index}`}>
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
-
-                </div>
-              )}
-
-            </div>
-          )}
-
-          {activeTab === "specifications" && (
-            <div className="max-w-4xl rounded-lg border border-slate-200 bg-white p-4">
-
-              <h2 className="text-sm font-bold text-slate-900">
-                {t("Specifications", "Specifications")}
-              </h2>
-
-              {Object.keys(displaySpecifications).length > 0 ? (
-                <div className="mt-4 divide-y divide-slate-100">
-
-                  {Object.entries(displaySpecifications).map(
-                    ([key, value]) => (
-                      <div
-                        key={key}
-                        className="flex gap-4 py-2.5 text-xs"
-                      >
-                        <span className="w-1/3 font-semibold text-slate-600">
-                          {key}
-                        </span>
-
-                        <span className="flex-1 text-slate-700">
-                          {String(value)}
-                        </span>
-                      </div>
-                    )
-                  )}
-
-                </div>
-              ) : (
-                <p className="mt-3 text-xs text-slate-500">
-                  {t(
-                    "No product specifications available.",
-                    "Hakuna specifications za bidhaa zilizowekwa."
-                  )}
-                </p>
-              )}
-
-            </div>
-          )}
-
-        </div>
-
-      </section>
+      <RelatedProducts
+        products={related}
+        language={language}
+      />
 
       {/* ================= REVIEWS ================= */}
 

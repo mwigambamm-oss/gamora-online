@@ -1,15 +1,19 @@
 "use client";
 
 import { useLanguage } from "@/components/providers/LanguageProvider";
-
 import { useRouter } from "next/navigation";
 import { FaFacebookF, FaInstagram, FaTiktok } from "react-icons/fa";
-
 import { translations, type Language } from "@/lib/translations";
 import { formatCurrency, type Currency } from "@/lib/currency";
 import { getProducts as getSupabaseProducts, type Product } from "@/lib/products";
-import { useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
-
+import { supabase } from "@/lib/supabase";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type RefObject,
+} from "react";
 
 type CartItem = Product & { quantity: number };
 
@@ -32,7 +36,6 @@ const CATEGORY_IMAGES: Record<string, string> = {
   "Garden & Outdoor": "/images/categories/garden.jpg",
   "Health & Wellness": "/images/categories/health.jpg",
   Gaming: "/images/categories/gaming.jpg",
-
 };
 
 const CATEGORY_ICONS: Record<string, string> = {
@@ -80,6 +83,7 @@ const ALL_CATEGORIES = [
 export default function HomePage() {
   const router = useRouter();
   const { language, setLanguage } = useLanguage();
+
   const [currency, setCurrency] = useState<Currency>("TZS");
   const [products, setProducts] = useState<Product[]>([]);
   const [search, setSearch] = useState("");
@@ -88,21 +92,20 @@ export default function HomePage() {
   const [heroIndex, setHeroIndex] = useState(0);
   const [heroPaused, setHeroPaused] = useState(false);
   const [notice, setNotice] = useState("");
-  const [showCategoryMenu, setShowCategoryMenu] = useState(false);
-  const [flashTime, setFlashTime] = useState("12:32:43");
+  const [flashTime, setFlashTime] = useState("00:00:00");
 
-  const dealsRef = useRef<HTMLDivElement>(null);
   const flashRef = useRef<HTMLDivElement>(null);
+  const trendingRef = useRef<HTMLDivElement>(null);
   const newRef = useRef<HTMLDivElement>(null);
   const bestRef = useRef<HTMLDivElement>(null);
 
   const t = translations[language];
 
   useEffect(() => {
+    const saved = localStorage.getItem("gamora_currency");
 
-    const savedCurrency = localStorage.getItem("gamora_currency");
-    if (savedCurrency === "TZS" || savedCurrency === "USD") {
-      setCurrency(savedCurrency);
+    if (saved === "TZS" || saved === "USD") {
+      setCurrency(saved);
     }
   }, []);
 
@@ -111,9 +114,10 @@ export default function HomePage() {
   }, [currency]);
 
   useEffect(() => {
-    const updateFlashTime = () => {
+    const update = () => {
       const now = new Date();
       const end = new Date(now);
+
       end.setHours(23, 59, 59, 999);
 
       const diff = Math.max(0, end.getTime() - now.getTime());
@@ -123,14 +127,37 @@ export default function HomePage() {
       const seconds = Math.floor((diff % 60000) / 1000);
 
       setFlashTime(
-        `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
+        `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
+          2,
+          "0"
+        )}:${String(seconds).padStart(2, "0")}`
       );
     };
 
-    updateFlashTime();
-    const timer = window.setInterval(updateFlashTime, 1000);
+    update();
 
-    return () => window.clearInterval(timer);
+    const timer = window.setInterval(update, 1000);
+
+  
+
+  const marqueeStyle = `
+    @keyframes gamora-marquee {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+
+    .gamora-marquee {
+      animation: gamora-marquee 22s linear infinite;
+    }
+
+    .gamora-marquee:hover {
+      animation-play-state: paused;
+    }
+  `;
+
+
+
+  return () => window.clearInterval(timer);
   }, []);
 
   useEffect(() => {
@@ -139,37 +166,47 @@ export default function HomePage() {
     async function loadProducts() {
       try {
         const data = await getSupabaseProducts();
-        if (active) setProducts(data);
+
+        if (active) {
+          setProducts(data);
+        }
       } catch (error) {
         console.error("Failed to load products:", error);
-        if (active) setProducts([]);
+
+        if (active) {
+          setProducts([]);
+        }
       }
     }
 
     loadProducts();
     updateCartCount();
 
-    const onStorage = () => updateCartCount();
-    window.addEventListener("storage", onStorage);
-    window.addEventListener("gamora-cart-updated", onStorage);
+    const update = () => updateCartCount();
+
+    window.addEventListener("storage", update);
+    window.addEventListener("gamora-cart-updated", update);
 
     return () => {
       active = false;
-      window.removeEventListener("storage", onStorage);
-      window.removeEventListener("gamora-cart-updated", onStorage);
+      window.removeEventListener("storage", update);
+      window.removeEventListener("gamora-cart-updated", update);
     };
   }, []);
 
   useEffect(() => {
-    if (heroPaused || heroSlides.length <= 1) return;
+    if (heroPaused) return;
+
     const timer = window.setInterval(() => {
-      setHeroIndex((current) => (current + 1) % heroSlides.length);
-    }, 5500);
+      setHeroIndex((current) => current + 1);
+    }, 3000);
+
     return () => window.clearInterval(timer);
-  });
+  }, [heroPaused]);
 
   function updateCartCount() {
     const saved = localStorage.getItem("gamora_cart");
+
     if (!saved) {
       setCartCount(0);
       return;
@@ -177,8 +214,12 @@ export default function HomePage() {
 
     try {
       const cart: CartItem[] = JSON.parse(saved);
+
       setCartCount(
-        cart.reduce((total, item) => total + Number(item.quantity || 0), 0)
+        cart.reduce(
+          (total, item) => total + Number(item.quantity || 0),
+          0
+        )
       );
     } catch {
       setCartCount(0);
@@ -192,6 +233,7 @@ export default function HomePage() {
 
   function addToCart(product: Product) {
     const saved = localStorage.getItem("gamora_cart");
+
     let cart: CartItem[] = [];
 
     if (saved) {
@@ -202,16 +244,23 @@ export default function HomePage() {
       }
     }
 
-    const existingIndex = cart.findIndex((item) => item.id === product.id);
+    const existingIndex = cart.findIndex(
+      (item) => item.id === product.id
+    );
 
     if (existingIndex >= 0) {
       cart[existingIndex].quantity += 1;
     } else {
-      cart.push({ ...product, quantity: 1 });
+      cart.push({
+        ...product,
+        quantity: 1,
+      });
     }
 
     localStorage.setItem("gamora_cart", JSON.stringify(cart));
+
     updateCartCount();
+
     window.dispatchEvent(new Event("gamora-cart-updated"));
 
     setNotice(
@@ -219,560 +268,1004 @@ export default function HomePage() {
         ? `${product.name} imeongezwa kwenye kikapu.`
         : `${product.name} has been added to your cart.`
     );
+
     window.setTimeout(() => setNotice(""), 2200);
   }
 
   function scrollCarousel(
-    ref: React.RefObject<HTMLDivElement | null>,
+    ref: RefObject<HTMLDivElement | null>,
     direction: number
   ) {
     const el = ref.current;
+
     if (!el) return;
 
-    const amount = Math.max(320, Math.floor(el.clientWidth * 0.9));
-
     el.scrollBy({
-      left: direction * amount,
+      left:
+        direction *
+        Math.max(320, Math.floor(el.clientWidth * 0.9)),
       behavior: "smooth",
     });
   }
 
   const categories = useMemo(() => {
-    const found = Array.from(new Set(products.map((p) => p.category).filter(Boolean)));
-    const extra = found.filter((name) => !ALL_CATEGORIES.includes(name));
+    const found = Array.from(
+      new Set(
+        products
+          .map((product) => product.category)
+          .filter(Boolean)
+      )
+    );
+
+    const extra = found.filter(
+      (name) => !ALL_CATEGORIES.includes(name)
+    );
+
     return [...ALL_CATEGORIES, ...extra];
   }, [products]);
 
   const filteredProducts = useMemo(() => {
     const query = search.toLowerCase().trim();
+
     return products.filter((product) => {
       const matchesSearch =
         !query ||
         product.name.toLowerCase().includes(query) ||
         product.category.toLowerCase().includes(query);
+
       const matchesCategory =
-        selectedCategory === "All" || product.category === selectedCategory;
+        selectedCategory === "All" ||
+        product.category === selectedCategory;
+
       return matchesSearch && matchesCategory;
     });
   }, [products, search, selectedCategory]);
 
-  const deals = useMemo(() => {
-    return [...filteredProducts]
-      .filter((p) => getDiscount(p) > 0)
-      .sort((a, b) => getDiscount(b) - getDiscount(a))
-      .slice(0, 10);
-  }, [filteredProducts]);
+  const deals = useMemo(
+    () =>
+      [...filteredProducts]
+        .filter((product) => getDiscount(product) > 0)
+        .sort(
+          (a, b) => getDiscount(b) - getDiscount(a)
+        )
+        .slice(0, 20),
+    [filteredProducts]
+  );
 
-  const recommended = useMemo(() => filteredProducts.slice(0, 10), [filteredProducts]);
+  const trending = useMemo(
+    () =>
+      [...filteredProducts]
+        .sort(
+          (a, b) =>
+            Number(b.orders_count || 0) -
+            Number(a.orders_count || 0)
+        )
+        .slice(0, 20),
+    [filteredProducts]
+  );
 
   const newArrivals = useMemo(
-    () => [...filteredProducts].sort((a, b) => b.id - a.id).slice(0, 10),
+    () =>
+      [...filteredProducts]
+        .sort((a, b) => Number(b.id) - Number(a.id))
+        .slice(0, 20),
     [filteredProducts]
   );
 
   const bestSellers = useMemo(
     () =>
       [...filteredProducts]
-        .sort((a, b) => Number(b.orders_count || 0) - Number(a.orders_count || 0))
-        .slice(0, 10),
+        .sort(
+          (a, b) =>
+            Number(b.orders_count || 0) -
+            Number(a.orders_count || 0)
+        )
+        .slice(0, 20),
     [filteredProducts]
   );
 
+  const categoryProducts = useMemo(() => {
+    const result: Record<string, Product[]> = {};
+
+    ALL_CATEGORIES.forEach((category) => {
+      result[category] = products
+        .filter(
+          (product) => product.category === category
+        )
+        .slice(0, 12);
+    });
+
+    return result;
+  }, [products]);
+
   const heroProducts = useMemo(
-    () => products.filter((p) => getProductImage(p)).slice(0, 3),
+    () =>
+      products.filter((product) => getProductImage(product)),
     [products]
   );
 
-  const heroSlides = [
-    {
-      eyebrow: language === "sw" ? "KARIBU GAMORA ONLINE" : "WELCOME TO GAMORA ONLINE",
-      title: language === "sw" ? "Nunua smart. Chagua Gamora." : "Shop smart. Choose Gamora.",
-      text:
-        language === "sw"
-          ? "Gundua bidhaa unazopenda kwa bei nzuri, kwa uzoefu rahisi na salama."
-          : "Discover products you love at great prices with a simple, secure shopping experience.",
-      button: language === "sw" ? "ANZA KUNUNUA" : "SHOP NOW",
-      product: heroProducts[0],
-    },
-    {
-      eyebrow: language === "sw" ? "BIDHAA MPYA" : "NEW ARRIVALS",
-      title: language === "sw" ? "Vitu vipya vimefika." : "Fresh finds have arrived.",
-      text:
-        language === "sw"
-          ? "Angalia bidhaa mpya na uongeze kitu kipya kwenye kikapu chako."
-          : "Explore the latest products and find something new for your cart.",
-      button: language === "sw" ? "ANGALIA BIDHAA MPYA" : "EXPLORE NEW ARRIVALS",
-      product: heroProducts[1] || heroProducts[0],
-    },
-    {
-      eyebrow: language === "sw" ? "OFa MAALUM" : "SPECIAL DEALS",
-      title: language === "sw" ? "Bei nzuri. Ofa kali." : "Better prices. Bigger deals.",
-      text:
-        language === "sw"
-          ? "Pata punguzo kwenye bidhaa zilizochaguliwa kabla hazijaisha."
-          : "Save more on selected products while the deals last.",
-      button: language === "sw" ? "ANGALIA OFA" : "VIEW DEALS",
-      product: deals[0] || heroProducts[2] || heroProducts[0],
-    },
-  ];
+  const heroSlides = useMemo(
+    () =>
+      heroProducts.map((product, index) => ({
+        eyebrow:
+          index % 4 === 0
+            ? language === "sw"
+              ? "🔥 INAPENDWA SANA"
+              : "🔥 TRENDING NOW"
+            : index % 4 === 1
+              ? language === "sw"
+                ? "⚡ OFA MAALUM"
+                : "⚡ SPECIAL DEAL"
+              : index % 4 === 2
+                ? language === "sw"
+                  ? "✨ CHAGUO JIPYA"
+                  : "✨ NEW PICK"
+                : language === "sw"
+                  ? "🛍️ GAMORA PICK"
+                  : "🛍️ GAMORA PICK",
+        title: product.name,
+        text:
+          product.description
+            ?.replace(/<br\s*\/?>/gi, " ")
+            .replace(/<[^>]*>/g, "")
+            .slice(0, 150) ||
+          (language === "sw"
+            ? "Gundua bidhaa hii kwenye Gamora Online."
+            : "Discover this product on Gamora Online."),
+        button:
+          language === "sw"
+            ? "ANGALIA BIDHAA"
+            : "SHOP NOW",
+        product,
+      })),
+    [heroProducts, language]
+  );
 
-  const hero = heroSlides[heroIndex] || heroSlides[0];
+  const hero =
+    heroSlides.length > 0
+      ? heroSlides[heroIndex % heroSlides.length]
+      : {
+          eyebrow: "GAMORA ONLINE",
+          title:
+            language === "sw"
+              ? "Gundua bidhaa zetu"
+              : "Discover our products",
+          text:
+            language === "sw"
+              ? "Gundua bidhaa mbalimbali kwenye Gamora Online."
+              : "Discover a wide range of products on Gamora Online.",
+          button:
+            language === "sw"
+              ? "ANGALIA BIDHAA"
+              : "SHOP NOW",
+          product: null,
+        };
 
-  function goToCategory(category: string) {
-    setSelectedCategory(category);
-    document.getElementById("products")?.scrollIntoView({ behavior: "smooth" });
+  function goCategory(category: string) {
+    router.push(
+      `/category/${encodeURIComponent(category)}`
+    );
+  }
+
+  function handleHeroButton() {
+    if (hero.product) {
+      router.push(`/product/${hero.product.id}`);
+      return;
+    }
+
+    document
+      .getElementById("products")
+      ?.scrollIntoView({
+        behavior: "smooth",
+      });
   }
 
   return (
-    <main className="min-h-screen bg-[#f3f4f6] text-[#374151]">
+    <main className="min-h-screen bg-[#f3f4f6] text-[#1f2937]">
+      <style>{`
+        @keyframes gamora-marquee {
+          from { transform: translateX(100vw); }
+          to { transform: translateX(-100%); }
+        }
+      `}</style>
       {notice && (
-        <div className="fixed left-1/2 top-5 z-[100] -translate-x-1/2 rounded-full bg-[#374151] px-5 py-3 text-xs font-bold text-white shadow-2xl sm:text-sm">
+        <div className="fixed left-1/2 top-5 z-[100] -translate-x-1/2 rounded-full bg-[#1f2937] px-5 py-3 text-xs font-bold text-white shadow-2xl sm:text-sm">
           ✓ {notice}
         </div>
       )}
 
-      {/* TOP WELCOME ANNOUNCEMENT */}
-      <div className="overflow-hidden bg-[#171a1f] text-white">
-        <div className="announcement-marquee flex min-h-[36px] w-max items-center py-2 text-[13px] font-medium text-white sm:min-h-[40px] sm:text-sm">
-          <span className="px-8 text-white">
+      {/* ANNOUNCEMENT */}
+      <div className="bg-gradient-to-r from-[#E30613] to-orange-500 text-white">
+        <div className="mx-auto max-w-[1440px] overflow-hidden">
+          <div className="gamora-marquee flex min-h-[38px] w-max items-center whitespace-nowrap text-[11px] font-bold sm:text-xs">
             {language === "sw"
-              ? "Karibu Gamora Online • Gundua bidhaa unazozipenda kwa bei nzuri • Pata ofa nzuri • Nunua kwa urahisi na kwa usalama."
-              : "Welcome to Gamora Online • Discover products you love at great prices • Get great deals • Shop easily and securely."}
-          </span>
-          <span className="px-8 text-white">
-            {language === "sw"
-              ? "Karibu Gamora Online • Gundua bidhaa mpya • Pata ofa nzuri • Nunua kwa urahisi na kwa usalama."
-              : "Welcome to Gamora Online • Discover new products • Get great deals • Shop easily and securely."}
-          </span>
+              ? "Karibu Gamora Online — Gundua bidhaa unazopenda, pata bei nzuri na uagize kwa urahisi. Tunakuletea bidhaa bora hadi ulipo."
+              : "Welcome to Gamora Online — Discover products you love, enjoy great prices and shop with ease. Quality products delivered to you."}
+          </div>
         </div>
       </div>
 
       {/* HEADER */}
-      <header className="sticky top-0 z-50 border-b border-[#e5e5e5] bg-white/95 backdrop-blur">
-        <div className="mx-auto max-w-[1280px] px-4">
-          <div className="flex min-h-[64px] items-center gap-2 sm:min-h-[72px] sm:gap-5">
-            <a href="/" className="shrink-0 flex items-center gap-2" aria-label="Gamora Online home">
-              <div className="flex flex-col">
-                <img 
-                  src="/gamora-logo.png" 
-                  alt="Gamora Online" 
-                  className="h-16 w-auto object-contain sm:h-20" 
-                />
-                <span className="text-[10px] font-semibold text-[#374151] sm:text-xs">
-                  Nunua smart. Chagua Gamora.
-                </span>
-              </div>
-            </a>
+      <header className="sticky top-0 z-50 border-b border-red-100 bg-white">
 
-            <nav className="hidden items-center gap-6 text-xs font-normal lg:flex">
-              <a href="/" className="border-b-2 border-black py-6">{t.home}</a>
-              <button
-                type="button"
-                onClick={() => setShowCategoryMenu((v) => !v)}
-                className="flex items-center gap-1 py-6 text-[#555] transition hover:text-[#374151]"
-              >
-                {t.categories}
-              </button>
-              <a href="#new-arrivals" className="py-6 text-[#555] transition hover:text-[#374151]">{language === "sw" ? "Bidhaa Mpya" : "New Arrivals"}</a>
-              <a href="#flash-sales" className="py-6 text-[#555] transition hover:text-[#374151]">{language === "sw" ? "Ofa" : "Deals"}</a>
-              <a href="#best-sellers" className="py-6 text-[#555] transition hover:text-[#374151]">{language === "sw" ? "Zinazouzwa Sana" : "Best Sellers"}</a>
-            </nav>
+        {/* DESKTOP HEADER */}
+        <div className="mx-auto hidden min-h-[70px] max-w-[1440px] items-center gap-4 px-3 sm:px-5 lg:flex lg:gap-6">
 
-            <div className="ml-auto flex min-w-0 items-center gap-1.5 sm:gap-3">
-              <div className="relative hidden w-56 md:block xl:w-72">
-                <input
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder={t.search}
-                  className="w-full rounded-full border border-[#d8d8d8] bg-[#f7f7f7] py-2.5 pl-4 pr-11 text-sm outline-none transition focus:border-[#777] focus:bg-white"
-                />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-lg text-[#555]">⌕</span>
-              </div>
+          <button
+            onClick={() => router.push("/")}
+            className="shrink-0 text-left"
+          >
+            <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#E30613]">
+              Gamora Online
+            </p>
+            <p className="text-xs font-black bg-gradient-to-r from-[#E30613] via-orange-500 to-pink-500 bg-clip-text text-transparent">
+              {language === "sw"
+                ? "Soko lako la mtandaoni"
+                : "Your online marketplace"}
+            </p>
+          </button>
 
-              <div className="flex items-center rounded-lg border border-[#dedede] bg-white p-0.5 text-[9px] font-black sm:p-1 sm:text-[11px]">
-                <button onClick={() => changeLanguage("en")} className={`rounded-md px-1.5 py-1 ${language === "en" ? "bg-[#374151] text-white" : "text-[#666]"} sm:px-2.5 sm:py-1.5`}>EN</button>
-                <button onClick={() => changeLanguage("sw")} className={`rounded-md px-1.5 py-1 ${language === "sw" ? "bg-[#374151] text-white" : "text-[#666]"} sm:px-2.5 sm:py-1.5`}>SW</button>
-              </div>
+          <div className="relative flex-1">
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={
+                language === "sw"
+                  ? "Unatafuta nini leo?"
+                  : "What are you looking for today?"
+              }
+              className="h-11 w-full rounded-full border-2 border-orange-200 bg-white px-5 pr-14 text-sm outline-none transition focus:border-[#E30613] focus:shadow-md"
+            />
 
-              <div className="flex items-center rounded-lg border border-[#dedede] bg-white p-0.5 text-[9px] font-black sm:p-1 sm:text-[11px]">
-                <button
-                  type="button"
-                  onClick={() => setCurrency("TZS")}
-                  className={`rounded-md px-1.5 py-1 ${currency === "TZS" ? "bg-[#374151] text-white" : "text-[#666]"} sm:px-2.5 sm:py-1.5`}
-                >
-                  TZS
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setCurrency("USD")}
-                  className={`rounded-md px-1.5 py-1 ${currency === "USD" ? "bg-[#374151] text-white" : "text-[#666]"} sm:px-2.5 sm:py-1.5`}
-                >
-                  USD
-                </button>
-              </div>
-
-              <a href="/account" className="flex h-9 items-center rounded-lg px-1.5 text-xs font-bold text-[#333] transition hover:bg-[#f1f1f1] sm:h-10 sm:px-2 sm:text-sm">
-                {language === "sw" ? "Akaunti" : "Account"}
-              </a>
-
-              <a href="/cart" className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-lg transition hover:bg-[#f1f1f1] sm:h-10 sm:w-10 sm:text-xl" aria-label={`${t.cart}: ${cartCount}`}>
-                🛒
-                {cartCount > 0 && (
-                  <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#e30613] px-1 text-[10px] font-black text-white">{cartCount}</span>
-                )}
-              </a>
-            </div>
+            <button
+              type="button"
+              className="absolute right-1 top-1 flex h-9 w-12 items-center justify-center rounded-full bg-[#E30613] text-lg text-white"
+            >
+              ⌕
+            </button>
           </div>
 
-          <div className="pb-2 md:hidden">
-            <div className="relative">
+          <div className="flex items-center rounded-lg border border-slate-200 p-1">
+            <button
+              onClick={() => changeLanguage("en")}
+              className={`rounded-md px-2.5 py-1.5 text-[10px] font-black ${
+                language === "en"
+                  ? "bg-[#E30613] text-white"
+                  : "text-slate-500"
+              }`}
+            >
+              EN
+            </button>
+
+            <button
+              onClick={() => changeLanguage("sw")}
+              className={`rounded-md px-2.5 py-1.5 text-[10px] font-black ${
+                language === "sw"
+                  ? "bg-[#E30613] text-white"
+                  : "text-slate-500"
+              }`}
+            >
+              SW
+            </button>
+          </div>
+
+          <div className="flex items-center rounded-lg border border-slate-200 p-1">
+            <button
+              onClick={() => setCurrency("TZS")}
+              className={`rounded-md px-2 py-1.5 text-[10px] font-black ${
+                currency === "TZS"
+                  ? "bg-[#E30613] text-white"
+                  : "text-slate-500"
+              }`}
+            >
+              TZS
+            </button>
+
+            <button
+              onClick={() => setCurrency("USD")}
+              className={`rounded-md px-2 py-1.5 text-[10px] font-black ${
+                currency === "USD"
+                  ? "bg-[#E30613] text-white"
+                  : "text-slate-500"
+              }`}
+            >
+              USD
+            </button>
+          </div>
+
+          <button
+            onClick={() => router.push("/account")}
+            className="shrink-0 rounded-lg px-2 py-1 text-left transition hover:bg-red-50"
+          >
+            <p className="text-[10px] font-bold text-slate-500">
+              {language === "sw" ? "Karibu" : "Welcome"}
+            </p>
+            <p className="text-xs font-black text-[#E30613]">
+              {language === "sw" ? "Akaunti" : "Account"}
+            </p>
+          </button>
+
+          <button
+            onClick={() => router.push("/cart")}
+            className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 border-red-100 bg-red-50 text-xl transition hover:border-[#E30613]"
+            aria-label="Cart"
+          >
+            🛒
+
+            {cartCount > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#E30613] px-1 text-[10px] font-black text-white">
+                {cartCount}
+              </span>
+            )}
+          </button>
+
+        </div>
+
+        {/* MOBILE HEADER */}
+        <div className="lg:hidden bg-gradient-to-r from-[#450a0a] via-[#991b1b] to-[#c2410c] px-3 py-2">
+
+          <div className="flex items-center gap-2">
+
+            <div className="flex shrink-0 items-center rounded-full bg-white p-1">
+              <button
+                onClick={() => changeLanguage("en")}
+                className={`rounded-full px-2.5 py-1 text-[10px] font-black ${
+                  language === "en"
+                    ? "bg-[#E30613] text-white"
+                    : "text-slate-500"
+                }`}
+              >
+                EN
+              </button>
+
+              <button
+                onClick={() => changeLanguage("sw")}
+                className={`rounded-full px-2.5 py-1 text-[10px] font-black ${
+                  language === "sw"
+                    ? "bg-[#E30613] text-white"
+                    : "text-slate-500"
+                }`}
+              >
+                SW
+              </button>
+            </div>
+
+            <div className="relative min-w-0 flex-1">
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder={t.search}
-                className="w-full rounded-full border border-[#d8d8d8] bg-[#f7f7f7] py-2.5 pl-4 pr-11 text-sm outline-none focus:border-[#777] focus:bg-white"
+                placeholder={
+                  language === "sw"
+                    ? "Tafuta bidhaa..."
+                    : "Search products..."
+                }
+                className="h-8 w-full rounded-full border-0 bg-white px-3 pr-9 text-[11px] text-slate-900 outline-none"
               />
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-lg text-[#555]">⌕</span>
-            </div>
 
-            <nav className="mt-2 flex gap-5 overflow-x-auto whitespace-nowrap pb-1 text-[11px] font-bold scrollbar-hide">
               <button
                 type="button"
-                onClick={() => setShowCategoryMenu((v) => !v)}
-                className="shrink-0 font-bold text-[#333]"
+                className="absolute right-1 top-1 flex h-6 w-7 items-center justify-center rounded-full bg-[#E30613] text-sm text-white"
               >
-                {t.categories}
+                ⌕
               </button>
-              <a href="#new-arrivals" className="shrink-0 text-[#333]">{language === "sw" ? "Bidhaa Mpya" : "New Arrivals"}</a>
-              <a href="#flash-sales" className="shrink-0 text-[#333]">{language === "sw" ? "Ofa" : "Deals"}</a>
-              <a href="#best-sellers" className="shrink-0 text-[#333]">{language === "sw" ? "Zinazouzwa Sana" : "Best Sellers"}</a>
-            </nav>
+            </div>
+
           </div>
+
         </div>
-      </header>
 
-      {showCategoryMenu && (
-        <div className="absolute left-0 right-0 z-40 border-b border-[#e5e5e5] bg-white shadow-xl">
-          <div className="mx-auto max-w-[1280px] px-4 py-5 sm:py-7">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-base font-black text-[#222] sm:text-lg">
-                {language === "sw" ? "Makundi yote" : "All Categories"}
-              </h3>
-              <button
-                type="button"
-                onClick={() => setShowCategoryMenu(false)}
-                className="rounded-full px-3 py-1 text-lg text-[#555] hover:bg-[#f3f4f6]"
-                aria-label="Close categories"
-              >
-                ×
-              </button>
-            </div>
+        {/* MAIN NAVIGATION */}
+        <div className="relative z-[100] bg-gradient-to-r from-[#450a0a] via-[#991b1b] to-[#c2410c]">
 
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
-              {ALL_CATEGORIES.map((category) => (
-                <button
-                  key={category}
-                  type="button"
-                  onClick={() => {
-                    router.push(`/category/${encodeURIComponent(category)}`);
-                    setShowCategoryMenu(false);
-                  }}
-                  className="flex min-h-[58px] items-center gap-2 rounded-xl border border-[#e5e5e5] bg-white px-3 py-2 text-left text-xs font-bold text-[#333] transition hover:border-[#374151] hover:bg-[#f8f9fa] sm:text-sm"
-                >
-                  {CATEGORY_IMAGES[category] ? (
-                    <img
-                      src={CATEGORY_IMAGES[category]}
-                      alt={category}
-                      className="h-10 w-10 rounded-lg object-cover"
-                    />
-                  ) : (
-                    <span className="text-xl">
-                      {CATEGORY_ICONS[category] || "🛍️"}
-                    </span>
-                  )}
-                  <span>{category}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
+          <div className="mx-auto flex max-w-[1440px] items-center gap-2 overflow-x-auto px-3 py-2 scrollbar-hide">
 
-      {/* MARKETPLACE HERO + CATEGORIES */}
-      <section className="bg-white py-3 sm:py-5">
-        <div className="mx-auto max-w-[1280px] px-3 sm:px-4">
-          <div className="grid gap-3 lg:grid-cols-[205px_minmax(0,1fr)]">
-
-            {/* SMALL CATEGORY PANEL */}
-            <aside className="hidden overflow-hidden rounded-xl border border-[#e5e5e5] bg-white lg:block">
-              <div className="border-b border-[#eeeeee] px-4 py-3">
-                <h2 className="text-sm font-black text-[#111]">
-                  {language === "sw" ? "Makundi" : "Categories"}
-                </h2>
-              </div>
-
-              <div className="py-1">
-                {ALL_CATEGORIES.slice(0, 12).map((category) => (
-                  <button
-                    key={category}
-                    type="button"
-                    onClick={() =>
-                      router.push(`/category/${encodeURIComponent(category)}`)
-                    }
-                    className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-[11px] font-semibold text-[#333] transition hover:bg-[#fff1f2] hover:text-[#e30613]"
-                  >
-                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-[#f7f7f7] text-sm">
-                      {CATEGORY_ICONS[category] || "🛍️"}
-                    </span>
-                    <span className="line-clamp-1">{category}</span>
-                    <span className="ml-auto text-[#aaa]">›</span>
-                  </button>
-                ))}
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setShowCategoryMenu(true)}
-                className="w-full border-t border-[#eeeeee] px-3 py-3 text-left text-[11px] font-black text-[#e30613] hover:bg-[#fff7f7]"
-              >
-                {language === "sw" ? "Makundi yote →" : "All Categories →"}
-              </button>
-            </aside>
-
-            {/* HERO SLIDER */}
-            <div
-              className="relative min-w-0 overflow-hidden rounded-xl bg-[#f3f4f6]"
-              onMouseEnter={() => setHeroPaused(true)}
-              onMouseLeave={() => setHeroPaused(false)}
+            <button
+              onClick={() => router.push("/")}
+              className="shrink-0 rounded-full px-3 py-1.5 text-[10px] font-bold text-white transition hover:bg-white/15"
             >
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_78%_45%,#ffffff_0%,#f3f4f6_48%,#e5e7eb_100%)]" />
+              {language === "sw" ? "Nyumbani" : "Home"}
+            </button>
 
-              <div className="relative grid min-h-[275px] items-center gap-2 px-5 py-5 sm:min-h-[330px] sm:px-8 lg:min-h-[365px] lg:grid-cols-[1fr_.8fr] lg:px-12">
-                <div className="relative z-10 max-w-xl">
-                  <p className="mb-2 text-[10px] font-black uppercase tracking-[0.18em] text-[#e30613] sm:text-xs">
-                    {hero.eyebrow}
-                  </p>
+            <button
+              onClick={() =>
+                document
+                  .getElementById("categories")
+                  ?.scrollIntoView({ behavior: "smooth" })
+              }
+              className="shrink-0 rounded-full px-3 py-1.5 text-[10px] font-bold text-white transition hover:bg-white/15"
+            >
+              {language === "sw" ? "Makundi" : "Categories"}
+            </button>
 
-                  <h1 className="max-w-xl text-3xl font-black leading-[1] tracking-tight text-[#111] sm:text-4xl lg:text-6xl">
-                    {hero.title}
-                  </h1>
+            <button
+              onClick={() =>
+                document
+                  .getElementById("flash-sales")
+                  ?.scrollIntoView({ behavior: "smooth" })
+              }
+              className="shrink-0 rounded-full px-3 py-1.5 text-[10px] font-bold text-white transition hover:bg-white/15"
+            >
+              🔥 {language === "sw" ? "Ofa" : "Flash deals"}
+            </button>
 
-                  <p className="mt-3 max-w-lg text-xs leading-5 text-[#666] sm:text-sm sm:leading-6">
-                    {hero.text}
-                  </p>
+            <button
+              onClick={() =>
+                document
+                  .getElementById("new-arrivals")
+                  ?.scrollIntoView({ behavior: "smooth" })
+              }
+              className="shrink-0 rounded-full px-3 py-1.5 text-[10px] font-bold text-white transition hover:bg-white/15"
+            >
+              {language === "sw" ? "Mpya" : "New arrivals"}
+            </button>
+
+            <button
+              onClick={() =>
+                document
+                  .getElementById("best-sellers")
+                  ?.scrollIntoView({ behavior: "smooth" })
+              }
+              className="shrink-0 rounded-full px-3 py-1.5 text-[10px] font-bold text-white transition hover:bg-white/15"
+            >
+              {language === "sw"
+                ? "Zinazouzwa sana"
+                : "Best sellers"}
+            </button>
+
+            <div className="group relative z-[99999] shrink-0">
+              <button
+                type="button"
+                className="flex items-center gap-1 rounded-full px-3 py-1.5 text-[10px] font-bold text-white transition hover:bg-white/15"
+              >
+                {language === "sw" ? "Wasiliana nasi" : "Contact us"}
+                <span className="text-[9px]">
+                  ▾
+                </span>
+              </button>
+
+              <div className="pointer-events-none invisible absolute left-0 top-full z-[999999] mt-1 w-64 rounded-xl border border-slate-200 bg-white p-4 text-left opacity-0 shadow-2xl transition-all duration-200 group-hover:pointer-events-auto group-hover:visible group-hover:opacity-100">
+
+                <p className="text-xs font-black text-slate-900">
+                  {language === "sw"
+                    ? "Wasiliana na Gamora"
+                    : "Contact Gamora"}
+                </p>
+
+                <div className="mt-3 space-y-3 text-[10px] text-slate-600">
 
                   <a
-                    href={hero.product ? `/product/${hero.product.id}` : "#products"}
-                    className="mt-5 inline-flex rounded-lg bg-[#e30613] px-5 py-3 text-[11px] font-black text-white shadow-lg transition hover:bg-[#c80511] sm:px-6 sm:text-xs"
+                    href="mailto:officialgamoraonline@gmail.com"
+                    className="flex items-start gap-2 hover:text-[#E30613]"
                   >
-                    {hero.button}
-                    <span className="ml-2">→</span>
+                    <span>📧</span>
+                    <span className="break-all">
+                      officialgamoraonline@gmail.com
+                    </span>
+                  </a>
+
+                  <a
+                    href="https://wa.me/255798555221"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-2 hover:text-green-600"
+                  >
+                    <span>💬</span>
+                    <span>WhatsApp: +255 798 555 221</span>
+                  </a>
+
+                  <div className="flex items-center gap-2">
+                    <span>📍</span>
+                    <span>Dar es Salaam, Tanzania</span>
+                  </div>
+
+                  <a
+                    href="https://www.instagram.com/gamoraonline_store/"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-2 hover:text-pink-600"
+                  >
+                    <span>📸</span>
+                    <span>Instagram: @gamoraonline_store</span>
+                  </a>
+
+                </div>
+
+                <div className="mt-3 border-t border-slate-100 pt-3">
+                  <a
+                    href="/contact"
+                    className="block rounded-lg bg-[#E30613] px-3 py-2 text-center text-[10px] font-bold text-white"
+                  >
+                    {language === "sw"
+                      ? "Fungua Contact Us"
+                      : "Open Contact Us"}
                   </a>
                 </div>
 
-                <div className="relative flex min-h-[145px] items-center justify-center sm:min-h-[190px] lg:min-h-[280px]">
-                  <div className="absolute h-40 w-40 rounded-full bg-white/80 blur-2xl sm:h-56 sm:w-56 lg:h-72 lg:w-72" />
+              </div>
+            </div>
 
-                  {hero.product && getProductImage(hero.product) ? (
-                    <img
-                      src={getProductImage(hero.product)}
-                      alt={hero.product.name}
-                      className="relative z-10 max-h-[190px] max-w-[88%] object-contain drop-shadow-2xl transition duration-700 sm:max-h-[245px] lg:max-h-[320px]"
-                    />
-                  ) : (
-                    <div className="relative z-10 text-7xl opacity-30">🛍️</div>
-                  )}
+          </div>
+        </div>
+
+        {/* MOBILE BOTTOM NAV */}
+        <div className="fixed bottom-0 left-0 right-0 z-[9999] flex h-12 items-center justify-around border-t border-slate-200 bg-white shadow-[0_-3px_12px_rgba(0,0,0,0.08)] lg:hidden">
+
+          <button
+            onClick={() =>
+              document
+                .getElementById("categories")
+                ?.scrollIntoView({ behavior: "smooth" })
+            }
+            className="flex flex-1 flex-col items-center justify-center gap-0.5 py-1 text-[9px] font-bold text-slate-600"
+          >
+            <span className="text-sm">☰</span>
+            <span>
+              {language === "sw" ? "Makundi" : "Categories"}
+            </span>
+          </button>
+
+          <button
+            onClick={() => router.push("/account")}
+            className="flex flex-1 flex-col items-center justify-center gap-0.5 py-1 text-[9px] font-bold text-slate-600"
+          >
+            <span className="text-sm">👤</span>
+            <span>
+              {language === "sw" ? "Akaunti" : "My Account"}
+            </span>
+          </button>
+
+          <button
+            onClick={() => router.push("/cart")}
+            className="relative flex flex-1 flex-col items-center justify-center gap-0.5 py-1 text-[9px] font-bold text-slate-600"
+            aria-label="Cart"
+          >
+            <span className="text-sm">🛒</span>
+            <span>
+              {language === "sw" ? "Kikapu" : "Cart"}
+            </span>
+
+            {cartCount > 0 && (
+              <span className="absolute right-[28%] top-0 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-[#E30613] px-1 text-[8px] font-black text-white">
+                {cartCount}
+              </span>
+            )}
+          </button>
+
+        </div>
+
+      </header>
+
+      {/* HERO */}
+      <section
+        className="bg-[#eef2ff] py-4 sm:py-6"
+        onMouseEnter={() => setHeroPaused(true)}
+        onMouseLeave={() => setHeroPaused(false)}
+      >
+        <div className="mx-auto max-w-[1440px] px-3 sm:px-5">
+          <div className="grid overflow-hidden rounded-xl bg-white shadow-sm lg:grid-cols-[215px_1fr]">
+            
+            {/* LEFT CATEGORIES */}
+            <aside className="hidden border-r border-slate-100 bg-white lg:block">
+              <div className="border-b border-slate-100 px-5 py-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[#E30613]">
+                      GAMORA MARKETPLACE
+                    </p>
+                    <h2 className="mt-1 text-sm font-black text-slate-900">
+                      {language === "sw"
+                        ? "Nunua kwa Makundi"
+                        : "Shop by Category"}
+                    </h2>
+                  </div>
+
+                  <span className="rounded-full bg-[#fff1f2] px-2 py-1 text-[9px] font-bold text-[#E30613]">
+                    {ALL_CATEGORIES.length}+
+                  </span>
                 </div>
               </div>
 
+              <div className="px-3 py-3">
+                <div className="mb-3 flex gap-1.5 overflow-hidden">
+                  <button
+                    type="button"
+                    className="shrink-0 rounded-full bg-[#E30613] px-3 py-1.5 text-[9px] font-bold text-white"
+                  >
+                    🔥 Popular
+                  </button>
+
+                  <button
+                    type="button"
+                    className="shrink-0 rounded-full bg-orange-50 px-3 py-1.5 text-[9px] font-black text-orange-600"
+                  >
+                    ⚡ Deals
+                  </button>
+
+                  <button
+                    type="button"
+                    className="shrink-0 rounded-full bg-emerald-50 px-3 py-1.5 text-[9px] font-black text-emerald-600"
+                  >
+                    ✨ New
+                  </button>
+                </div>
+
+                <div className="space-y-1">
+                  {ALL_CATEGORIES.slice(0, 5).map((category, index) => {
+                    const fallbackImages: Record<string, string> = {
+                      "Women's Fashion": "/images/womens-fashion.jpg",
+                      "Men's Fashion": "/images/mens-fashion.jpg",
+                      Shoes: "/images/shoes.jpg",
+                      "Phones & Electronics": "/images/phone.jpg",
+                      "Home & Kitchen": "/images/categories/kitchen.jpg",
+                      Accessories: "/images/categories/jewelry.jpg",
+                      "Beauty & Personal Care": "/images/categories/beauty.jpg",
+                      "Computers & Accessories": "/images/categories/computers.jpg",
+                      "Baby & Kids": "/images/categories/baby.jpg",
+                      "Sports & Fitness": "/images/categories/sports.jpg",
+                      Automotive: "/images/categories/automotive.jpg",
+                      "Tools & Hardware": "/images/categories/garden.jpg",
+                    };
+
+                    const accents = [
+                      "hover:bg-pink-50 hover:text-pink-600",
+                      "hover:bg-indigo-50 hover:text-indigo-600",
+                      "hover:bg-orange-50 hover:text-orange-600",
+                      "hover:bg-blue-50 hover:text-blue-600",
+                      "hover:bg-amber-50 hover:text-amber-600",
+                      "hover:bg-purple-50 hover:text-purple-600",
+                      "hover:bg-fuchsia-50 hover:text-fuchsia-600",
+                      "hover:bg-cyan-50 hover:text-cyan-600",
+                      "hover:bg-sky-50 hover:text-sky-600",
+                      "hover:bg-emerald-50 hover:text-emerald-600",
+                      "hover:bg-red-50 hover:text-red-600",
+                      "hover:bg-lime-50 hover:text-lime-600",
+                    ];
+
+                    return (
+                      <button
+                        key={category}
+                        type="button"
+                        onClick={() => goCategory(category)}
+                        className={`group flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left transition ${accents[index]}`}
+                      >
+                        <span className="relative flex h-9 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-slate-50 ring-1 ring-slate-100">
+                          <img
+                            src={
+                              CATEGORY_IMAGES[category] ||
+                              fallbackImages[category] ||
+                              "/images/categories/furniture.jpg"
+                            }
+                            alt={category}
+                            className="h-full w-full object-cover transition duration-300 group-hover:scale-110"
+                          />
+                        </span>
+
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-[11px] font-bold text-slate-700 group-hover:font-black">
+                            {category}
+                          </span>
+                          <span className="block text-[8px] font-medium text-slate-400">
+                            {language === "sw"
+                              ? "Angalia bidhaa"
+                              : "Explore products"}
+                          </span>
+                        </span>
+
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-50 text-[13px] font-bold text-slate-400 transition group-hover:bg-white group-hover:text-current">
+                          →
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    document
+                      .getElementById("categories")
+                      ?.scrollIntoView({ behavior: "smooth" })
+                  }
+                  className="mt-2 flex w-full items-center justify-center rounded-lg bg-slate-50 py-2 text-[9px] font-black text-[#E30613] transition hover:bg-red-50"
+                >
+                  {language === "sw"
+                    ? "VIEW MORE MAKUNDI"
+                    : "VIEW MORE CATEGORIES"}{" "}
+                  →
+                </button>
+              </div>
+            </aside>
+
+            {/* GAMORA MARKETPLACE PRODUCT BANNER */}
+            <div
+              className={`relative min-h-[300px] overflow-hidden sm:min-h-[340px] ${
+                [
+                  "bg-gradient-to-br from-red-50 via-orange-50 to-yellow-100",
+                  "bg-gradient-to-br from-blue-50 via-cyan-50 to-indigo-100",
+                  "bg-gradient-to-br from-purple-50 via-pink-50 to-fuchsia-100",
+                  "bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-100",
+                  "bg-gradient-to-br from-amber-50 via-orange-50 to-red-100",
+                  "bg-gradient-to-br from-indigo-50 via-violet-50 to-purple-100",
+                ][heroIndex % 6]
+              }`}
+              onMouseEnter={() => setHeroPaused(true)}
+              onMouseLeave={() => setHeroPaused(false)}
+            >
+              <div className="absolute -right-20 -top-20 h-60 w-60 rounded-full bg-white/50 blur-3xl" />
+              <div className="absolute -bottom-20 -left-16 h-52 w-52 rounded-full bg-white/50 blur-3xl" />
+
+              {hero.product ? (
+                <div className="relative z-10 grid h-full min-h-[300px] items-center gap-3 px-6 py-5 sm:min-h-[340px] sm:px-8 lg:grid-cols-[1fr_1fr] lg:px-8">
+                  <div className="z-20">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="rounded-full bg-[#E30613] px-3 py-1 text-[9px] font-black uppercase tracking-wider text-white shadow-sm">
+                        🔥 {language === "sw" ? "Inapendwa" : "Trending"}
+                      </span>
+
+                      <span className="rounded-full bg-orange-100 px-3 py-1 text-[9px] font-black text-orange-600">
+                        ⚡ {language === "sw" ? "Ofa" : "DEAL"}
+                      </span>
+                    </div>
+
+                    <p className="mt-2 text-[8px] font-black uppercase tracking-[0.2em] text-[#E30613]">
+                      GAMORA ONLINE
+                    </p>
+
+                    <h1 className="mt-1 max-w-xl text-2xl font-black leading-[1.02] tracking-tight text-slate-950 sm:text-3xl lg:text-4xl">
+                      {hero.product.name}
+                    </h1>
+
+                    <p className="mt-2 max-w-lg text-[10px] leading-4 text-slate-500 sm:text-xs">
+                      {hero.product.description
+                        ? hero.product.description
+                            .replace(/<br\s*\/?>/gi, " ")
+                            .replace(/<[^>]*>/g, "")
+                            .slice(0, 150)
+                        : hero.text}
+                      {hero.product.description &&
+                      hero.product.description.length > 150
+                        ? "..."
+                        : ""}
+                    </p>
+
+                    <div className="mt-2 flex items-end gap-3">
+                      <span className="text-xl font-black text-[#E30613] sm:text-2xl">
+                        TZS {Number(hero.product.price || 0).toLocaleString()}
+                      </span>
+
+                      {Number(hero.product.oldPrice || 0) >
+                        Number(hero.product.price || 0) && (
+                        <span className="pb-1 text-xs font-bold text-slate-400 line-through">
+                          TZS{" "}
+                          {Number(
+                            hero.product.oldPrice
+                          ).toLocaleString()}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="mt-2 flex flex-wrap items-center gap-2 text-[8px] font-semibold text-slate-500">
+                      <span>
+                        ⭐{" "}
+                        {Number(hero.product.rating || 0).toFixed(1)}
+                      </span>
+
+                      <span>
+                        ❤️{" "}
+                        {Math.max(
+                          200,
+                          Number(hero.product.likes || 200)
+                        )}{" "}
+                        Likes
+                      </span>
+
+                      <span>
+                        🛒{" "}
+                        {Math.max(
+                          300,
+                          Number(hero.product.orders_count || 300)
+                        )}{" "}
+                        Ordered
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        window.location.href = `/product/${hero.product.id}`
+                      }
+                      className="mt-3 rounded-lg bg-[#E30613] px-5 py-2.5 text-[9px] font-bold text-white shadow-lg shadow-red-200 transition hover:-translate-y-0.5 hover:bg-red-700"
+                    >
+                      {language === "sw"
+                        ? "ANGALIA BIDHAA"
+                        : "SHOP NOW"}{" "}
+                      →
+                    </button>
+                  </div>
+
+                  <div className="relative flex h-full min-h-[170px] items-center justify-center">
+                    <div className="absolute h-44 w-44 rounded-full bg-white/70 shadow-inner sm:h-56 sm:w-56" />
+
+                    <div className="absolute right-4 top-4 z-20 rounded-full bg-yellow-400 px-3 py-2 text-[10px] font-black text-slate-900 shadow-md">
+                      ✨ HOT
+                    </div>
+
+                    <img
+                      src={getProductImage(hero.product)}
+                      alt={hero.product.name}
+                      className="relative z-10 max-h-[190px] max-w-[82%] object-contain drop-shadow-2xl transition-all duration-700 sm:max-h-[250px]"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="flex h-full min-h-[360px] items-center justify-center">
+                  <span className="text-7xl opacity-30">🛍️</span>
+                </div>
+              )}
+
               <button
-                aria-label="Previous slide"
+                type="button"
                 onClick={() =>
                   setHeroIndex(
-                    (heroIndex - 1 + heroSlides.length) % heroSlides.length
+                    (heroIndex - 1 + heroSlides.length) %
+                      heroSlides.length
                   )
                 }
-                className="absolute left-2 top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-lg shadow-md transition hover:bg-white sm:left-3 sm:h-10 sm:w-10 sm:text-xl"
+                className="absolute left-3 top-1/2 z-30 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-xl font-bold text-slate-700 shadow-lg transition hover:bg-[#E30613] hover:text-white"
               >
                 ‹
               </button>
 
               <button
-                aria-label="Next slide"
+                type="button"
                 onClick={() =>
-                  setHeroIndex((heroIndex + 1) % heroSlides.length)
+                  setHeroIndex(
+                    (heroIndex + 1) % heroSlides.length
+                  )
                 }
-                className="absolute right-2 top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-lg shadow-md transition hover:bg-white sm:right-3 sm:h-10 sm:w-10 sm:text-xl"
+                className="absolute right-3 top-1/2 z-30 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-xl font-bold text-slate-700 shadow-lg transition hover:bg-[#E30613] hover:text-white"
               >
                 ›
               </button>
 
-              <div className="absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 gap-1.5">
+              <div className="absolute bottom-4 left-1/2 z-30 flex -translate-x-1/2 gap-1.5">
                 {heroSlides.map((_, index) => (
                   <button
                     key={index}
+                    type="button"
                     onClick={() => setHeroIndex(index)}
-                    aria-label={`Go to slide ${index + 1}`}
                     className={`h-1.5 rounded-full transition-all ${
-                      index === heroIndex
-                        ? "w-6 bg-[#e30613]"
-                        : "w-1.5 bg-[#999]"
+                      heroIndex === index
+                        ? "w-7 bg-[#E30613]"
+                        : "w-1.5 bg-slate-300"
                     }`}
                   />
                 ))}
               </div>
+
+              <div className="absolute bottom-3 right-5 z-20 hidden text-[8px] font-bold uppercase tracking-wider text-slate-400 sm:block">
+                {language === "sw"
+                  ? "Bidhaa bora • Bei nzuri • Gamora"
+                  : "Quality products • Great prices • Gamora"}
+              </div>
             </div>
           </div>
+        </div>
+      </section>
 
-          {/* MOBILE CATEGORIES STRIP */}
-          <div className="mt-3 flex gap-2 overflow-x-auto pb-1 scrollbar-hide lg:hidden">
-            {ALL_CATEGORIES.slice(0, 12).map((category) => (
+      {/* CATEGORY STRIP */}
+      <section
+        id="categories"
+        className="bg-white py-7 sm:py-10"
+      >
+        <div className="mx-auto max-w-[1440px] px-4 sm:px-5">
+          <SectionHeading
+            title={
+              language === "sw"
+                ? "Nunua kwa makundi"
+                : "Shop by Category"
+            }
+            subtitle={
+              language === "sw"
+                ? "Chagua kundi unalotaka."
+                : "Explore our popular categories."
+            }
+          />
+
+          <div className="mt-6 flex gap-4 overflow-x-auto pb-3 scrollbar-hide lg:grid lg:grid-cols-9 lg:overflow-visible">
+            {categories.map((category) => (
               <button
                 key={category}
-                type="button"
-                onClick={() =>
-                  router.push(`/category/${encodeURIComponent(category)}`)
-                }
-                className="flex min-w-fit items-center gap-1.5 rounded-full border border-[#e5e5e5] bg-white px-3 py-2 text-[10px] font-bold text-[#333]"
+                onClick={() => goCategory(category)}
+                className="group min-w-[110px] text-center"
               >
-                <span>{CATEGORY_ICONS[category] || "🛍️"}</span>
-                <span>{category}</span>
+                <div className="mx-auto h-20 w-20 overflow-hidden rounded-full border border-slate-200 bg-white shadow-sm transition group-hover:-translate-y-1 group-hover:border-blue-300 group-hover:shadow-md sm:h-24 sm:w-24">
+                  {CATEGORY_IMAGES[category] ? (
+                    <img
+                      src={CATEGORY_IMAGES[category]}
+                      alt={category}
+                      className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
+                    />
+                  ) : (
+                    <div className="flex h-full items-center justify-center text-3xl">
+                      {CATEGORY_ICONS[category] || "🛍️"}
+                    </div>
+                  )}
+                </div>
+
+                <p className="mt-2 line-clamp-2 text-[10px] font-bold text-slate-700 sm:text-xs">
+                  {category}
+                </p>
               </button>
             ))}
           </div>
         </div>
       </section>
 
-      {/* CATEGORIES */}
-      <section id="categories" className="bg-white py-5 sm:py-14">
-        <div className="mx-auto max-w-[1280px] px-4">
-          <SectionHeading title={language === "sw" ? "Nunua kwa Kundi" : "Shop by Category"} subtitle={language === "sw" ? "Chagua unachotafuta kwa haraka." : "Find what you need quickly."} />
-
-          {categories.length > 0 ? (
-            <div className="relative mt-7"><button type="button" aria-label="Previous categories" onClick={() => document.getElementById("category-scroll")?.scrollBy({ left: -260, behavior: "smooth" })} className="absolute left-0 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-[#ddd] bg-white text-xl shadow-md sm:hidden">‹</button><div id="category-scroll" className="flex gap-4 overflow-x-auto pb-3 scrollbar-hide lg:grid lg:grid-cols-6 lg:overflow-visible">
-              {categories.map((category) => (
-                <button key={category} onClick={() => router.push(`/category/${encodeURIComponent(category)}`)} className={`group cursor-pointer min-w-[120px] rounded-xl border bg-white p-2 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-lg lg:min-w-0 ${selectedCategory === category ? "border-[#374151] ring-2 ring-[#374151]/10" : "border-[#e5e5e5]"}`}>
-                  <div className="relative h-36 overflow-hidden rounded-lg bg-white sm:h-40 lg:h-44">
-                    {CATEGORY_IMAGES[category] ? (
-                      <img
-                        src={CATEGORY_IMAGES[category]}
-                        alt={category}
-                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center text-5xl">
-                        {CATEGORY_ICONS[category] || "🛍️"}
-                      </div>
-                    )}
-                  </div>
-                  <div className="px-1 pt-2 pb-1">
-                    <p className="line-clamp-1 text-xs font-semibold text-[#333]">{category}</p>
-                    <p className="mt-0.5 text-[10px] text-[#777]">{language === "sw" ? "Angalia bidhaa →" : "Explore products →"}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
-            <button type="button" aria-label="Next categories" onClick={() => document.getElementById("category-scroll")?.scrollBy({ left: 260, behavior: "smooth" })} className="absolute right-0 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-[#ddd] bg-white text-xl shadow-md sm:hidden">›</button>
-          </div>
-          ) : (
-            <div className="mt-7 rounded-2xl border border-dashed border-[#ddd] p-5 text-center text-sm text-[#777]">{t.noProducts}</div>
-          )}
-        </div>
-      </section>
-
-      {/* DEALS */}
-      <section id="deals" className="bg-[#f3f4f6] py-5 sm:py-14 text-white">
-        <div className="mx-auto max-w-[1280px] px-4">
-          <div className="flex items-end justify-between gap-4">
-            <SectionHeading title={language === "sw" ? "Ofa za Leo" : "Today's Deals"} subtitle={language === "sw" ? "Punguzo kwenye bidhaa zilizochaguliwa." : "Save on selected products."} />
-            <CarouselArrows onPrev={() => scrollCarousel(dealsRef, -1)} onNext={() => scrollCarousel(dealsRef, 1)} />
-          </div>
-
-          {deals.length > 0 ? (
-            <Carousel carouselRef={dealsRef} paused={false}>
-              {deals.map((product) => (
-                <div
-                  key={product.id}
-                  className="min-w-[185px] shrink-0 sm:min-w-[205px] lg:min-w-[215px]"
-                >
-                  <ProductCard
-                    product={product}
-                    addToCart={addToCart}
-                    currency={currency}
-                  />
-                </div>
-              ))}
-            </Carousel>
-          ) : (
-            <EmptySection text={language === "sw" ? "Hakuna ofa kwa sasa." : "No active deals right now."} />
-          )}
-        </div>
-      </section>
-
-      {/* RECOMMENDED */}
-      <section id="products" className="bg-[#f3f4f6] pb-10 sm:pb-14">
-        <div className="mx-auto max-w-[1280px] px-4">
-          <div className="flex items-end justify-between gap-4">
-            <SectionHeading title={language === "sw" ? "Mapendekezo Kwako" : "Recommended For You"} subtitle={selectedCategory !== "All" ? selectedCategory : language === "sw" ? "Bidhaa zilizochaguliwa kwa ajili yako." : "Popular picks from our store."} />
-            {selectedCategory !== "All" && <button onClick={() => setSelectedCategory("All")} className="text-xs font-black text-[#555] hover:text-[#374151]">{language === "sw" ? "Ondoa filter" : "Clear filter"} ×</button>}
-          </div>
-
-          {recommended.length > 0 ? (
-            <div className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
-              {recommended.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  addToCart={addToCart}
-                  currency={currency}
-                />
-              ))}
-            </div>
-          ) : <EmptySection text={t.noProducts} />}
-        </div>
-      </section>
-
-      {/* FLASH SALES */}
-      <section id="flash-sales" className="bg-[#f3f4f6] py-6 sm:py-12">
-        <div className="mx-auto max-w-[1280px] px-4">
-
+      {/* FLASH DEALS */}
+      <section
+        id="flash-sales"
+        className="bg-[#fff7ed] py-8 sm:py-12"
+      >
+        <div className="mx-auto max-w-[1440px] px-4 sm:px-5">
           <div className="flex items-end justify-between gap-4">
             <div>
-              <div className="flex items-center gap-3">
-                <SectionHeading
-                  title="🔥 Flash Sales"
-                  subtitle={
-                    language === "sw"
-                      ? "Ofa za muda mfupi — nunua kabla hazijaisha."
-                      : "Limited-time deals — shop before they're gone."
-                  }
-                />
+              <div className="flex flex-wrap items-center gap-3">
+                <div>
+                  <h2
+                    style={{ color: "#E30613" }}
+                    className="text-xl font-black sm:text-2xl"
+                  >
+                    🔥 Flash Deals
+                  </h2>
+                  <p
+                    style={{ color: "#374151" }}
+                    className="mt-1 text-xs font-semibold sm:text-sm"
+                  >
+                    {language === "sw"
+                      ? "Ofa za muda mfupi."
+                      : "Limited-time deals."}
+                  </p>
+                </div>
 
-                <div className="rounded-lg bg-[#111827] px-3 py-2 text-white shadow-sm">
-                  <div className="text-[8px] font-bold uppercase tracking-wider text-[#d1d5db]">
-                    {language === "sw" ? "Inaisha ndani" : "Ends in"}
-                  </div>
-                  <div className="mt-0.5 font-mono text-sm font-black tracking-wider sm:text-base">
+                <div className="rounded-lg bg-[#1f2937] px-3 py-2 text-white">
+                  <p
+                    style={{ color: "#FFFFFF" }}
+                    className="!text-white text-[8px] font-black uppercase"
+                  >
+                    {language === "sw"
+                      ? "Inaisha ndani"
+                      : "Ends in"}
+                  </p>
+                  <p
+                    style={{ color: "#FFFFFF" }}
+                    className="font-mono text-sm font-black"
+                  >
                     {flashTime}
-                  </div>
+                  </p>
                 </div>
               </div>
             </div>
 
             <CarouselArrows
-              onPrev={() => scrollCarousel(flashRef, -1)}
-              onNext={() => scrollCarousel(flashRef, 1)}
+              onPrev={() =>
+                scrollCarousel(flashRef, -1)
+              }
+              onNext={() =>
+                scrollCarousel(flashRef, 1)
+              }
             />
           </div>
 
           {deals.length > 0 ? (
-            <Carousel carouselRef={flashRef} paused={false}>
+            <Carousel carouselRef={flashRef}>
               {deals.map((product) => (
                 <ProductCard
                   key={product.id}
                   product={product}
                   addToCart={addToCart}
                   currency={currency}
+                  language={language}
                 />
               ))}
             </Carousel>
@@ -780,109 +1273,511 @@ export default function HomePage() {
             <EmptySection
               text={
                 language === "sw"
-                  ? "Hakuna Flash Sales kwa sasa."
-                  : "No Flash Sales available right now."
+                  ? "Hakuna ofa kwa sasa."
+                  : "No active deals right now."
               }
             />
           )}
+        </div>
+      </section>
 
+      {/* TRENDING */}
+      <section className="bg-white py-8 sm:py-12">
+        <div className="mx-auto max-w-[1440px] px-4 sm:px-5">
+          <div className="flex items-end justify-between">
+            <SectionHeading
+              title={
+                language === "sw"
+                  ? "🔥 Zinazotrend"
+                  : "🔥 Trending Now"
+              }
+              subtitle={
+                language === "sw"
+                  ? "Bidhaa zinazopendwa sasa."
+                  : "Products customers are loving right now."
+              }
+            />
+
+            <CarouselArrows
+              onPrev={() =>
+                scrollCarousel(trendingRef, -1)
+              }
+              onNext={() =>
+                scrollCarousel(trendingRef, 1)
+              }
+            />
+          </div>
+
+          <Carousel carouselRef={trendingRef}>
+            {trending.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                addToCart={addToCart}
+                currency={currency}
+                language={language}
+              />
+            ))}
+          </Carousel>
         </div>
       </section>
 
       {/* NEW ARRIVALS */}
-      <section id="new-arrivals" className="bg-white py-5 sm:py-14">
-        <div className="mx-auto max-w-[1280px] px-4">
-          <div className="flex items-end justify-between gap-4">
-            <SectionHeading title={language === "sw" ? "Bidhaa Mpya" : "New Arrivals"} subtitle={language === "sw" ? "Bidhaa mpya zilizoongezwa hivi karibuni." : "Recently added products."} />
-            <CarouselArrows onPrev={() => scrollCarousel(newRef, -1)} onNext={() => scrollCarousel(newRef, 1)} />
+      <section
+        id="new-arrivals"
+        className="bg-[#f3f4f6] py-8 sm:py-12"
+      >
+        <div className="mx-auto max-w-[1440px] px-4 sm:px-5">
+          <div className="flex items-end justify-between">
+            <SectionHeading
+              title={
+                language === "sw"
+                  ? "✨ Bidhaa Mpya"
+                  : "✨ New Arrivals"
+              }
+              subtitle={
+                language === "sw"
+                  ? "Bidhaa zilizoongezwa hivi karibuni."
+                  : "Fresh products added recently."
+              }
+            />
+
+            <CarouselArrows
+              onPrev={() =>
+                scrollCarousel(newRef, -1)
+              }
+              onNext={() =>
+                scrollCarousel(newRef, 1)
+              }
+            />
           </div>
-          <Carousel carouselRef={newRef} paused={false}>{newArrivals.map((product) => (
-  <div key={product.id} className="min-w-[185px] shrink-0 sm:min-w-[205px] lg:min-w-[215px]">
-    <ProductCard product={product} addToCart={addToCart} currency={currency} />
-  </div>
-))}</Carousel>
+
+          <Carousel carouselRef={newRef}>
+            {newArrivals.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                addToCart={addToCart}
+                currency={currency}
+                language={language}
+              />
+            ))}
+          </Carousel>
         </div>
       </section>
 
       {/* BEST SELLERS */}
-      <section id="best-sellers" className="bg-[#f3f4f6] py-5 sm:py-14 text-white">
-        <div className="mx-auto max-w-[1280px] px-4">
-          <div className="flex items-end justify-between gap-4">
-            <SectionHeading title={language === "sw" ? "Zinazouzwa Sana" : "Best Sellers"} subtitle={language === "sw" ? "Bidhaa zinazopendwa zaidi na wateja." : "Customer favorites."} />
-            <CarouselArrows onPrev={() => scrollCarousel(bestRef, -1)} onNext={() => scrollCarousel(bestRef, 1)} />
+      <section
+        id="best-sellers"
+        className="bg-white py-8 sm:py-12"
+      >
+        <div className="mx-auto max-w-[1440px] px-4 sm:px-5">
+          <div className="flex items-end justify-between">
+            <SectionHeading
+              title={
+                language === "sw"
+                  ? "🏆 Zinazouzwa Sana"
+                  : "🏆 Best Sellers"
+              }
+              subtitle={
+                language === "sw"
+                  ? "Bidhaa zinazopendwa zaidi."
+                  : "Customer favorites."
+              }
+            />
+
+            <CarouselArrows
+              onPrev={() =>
+                scrollCarousel(bestRef, -1)
+              }
+              onNext={() =>
+                scrollCarousel(bestRef, 1)
+              }
+            />
           </div>
-          <Carousel carouselRef={bestRef} paused={false}>{bestSellers.map((product) => (
-  <div key={product.id} className="min-w-[185px] shrink-0 sm:min-w-[205px] lg:min-w-[215px]">
-    <ProductCard product={product} addToCart={addToCart} bestSeller currency={currency} />
-  </div>
-))}</Carousel>
+
+          <Carousel carouselRef={bestRef}>
+            {bestSellers.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                addToCart={addToCart}
+                bestSeller
+                currency={currency}
+                language={language}
+              />
+            ))}
+          </Carousel>
+        </div>
+      </section>
+
+      {/* CATEGORY SECTIONS */}
+      {ALL_CATEGORIES.map((category) => {
+        const categoryItems =
+          categoryProducts[category] || [];
+
+        if (categoryItems.length === 0) {
+          return null;
+        }
+
+        return (
+          <section
+            key={category}
+            className="border-t border-slate-100 bg-[#f3f4f6] py-8 sm:py-12"
+          >
+            <div className="mx-auto max-w-[1440px] px-4 sm:px-5">
+              <div className="flex items-end justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">
+                      {CATEGORY_ICONS[category]}
+                    </span>
+
+                    <h2 className="text-xl font-black tracking-tight text-slate-900 sm:text-2xl">
+                      {category}
+                    </h2>
+                  </div>
+
+                  <p className="mt-1 text-xs text-slate-500">
+                    {language === "sw"
+                      ? `Bidhaa za ${category}`
+                      : `Explore ${category}`}
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => goCategory(category)}
+                  className="shrink-0 rounded-full border border-slate-300 bg-white px-4 py-2 text-[10px] font-black text-slate-700 transition hover:border-blue-400 hover:text-blue-600"
+                >
+                  {language === "sw"
+                    ? "ONA ZOTE →"
+                    : "VIEW ALL →"}
+                </button>
+              </div>
+
+              <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-6">
+                {categoryItems.map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    addToCart={addToCart}
+                    currency={currency}
+                    language={language}
+                  />
+                ))}
+              </div>
+            </div>
+          </section>
+        );
+      })}
+
+      {/* LONG PRODUCT FEED */}
+      <section
+        id="products"
+        className="bg-white py-10 sm:py-14"
+      >
+        <div className="mx-auto max-w-[1440px] px-4 sm:px-5">
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <h2 className="text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
+                {selectedCategory !== "All"
+                  ? selectedCategory
+                  : language === "sw"
+                  ? "Bidhaa Zote"
+                  : "More Products"}
+              </h2>
+
+              <p className="mt-1 text-xs text-slate-500">
+                {search
+                  ? `${filteredProducts.length} ${
+                      language === "sw"
+                        ? "bidhaa zimepatikana"
+                        : "products found"
+                    }`
+                  : language === "sw"
+                  ? "Endelea kugundua bidhaa zaidi."
+                  : "Keep exploring more products."}
+              </p>
+            </div>
+
+            {selectedCategory !== "All" && (
+              <button
+                onClick={() =>
+                  setSelectedCategory("All")
+                }
+                className="rounded-full border border-slate-300 px-4 py-2 text-[10px] font-black"
+              >
+                {language === "sw"
+                  ? "ONDOA FILTER"
+                  : "CLEAR FILTER"}{" "}
+                ×
+              </button>
+            )}
+          </div>
+
+          {filteredProducts.length > 0 ? (
+            <div className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+              {filteredProducts.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  addToCart={addToCart}
+                  currency={currency}
+                  language={language}
+                />
+              ))}
+            </div>
+          ) : (
+            <EmptySection text={t.noProducts} />
+          )}
         </div>
       </section>
 
       {/* FOOTER */}
-<footer id="about" className="border-t border-slate-200 bg-white py-8 text-slate-700 sm:py-5">
-  <div className="mx-auto max-w-[1280px] px-4">
+<footer className="border-t border-orange-200 bg-gradient-to-br from-[#450a0a] via-[#991b1b] to-[#c2410c] py-10 text-white">
+  <div className="mx-auto max-w-[1440px] px-4 sm:px-5">
 
-    <div className="grid grid-cols-3 gap-3 sm:gap-4">
+    {/* MAIN FOOTER */}
+    <div className="grid grid-cols-2 gap-8 py-10 md:grid-cols-4 lg:grid-cols-5">
 
+      {/* BRAND */}
+      <div className="col-span-2 lg:col-span-1">
+        <img
+          src="/gamora-logo.png"
+          alt="Gamora Online"
+          className="h-14 w-auto rounded bg-white/95 px-2 ring-2 ring-orange-300 shadow-lg"
+        />
+
+        <p className="mt-4 max-w-xs text-xs leading-5 text-orange-50">
+          {language === "sw"
+            ? "Gamora Online — soko lako la mtandaoni kwa bidhaa mbalimbali, bei nzuri na shopping rahisi."
+            : "Gamora Online — your online marketplace for great products, great prices and easy shopping."}
+        </p>
+
+        <div className="mt-5 flex gap-2">
+          <SocialButton label="Facebook" icon={<FaFacebookF />} />
+          <SocialButton label="Instagram" icon={<FaInstagram />} />
+          <SocialButton label="TikTok" icon={<FaTiktok />} />
+        </div>
+      </div>
+
+      {/* SHOP */}
       <FooterColumn
         title={language === "sw" ? "Duka" : "Shop"}
         links={[
           [language === "sw" ? "Makundi" : "Categories", "#categories"],
           [language === "sw" ? "Bidhaa Mpya" : "New Arrivals", "#new-arrivals"],
-          [language === "sw" ? "Ofa" : "Deals", "#deals"],
+          [language === "sw" ? "Ofa" : "Deals", "#flash-sales"],
           [language === "sw" ? "Zinazouzwa Sana" : "Best Sellers", "#best-sellers"],
         ]}
       />
 
+      {/* CUSTOMER */}
       <FooterColumn
         title={language === "sw" ? "Mteja" : "Customer"}
         links={[
-          [language === "sw" ? "Tengeneza Account" : "Create Account", "/profile"],
+          [language === "sw" ? "Akaunti" : "Account", "/account"],
           [language === "sw" ? "Oda Zangu" : "My Orders", "/orders"],
-          [language === "sw" ? "Orodha ya Matamanio" : "Wishlist", "/wishlist"],
-          [language === "sw" ? "Kikapu" : "Cart", "/cart"],
+          [language === "sw" ? "Wishlist" : "Wishlist", "/wishlist"],
+          [language === "sw" ? "Cart" : "Cart", "/cart"],
         ]}
       />
 
-      <FooterColumn
-        title={language === "sw" ? "Msaada" : "Support"}
-        links={[
-          [language === "sw" ? "Jinsi ya Kununua" : "How to Buy", "/help"],
-          [language === "sw" ? "Sera ya Uwasilishaji" : "Delivery Policy", "/delivery"],
-          [language === "sw" ? "Vigezo na Masharti" : "Terms & Conditions", "/terms"],
-          [language === "sw" ? "Wasiliana Nasi" : "Contact Us", "/contact"],
-        ]}
-      />
+      {/* SHOPPING GUIDE */}
+      <div>
+        <h3 className="text-sm font-black">
+          {language === "sw" ? "Shopping Guide" : "Shopping Guide"}
+        </h3>
 
+        <div className="mt-4 space-y-3 text-xs text-orange-100">
+          <a href="/help" className="block hover:text-white">
+            {language === "sw" ? "Jinsi ya Kuagiza" : "How to Buy"}
+          </a>
+
+          <a href="/delivery" className="block hover:text-white">
+            {language === "sw" ? "Delivery" : "Delivery"}
+          </a>
+
+          <a href="/terms" className="block hover:text-white">
+            {language === "sw"
+              ? "Masharti na Vigezo"
+              : "Terms & Conditions"}
+          </a>
+
+          <a href="/contact" className="block hover:text-white">
+            {language === "sw" ? "Wasiliana Nasi" : "Contact Us"}
+          </a>
+        </div>
+      </div>
+
+      {/* CONTACT */}
+      <div>
+        <h3 className="text-sm font-black">
+          {language === "sw" ? "Wasiliana Nasi" : "Contact Gamora"}
+        </h3>
+
+        <div className="mt-4 space-y-3 text-xs text-orange-100">
+          <a
+            href="mailto:officialgamoraonline@gmail.com"
+            className="block break-all hover:text-white"
+          >
+            officialgamoraonline@gmail.com
+          </a>
+
+          <a
+            href="https://wa.me/255798555221"
+            className="block hover:text-white"
+          >
+            WhatsApp: +255 798 555 221
+          </a>
+
+          <p>
+            {language === "sw"
+              ? "Dar es Salaam, Tanzania"
+              : "Dar es Salaam, Tanzania"}
+          </p>
+        </div>
+      </div>
     </div>
 
-    <div className="mt-6 flex justify-center gap-3">
-      <SocialButton 
-        label="Facebook" 
-        href="https://web.facebook.com/gamoraonline/" 
-        icon="Facebook"
-      />
-      <SocialButton 
-        label="Instagram" 
-        href="https://www.instagram.com/gamoraonline_store/" 
-        icon="Instagram"
-      />
-      <SocialButton 
-        label="TikTok" 
-        href="https://www.tiktok.com/@officialgamoraonline" 
-        icon="TikTok"
-      />
+    {/* FAQ */}
+    <div className="border-t border-white/15 py-8">
+      <div className="mb-5">
+        <h2 className="text-lg font-black sm:text-xl">
+          {language === "sw"
+            ? "Maswali Yanayoulizwa Mara kwa Mara"
+            : "Frequently Asked Questions"}
+        </h2>
+
+        <p className="mt-1 text-xs text-orange-100">
+          {language === "sw"
+            ? "Majibu ya haraka kuhusu kuagiza, malipo na delivery."
+            : "Quick answers about ordering, payment and delivery."}
+        </p>
+      </div>
+
+      <div className="grid gap-3 md:grid-cols-2">
+
+        <details className="group rounded-lg bg-white/10 p-4">
+          <summary className="cursor-pointer list-none text-xs font-bold">
+            {language === "sw"
+              ? "Nawezaje kuagiza bidhaa?"
+              : "How can I place an order?"}
+          </summary>
+
+          <p className="mt-3 text-[11px] leading-5 text-orange-100">
+            {language === "sw"
+              ? "Chagua bidhaa, ongeza kwenye cart, fungua checkout, jaza taarifa zako za delivery na ukamilishe oda."
+              : "Choose a product, add it to your cart, open checkout, enter your delivery details and complete your order."}
+          </p>
+        </details>
+
+        <details className="group rounded-lg bg-white/10 p-4">
+          <summary className="cursor-pointer list-none text-xs font-bold">
+            {language === "sw"
+              ? "Mna-deliver maeneo gani?"
+              : "Where do you deliver?"}
+          </summary>
+
+          <p className="mt-3 text-[11px] leading-5 text-orange-100">
+            {language === "sw"
+              ? "Gamora Online inalenga delivery ndani ya Tanzania. Gharama ya delivery huathiriwa na eneo lako."
+              : "Gamora Online serves customers within Tanzania. Delivery cost depends on your location."}
+          </p>
+        </details>
+
+        <details className="group rounded-lg bg-white/10 p-4">
+          <summary className="cursor-pointer list-none text-xs font-bold">
+            {language === "sw"
+              ? "Nitalipaje oda yangu?"
+              : "How can I pay for my order?"}
+          </summary>
+
+          <p className="mt-3 text-[11px] leading-5 text-orange-100">
+            {language === "sw"
+              ? "Njia za malipo zinazoonekana kwenye checkout ndizo zinazopatikana kwa oda yako."
+              : "The payment methods shown at checkout are the available options for your order."}
+          </p>
+        </details>
+
+        <details className="group rounded-lg bg-white/10 p-4">
+          <summary className="cursor-pointer list-none text-xs font-bold">
+            {language === "sw"
+              ? "Ninawezaje kufuatilia oda yangu?"
+              : "How can I track my order?"}
+          </summary>
+
+          <p className="mt-3 text-[11px] leading-5 text-orange-100">
+            {language === "sw"
+              ? "Fungua akaunti yako na angalia sehemu ya My Orders kuona taarifa ya oda yako."
+              : "Open your account and check My Orders to view your order status."}
+          </p>
+        </details>
+
+        <details className="group rounded-lg bg-white/10 p-4">
+          <summary className="cursor-pointer list-none text-xs font-bold">
+            {language === "sw"
+              ? "Ninaweza kuwasiliana na Gamora kupitia WhatsApp?"
+              : "Can I contact Gamora through WhatsApp?"}
+          </summary>
+
+          <p className="mt-3 text-[11px] leading-5 text-orange-100">
+            {language === "sw"
+              ? "Ndiyo. Unaweza kutumia WhatsApp yetu kwa msaada kuhusu bidhaa na oda."
+              : "Yes. You can use our WhatsApp for help with products and orders."}
+          </p>
+        </details>
+
+        <details className="group rounded-lg bg-white/10 p-4">
+          <summary className="cursor-pointer list-none text-xs font-bold">
+            {language === "sw"
+              ? "Ninawezaje kupata msaada?"
+              : "How can I get help?"}
+          </summary>
+
+          <p className="mt-3 text-[11px] leading-5 text-orange-100">
+            {language === "sw"
+              ? "Tembelea Help Center, Contact Us au wasiliana nasi kupitia WhatsApp."
+              : "Visit the Help Center, Contact Us page or reach us through WhatsApp."}
+          </p>
+        </details>
+      </div>
     </div>
 
-    <div className="mt-6 border-t border-slate-200 pt-4 text-center text-xs text-slate-500">
-      © 2026 Gamora Online. {t.rights}
+    {/* SELL ON GAMORA */}
+    <div className="rounded-xl border border-orange-300/20 bg-black/10 p-5">
+      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+        <div>
+          <h3 className="text-sm font-black">
+            {language === "sw"
+              ? "Unauza bidhaa?"
+              : "Do you sell products?"}
+          </h3>
+
+          <p className="mt-1 max-w-2xl text-xs leading-5 text-orange-100">
+            {language === "sw"
+              ? "Gamora Online inalenga kuwa marketplace inayowaunganisha wauzaji na wateja Tanzania."
+              : "Gamora Online is building a marketplace connecting sellers with customers across Tanzania."}
+          </p>
+        </div>
+
+        <a
+          href="/contact"
+          className="inline-flex h-9 items-center justify-center rounded-lg bg-white px-5 text-[11px] font-black text-[#991b1b] transition hover:bg-orange-50"
+        >
+          {language === "sw" ? "WASILIANA NASI" : "CONTACT US"}
+        </a>
+      </div>
+    </div>
+
+    {/* COPYRIGHT */}
+    <div className="mt-8 border-t border-white/15 pt-5 text-center text-[10px] text-orange-100">
+      © {new Date().getFullYear()} Gamora Online. All rights reserved.
     </div>
 
   </div>
 </footer>
-
-</main>
+    </main>
   );
 }
 
@@ -891,44 +1786,63 @@ function getProductImage(product: Product) {
 }
 
 function getDiscount(product: Product) {
-  if (typeof product.discount === "number" && product.discount > 0) return product.discount;
-  if (typeof product.oldPrice === "number" && product.oldPrice > product.price) {
-    return Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100);
+  if (
+    typeof product.discount === "number" &&
+    product.discount > 0
+  ) {
+    return product.discount;
   }
+
+  if (
+    typeof product.oldPrice === "number" &&
+    product.oldPrice > product.price
+  ) {
+    return Math.round(
+      ((product.oldPrice - product.price) /
+        product.oldPrice) *
+        100
+    );
+  }
+
   return 0;
 }
 
-function SectionHeading({ title, subtitle, centered = false }: { title: string; subtitle?: string; centered?: boolean }) {
+function SectionHeading({
+  title,
+  subtitle,
+}: {
+  title: string;
+  subtitle: string;
+}) {
   return (
-    <div className={centered ? "text-center" : ""}>
-      <h2 className="text-lg font-black tracking-tight text-[#374151] sm:text-xl">{title}</h2>
-      {subtitle && <p className="mt-1.5 text-sm text-[#777]">{subtitle}</p>}
+    <div>
+      <h2 className="text-xl font-black tracking-tight text-slate-950 sm:text-2xl">
+        {title}
+      </h2>
+
+      <p className="mt-1 text-xs text-slate-500">
+        {subtitle}
+      </p>
     </div>
   );
 }
 
 function Carousel({
-  children,
   carouselRef,
+  children,
 }: {
-  children: ReactNode;
   carouselRef: RefObject<HTMLDivElement | null>;
-  paused?: boolean;
+  children: React.ReactNode;
 }) {
   return (
     <div
       ref={carouselRef}
-      className="mt-5 flex w-full gap-3 overflow-x-auto scroll-smooth pb-2 scrollbar-hide sm:gap-4"
-      style={{
-        scrollSnapType: "x mandatory",
-        WebkitOverflowScrolling: "touch",
-      }}
+      className="mt-6 flex gap-3 overflow-x-auto pb-4 scrollbar-hide"
     >
       {children}
     </div>
   );
 }
-
 
 function CarouselArrows({
   onPrev,
@@ -938,21 +1852,17 @@ function CarouselArrows({
   onNext: () => void;
 }) {
   return (
-    <div className="flex shrink-0 items-center gap-2">
+    <div className="hidden gap-2 sm:flex">
       <button
-        type="button"
-        aria-label="Previous"
         onClick={onPrev}
-        className="flex h-9 w-9 items-center justify-center rounded-full border border-[#d9d9d9] bg-white text-xl font-bold text-[#333] shadow-sm transition hover:bg-[#f3f4f6] active:scale-95"
+        className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-lg shadow-sm transition hover:border-blue-300 hover:text-blue-600"
       >
         ‹
       </button>
 
       <button
-        type="button"
-        aria-label="Next"
         onClick={onNext}
-        className="flex h-9 w-9 items-center justify-center rounded-full border border-[#d9d9d9] bg-white text-xl font-bold text-[#333] shadow-sm transition hover:bg-[#f3f4f6] active:scale-95"
+        className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-lg shadow-sm transition hover:border-blue-300 hover:text-blue-600"
       >
         ›
       </button>
@@ -965,147 +1875,300 @@ function ProductCard({
   addToCart,
   bestSeller = false,
   currency,
+  language,
 }: {
   product: Product;
   addToCart: (product: Product) => void;
   bestSeller?: boolean;
   currency: Currency;
+  language: Language;
 }) {
   const image = getProductImage(product);
   const discount = getDiscount(product);
-  const rating = Number(product.rating || 0);
-  const likes = Math.max(200, Number(product.likes || 200));
-  const orders = Math.max(300, Number(product.orders_count || 300));
+
+  const [likes, setLikes] = useState(
+    Math.max(200, Number(product.likes || 200))
+  );
+  const [orders, setOrders] = useState(
+    Math.max(300, Number(product.orders_count || 300))
+  );
+  const [liked, setLiked] = useState(false);
+  const [likeLoading, setLikeLoading] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadLikeState = async () => {
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        const headers: HeadersInit = session?.access_token
+          ? { Authorization: `Bearer ${session.access_token}` }
+          : {};
+
+        const response = await fetch(
+          `/api/products/${product.id}/like`,
+          {
+            headers,
+            cache: "no-store",
+          }
+        );
+
+        if (!response.ok) return;
+
+        const data = await response.json();
+
+        if (!cancelled) {
+          setLikes(Math.max(200, Number(data.likes || 200)));
+          setOrders(Math.max(300, Number(data.orders || 300)));
+          setLiked(Boolean(data.liked));
+        }
+      } catch (error) {
+        console.error("Failed to load product like state:", error);
+      }
+    };
+
+    loadLikeState();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [product.id]);
+
+  const toggleLike = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+
+    if (likeLoading) return;
+
+    setLikeLoading(true);
+
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        alert(
+          language === "sw"
+            ? "Tafadhali ingia kwenye akaunti ili kuweka Like kwenye bidhaa hii."
+            : "Please login to like this product."
+        );
+        return;
+      }
+
+      const response = await fetch(
+        `/api/products/${product.id}/like`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(
+          data?.error ||
+            (language === "sw"
+              ? "Imeshindikana kusasisha Like."
+              : "Unable to update like.")
+        );
+        return;
+      }
+
+      setLiked(Boolean(data.liked));
+    } catch (error) {
+      console.error("Failed to toggle product like:", error);
+
+      alert(
+        language === "sw"
+          ? "Imeshindikana kuweka Like. Tafadhali jaribu tena."
+          : "Unable to update like. Please try again."
+      );
+    } finally {
+      setLikeLoading(false);
+    }
+  };
 
   return (
-    <article className="group w-[155px] shrink-0 overflow-hidden bg-white sm:w-[190px] lg:w-[215px]">
-      <a
-        href={`/product/${product.id}`}
-        className="relative block overflow-hidden bg-white"
+    <article className="group relative min-w-[180px] shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg sm:min-w-[205px] lg:min-w-0">
+      <div className="absolute right-2 top-2 z-20 flex flex-col items-center gap-2">
+        <button
+          type="button"
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-[#2563eb] text-sm text-white shadow-md transition hover:bg-[#1d4ed8]"
+          onClick={(e) => {
+            e.stopPropagation();
+            addToCart(product);
+          }}
+          aria-label="Add to cart"
+        >
+          🛒
+        </button>
+
+        <button
+          type="button"
+          className={`flex h-9 w-9 items-center justify-center rounded-full text-sm text-white shadow-md transition ${
+            liked
+              ? "bg-[#E30613] hover:bg-[#c80511]"
+              : "bg-[#ef4444] hover:bg-[#dc2626]"
+          }`}
+          onClick={toggleLike}
+          disabled={likeLoading}
+          aria-label={liked ? "Unlike product" : "Like product"}
+        >
+          {liked ? "❤️" : "♡"}
+        </button>
+      </div>
+
+      {discount > 0 && (
+        <span className="absolute left-2 top-2 z-20 rounded-md bg-[#ef4444] px-2 py-1 text-[9px] font-bold text-white">
+          -{discount}%
+        </span>
+      )}
+
+      {bestSeller && (
+        <span className="absolute left-2 top-9 z-20 rounded-md bg-[#1f2937] px-2 py-1 text-[9px] font-bold text-white">
+          {language === "sw"
+            ? "BEST SELLER"
+            : "BEST SELLER"}
+        </span>
+      )}
+
+      <button
+        type="button"
+        onClick={() =>
+          window.location.href = `/product/${product.id}`
+        }
+        className="block w-full text-left"
       >
-        {image ? (
-          <div className="relative flex h-[185px] w-full items-center justify-center overflow-hidden bg-white sm:h-[215px] lg:h-[245px]">
+        <div className="flex h-[145px] items-center justify-center overflow-hidden bg-white sm:h-[160px]">
+          {image ? (
             <img
               src={image}
               alt={product.name}
-              loading="lazy"
-              className="h-full w-full object-contain p-1 transition-transform duration-300 group-hover:scale-[1.025]"
+              className="h-full w-full object-contain p-0 transition duration-500 group-hover:scale-105"
             />
-          </div>
-        ) : (
-          <div className="flex h-[185px] w-full items-center justify-center bg-white text-4xl text-gray-300 sm:h-[215px] lg:h-[245px]">
-            🛍️
-          </div>
-        )}
-
-        {discount > 0 && (
-          <span className="absolute left-1 top-1 bg-[#e30613] px-1.5 py-0.5 text-[9px] font-bold text-white">
-            -{discount}%
-          </span>
-        )}
-
-        {bestSeller && (
-          <span className="absolute right-1 top-1 bg-[#374151] px-1.5 py-0.5 text-[8px] font-bold text-white">
-            BEST
-          </span>
-        )}
-      </a>
-
-      <div className="px-1 pt-1 pb-1">
-        <a href={`/product/${product.id}`}>
-          <h3 className="line-clamp-2 text-[11px] font-medium leading-[14px] text-[#222] sm:text-xs">
-            {product.name}
-          </h3>
-        </a>
-
-        <div className="mt-1 flex items-center gap-1">
-          <span className="text-[10px] text-[#f59e0b]">★★★★★</span>
-
-          {rating > 0 && (
-            <span className="text-[9px] text-[#777]">
-              {rating.toFixed(1)}
-            </span>
+          ) : (
+            <div className="text-5xl opacity-20">
+              🛍️
+            </div>
           )}
         </div>
 
-        <div className="mt-0.5 flex items-center gap-2 text-[9px] text-[#888]">
-          <span>❤️ {likes}+ Likes</span>
-          <span>🛒 {orders}+ Orders</span>
-        </div>
+        <div className="px-3 py-2">
+          <div className="flex items-end justify-between gap-2">
+            <div>
+              <p className="text-sm font-medium text-[#e30613]">
+                {formatCurrency(
+                  Number(product.price || 0),
+                  currency
+                )}
+              </p>
 
-        <div className="mt-1 flex flex-wrap items-baseline gap-1">
-          <span className="text-xs font-bold text-[#e30613] sm:text-sm">
-            {formatCurrency(Number(product.price), currency)}
-          </span>
+              {typeof product.oldPrice === "number" &&
+                product.oldPrice >
+                  Number(product.price || 0) && (
+                  <p className="text-[9px] text-slate-400 line-through">
+                    {formatCurrency(
+                      product.oldPrice,
+                      currency
+                    )}
+                  </p>
+                )}
+            </div>
+          </div>
 
-          {typeof product.oldPrice === "number" &&
-            product.oldPrice > product.price && (
-              <span className="text-[9px] text-[#999] line-through">
-                {formatCurrency(Number(product.oldPrice), currency)}
-              </span>
-            )}
+          <div className="mt-1 flex items-center gap-3 text-[9px] text-slate-500">
+            <span>❤️ {likes} Likes</span>
+            <span>🛒 {orders} Ordered</span>
+          </div>
         </div>
+      </button>
+
+      <div className="px-3 pb-3">
+        <button
+          type="button"
+          onClick={() => addToCart(product)}
+          className="w-full rounded-lg bg-[#2563eb] py-2 text-[9px] font-medium text-white transition hover:bg-[#1d4ed8]"
+        >
+          {language === "sw"
+            ? "ONGEZA KIKAPUNI"
+            : "ADD TO CART"}
+        </button>
       </div>
     </article>
   );
 }
 
-function Benefit({ icon, title, text }: { icon: string; title: string; text: string }) {
+function EmptySection({
+  text,
+}: {
+  text: string;
+}) {
   return (
-    <div className="px-4 py-5 text-center">
-      <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-[#f3f6fb] text-base font-bold text-[#2563eb]">
-        {icon}
-      </div>
-      <h3 className="mt-2 text-[10px] font-semibold text-[#222] sm:text-xs">
-        {title}
-      </h3>
-      <p className="mx-auto mt-1 max-w-xs text-[10px] leading-4 text-[#777]">
-        {text}
-      </p>
+    <div className="mt-6 rounded-xl border border-dashed border-slate-300 bg-white p-10 text-center text-sm text-slate-300">
+      {text}
     </div>
   );
 }
 
-function EmptySection({ text }: { text: string }) {
-  return <div className="mt-7 rounded-2xl border border-dashed border-[#d7d7d7] bg-white py-8 text-center text-sm text-[#777]">{text}</div>;
-}
-
-function FooterColumn({ title, links }: { title: string; links: Array<[string, string]> }) {
+function FooterColumn({
+  title,
+  links,
+}: {
+  title: string;
+  links: [string, string][];
+}) {
   return (
     <div>
-      <h3 className="text-[10px] sm:text-sm text-[11px] font-black sm:text-sm text-white">{title}</h3>
-      <div className="mt-4 space-y-3 text-[11px] sm:text-xs text-[#999]">
-        {links.map(([label, href]) => <a key={`${label}-${href}`} href={href} className="block transition hover:text-white">{label}</a>)}
+      <h3 className="text-sm font-black text-white">
+        {title}
+      </h3>
+
+      <div className="mt-4 space-y-3">
+        {links.map(([label, href]) => (
+          <a
+            key={`${label}-${href}`}
+            href={href}
+            className="block text-xs font-medium text-slate-200 transition hover:text-white"
+          >
+            {label}
+          </a>
+        ))}
       </div>
     </div>
   );
 }
 
-function SocialButton({ icon, label, href }: { icon: string; label: string; href: string }) {
-  const Icon =
-    icon === "Facebook"
-      ? FaFacebookF
-      : icon === "Instagram"
-      ? FaInstagram
-      : FaTiktok;
+function SocialButton({
+  label,
+  icon,
+}: {
+  label: string;
+  icon: React.ReactNode;
+}) {
+  const styles: Record<string, string> = {
+    Facebook:
+      "bg-[#1877F2] text-white shadow-md shadow-blue-900/20 hover:bg-[#0d65d9]",
+    Instagram:
+      "bg-gradient-to-tr from-[#F58529] via-[#DD2A7B] to-[#8134AF] text-white shadow-md shadow-pink-900/20 hover:brightness-110",
+    TikTok:
+      "bg-black text-white shadow-md shadow-black/30 hover:bg-slate-900",
+  };
 
   return (
     <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
+      href="#"
       aria-label={label}
-      className="flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm transition hover:scale-110"
+      className={`flex h-10 w-10 items-center justify-center rounded-full text-base transition duration-200 hover:-translate-y-0.5 ${
+        styles[label] || "bg-white text-slate-700"
+      }`}
     >
-      <Icon
-        className={`h-4 w-4 ${
-          icon === "Facebook"
-            ? "text-[#1877F2]"
-            : icon === "Instagram"
-            ? "text-[#E4405F]"
-            : "text-black"
-        }`}
-      />
+      {icon}
     </a>
   );
 }

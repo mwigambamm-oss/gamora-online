@@ -6,6 +6,7 @@ import { getProductById, getProducts } from "@/lib/products";
 import { supabase } from "@/lib/supabase";
 import RelatedProducts from "@/components/product/RelatedProducts";
 import { formatCurrency, type Currency } from "@/lib/currency";
+import { normalizeProductDescription } from "@/lib/specifications";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 
 type Product = {
@@ -54,7 +55,22 @@ export default function ProductPage({
 
   const displayCategory = product?.category;
 
-  const displayDescription = product?.description;
+  const parsedProduct = product
+    ? normalizeProductDescription(product.description || "")
+    : {
+        description: "",
+        key_features: [],
+        specifications: {},
+      };
+
+  const displayDescription = parsedProduct.description;
+
+  const displayKeyFeatures = parsedProduct.key_features;
+
+  const displaySpecifications =
+    Object.keys(parsedProduct.specifications).length > 0
+      ? parsedProduct.specifications
+      : {};
 
   const [related, setRelated] = useState<Product[]>([]);
 
@@ -1052,7 +1068,7 @@ window.dispatchEvent(new Event("cartUpdated"));
                 : "text-slate-400"
             }`}
           >
-            {t("Specifications", "Vipengele")}
+            {t("Specifications", "Specifications")}
           </button>
 
           <button
@@ -1073,72 +1089,83 @@ window.dispatchEvent(new Event("cartUpdated"));
 
         <div className="py-4">
 
-{activeTab === "description" && (
-  <>
-    <h2 className="text-sm font-medium text-slate-900">
-      {t("Product Description", "Maelezo ya Bidhaa")}
-    </h2>
+          {activeTab === "description" && (
+            <div>
 
-    <p className="mt-3 max-w-4xl text-xs leading-5 text-slate-500">
-      {displayDescription ||
-        t(
-          "No additional product description available.",
-          "Hakuna maelezo ya ziada ya bidhaa yaliyowekwa."
-        )}
-    </p>
-  </>
-)}
+              <h2 className="text-sm font-bold text-slate-900">
+                {t("Product Description", "Maelezo ya Bidhaa")}
+              </h2>
 
-{activeTab === "specifications" && (
-  <div className="rounded-lg border border-slate-200 bg-white p-3">
+              <p className="mt-3 max-w-4xl whitespace-pre-line text-xs leading-5 text-slate-500">
+                {displayDescription ||
+                  t(
+                    "No additional product description available.",
+                    "Hakuna maelezo ya ziada ya bidhaa yaliyowekwa."
+                  )}
+              </p>
 
-    <h2 className="text-sm font-medium text-slate-800">
-      {t("Specifications", "Vipengele")}
-    </h2>
+              {displayKeyFeatures.length > 0 && (
+                <div className="mt-6 max-w-4xl">
 
-    <div className="mt-3 space-y-2 text-xs text-slate-500">
+                  <h3 className="text-sm font-bold text-slate-900">
+                    {t("Key Features", "Key Features")}
+                  </h3>
 
-      <div className="flex justify-between">
-        <span>Category</span>
-        <span className="text-slate-700">
-          {displayCategory || "N/A"}
-        </span>
-      </div>
+                  <ul className="mt-3 list-disc space-y-2 pl-5 text-xs leading-5 text-slate-600">
+                    {displayKeyFeatures.map((feature, index) => (
+                      <li key={`${feature}-${index}`}>
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
 
-      <div className="flex justify-between">
-        <span>Stock</span>
-        <span className="text-green-600">
-          In Stock ({product.stock})
-        </span>
-      </div>
+                </div>
+              )}
 
-      <div className="flex justify-between">
-        <span>{t("Colors", "Rangi")}</span>
-        <span className="text-slate-700">
-          {product.colors?.join(", ") || "N/A"}
-        </span>
-      </div>
+            </div>
+          )}
 
-      <div className="flex justify-between">
-        <span>{t("Sizes", "Ukubwa")}</span>
-        <span className="text-slate-700">
-          {product.sizes?.join(", ") || "N/A"}
-        </span>
-      </div>
+          {activeTab === "specifications" && (
+            <div className="max-w-4xl rounded-lg border border-slate-200 bg-white p-4">
 
-      <div className="flex justify-between">
-        <span>{t("Shipping", "Usafirishaji")}</span>
-        <span className="text-slate-700">
-          Available
-        </span>
-      </div>
+              <h2 className="text-sm font-bold text-slate-900">
+                {t("Specifications", "Specifications")}
+              </h2>
 
-    </div>
+              {Object.keys(displaySpecifications).length > 0 ? (
+                <div className="mt-4 divide-y divide-slate-100">
 
-  </div>
-)}
+                  {Object.entries(displaySpecifications).map(
+                    ([key, value]) => (
+                      <div
+                        key={key}
+                        className="flex gap-4 py-2.5 text-xs"
+                      >
+                        <span className="w-1/3 font-semibold text-slate-600">
+                          {key}
+                        </span>
 
-</div>
+                        <span className="flex-1 text-slate-700">
+                          {String(value)}
+                        </span>
+                      </div>
+                    )
+                  )}
+
+                </div>
+              ) : (
+                <p className="mt-3 text-xs text-slate-500">
+                  {t(
+                    "No product specifications available.",
+                    "Hakuna specifications za bidhaa zilizowekwa."
+                  )}
+                </p>
+              )}
+
+            </div>
+          )}
+
+        </div>
 
       </section>
 

@@ -284,6 +284,8 @@ export default function ProductsModule() {
 
       description: form.description,
 
+      specifications: extractSpecifications(form.description),
+
       image:
         form.images?.[0] ||
         form.image ||

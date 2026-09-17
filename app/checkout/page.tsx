@@ -1256,6 +1256,13 @@ export default function CheckoutPage() {
             </option>
           </select>
 
+          <p className="mt-2 text-[10px] leading-relaxed text-slate-500">
+            {t(
+              "Please use the payment numbers shown at the top left after placing your order. Currently under Sokoro Mwigamba. Gamora accounts are coming soon.",
+              "Tafadhali tumia namba za malipo zinazoonekana juu kushoto baada ya kuweka order. Kwa sasa zipo kwa jina la Sokoro Mwigamba. Akaunti za Gamora zinakuja hivi karibuni."
+            )}
+          </p>
+
           <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
             <div className="flex justify-between text-xs">
               <span className="text-slate-500">
@@ -1280,24 +1287,17 @@ export default function CheckoutPage() {
             {customerLocation && !isInsideDarEsSalaam(customerLocation) && (
               <div className="mt-2 rounded-lg border border-sky-200 bg-sky-50 p-3">
                 <p className="text-xs font-semibold text-sky-800">
-                  {t("Shipping cost will be calculated separately.", "Gharama ya usafirishaji itahesabiwa tofauti.")}
+                  {t(
+                    "Shipping cost will be calculated separately.",
+                    "Gharama ya usafirishaji itahesabiwa tofauti."
+                  )}
                 </p>
                 <p className="mt-1 text-[11px] leading-4 text-sky-700">
-                  {t("Please place your order and request the shipping cost.", "Weka order yako kisha request gharama ya usafirishaji.")}
-                  {t("Our team will contact you with the available shipping", "Timu yetu itawasiliana nawe kuhusu njia za usafirishaji")}
-                  {t("options and cost.", "zinazopatikana na gharama yake.")}
+                  {t(
+                    "Please place your order and request the shipping cost. Our team will contact you with the available shipping options and cost.",
+                    "Weka order yako kisha request gharama ya usafirishaji. Timu yetu itawasiliana nawe kuhusu njia za usafirishaji zinazopatikana na gharama yake."
+                  )}
                 </p>
-
-                <div className="mt-2 border-t border-sky-200 pt-2">
-                  <p className="text-xs font-semibold text-sky-800">
-                    Gharama ya usafirishaji itahesabiwa tofauti.
-                  </p>
-                  <p className="mt-1 text-[11px] leading-4 text-sky-700">
-                    Weka order yako kisha request gharama ya usafirishaji.
-                    Timu yetu itawasiliana nawe kuhusu njia za usafirishaji
-                    zinazopatikana na gharama yake.
-                  </p>
-                </div>
               </div>
             )}
 

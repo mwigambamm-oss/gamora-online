@@ -79,9 +79,7 @@ function RelatedProductCard({
   }, [product.id]);
 
   const displayName =
-    language === "sw"
-      ? product.name_sw || product.name
-      : product.name;
+product.name;
 
   return (
     <Link

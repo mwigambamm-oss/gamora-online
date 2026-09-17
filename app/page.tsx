@@ -721,10 +721,7 @@ export default function HomePage() {
     <div className="flex shrink-0 items-center rounded-lg border border-slate-200 bg-white p-1">
       <button
         type="button"
-        onClick={() => {
-          alert("SW CLICK");
-          setLanguage("sw");
-        }}
+        onClick={() => setLanguage("sw")}
         className={`rounded-md px-2 py-1.5 text-[10px] font-black ${
           language === "sw"
             ? "bg-[#E30613] text-white"
@@ -824,7 +821,7 @@ export default function HomePage() {
             }`}
           >
             <span className="text-base leading-none">⌂</span>
-            <span>Home</span>
+            <span>{language === "sw" ? "Nyumbani" : "Home"}</span>
           </a>
 
           <a
@@ -834,7 +831,7 @@ export default function HomePage() {
             }`}
           >
             <span className="text-base leading-none">▦</span>
-            <span>Categories</span>
+            <span>{language === "sw" ? "Makundi" : "Categories"}</span>
           </a>
 
           <a
@@ -845,7 +842,7 @@ export default function HomePage() {
             }`}
           >
             <span className="text-base leading-none">🛒</span>
-            <span>Cart</span>
+            <span>{language === "sw" ? "Kikapu" : "Cart"}</span>
             {cartCount > 0 && (
               <span className="absolute -right-2 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#E30613] px-1 text-[8px] font-black text-orange-300">
                 {cartCount}
@@ -860,7 +857,7 @@ export default function HomePage() {
             }`}
           >
             <span className="text-base leading-none">👤</span>
-            <span>My Gamora</span>
+            <span>{language === "sw" ? "Gamora Yangu" : "My Gamora"}</span>
           </a>
         </div>
 
@@ -1061,16 +1058,16 @@ export default function HomePage() {
 
                     <div className="mt-2 flex items-end gap-3">
                       <span className="text-xl font-black text-[#E30613] sm:text-2xl">
-                        TZS {Number(hero.product.price || 0).toLocaleString()}
+                        {formatCurrency(Number(hero.product.price || 0), currency)}
                       </span>
 
                       {Number(hero.product.oldPrice || 0) >
                         Number(hero.product.price || 0) && (
                         <span className="pb-1 text-xs font-bold text-slate-400 line-through">
-                          TZS{" "}
-                          {Number(
-                            hero.product.oldPrice
-                          ).toLocaleString()}
+                          {formatCurrency(
+                            Number(hero.product.oldPrice || 0),
+                            currency
+                          )}
                         </span>
                       )}
                     </div>
@@ -1982,7 +1979,7 @@ function Carousel({
     let animationFrame = 0;
     let pausedUntil = 0;
 
-    const speed = 2.5;
+    const speed = 0.7;
 
     const pauseAutoScroll = () => {
       pausedUntil = Date.now() + 2500;

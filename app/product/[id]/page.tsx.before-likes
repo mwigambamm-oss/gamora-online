@@ -1,0 +1,1223 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { getProductById, getProducts } from "@/lib/products";
+import { supabase } from "@/lib/supabase";
+import RelatedProducts from "@/components/product/RelatedProducts";
+import { formatCurrency, type Currency } from "@/lib/currency";
+import { useLanguage } from "@/components/providers/LanguageProvider";
+
+type Product = {
+  id: number;
+  name: string;
+  name_sw?: string;
+  price: number;
+  oldPrice?: number;
+  category?: string;
+  category_sw?: string;
+  stock: number;
+  description?: string;
+  description_sw?: string;
+  image?: string;
+  images?: string[];
+  colors?: string[];
+  sizes?: string[];
+  storageOptions?: {
+    storage: string;
+    price: number;
+    stock: number;
+  }[];
+  specifications?: Record<string, string>;
+};
+
+type Review = {
+  id: number;
+  product_id: number;
+  rating: number;
+  comment: string;
+  created_at: string;
+};
+
+export default function ProductPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const router = useRouter();
+  const { language } = useLanguage();
+
+  useEffect(() => {
+    console.log("GAMORA PRODUCT LANGUAGE:", language);
+  }, [language]);
+  const t = (en: string, sw: string) => (language === "sw" ? sw : en);
+
+  const [product, setProduct] = useState<Product | null>(null);
+
+  const displayName = language === "sw" ? (product?.name_sw || product?.name) : product?.name;
+
+  const displayCategory = language === "sw" ? (product?.category_sw || product?.category) : product?.category;
+
+  const displayDescription = language === "sw" ? (product?.description_sw || product?.description) : product?.description;
+
+  const [related, setRelated] = useState<Product[]>([]);
+
+  const [activeImage, setActiveImage] = useState(0);
+  const [quantity, setQuantity] = useState(1);
+const [cartCount, setCartCount] = useState(0);
+  const [currency, setCurrency] = useState<Currency>("TZS");
+
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState("");
+  const [reviewLoading, setReviewLoading] = useState(false);
+
+  const [selectedColor, setSelectedColor] = useState("");
+  const [selectedSize, setSelectedSize] = useState("");
+  const [selectedStorage, setSelectedStorage] = useState("");
+  const [activeTab, setActiveTab] = useState("description");
+
+  useEffect(() => {
+    const savedCurrency = localStorage.getItem("gamora_currency");
+
+    if (savedCurrency === "TZS" || savedCurrency === "USD") {
+      setCurrency(savedCurrency);
+    }
+  }, []);
+
+  /*
+   * LOAD PRODUCT + REVIEWS
+   */
+  useEffect(() => {
+    async function load() {
+      const { id } = await params;
+      const productId = Number(id);
+
+      const item = await getProductById(productId);
+
+console.log("GAMORA PRODUCT DATA:", item);
+
+if (!item) {
+  setProduct(null);
+  return;
+}
+
+setProduct(item);
+
+      if (item.storageOptions && item.storageOptions.length > 0) {
+        setSelectedStorage(item.storageOptions[0].storage);
+      }
+
+      if (item.colors && item.colors.length > 0) {
+        setSelectedColor(item.colors[0]);
+      }
+
+      if (item.sizes && item.sizes.length > 0) {
+        setSelectedSize(item.sizes[0]);
+      }
+
+      const all = await getProducts();
+
+      setRelated(
+        all
+          .filter(
+            (p) =>
+              p.id !== productId &&
+              p.category === item.category
+          )
+          .slice(0, 5)
+      );
+
+      /*
+       * LOAD REAL REVIEWS FROM SUPABASE
+       */
+      const { data: reviewData, error: reviewError } =
+        await supabase
+          .from("product_reviews")
+          .select("*")
+          .eq("product_id", productId)
+          .order("created_at", {
+            ascending: false,
+          });
+
+      setReviews(reviewData || []);
+    }
+
+    load();
+  }, [params]);
+
+  useEffect(() => {
+  function updateCartCount() {
+    try {
+      const existing = localStorage.getItem("gamora_cart");
+      const cart = existing ? JSON.parse(existing) : [];
+
+      const count = cart.reduce(
+        (total: number, item: { quantity?: number }) =>
+          total + Number(item.quantity || 0),
+        0
+      );
+
+      setCartCount(count);
+    } catch (error) {
+      console.error("Cart count error:", error);
+      setCartCount(0);
+    }
+  }
+
+  updateCartCount();
+
+  window.addEventListener("cartUpdated", updateCartCount);
+
+  return () => {
+    window.removeEventListener("cartUpdated", updateCartCount);
+  };
+}, []);
+
+  /*
+   * PRODUCT IMAGES
+   */
+  const images =
+    product?.images && product.images.length > 0
+      ? product.images
+      : product?.image
+      ? [product.image]
+      : [];
+
+  /*
+   * AUTO SLIDE
+   */
+  useEffect(() => {
+    if (images.length <= 1) return;
+
+    const timer = setInterval(() => {
+      setActiveImage((current) =>
+        current >= images.length - 1 ? 0 : current + 1
+      );
+    }, 4000);
+
+    return () => clearInterval(timer);
+  }, [product?.id, images.length]);
+
+  /*
+   * RESET IMAGE WHEN PRODUCT CHANGES
+   */
+  useEffect(() => {
+    setActiveImage(0);
+  }, [product?.id]);
+
+  /*
+   * NEXT IMAGE
+   */
+  function nextImage() {
+    if (images.length <= 1) return;
+
+    setActiveImage((current) =>
+      current >= images.length - 1 ? 0 : current + 1
+    );
+  }
+
+  /*
+   * PREVIOUS IMAGE
+   */
+  function previousImage() {
+    if (images.length <= 1) return;
+
+    setActiveImage((current) =>
+      current <= 0 ? images.length - 1 : current - 1
+    );
+  }
+
+  /*
+   * TOUCH / SWIPE
+   */
+  function handleTouchStart(
+    e: React.TouchEvent<HTMLDivElement>
+  ) {
+    setTouchStart(e.touches[0].clientX);
+    setTouchEnd(null);
+  }
+
+  function handleTouchMove(
+    e: React.TouchEvent<HTMLDivElement>
+  ) {
+    setTouchEnd(e.touches[0].clientX);
+  }
+
+  function handleTouchEnd() {
+    if (touchStart === null || touchEnd === null) return;
+
+    const distance = touchStart - touchEnd;
+
+    if (Math.abs(distance) > 50) {
+      if (distance > 0) {
+        nextImage();
+      } else {
+        previousImage();
+      }
+    }
+
+    setTouchStart(null);
+    setTouchEnd(null);
+  }
+
+  /*
+   * SUBMIT REAL REVIEW
+   */
+  async function submitReview() {
+    if (!product) return;
+
+    const comment = reviewComment.trim();
+
+    if (!comment) {
+      alert("Please write your comment.");
+      return;
+    }
+
+    setReviewLoading(true);
+
+    const { data, error } = await supabase
+      .from("product_reviews")
+      .insert({
+        product_id: product.id,
+        rating: reviewRating,
+        comment,
+      })
+      .select()
+      .single();
+
+    setReviewLoading(false);
+
+    if (error) {
+      console.error("Review submit error:", error);
+      alert("Failed to submit review. Please try again.");
+      return;
+    }
+
+    if (data) {
+      setReviews((current) => [data as Review, ...current]);
+      setReviewComment("");
+      setReviewRating(5);
+    }
+  }
+
+  /*
+   * ADD TO CART
+   */
+  function addToCart() {
+    if (!product) return;
+
+    const cartImage =
+      product.images?.[0] ||
+      product.image ||
+      images[0] ||
+      "";
+
+    const selectedStorageOption =
+      product.storageOptions?.find(
+        (item) => item.storage === selectedStorage
+      );
+
+    const cartItem = {
+      id: product.id,
+      name: product.name,
+      price: selectedStorageOption?.price ?? product.price,
+      oldPrice: product.oldPrice,
+      stock: selectedStorageOption?.stock ?? product.stock,
+      image: cartImage,
+      quantity: quantity,
+      selectedColor: selectedColor,
+      selectedSize: selectedSize,
+      selectedStorage: selectedStorage,
+    };
+
+    try {
+      const existing = localStorage.getItem("gamora_cart");
+      const cart = existing ? JSON.parse(existing) : [];
+
+      const existingIndex = cart.findIndex(
+        (item: {
+          id: number;
+          selectedColor?: string;
+          selectedSize?: string;
+          selectedStorage?: string;
+        }) =>
+          item.id === product.id &&
+          item.selectedColor === selectedColor &&
+          item.selectedSize === selectedSize &&
+          item.selectedStorage === selectedStorage
+      );
+
+      if (existingIndex >= 0) {
+        cart[existingIndex].quantity += quantity;
+      } else {
+        cart.push(cartItem);
+      }
+
+      localStorage.setItem(
+        "gamora_cart",
+        JSON.stringify(cart)
+      );
+
+      window.dispatchEvent(new Event("cartUpdated"));
+
+      alert("Product added to cart.");
+    } catch (error) {
+      console.error("Cart error:", error);
+    }
+  }
+
+  function buyNow() {
+    if (!product) return;
+
+    const cartImage =
+      product.images?.[0] ||
+      product.image ||
+      images[0] ||
+      "";
+
+    const selectedStorageOption =
+      product.storageOptions?.find(
+        (item) => item.storage === selectedStorage
+      );
+
+    const cartItem = {
+      id: product.id,
+      name: product.name,
+      price: selectedStorageOption?.price ?? product.price,
+      oldPrice: product.oldPrice,
+      stock: selectedStorageOption?.stock ?? product.stock,
+      image: cartImage,
+      quantity: quantity,
+      selectedColor: selectedColor,
+      selectedSize: selectedSize,
+      selectedStorage: selectedStorage,
+    };
+
+    try {
+      localStorage.setItem(
+        "gamora_cart",
+        JSON.stringify([cartItem])
+      );
+
+      window.dispatchEvent(new Event("cartUpdated"));
+
+      router.push("/checkout");
+
+    } catch (error) {
+      console.error("Buy now error:", error);
+    }
+  }
+
+
+  /*
+   * LOADING
+   */
+  if (!product) {
+    return (
+      <main className="min-h-screen bg-white  text-center">
+        <p className="text-sm font-normal text-slate-500">
+          Loading...
+        </p>
+      </main>
+    );
+  }
+
+  /*
+   * ONLY SHOW 6 THUMBNAILS
+   */
+  const visibleThumbnails = images.slice(0, 6);
+
+  /*
+   * SELECTED STORAGE PRICE + STOCK
+   */
+  const selectedStorageOption =
+    product.storageOptions?.find(
+      (item) => item.storage === selectedStorage
+    );
+
+  const currentPrice =
+    selectedStorageOption?.price ?? product.price;
+
+  const currentStock =
+    selectedStorageOption?.stock ?? product.stock;
+
+  /*
+   * DISCOUNT
+   */
+  const discount =
+    product.oldPrice && product.oldPrice > product.price
+      ? Math.round(
+          ((product.oldPrice - product.price) /
+            product.oldPrice) *
+            100
+        )
+      : 0;
+
+  /*
+   * REAL REVIEW SUMMARY
+   */
+  const reviewCount = reviews.length;
+
+  const averageRating =
+    reviewCount > 0
+      ? (
+          reviews.reduce(
+            (sum, review) => sum + review.rating,
+            0
+          ) / reviewCount
+        ).toFixed(1)
+      : "0.0";
+
+  return (
+    <main className="min-h-screen bg-white  pb-24 pt-4 sm: md: md:pb-10 md:pt-6">
+
+      {/* ================= PRODUCT HERO ================= */}
+
+      <section className="mx-auto w-full max-w-7xl">
+
+        {/* BREADCRUMB */}
+
+        <div className="mb-4  whitespace-nowrap text-[11px] text-slate-400 sm:mb-5 sm:text-xs">
+          <span>{t("Home", "Nyumbani")}</span>
+
+          <span className="mx-2">›</span>
+
+          <span>
+            {displayCategory || t("Products", "Bidhaa")}
+          </span>
+
+          <span className="mx-2">›</span>
+
+          <span className="text-slate-600">
+            {displayName}
+          </span>
+        </div>
+
+        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.08fr)_minmax(360px,0.92fr)] lg:gap-10">
+
+          {/* ================= IMAGE AREA ================= */}
+
+          <div className="min-w-0">
+
+            {/* MODERN ECOMMERCE PRODUCT GALLERY */}
+
+            <div
+              className="relative w-full rounded-xl bg-white"
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
+
+              {/* ONE IMAGE ONLY */}
+              <div className="relative flex h-[340px] w-full items-center justify-center bg-white sm:h-[440px] lg:h-[520px]">
+
+                {images.length > 0 ? (
+                  <img
+                    src={images[activeImage]}
+                    alt={`${displayName || "Product"} ${activeImage + 1}`}
+                    className="block h-full w-full object-contain object-center"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-sm text-slate-400">
+                    No Image
+                  </div>
+                )}
+
+                {/* PREVIOUS */}
+                {images.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={previousImage}
+                    aria-label="Previous product image"
+                    className="absolute left-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white text-xl text-slate-700 shadow-md ring-1 ring-slate-200 transition hover:bg-slate-50 sm:left-3 sm:h-10 sm:w-10"
+                  >
+                    ‹
+                  </button>
+                )}
+
+                {/* NEXT */}
+                {images.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={nextImage}
+                    aria-label="Next product image"
+                    className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white text-xl text-slate-700 shadow-md ring-1 ring-slate-200 transition hover:bg-slate-50 sm:right-3 sm:h-10 sm:w-10"
+                  >
+                    ›
+                  </button>
+                )}
+
+                {/* IMAGE COUNTER */}
+                {images.length > 1 && (
+                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-black/60 px-3 py-1 text-[10px] font-medium text-white">
+                    {activeImage + 1} / {images.length}
+                  </div>
+                )}
+
+              </div>
+
+            </div>
+
+            {/* THUMBNAILS */}
+
+            {visibleThumbnails.length > 0 && (
+              <div className="mt-3 flex gap-2 overflow-x-auto pb-1 scrollbar-hide sm:gap-3">
+
+                {visibleThumbnails.map((img, index) => (
+                  <button
+                    key={`${img}-thumb-${index}`}
+                    type="button"
+                    onClick={() => setActiveImage(index)}
+                    aria-label={`View product image ${index + 1}`}
+                    className={`flex h-[58px] w-[58px] min-w-[58px] items-center justify-center bg-white transition sm:h-[68px] sm:w-[68px] sm:min-w-[68px] ${
+                      activeImage === index
+                        ? "ring-2 ring-sky-700"
+                        : "ring-1 ring-slate-200"
+                    }`}
+                  >
+                    <img
+                      src={img}
+                      alt={`${displayName || "Product"} thumbnail ${index + 1}`}
+                      className="block h-full w-full object-contain object-center"
+                    />
+                  </button>
+                ))}
+
+              </div>
+            )}
+
+          </div>
+
+          {/* ================= DETAILS ================= */}
+
+          <div className="min-w-0 text-left">
+
+            {/* TITLE */}
+
+            <h1 className="text-base font-semibold leading-6 text-slate-900 sm:text-xl md:text-2xl md:leading-8">
+              {displayName}
+            </h1>
+
+            {/* PRICE */}
+
+            <div className="mt-3 rounded-lg border border-slate-100 bg-slate-50  py-3 sm:">
+
+              <div className="flex flex-wrap items-center gap-3">
+
+                <span className="text-lg font-bold text-sky-700 sm:text-xl">
+                  {formatCurrency(Number(currentPrice), currency)}
+                </span>
+
+                {product.oldPrice && (
+                  <span className="text-[12px] text-slate-400 line-through">
+                    {formatCurrency(Number(product.oldPrice), currency)}
+                  </span>
+                )}
+
+              </div>
+
+              {discount > 0 && (
+                <span className="mt-1 inline-block rounded bg-red-100  py-1 text-[11px] font-normal text-red-600">
+                  -{discount}%
+                </span>
+              )}
+
+            </div>
+
+            {/* DESCRIPTION */}
+
+            {product.description && (
+              <p className="mt-4 text-xs font-normal leading-5 text-slate-600 sm:text-sm sm:leading-6">
+                {displayDescription}
+              </p>
+            )}
+
+            {/* STOCK */}
+
+            <div className="mt-4 text-xs font-medium text-green-600 sm:text-sm">
+              ✓ {t("In Stock", "Zinapatikana")} ({currentStock})
+            </div>
+
+            {/* COLORS */}
+
+            {product.colors &&
+              product.colors.length > 0 && (
+                <div className="mt-2">
+
+                  <p className="mb-3 text-lg font-normal text-slate-700">
+                    {t("Color", "Rangi")}
+                  </p>
+
+                  <div className="flex flex-wrap gap-2">
+
+                    {product.colors.map((color) => (
+                      <button
+                        key={color}
+                        type="button"
+                        onClick={() =>
+                          setSelectedColor(color)
+                        }
+                        className={`rounded-lg  py-2 text-[13px] font-normal ${
+                          selectedColor === color
+                            ? "border-2 border-sky-700 bg-sky-50 text-sky-700"
+                            : "border border-slate-300 text-slate-600"
+                        }`}
+                      >
+                        {color}
+                      </button>
+                    ))}
+
+                  </div>
+
+                </div>
+              )}
+
+            {/* SIZES */}
+
+            {product.sizes &&
+              product.sizes.length > 0 && (
+                <div className="mt-2">
+
+                  <p className="mb-2 text-[13px] font-normal text-slate-600">
+                    {t("Size", "Ukubwa")}
+                  </p>
+
+                  <div className="flex flex-wrap gap-2">
+
+                    {product.sizes.map((size) => (
+                      <button
+                        key={size}
+                        type="button"
+                        onClick={() =>
+                          setSelectedSize(size)
+                        }
+                        className={`min-w-[64px] sm:min-w-14 rounded-lg px-4 py-2 text-[13px] font-normal ${
+                          selectedSize === size
+                            ? "border-2 border-sky-700 bg-sky-50 text-sky-700"
+                            : "border border-slate-300 text-slate-600"
+                        }`}
+                      >
+                        {size}
+                      </button>
+                    ))}
+
+                  </div>
+
+                </div>
+              )}
+
+            {/* STORAGE */}
+
+            {product.storageOptions &&
+              product.storageOptions.length > 0 && (
+                <div className="mt-2">
+
+                  <p className="mb-2 text-[13px] font-normal text-slate-600">
+                    {t("Storage", "Hifadhi")}
+                  </p>
+
+                  <div className="flex flex-wrap gap-2">
+
+                    {product.storageOptions.map((option) => (
+                      <button
+                        key={option.storage}
+                        type="button"
+                        onClick={() => {
+                          setSelectedStorage(option.storage);
+                          setQuantity((q) =>
+                            Math.min(q, Math.max(1, option.stock))
+                          );
+                        }}
+                        disabled={option.stock <= 0}
+                        className={`rounded-lg px-3 py-2 text-[13px] font-normal ${
+                          selectedStorage === option.storage
+                            ? "border-2 border-sky-700 bg-sky-50 text-sky-700"
+                            : "border border-slate-300 text-slate-600"
+                        } ${
+                          option.stock <= 0
+                            ? "cursor-not-allowed opacity-40"
+                            : ""
+                        }`}
+                      >
+                        {option.storage}
+                      </button>
+                    ))}
+
+                  </div>
+
+                </div>
+              )}
+
+            {/* QUANTITY */}
+
+            <div className="mt-2">
+
+              <p className="mb-2 text-[13px] font-normal text-slate-600">
+                {t("Quantity", "Idadi")}
+              </p>
+
+              <div className="inline-flex h-7 items-center rounded-md border border-slate-200 bg-white">
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setQuantity((q) =>
+                      Math.max(1, q - 1)
+                    )
+                  }
+                  className="flex h-7 w-7 items-center justify-center text-sm font-normal text-slate-600 hover:bg-slate-50"
+                >
+                  −
+                </button>
+
+                <span className="flex h-7 w-8 items-center justify-center border-x border-slate-200 text-xs font-normal text-slate-700">
+                  {quantity}
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setQuantity((q) =>
+                      Math.min(
+                        currentStock || 1,
+                        q + 1
+                      )
+                    )
+                  }
+                  className="flex h-7 w-7 items-center justify-center text-sm font-normal text-slate-600 hover:bg-slate-50"
+                >
+                  +
+                </button>
+
+              </div>
+
+            </div>
+
+            {/* ACTION BUTTONS */}
+
+            <div className="mt-4 flex items-center gap-2">
+
+              <button
+                type="button"
+                onClick={addToCart}
+                className="h-[30px] w-[120px] rounded px-5 text-[10px] font-normal leading-none text-white bg-sky-700 hover:bg-sky-800 sm:w-auto"
+              >
+                🛒 {t("Add", "Ongeza")}
+              </button>
+
+              <button
+                type="button"
+                onClick={buyNow}
+                className="h-[30px] w-[120px] rounded border border-sky-700 px-5 text-[10px] font-normal leading-none text-sky-700 hover:bg-sky-50 sm:w-auto"
+              >
+                ⚡ {t("Buy", "Nunua")}
+              </button>
+
+            </div>
+
+            {/* WHATSAPP */}
+
+            <a
+              href="https://wa.me/255798555221"
+              className="mt-3 inline-flex h-[30px] w-[120px] items-center justify-center rounded bg-green-600 px-5 text-[10px] font-normal leading-none text-white hover:bg-green-700 sm:w-auto"
+            >
+              💬 {t("WhatsApp", "WhatsApp")}
+            </a>
+
+          </div>
+
+        </div>
+
+      </section>
+
+      {/* ================= RELATED PRODUCTS ================= */}
+
+      {related.length > 0 && (
+        <section className="mx-auto mt-8 w-full max-w-7xl border-t border-slate-100 pt-5">
+
+          <h2 className="mb-5 text-[15px] font-semibold text-slate-800 sm:text-[17px]">
+            {t("You May Also Like", "Unaweza Pia Kupenda")}
+          </h2>
+
+          <div className="grid grid-cols-3 gap-x-3 gap-y-6 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-8">
+
+            {related.map((item) => (
+              <button
+                type="button"
+                key={item.id}
+                onClick={() => router.push(`/product/${item.id}`)}
+                className="group min-w-0 bg-transparent p-0 text-left"
+              >
+
+                <div className="flex h-[145px] w-full items-center justify-center overflow-hidden bg-white sm:h-[165px] lg:h-[185px]">
+
+                  <img
+                    src={
+                      item.images?.[0] ||
+                      item.image ||
+                      ""
+                    }
+                    alt={language === "sw" ? (item.name_sw || item.name) : item.name}
+                    loading="lazy"
+                    className="h-full w-full object-contain object-center transition-transform duration-300 group-hover:scale-[1.04]"
+                  />
+
+                </div>
+
+                <div className="pt-2">
+
+                  <p className="line-clamp-2 text-[10px] font-normal leading-[14px] text-slate-700 sm:text-[11px] sm:leading-[15px]">
+                    {language === "sw" ? (item.name_sw || item.name) : item.name}
+                  </p>
+
+                  <p className="mt-1 text-[12px] font-bold leading-4 text-red-600 sm:text-[13px]">
+                    {formatCurrency(Number(item.price), currency)}
+                  </p>
+
+                  {item.oldPrice &&
+                    Number(item.oldPrice) > Number(item.price) && (
+                      <p className="mt-0.5 text-[9px] leading-3 text-slate-400 line-through sm:text-[10px]">
+                        {formatCurrency(Number(item.oldPrice), currency)}
+                      </p>
+                    )}
+
+                </div>
+
+              </button>
+            ))}
+
+          </div>
+
+        </section>
+      )}
+
+      
+
+{/* ================= DESCRIPTION ================= */}
+
+      <section className="mx-auto mt-5 max-w-6xl border-t border-slate-200">
+
+        <div className="flex gap-5 overflow-x-auto border-b border-slate-200 pt-3 text-xs font-normal">
+
+          <button
+            type="button"
+            onClick={() => setActiveTab("description")}
+            className={`pb-2 ${
+              activeTab === "description"
+                ? "border-b-2 border-sky-700 text-sky-700"
+                : "text-slate-400"
+            }`}
+          >
+            {t("Description", "Maelezo")}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab("specifications")}
+            className={`pb-2 ${
+              activeTab === "specifications"
+                ? "border-b-2 border-sky-700 text-sky-700"
+                : "text-slate-400"
+            }`}
+          >
+            {t("Specifications", "Vipengele")}
+          </button>
+
+          <button
+            type="button"
+            onClick={() =>
+              document
+                .getElementById("reviews")
+                ?.scrollIntoView({
+                  behavior: "smooth",
+                })
+            }
+            className="pb-2 text-slate-400"
+          >
+            {t("Reviews", "Maoni")}
+          </button>
+
+        </div>
+
+        <div className="py-4">
+
+{activeTab === "description" && (
+  <>
+    <h2 className="text-sm font-medium text-slate-900">
+      {t("Product Description", "Maelezo ya Bidhaa")}
+    </h2>
+
+    <p className="mt-3 max-w-4xl text-xs leading-5 text-slate-500">
+      {displayDescription ||
+        t(
+          "No additional product description available.",
+          "Hakuna maelezo ya ziada ya bidhaa yaliyowekwa."
+        )}
+    </p>
+  </>
+)}
+
+{activeTab === "specifications" && (
+  <div className="rounded-lg border border-slate-200 bg-white ">
+
+    <h2 className="text-sm font-medium text-slate-800">
+      {t("Specifications", "Vipengele")}
+    </h2>
+
+    <div className="mt-3 space-y-2 text-xs text-slate-500">
+
+      <div className="flex justify-between gap-4">
+        <span>Category</span>
+        <span className="text-right text-slate-700">
+          {displayCategory || "N/A"}
+        </span>
+      </div>
+
+      <div className="flex justify-between gap-4">
+        <span>Stock</span>
+        <span className="text-right text-green-600">
+          In Stock ({currentStock})
+        </span>
+      </div>
+
+      <div className="flex justify-between gap-4">
+        <span>{t("Colors", "Rangi")}</span>
+        <span className="text-right text-slate-700">
+          {product.colors?.join(", ") || "N/A"}
+        </span>
+      </div>
+
+      <div className="flex justify-between gap-4">
+        <span>{t("Sizes", "Ukubwa")}</span>
+        <span className="text-right text-slate-700">
+          {product.sizes?.join(", ") || "N/A"}
+        </span>
+      </div>
+
+      {product.specifications &&
+        Object.entries(product.specifications).map(([key, value]) => (
+          <div
+            key={key}
+            className="flex justify-between gap-4 border-t border-slate-100 pt-2"
+          >
+            <span className="font-medium text-slate-600">
+              {key}
+            </span>
+
+            <span className="text-right text-slate-700">
+              {value}
+            </span>
+          </div>
+        ))}
+
+      {(!product.specifications ||
+        Object.keys(product.specifications).length === 0) && (
+        <div className="border-t border-slate-100 pt-2 text-slate-400">
+          {t(
+            "No additional specifications available.",
+            "Hakuna vipengele vya ziada vilivyowekwa."
+          )}
+        </div>
+      )}
+
+      <div className="flex justify-between">
+        <span>{t("Shipping", "Usafirishaji")}</span>
+        <span className="text-slate-700">
+          Available
+        </span>
+      </div>
+
+    </div>
+
+  </div>
+)}
+
+</div>
+
+      </section>
+
+      {/* ================= REVIEWS ================= */}
+
+      <section
+        id="reviews"
+        className="mx-auto max-w-6xl border-t border-slate-200 py-4"
+      >
+
+        <h2 className="text-sm font-medium text-slate-900">
+          {t("Customer Reviews", "Maoni ya Wateja")}
+        </h2>
+
+        {/* REAL REVIEW SUMMARY */}
+
+        <div className="mt-3 flex items-center gap-3">
+
+          <span className="text-[26px] font-extrabold text-amber-500">
+            {averageRating}
+          </span>
+
+          <div>
+
+            <div className="text-sm text-amber-500">
+              {"★".repeat(
+                Math.round(
+                  Number(averageRating) || 0
+                )
+              )}
+              <span className="text-slate-300">
+                {"★".repeat(
+                  Math.max(
+                    0,
+                    5 -
+                      Math.round(
+                        Number(averageRating) || 0
+                      )
+                  )
+                )}
+              </span>
+            </div>
+
+            <p className="text-xs text-slate-400">
+              {reviewCount}{" "}
+              {reviewCount === 1
+                ? "review"
+                : "reviews"}
+            </p>
+
+          </div>
+
+        </div>
+
+        {/* WRITE REVIEW */}
+
+        <div className="mt-6 rounded-lg border border-slate-200 ">
+
+          <h3 className="text-[14px] font-normal text-slate-800">
+            {t("Leave a Review", "Acha Maoni")}
+          </h3>
+
+          {/* STAR SELECTOR */}
+
+          <div className="mt-2 flex gap-1">
+
+            {[1, 2, 3, 4, 5].map((star) => (
+              <button
+                key={star}
+                type="button"
+                onClick={() =>
+                  setReviewRating(star)
+                }
+                aria-label={`Rate ${star} stars`}
+                className={`text-lg transition ${
+                  star <= reviewRating
+                    ? "text-amber-400"
+                    : "text-slate-300"
+                }`}
+              >
+                ★
+              </button>
+            ))}
+
+          </div>
+
+          {/* COMMENT */}
+
+          <textarea
+            value={reviewComment}
+            onChange={(e) =>
+              setReviewComment(e.target.value)
+            }
+            placeholder="Write your comment..."
+            className="mt-4 min-h-[110px] w-full resize-y rounded-xl border border-slate-200  text-[13px] text-slate-700 outline-none placeholder:text-slate-400 focus:border-sky-700"
+          />
+
+          {/* SUBMIT */}
+
+          <button
+            type="button"
+            onClick={submitReview}
+            disabled={reviewLoading}
+            className="mt-3 rounded-xl bg-sky-700  py-3 text-[13px] font-normal text-white hover:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {reviewLoading
+              ? "Submitting..."
+              : "Submit Review"}
+          </button>
+
+        </div>
+
+        {/* EXISTING REVIEWS */}
+
+        <div className="mt-6 space-y-4">
+
+          {reviews.length > 0 ? (
+            reviews.map((review) => (
+              <div
+                key={review.id}
+                className="rounded-lg border border-slate-200 "
+              >
+
+                <div className="text-[15px] text-amber-400">
+                  {"★".repeat(review.rating)}
+                  <span className="text-slate-300">
+                    {"★".repeat(
+                      Math.max(
+                        0,
+                        5 - review.rating
+                      )
+                    )}
+                  </span>
+                </div>
+
+                <p className="mt-2 text-[13px] leading-5 text-slate-600">
+                  {review.comment}
+                </p>
+
+                <p className="mt-2 text-[11px] text-slate-400">
+                  {new Date(
+                    review.created_at
+                  ).toLocaleDateString()}
+                </p>
+
+              </div>
+            ))
+          ) : (
+            <div className="rounded-xl border border-dashed border-slate-200  text-center">
+
+              <div className="text-lg text-slate-300">
+                ★★★★★
+              </div>
+
+              <p className="mt-2 text-[13px] font-normal text-slate-400">
+                No reviews yet.
+              </p>
+
+              <p className="mt-1 text-xs text-slate-400">
+                Be the first to review this product.
+              </p>
+
+            </div>
+          )}
+
+        </div>
+
+      </section>
+
+      {/* ================= MOBILE STICKY BAR ================= */}
+
+      <div className="fixed bottom-4 right-4 z-50">
+  <button
+    type="button"
+    onClick={() => router.push("/cart")}
+    className="rounded-full bg-slate-900  py-3 text-xs font-medium text-white shadow-lg hover:bg-slate-800"
+  >
+    🛒 Cart ({cartCount})
+  </button>
+</div>
+
+    </main>
+  );
+}

@@ -1,0 +1,20 @@
+import {
+  translateLocal,
+  translateLocalObject,
+} from "./localTranslator";
+
+export async function translateToSwahili(text: string): Promise<string> {
+  if (!text?.trim()) return "";
+
+  return translateLocal(text);
+}
+
+export async function translateSpecificationsToSwahili(
+  specifications: Record<string, string>
+): Promise<Record<string, string>> {
+  if (!specifications || Object.keys(specifications).length === 0) {
+    return {};
+  }
+
+  return translateLocalObject(specifications);
+}

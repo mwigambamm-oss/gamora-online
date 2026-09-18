@@ -1,0 +1,111 @@
+import { execFileSync } from "child_process";
+import path from "path";
+
+import {
+  translateLocal,
+  translateLocalObject,
+} from "./localTranslator";
+
+const ARGOS_SCRIPT = path.join(
+  process.cwd(),
+  "scripts",
+  "argos_translate.py"
+);
+
+const ARGOS_PYTHON = path.join(
+  process.cwd(),
+  ".venv-argos",
+  "bin",
+  "python"
+);
+
+async function translateWithArgos(text: string): Promise<string> {
+  if (!text?.trim()) return "";
+
+  try {
+    const stdout = execFileSync(
+      ARGOS_PYTHON,
+      [ARGOS_SCRIPT],
+      {
+        input: text,
+        encoding: "utf8",
+        maxBuffer: 1024 * 1024 * 5,
+      }
+    );
+
+    const result = stdout.trim();
+
+    if (result) {
+      return result;
+    }
+
+    throw new Error("Argos returned empty translation");
+  } catch (error: any) {
+    console.error(
+      "ARGOS TRANSLATION ERROR:",
+      error?.message || error
+    );
+
+    if (error?.stderr) {
+      console.error(
+        "ARGOS STDERR:",
+        error.stderr.toString()
+      );
+    }
+
+    return translateLocal(text);
+  }
+}
+
+export async function translateToSwahili(
+  text: string
+): Promise<string> {
+  if (!text?.trim()) return "";
+
+  return translateWithArgos(text);
+}
+
+export async function translateSpecificationsToSwahili(
+  specifications: Record<string, string>
+): Promise<Record<string, string>> {
+  if (
+    !specifications ||
+    Object.keys(specifications).length === 0
+  ) {
+    return {};
+  }
+
+  const result: Record<string, string> = {};
+
+  for (const [key, value] of Object.entries(specifications)) {
+    try {
+      const translated = await translateWithArgos(
+        `${key}: ${value}`
+      );
+
+      const separator = translated.indexOf(":");
+
+      if (separator !== -1) {
+        const translatedKey = translated
+          .slice(0, separator)
+          .trim();
+
+        const translatedValue = translated
+          .slice(separator + 1)
+          .trim();
+
+        if (translatedKey && translatedValue) {
+          result[translatedKey] = translatedValue;
+          continue;
+        }
+      }
+
+      // Safe fallback if Argos doesn't return key:value
+      result[translateLocal(key)] = translateLocal(value);
+    } catch {
+      result[translateLocal(key)] = translateLocal(value);
+    }
+  }
+
+  return result;
+}

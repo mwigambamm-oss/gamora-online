@@ -1,0 +1,765 @@
+import { useEffect, useMemo, useState } from "react";
+import {
+  ActivityIndicator,
+  Image,
+  Pressable,
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { supabase } from "./lib/supabase";
+
+type Product = {
+  id: number | string;
+  name: string;
+  name_sw?: string | null;
+  price: number;
+  old_price?: number | null;
+  category?: string | null;
+  stock?: number | null;
+  image?: string | null;
+  images?: string[] | null;
+  rating?: number | null;
+  discount?: number | null;
+  orders_count?: number | null;
+};
+
+const categories = [
+  ["All", "grid-outline"],
+  ["Phones", "phone-portrait-outline"],
+  ["Fashion", "shirt-outline"],
+  ["Shoes", "footsteps-outline"],
+  ["Beauty", "sparkles-outline"],
+  ["Electronics", "headset-outline"],
+  ["Home & Kitchen", "home-outline"],
+  ["Baby", "happy-outline"],
+];
+
+function formatPrice(price: number) {
+  return `TZS ${Number(price || 0).toLocaleString("en-TZ")}`;
+}
+
+function getProductImage(product: Product) {
+  return product.images?.[0] || product.image || "";
+}
+
+function ProductCard({ product }: { product: Product }) {
+  const image = getProductImage(product);
+
+  const discount =
+    product.old_price && product.old_price > product.price
+      ? Math.round(
+          ((product.old_price - product.price) / product.old_price) * 100
+        )
+      : product.discount || 0;
+
+  return (
+    <Pressable style={styles.productCard}>
+      <View style={styles.productImageBox}>
+        {image ? (
+          <Image
+            source={{ uri: image }}
+            style={styles.productImage}
+            resizeMode="contain"
+          />
+        ) : (
+          <Ionicons name="image-outline" size={42} color="#9ca3af" />
+        )}
+
+        {discount > 0 && (
+          <View style={styles.discountBadge}>
+            <Text style={styles.discountText}>-{discount}%</Text>
+          </View>
+        )}
+
+        <Pressable style={styles.heartButton}>
+          <Ionicons name="heart-outline" size={20} color="#374151" />
+        </Pressable>
+      </View>
+
+      <View style={styles.productInfo}>
+        <Text numberOfLines={2} style={styles.productName}>
+          {product.name}
+        </Text>
+
+        <View style={styles.ratingRow}>
+          <Ionicons name="star" size={13} color="#f59e0b" />
+          <Text style={styles.ratingText}>
+            {Number(product.rating || 0).toFixed(1)}
+          </Text>
+          <Text style={styles.ordersText}>
+            ({product.orders_count || 0})
+          </Text>
+        </View>
+
+        <Text style={styles.productPrice}>
+          {formatPrice(product.price)}
+        </Text>
+
+        {!!product.old_price && product.old_price > product.price && (
+          <Text style={styles.oldPrice}>
+            {formatPrice(product.old_price)}
+          </Text>
+        )}
+      </View>
+    </Pressable>
+  );
+}
+
+export default function App() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
+
+  useEffect(() => {
+    loadProducts();
+  }, []);
+
+  async function loadProducts() {
+    const { data, error } = await supabase
+      .from("products")
+      .select(
+        "id,name,name_sw,price,old_price,category,stock,image,images,rating,discount,orders_count"
+      )
+      .gt("stock", 0)
+      .order("created_at", { ascending: false })
+      .limit(100);
+
+    if (!error && data) {
+      setProducts(data as Product[]);
+    } else {
+      console.log("Products error:", error?.message);
+    }
+
+    setLoading(false);
+  }
+
+  const filteredProducts = useMemo(() => {
+    return products.filter((product) => {
+      const query = search.toLowerCase().trim();
+
+      const matchesSearch =
+        !query ||
+        product.name.toLowerCase().includes(query) ||
+        (product.category || "").toLowerCase().includes(query);
+
+      const matchesCategory =
+        selectedCategory === "All" ||
+        (product.category || "")
+          .toLowerCase()
+          .includes(selectedCategory.toLowerCase());
+
+      return matchesSearch && matchesCategory;
+    });
+  }, [products, search, selectedCategory]);
+
+  const bestSellers = useMemo(
+    () =>
+      [...products]
+        .sort(
+          (a, b) =>
+            Number(b.orders_count || 0) -
+            Number(a.orders_count || 0)
+        )
+        .slice(0, 10),
+    [products]
+  );
+
+  const newArrivals = products.slice(0, 10);
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="dark-content" />
+
+      <View style={styles.header}>
+        <View>
+          <Text style={styles.logo}>GAMORA</Text>
+          <Text style={styles.tagline}>
+            Shop Smart. Live Better.
+          </Text>
+        </View>
+
+        <View style={styles.headerActions}>
+          <Pressable style={styles.headerIcon}>
+            <Ionicons
+              name="notifications-outline"
+              size={23}
+              color="#172033"
+            />
+          </Pressable>
+
+          <Pressable style={styles.headerIcon}>
+            <Ionicons
+              name="cart-outline"
+              size={24}
+              color="#172033"
+            />
+          </Pressable>
+        </View>
+      </View>
+
+      <View style={styles.searchContainer}>
+        <Ionicons
+          name="search-outline"
+          size={21}
+          color="#6b7280"
+        />
+
+        <TextInput
+          value={search}
+          onChangeText={setSearch}
+          placeholder="Search products..."
+          placeholderTextColor="#9ca3af"
+          style={styles.searchInput}
+        />
+
+        {search.length > 0 && (
+          <Pressable onPress={() => setSearch("")}>
+            <Ionicons
+              name="close-circle"
+              size={20}
+              color="#9ca3af"
+            />
+          </Pressable>
+        )}
+      </View>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <View style={styles.hero}>
+          <View style={styles.heroText}>
+            <Text style={styles.heroSmall}>WELCOME TO</Text>
+            <Text style={styles.heroTitle}>GAMORA ONLINE</Text>
+            <Text style={styles.heroSubtitle}>
+              Discover amazing products at great prices.
+            </Text>
+
+            <Pressable style={styles.shopButton}>
+              <Text style={styles.shopButtonText}>Shop Now</Text>
+              <Ionicons
+                name="arrow-forward"
+                size={17}
+                color="#ffffff"
+              />
+            </Pressable>
+          </View>
+
+          <Ionicons
+            name="bag-handle-outline"
+            size={92}
+            color="rgba(255,255,255,0.25)"
+          />
+        </View>
+
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Shop by Category</Text>
+          <Ionicons
+            name="chevron-forward"
+            size={20}
+            color="#6b7280"
+          />
+        </View>
+
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.categoryList}
+        >
+          {categories.map(([name, icon]) => {
+            const active = selectedCategory === name;
+
+            return (
+              <Pressable
+                key={name}
+                onPress={() => setSelectedCategory(name)}
+                style={styles.categoryItem}
+              >
+                <View
+                  style={[
+                    styles.categoryIcon,
+                    active && styles.categoryIconActive,
+                  ]}
+                >
+                  <Ionicons
+                    name={icon as any}
+                    size={22}
+                    color={active ? "#ffffff" : "#1565C0"}
+                  />
+                </View>
+
+                <Text
+                  style={[
+                    styles.categoryName,
+                    active && styles.categoryNameActive,
+                  ]}
+                >
+                  {name}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Best Sellers</Text>
+          <Text style={styles.viewAll}>View All</Text>
+        </View>
+
+        {loading ? (
+          <View style={styles.loading}>
+            <ActivityIndicator
+              size="large"
+              color="#1565C0"
+            />
+            <Text style={styles.loadingText}>
+              Loading products...
+            </Text>
+          </View>
+        ) : (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.productList}
+          >
+            {bestSellers.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+              />
+            ))}
+          </ScrollView>
+        )}
+
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>New Arrivals</Text>
+          <Text style={styles.viewAll}>View All</Text>
+        </View>
+
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.productList}
+        >
+          {newArrivals.map((product) => (
+            <ProductCard
+              key={`new-${product.id}`}
+              product={product}
+            />
+          ))}
+        </ScrollView>
+
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>
+            {selectedCategory === "All"
+              ? "All Products"
+              : selectedCategory}
+          </Text>
+
+          <Text style={styles.productCount}>
+            {filteredProducts.length} products
+          </Text>
+        </View>
+
+        <View style={styles.grid}>
+          {filteredProducts.slice(0, 20).map((product) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+            />
+          ))}
+        </View>
+
+        <View style={styles.bottomSpace} />
+      </ScrollView>
+
+      <View style={styles.bottomNav}>
+        <Pressable style={styles.navItem}>
+          <Ionicons
+            name="home"
+            size={23}
+            color="#1565C0"
+          />
+          <Text style={[styles.navText, styles.navTextActive]}>
+            Home
+          </Text>
+        </Pressable>
+
+        <Pressable style={styles.navItem}>
+          <Ionicons
+            name="grid-outline"
+            size={23}
+            color="#6b7280"
+          />
+          <Text style={styles.navText}>
+            Categories
+          </Text>
+        </Pressable>
+
+        <Pressable style={styles.navItem}>
+          <Ionicons
+            name="heart-outline"
+            size={23}
+            color="#6b7280"
+          />
+          <Text style={styles.navText}>
+            Wishlist
+          </Text>
+        </Pressable>
+
+        <Pressable style={styles.navItem}>
+          <Ionicons
+            name="person-outline"
+            size={23}
+            color="#6b7280"
+          />
+          <Text style={styles.navText}>
+            Account
+          </Text>
+        </Pressable>
+      </View>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#f5f7fa",
+  },
+
+  header: {
+    backgroundColor: "#ffffff",
+    paddingHorizontal: 18,
+    paddingTop: 12,
+    paddingBottom: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+
+  logo: {
+    fontSize: 25,
+    fontWeight: "900",
+    letterSpacing: 1,
+    color: "#1565C0",
+  },
+
+  tagline: {
+    fontSize: 11,
+    color: "#6b7280",
+    marginTop: 1,
+  },
+
+  headerActions: {
+    flexDirection: "row",
+    gap: 8,
+  },
+
+  headerIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: "#f1f5f9",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  searchContainer: {
+    marginHorizontal: 16,
+    marginTop: 4,
+    marginBottom: 10,
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: "#ffffff",
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 14,
+  },
+
+  searchInput: {
+    flex: 1,
+    marginLeft: 9,
+    fontSize: 15,
+    color: "#111827",
+  },
+
+  scrollContent: {
+    paddingBottom: 20,
+  },
+
+  hero: {
+    marginHorizontal: 16,
+    marginTop: 5,
+    borderRadius: 18,
+    paddingHorizontal: 20,
+    paddingVertical: 22,
+    backgroundColor: "#1565C0",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    overflow: "hidden",
+  },
+
+  heroText: {
+    flex: 1,
+  },
+
+  heroSmall: {
+    color: "#dbeafe",
+    fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 1,
+  },
+
+  heroTitle: {
+    color: "#ffffff",
+    fontSize: 23,
+    fontWeight: "900",
+    marginTop: 3,
+  },
+
+  heroSubtitle: {
+    color: "#e0ecff",
+    fontSize: 12,
+    marginTop: 5,
+    maxWidth: 230,
+    lineHeight: 17,
+  },
+
+  shopButton: {
+    marginTop: 13,
+    backgroundColor: "#ffffff",
+    borderRadius: 9,
+    paddingHorizontal: 13,
+    paddingVertical: 9,
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start",
+    gap: 7,
+  },
+
+  shopButtonText: {
+    color: "#1565C0",
+    fontWeight: "800",
+    fontSize: 13,
+  },
+
+  sectionHeader: {
+    marginTop: 23,
+    marginBottom: 11,
+    paddingHorizontal: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+
+  sectionTitle: {
+    fontSize: 19,
+    fontWeight: "800",
+    color: "#172033",
+  },
+
+  viewAll: {
+    fontSize: 13,
+    color: "#1565C0",
+    fontWeight: "700",
+  },
+
+  productCount: {
+    fontSize: 12,
+    color: "#6b7280",
+  },
+
+  categoryList: {
+    paddingHorizontal: 16,
+    gap: 12,
+  },
+
+  categoryItem: {
+    width: 82,
+    alignItems: "center",
+  },
+
+  categoryIcon: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: "#e8f1fc",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  categoryIconActive: {
+    backgroundColor: "#1565C0",
+  },
+
+  categoryName: {
+    marginTop: 7,
+    fontSize: 11,
+    color: "#4b5563",
+    textAlign: "center",
+    fontWeight: "600",
+  },
+
+  categoryNameActive: {
+    color: "#1565C0",
+    fontWeight: "800",
+  },
+
+  productList: {
+    paddingHorizontal: 16,
+    gap: 12,
+  },
+
+  productCard: {
+    width: 178,
+    backgroundColor: "#ffffff",
+    borderRadius: 12,
+    overflow: "hidden",
+  },
+
+  productImageBox: {
+    height: 178,
+    backgroundColor: "#ffffff",
+    position: "relative",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  productImage: {
+    width: "100%",
+    height: "100%",
+  },
+
+  discountBadge: {
+    position: "absolute",
+    top: 9,
+    left: 9,
+    backgroundColor: "#dc2626",
+    borderRadius: 5,
+    paddingHorizontal: 7,
+    paddingVertical: 4,
+  },
+
+  discountText: {
+    color: "#ffffff",
+    fontSize: 10,
+    fontWeight: "800",
+  },
+
+  heartButton: {
+    position: "absolute",
+    right: 8,
+    top: 8,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: "rgba(255,255,255,0.92)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  productInfo: {
+    paddingHorizontal: 11,
+    paddingVertical: 10,
+  },
+
+  productName: {
+    fontSize: 13,
+    lineHeight: 18,
+    color: "#172033",
+    fontWeight: "600",
+    minHeight: 36,
+  },
+
+  ratingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 6,
+    gap: 3,
+  },
+
+  ratingText: {
+    fontSize: 11,
+    color: "#374151",
+    fontWeight: "700",
+  },
+
+  ordersText: {
+    fontSize: 10,
+    color: "#9ca3af",
+  },
+
+  productPrice: {
+    marginTop: 5,
+    fontSize: 15,
+    color: "#1565C0",
+    fontWeight: "900",
+  },
+
+  oldPrice: {
+    marginTop: 2,
+    fontSize: 10,
+    color: "#9ca3af",
+    textDecorationLine: "line-through",
+  },
+
+  loading: {
+    height: 220,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  loadingText: {
+    marginTop: 9,
+    color: "#6b7280",
+    fontSize: 13,
+  },
+
+  grid: {
+    paddingHorizontal: 16,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+  },
+
+  bottomSpace: {
+    height: 85,
+  },
+
+  bottomNav: {
+    height: 70,
+    backgroundColor: "#ffffff",
+    borderTopWidth: 1,
+    borderTopColor: "#e5e7eb",
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
+    paddingBottom: 4,
+  },
+
+  navItem: {
+    alignItems: "center",
+    justifyContent: "center",
+    minWidth: 70,
+  },
+
+  navText: {
+    fontSize: 10,
+    color: "#6b7280",
+    marginTop: 3,
+    fontWeight: "600",
+  },
+
+  navTextActive: {
+    color: "#1565C0",
+    fontWeight: "800",
+  },
+});

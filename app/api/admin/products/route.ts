@@ -1,26 +1,74 @@
 import { NextResponse } from "next/server";
 import { saveProduct } from "@/lib/products";
+import {
+  translateToSwahili,
+  translateSpecificationsToSwahili,
+} from "@/lib/translation/translate";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
 
+    const name = body.name || "";
+    const category = body.category || "";
+    const description = body.description || "";
+    const specifications = body.specifications || {};
+    const colors = Array.isArray(body.colors) ? body.colors : [];
+    const sizes = Array.isArray(body.sizes) ? body.sizes : [];
+
+    const [name_sw, category_sw, description_sw, specifications_sw, colors_sw, sizes_sw] =
+      await Promise.all([
+        body.name_sw?.trim()
+          ? Promise.resolve(body.name_sw)
+          : translateToSwahili(name),
+
+        body.category_sw?.trim()
+          ? Promise.resolve(body.category_sw)
+          : translateToSwahili(category),
+
+        body.description_sw?.trim()
+          ? Promise.resolve(body.description_sw)
+          : translateToSwahili(description),
+
+        body.specifications_sw &&
+        typeof body.specifications_sw === "object" &&
+        !Array.isArray(body.specifications_sw) &&
+        Object.keys(body.specifications_sw).length > 0
+          ? Promise.resolve(body.specifications_sw)
+          : translateSpecificationsToSwahili(specifications),
+
+        body.colors_sw &&
+        Array.isArray(body.colors_sw) &&
+        body.colors_sw.length > 0
+          ? Promise.resolve(body.colors_sw)
+          : Promise.all(colors.map((color: string) => translateToSwahili(color))),
+
+        body.sizes_sw &&
+        Array.isArray(body.sizes_sw) &&
+        body.sizes_sw.length > 0
+          ? Promise.resolve(body.sizes_sw)
+          : Promise.all(sizes.map((size: string) => translateToSwahili(size))),
+      ]);
+
     const product = await saveProduct({
-      name: body.name || "",
-      name_sw: body.name_sw || "",
+      name,
+      name_sw,
       price: Number(body.price || 0),
       oldPrice: Number(body.oldPrice || body.price || 0),
-      category: body.category || "",
-      category_sw: body.category_sw || "",
+      category,
+      category_sw,
       stock: Number(body.stock || 0),
-      description: body.description || "",
-      description_sw: body.description_sw || "",
+      description,
+      description_sw,
       image: body.image || "",
       images: body.images || [],
       cost_price: Number(body.cost_price || 0),
-      colors: body.colors || [],
-      sizes: body.sizes || [],
-      specifications: body.specifications || {},
+      colors,
+      colors_sw,
+      sizes,
+      sizes_sw,
+      specifications,
+      specifications_sw,
       discount: Number(body.discount || 0),
     });
 

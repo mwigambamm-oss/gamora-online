@@ -586,7 +586,40 @@ export default function HomePage() {
             </p>
           </button>
 
-          <div className="relative flex-1">
+          {/* DESKTOP QUICK NAV + SEARCH */}
+          <div className="ml-24 flex shrink-0 items-center gap-3">
+
+            <a
+              href="#flash-sales"
+              className="shrink-0 whitespace-nowrap text-[11px] font-black text-[#E30613] transition hover:underline"
+            >
+              🔥 Flash Deals
+            </a>
+
+            <a
+              href="#flash-sales"
+              className="shrink-0 whitespace-nowrap text-[11px] font-black text-slate-700 transition hover:text-[#E30613]"
+            >
+              Offers
+            </a>
+
+            <a
+              href="#new-arrivals"
+              className="shrink-0 whitespace-nowrap text-[11px] font-black text-slate-700 transition hover:text-[#E30613]"
+            >
+              New Arrivals
+            </a>
+
+            <a
+              href="#trending"
+              className="shrink-0 whitespace-nowrap text-[11px] font-black text-slate-700 transition hover:text-[#E30613]"
+            >
+              Trending Now
+            </a>
+
+          </div>
+
+          <div className="relative ml-8 w-[520px]">
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -611,9 +644,10 @@ export default function HomePage() {
             </button>
           </div>
 
-          <div className="flex items-center rounded-lg border border-slate-200 p-1">
-            <button
-              onClick={() => changeLanguage("en")}
+          <div className="ml-auto mr-16 flex items-center gap-5">
+            <div className="flex items-center rounded-lg border border-slate-200 p-1">
+              <button
+                onClick={() => changeLanguage("en")}
               className={`rounded-md px-2.5 py-1.5 text-[10px] font-black ${
                 language === "en"
                   ? "bg-[#E30613] text-white"
@@ -671,19 +705,20 @@ export default function HomePage() {
             </p>
           </button>
 
-          <button
-            onClick={() => router.push("/cart")}
-            className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 border-red-100 bg-red-50 text-xl transition hover:border-[#E30613]"
-            aria-label="Cart"
-          >
-            🛒
+            <button
+              onClick={() => router.push("/cart")}
+              className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 border-red-100 bg-red-50 text-xl transition hover:border-[#E30613]"
+              aria-label="Cart"
+            >
+              🛒
 
-            {cartCount > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#E30613] px-1 text-[10px] font-black text-white">
-                {cartCount}
-              </span>
-            )}
-          </button>
+              {cartCount > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#E30613] px-1 text-[10px] font-black text-white">
+                  {cartCount}
+                </span>
+              )}
+            </button>
+          </div>
 
         </div>
 
@@ -870,7 +905,7 @@ export default function HomePage() {
         onMouseLeave={() => setHeroPaused(false)}
       >
         <div className="mx-auto max-w-[1440px] px-3 sm:px-5">
-          <div className="grid overflow-hidden rounded-xl bg-white shadow-sm lg:grid-cols-[215px_1fr]">
+          <div className="grid overflow-hidden rounded-xl bg-white shadow-sm lg:grid-cols-[215px_1fr] min-[1600px]:grid-cols-[320px_950px_minmax(0,1fr)] lg:gap-5">
             
             {/* LEFT CATEGORIES */}
             <aside className="hidden border-r border-slate-100 bg-white lg:block">
@@ -887,9 +922,23 @@ export default function HomePage() {
                     </h2>
                   </div>
 
-                  <span className="rounded-full bg-[#fff1f2] px-2 py-1 text-[9px] font-bold text-[#E30613]">
-                    {ALL_CATEGORIES.length}+
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-full bg-[#fff1f2] px-2 py-1 text-[9px] font-bold text-[#E30613]">
+                      {ALL_CATEGORIES.length}+
+                    </span>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        document
+                          .getElementById("categories")
+                          ?.scrollIntoView({ behavior: "smooth", block: "start" });
+                      }}
+                      className="whitespace-nowrap rounded-full bg-slate-900 px-2.5 py-1 text-[9px] font-black text-white transition hover:bg-[#E30613]"
+                    >
+                      {language === "sw" ? "Ona Zote →" : "View All →"}
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -1006,7 +1055,7 @@ export default function HomePage() {
 
             {/* GAMORA MARKETPLACE PRODUCT BANNER */}
             <div
-              className={`relative min-h-[300px] overflow-hidden sm:min-h-[340px] ${
+              className={`relative ml-0 min-h-[300px] min-[1600px]:ml-[60px] overflow-hidden sm:min-h-[340px] ${
                 [
                   "bg-gradient-to-br from-red-50 via-orange-50 to-yellow-100",
                   "bg-gradient-to-br from-blue-50 via-cyan-50 to-indigo-100",

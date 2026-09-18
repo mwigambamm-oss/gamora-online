@@ -1,0 +1,140 @@
+import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
+import {
+  translateToSwahili,
+  translateSpecificationsToSwahili,
+} from "@/lib/translation/translate";
+import { extractSpecifications } from "@/lib/translation/extractSpecifications";
+
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+    const productId = Number(body.product_id);
+    const force = body.force === true;
+
+    if (!productId || !Number.isFinite(productId)) {
+      return NextResponse.json(
+        { success: false, error: "Valid product_id is required" },
+        { status: 400 }
+      );
+    }
+
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!url || !serviceKey) {
+      return NextResponse.json(
+        { success: false, error: "Supabase server environment variables are missing" },
+        { status: 500 }
+      );
+    }
+
+    const supabase = createClient(url, serviceKey);
+
+    const { data: product, error: fetchError } = await supabase
+      .from("products")
+      .select("*")
+      .eq("id", productId)
+      .single();
+
+    if (fetchError || !product) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: fetchError?.message || "Product not found",
+        },
+        { status: 404 }
+      );
+    }
+
+    const [
+      name_sw,
+      category_sw,
+      description_sw,
+      specifications_sw,
+    ] = await Promise.all([
+      !force && product.name_sw?.trim()
+        ? Promise.resolve(product.name_sw)
+        : translateToSwahili(product.name || ""),
+
+      !force && product.category_sw?.trim()
+        ? Promise.resolve(product.category_sw)
+        : translateToSwahili(product.category || ""),
+
+      !force && product.description_sw?.trim()
+        ? Promise.resolve(product.description_sw)
+        : translateToSwahili(product.description || ""),
+
+      !force &&
+      product.specifications_sw &&
+      typeof product.specifications_sw === "object" &&
+      !Array.isArray(product.specifications_sw) &&
+      Object.keys(product.specifications_sw).length > 0
+        ? Promise.resolve(product.specifications_sw)
+        : translateSpecificationsToSwahili(
+            Object.keys(product.specifications || {}).length > 0
+              ? product.specifications
+              : extractSpecifications(product.description || "")
+          ),
+    ]);
+
+    const colors = Array.isArray(product.colors) ? product.colors : [];
+    const sizes = Array.isArray(product.sizes) ? product.sizes : [];
+
+    const colors_sw =
+      !force &&
+      Array.isArray(product.colors_sw) &&
+      product.colors_sw.length > 0
+        ? product.colors_sw
+        : await Promise.all(
+            colors.map((color: string) => translateToSwahili(color))
+          );
+
+    const sizes_sw =
+      !force &&
+      Array.isArray(product.sizes_sw) &&
+      product.sizes_sw.length > 0
+        ? product.sizes_sw
+        : await Promise.all(
+            sizes.map((size: string) => translateToSwahili(size))
+          );
+
+    const { data: updatedProduct, error: updateError } = await supabase
+      .from("products")
+      .update({
+        name_sw,
+        category_sw,
+        description_sw,
+        colors_sw,
+        sizes_sw,
+        specifications_sw,
+      })
+      .eq("id", productId)
+      .select("*")
+      .single();
+
+    if (updateError) {
+      console.error("PRODUCT TRANSLATION UPDATE ERROR:", updateError);
+
+      return NextResponse.json(
+        { success: false, error: updateError.message },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      product: updatedProduct,
+    });
+  } catch (error: any) {
+    console.error("PRODUCT TRANSLATION ERROR:", error);
+
+    return NextResponse.json(
+      {
+        success: false,
+        error: error?.message || "Failed to translate product",
+      },
+      { status: 500 }
+    );
+  }
+}

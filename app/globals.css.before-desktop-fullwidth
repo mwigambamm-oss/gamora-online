@@ -88,16 +88,3 @@ body {
   max-width: 100%;
   overflow-x: hidden;
 }
-
-/* =========================================================
-   GAMORA — LARGE DESKTOP FULL WIDTH
-   Mobile + laptop layout untouched
-   ========================================================= */
-
-@media (min-width: 1600px) {
-  .mx-auto.max-w-\[1440px\] {
-    max-width: none !important;
-    width: 100% !important;
-  }
-}
-

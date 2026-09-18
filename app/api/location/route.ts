@@ -3,104 +3,85 @@ import { NextResponse } from "next/server";
 const GAMORA_LAT = -6.7924;
 const GAMORA_LNG = 39.2083;
 
-function calculateDistance(
-  lat1: number,
-  lon1: number,
-  lat2: number,
-  lon2: number
-) {
-  const R = 6371;
-
-  const dLat =
-    ((lat2 - lat1) * Math.PI) / 180;
-
-  const dLon =
-    ((lon2 - lon1) * Math.PI) / 180;
-
-  const a =
-    Math.sin(dLat / 2) *
-      Math.sin(dLat / 2) +
-    Math.cos(
-      (lat1 * Math.PI) / 180
-    ) *
-      Math.cos(
-        (lat2 * Math.PI) / 180
-      ) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
-
-  const c =
-    2 *
-    Math.atan2(
-      Math.sqrt(a),
-      Math.sqrt(1 - a)
-    );
-
-  return R * c;
-}
-
-
-export async function POST(
-  req: Request
-) {
+export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    const {
-      latitude,
-      longitude,
-      address,
-    } = body;
+    const { latitude, longitude, address } = body;
 
+    const lat = Number(latitude);
+    const lng = Number(longitude);
 
-    let lat = Number(latitude);
-    let lng = Number(longitude);
-
-
-    /*
-      Kama mteja hajaweka GPS
-      tunatumia address ya kawaida
-      baadaye tunaweza kuunganisha
-      geocoding
-    */
-
-    if (
-      !Number.isFinite(lat) ||
-      !Number.isFinite(lng)
-    ) {
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
       return NextResponse.json({
         success: false,
-        message:
-          "Location haijapatikana",
-        address:
-          address || "",
+        message: "Location haijapatikana",
+        address: address || "",
       });
     }
 
+    /*
+      OSRM inatumia road/driving distance.
+      Format: longitude,latitude
+    */
+    const osrmUrl =
+      `https://router.project-osrm.org/route/v1/driving/` +
+      `${GAMORA_LNG},${GAMORA_LAT};${lng},${lat}` +
+      `?overview=false`;
 
-    const distance =
-      calculateDistance(
-        GAMORA_LAT,
-        GAMORA_LNG,
-        lat,
-        lng
+    const response = await fetch(osrmUrl, {
+      headers: {
+        Accept: "application/json",
+      },
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      console.error("OSRM ERROR:", response.status);
+
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Road distance haijapatikana.",
+        },
+        { status: 502 }
       );
+    }
 
+    const data = await response.json();
 
-    const rounded =
-      Math.round(
-        distance * 10
-      ) / 10;
-
-
-    const deliveryFee =
-      Math.max(
-        500,
-        Math.round(
-          (rounded * 671) / 100
-        ) * 100
+    if (
+      data.code !== "Ok" ||
+      !data.routes ||
+      !data.routes.length
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Hakuna road route iliyopatikana.",
+        },
+        { status: 422 }
       );
+    }
 
+    /*
+      OSRM distance iko meters.
+      Tunabadilisha kuwa kilometers.
+    */
+    const roadDistanceKm =
+      Number(data.routes[0].distance || 0) / 1000;
+
+    const roundedDistance =
+      Math.round(roadDistanceKm * 10) / 10;
+
+    /*
+      Delivery rate:
+      TSh 671 kwa kila km.
+    */
+    const deliveryFee = Math.max(
+      500,
+      Math.round(roundedDistance * 671)
+    );
 
     return NextResponse.json({
       success: true,
@@ -110,27 +91,21 @@ export async function POST(
         longitude: lng,
       },
 
-      distanceKm: rounded,
+      distanceKm: roundedDistance,
 
       deliveryFee,
 
-      message:
-        "Umbali umepatikana",
+      message: "Road distance imepatikana.",
     });
-
-
   } catch (error) {
+    console.error("LOCATION ERROR:", error);
 
     return NextResponse.json(
       {
-        success:false,
-        error:
-          "Server error",
+        success: false,
+        message: "Server error wakati wa kupata road distance.",
       },
-      {
-        status:500,
-      }
+      { status: 500 }
     );
-
   }
 }

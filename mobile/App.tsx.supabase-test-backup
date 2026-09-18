@@ -1,0 +1,57 @@
+import { useEffect, useState } from "react";
+import { StyleSheet, Text, View } from "react-native";
+import { supabase } from "./lib/supabase";
+
+export default function App() {
+  const [status, setStatus] = useState("Connecting to Gamora...");
+
+  useEffect(() => {
+    async function testConnection() {
+      const { error } = await supabase.from("products").select("id").limit(1);
+
+      if (error) {
+        setStatus(`Supabase error: ${error.message}`);
+        return;
+      }
+
+      setStatus("✅ Gamora Mobile connected to Supabase");
+    }
+
+    testConnection();
+  }, []);
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.logo}>GAMORA</Text>
+      <Text style={styles.title}>Gamora Online</Text>
+      <Text style={styles.status}>{status}</Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 24,
+    backgroundColor: "#ffffff",
+  },
+  logo: {
+    fontSize: 36,
+    fontWeight: "800",
+    color: "#1565C0",
+    marginBottom: 8,
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: "#1f2937",
+    marginBottom: 20,
+  },
+  status: {
+    fontSize: 15,
+    color: "#4b5563",
+    textAlign: "center",
+  },
+});

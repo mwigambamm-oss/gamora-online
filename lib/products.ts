@@ -15,13 +15,16 @@ export type Product = {
   images?: string[];
   cost_price?: number;
   colors?: string[];
+  colors_sw?: string[];
   sizes?: string[];
+  sizes_sw?: string[];
   storageOptions?: {
     storage: string;
     price: number;
     stock: number;
   }[];
   specifications?: Record<string, string>;
+  specifications_sw?: Record<string, string>;
   discount?: number;
   orders_count?: number;
   likes?: number;

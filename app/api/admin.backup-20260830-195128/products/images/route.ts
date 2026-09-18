@@ -3,9 +3,9 @@ import { supabase } from "@/lib/supabase";
 
 export async function POST(req: Request) {
   try {
-    const formData = await req.formData();
+    const formData: any = await req.formData();
 
-    const productId = formData.get("product_id") as string;
+    const productId = String(formData.get("product_id") || "");
     const files = formData.getAll("images") as File[];
 
     if (!productId) {

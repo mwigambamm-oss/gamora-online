@@ -1,0 +1,1007 @@
+type Rule = [RegExp, string];
+
+/*
+ * GAMORA ONLINE
+ * Internal English -> Tanzanian Swahili translation engine.
+ *
+ * This is intentionally context/phrase based rather than word-by-word.
+ * It is designed for ecommerce product names, descriptions,
+ * categories, colors, sizes and specifications.
+ */
+
+const EXACT: Record<string, string> = {
+  // Categories
+  "Bags": "Mabegi",
+  "Bag": "Mkoba",
+  "Shoes": "Viatu",
+  "Men's Shoes": "Viatu vya Wanaume",
+  "Women's Shoes": "Viatu vya Wanawake",
+  "Clothing": "Mavazi",
+  "Women's Fashion": "Mavazi ya Wanawake",
+  "Men's Fashion": "Mavazi ya Wanaume",
+  "Phones & Electronics": "Simu na Vifaa vya Elektroniki",
+  "Home & Kitchen": "Nyumbani na Jikoni",
+  "Accessories": "Vifaa vya Nyongeza",
+  "Beauty & Personal Care": "Urembo na Huduma Binafsi",
+  "Computers & Accessories": "Kompyuta na Vifaa Vyake",
+  "Baby & Kids": "Watoto na Vifaa vya Watoto",
+  "Sports & Fitness": "Michezo na Mazoezi",
+  "Automotive": "Magari na Vifaa Vyake",
+  "Tools & Hardware": "Zana na Vifaa vya Ujenzi",
+  "Books & Stationery": "Vitabu na Vifaa vya Kuandikia",
+  "Jewelry & Watches": "Vito na Saa",
+  "Furniture": "Samani",
+  "Garden & Outdoor": "Bustani na Vifaa vya Nje",
+  "Health & Wellness": "Afya na Ustawi",
+  "Gaming": "Michezo ya Kielektroniki",
+  "Kitchen": "Jikoni",
+
+  // Product types
+  "Crossbody Bag": "Mkoba wa kubebea begani",
+  "Elegant Crossbody Bag": "Mkoba wa kifahari wa kubebea begani",
+  "Mini Crossbody Bag": "Mkoba mdogo wa kubebea begani",
+  "Shoulder Bag": "Mkoba wa begani",
+  "Handbag": "Mkoba wa mkononi",
+  "Backpack": "Mkoba wa mgongoni",
+  "Travel Bag": "Mkoba wa kusafiria",
+  "Laptop Bag": "Mkoba wa kompyuta mpakato",
+  "Wallet": "Pochi",
+  "Purse": "Pochi",
+  "Sneakers": "Viatu vya michezo",
+  "Running Shoes": "Viatu vya kukimbia",
+  "Sports Shoes": "Viatu vya michezo",
+  "Sandals": "Sandali",
+  "Slippers": "Sandal za ndani",
+  "T-Shirt": "Fulana",
+  "Shirt": "Shati",
+  "Dress": "Gauni",
+  "Jeans": "Suruali ya jeans",
+  "Jacket": "Jaketi",
+  "Hoodie": "Hoodie",
+  "Watch": "Saa",
+  "Smart Watch": "Saa janja",
+  "Phone": "Simu",
+  "Smartphone": "Simu janja",
+  "Laptop": "Kompyuta mpakato",
+  "Tablet": "Tableti",
+  "Headphones": "Vipokea sauti",
+  "Earphones": "Vipokea sauti vya masikioni",
+  "Speaker": "Spika",
+  "Power Bank": "Betri ya kuchaji simu",
+  "Charger": "Chaja",
+  "Phone Case": "Kava ya simu",
+  "Phone Cover": "Kava ya simu",
+
+  // Materials
+  "Synthetic leather": "Ngozi bandia",
+  "Faux leather": "Ngozi bandia",
+  "Leather": "Ngozi",
+  "PU Leather": "Ngozi ya PU",
+  "Stainless Steel": "Chuma cha pua",
+  "Plastic": "Plastiki",
+  "Silicone": "Silikoni",
+  "Cotton": "Pamba",
+  "Polyester": "Polyesta",
+  "Nylon": "Nailoni",
+  "Metal": "Chuma",
+  "Wood": "Mbao",
+  "Glass": "Kioo",
+
+  // Colors
+  "Black": "Nyeusi",
+  "Brown": "Kahawia",
+  "Pink": "Waridi",
+  "White": "Nyeupe",
+  "Red": "Nyekundu",
+  "Blue": "Bluu",
+  "Green": "Kijani",
+  "Yellow": "Njano",
+  "Purple": "Zambarau",
+  "Orange": "Machungwa",
+  "Beige": "Beji",
+  "Gray": "Kijivu",
+  "Grey": "Kijivu",
+  "Gold": "Dhahabu",
+  "Silver": "Fedha",
+  "Cream": "Krimu",
+  "Black and White": "Nyeusi na Nyeupe",
+
+  // Sizes
+  "Small": "Ndogo",
+  "Medium": "Wastani",
+  "Large": "Kubwa",
+  "Extra Large": "Kubwa Zaidi",
+  "Extra Small": "Ndogo Zaidi",
+  "One Size": "Ukubwa wa aina moja",
+
+  // Common specification keys
+  "Material": "Nyenzo",
+  "Weight": "Uzito",
+  "Gender": "Jinsia",
+  "Color": "Rangi",
+  "Colour": "Rangi",
+  "Available Colours": "Rangi Zinazopatikana",
+  "Available Colors": "Rangi Zinazopatikana",
+  "Bag Type": "Aina ya Mkoba",
+  "Size": "Ukubwa",
+  "Closure": "Aina ya Kufunga",
+  "Strap": "Kamba ya Kubebea",
+  "Interior": "Sehemu ya Ndani",
+  "Pockets": "Mifuko ya Ndani",
+  "Design": "Muundo",
+  "Carrying Style": "Namna ya Kubeba",
+  "Suitable For": "Inafaa kwa",
+  "Features": "Vipengele",
+  "Specifications": "Vipimo na Sifa",
+  "Storage": "Hifadhi",
+  "Battery": "Betri",
+  "Screen Size": "Ukubwa wa Skrini",
+  "Processor": "Prosesa",
+  "RAM": "RAM",
+  "Storage Capacity": "Uwezo wa Hifadhi",
+  "Operating System": "Mfumo wa Uendeshaji",
+  "Brand": "Chapa",
+  "Model": "Modeli",
+  "Type": "Aina",
+};
+
+/*
+ * Phrase rules are deliberately ordered from long/specific phrases
+ * to shorter phrases.
+ */
+const PHRASE_RULES: Rule[] = [
+  // ------------------------------------------------------------
+  // GENERAL ECOMMERCE / PRODUCT DESCRIPTION PHRASES
+  // ------------------------------------------------------------
+  [/\blarger workspace\b/gi, "eneo kubwa zaidi la kufanyia kazi"],
+  [/\bworkspace\b/gi, "eneo la kufanyia kazi"],
+  [/\bprofessionals\b/gi, "wataalamu"],
+  [/\bprofessional\b/gi, "kitaalamu"],
+  [/\bstudents\b/gi, "wanafunzi"],
+  [/\bstudent\b/gi, "mwanafunzi"],
+  [/\bbusinesses\b/gi, "biashara"],
+  [/\bbusiness\b/gi, "biashara"],
+  [/\boffice and home\b/gi, "ofisini na nyumbani"],
+  [/\boffice\b/gi, "ofisi"],
+  [/\bhome use\b/gi, "matumizi ya nyumbani"],
+  [/\bhome\b/gi, "nyumbani"],
+  [/\bwork environment\b/gi, "mazingira ya kazi"],
+  [/\bworking environment\b/gi, "mazingira ya kazi"],
+  [/\bwork\b/gi, "kazi"],
+  [/\bmultiple windows\b/gi, "madirisha mengi"],
+  [/\bmultiple applications\b/gi, "programu nyingi"],
+  [/\bmultiple devices\b/gi, "vifaa vingi"],
+  [/\bdisplay\b/gi, "skrini"],
+  [/\blarger display\b/gi, "skrini kubwa zaidi"],
+  [/\bwide viewing area\b/gi, "eneo pana la kutazama"],
+  [/\bviewing area\b/gi, "eneo la kutazama"],
+  [/\bviewing angle\b/gi, "pembe ya kutazama"],
+  [/\bviewing angles\b/gi, "pembe za kutazama"],
+  [/\bLED technology\b/gi, "teknolojia ya LED"],
+  [/\bLED\b/gi, "LED"],
+  [/\btechnology\b/gi, "teknolojia"],
+  [/\binput options\b/gi, "chaguo za miunganisho ya kuingiza"],
+  [/\binput option\b/gi, "chaguo la muunganisho wa kuingiza"],
+  [/\bmultiple input options\b/gi, "chaguo mbalimbali za miunganisho"],
+  [/\binput ports\b/gi, "milango ya kuunganisha"],
+  [/\binput port\b/gi, "mlango wa kuunganisha"],
+  [/\bports\b/gi, "milango ya kuunganisha"],
+  [/\bport\b/gi, "mlango wa kuunganisha"],
+  [/\bdepending on model\b/gi, "kutegemea modeli"],
+  [/\bdepending on the model\b/gi, "kutegemea modeli"],
+  [/\bdesktop stand\b/gi, "standi ya kuweka kwenye meza"],
+  [/\bdesk stand\b/gi, "standi ya kuweka kwenye meza"],
+  [/\bcompatible with\b/gi, "inaendana na"],
+  [/\bcompatible\b/gi, "inaendana"],
+  [/\bideal for\b/gi, "inafaa kwa"],
+  [/\buseful for\b/gi, "inafaa kwa"],
+  [/\bparticularly useful for\b/gi, "inafaa zaidi kwa"],
+  [/\busers who need\b/gi, "watumiaji wanaohitaji"],
+  [/\busers who\b/gi, "watumiaji wanao"],
+  [/\bneed to work with\b/gi, "wanaohitaji kufanya kazi na"],
+  [/\bwork with\b/gi, "kufanya kazi na"],
+  [/\bgraphic work\b/gi, "kazi za michoro"],
+  [/\bgraphic design\b/gi, "usanifu wa michoro"],
+  [/\bentertainment\b/gi, "burudani"],
+  [/\bspreadsheets\b/gi, "majedwali ya data"],
+  [/\baccounting software\b/gi, "programu za uhasibu"],
+  [/\bweb applications\b/gi, "programu za wavuti"],
+  [/\bweb application\b/gi, "programu ya wavuti"],
+  [/\bsoftware\b/gi, "programu"],
+  [/\bapplications\b/gi, "programu"],
+  [/\bapplication\b/gi, "programu"],
+  [/\bprovides\b/gi, "hutoa"],
+  [/\bproviding\b/gi, "ikitoa"],
+  [/\bprovides a\b/gi, "hutoa"],
+  [/\boffers\b/gi, "inatoa"],
+  [/\boffer\b/gi, "toa"],
+  [/\bfeatures\b/gi, "ina vipengele"],
+  [/\bfeature\b/gi, "kipengele"],
+  [/\blarger\b/gi, "kubwa zaidi"],
+  [/\bsmaller\b/gi, "ndogo zaidi"],
+  [/\bclear images\b/gi, "picha zilizo wazi"],
+  [/\bclear image\b/gi, "picha iliyo wazi"],
+  [/\bsharp visuals\b/gi, "mwonekano mkali na wazi"],
+  [/\bhigh quality images\b/gi, "picha za ubora wa juu"],
+  [/\bhigh quality display\b/gi, "skrini ya ubora wa juu"],
+  [/\bfull HD\b/gi, "Full HD"],
+  [/\bHD display\b/gi, "skrini ya HD"],
+  [/\bscreen size\b/gi, "ukubwa wa skrini"],
+  [/\bscreen\b/gi, "skrini"],
+  [/\bmonitor\b/gi, "monitor"],
+  [/\bmonitors\b/gi, "monitor"],
+  [/\bLED monitor\b/gi, "monitor ya LED"],
+  [/\bLED monitors\b/gi, "monitor za LED"],
+  [/\bdesktop\b/gi, "kompyuta ya mezani"],
+  [/\bstand\b/gi, "standi"],
+  [/\bhome and office\b/gi, "nyumbani na ofisini"],
+  [/\bhome or office\b/gi, "nyumbani au ofisini"],
+  [/\bfor home and office\b/gi, "kwa matumizi ya nyumbani na ofisini"],
+  [/\bfor home use\b/gi, "kwa matumizi ya nyumbani"],
+  [/\bfor office use\b/gi, "kwa matumizi ya ofisini"],
+  [/\beasy to use\b/gi, "rahisi kutumia"],
+  [/\beasy to install\b/gi, "rahisi kufunga"],
+  [/\beasy to connect\b/gi, "rahisi kuunganisha"],
+  [/\benergy efficient\b/gi, "inayotumia nishati kwa ufanisi"],
+  [/\blong-lasting\b/gi, "ya kudumu kwa muda mrefu"],
+  [/\blong lasting\b/gi, "ya kudumu kwa muda mrefu"],
+  [/\breliable performance\b/gi, "utendaji unaotegemewa"],
+  [/\bhigh performance\b/gi, "utendaji wa hali ya juu"],
+  [/\bperformance\b/gi, "utendaji"],
+  [/\bproductivity\b/gi, "tija"],
+  [/\bwork productivity\b/gi, "tija ya kazi"],
+  [/\bcomfortable viewing\b/gi, "utazamaji wenye starehe"],
+  [/\bwide viewing\b/gi, "utazamaji mpana"],
+  [/\bviewing experience\b/gi, "uzoefu wa kutazama"],
+  [/\buser experience\b/gi, "uzoefu wa mtumiaji"],
+  [/\busers\b/gi, "watumiaji"],
+  [/\bfor users\b/gi, "kwa watumiaji"],
+  [/\bwhile\b/gi, "wakati"],
+  [/\bwithout\b/gi, "bila"],
+  [/\bwith\b/gi, "ikiwa na"],
+  [/\band\b/gi, "na"],
+  [/\bor\b/gi, "au"],
+  [/\bthe\b/gi, ""],
+  [/\ba\b/gi, ""],
+  [/\ban\b/gi, ""],
+
+  // ------------------------------------------------------------
+  // PRODUCT NAME PHRASES
+  // ------------------------------------------------------------
+
+  [
+    /\bwomen'?s mini crossbody fashion bag\b/gi,
+    "Mkoba mdogo wa kifahari wa wanawake wa kubebea begani",
+  ],
+  [
+    /\bmen'?s mini crossbody fashion bag\b/gi,
+    "Mkoba mdogo wa kifahari wa wanaume wa kubebea begani",
+  ],
+  [
+    /\bwomen'?s crossbody fashion bag\b/gi,
+    "Mkoba wa kifahari wa wanawake wa kubebea begani",
+  ],
+  [
+    /\bmen'?s crossbody fashion bag\b/gi,
+    "Mkoba wa kifahari wa wanaume wa kubebea begani",
+  ],
+  [
+    /\bwomen'?s crossbody bag\b/gi,
+    "Mkoba wa wanawake wa kubebea begani",
+  ],
+  [
+    /\bmen'?s crossbody bag\b/gi,
+    "Mkoba wa wanaume wa kubebea begani",
+  ],
+  [
+    /\bmini crossbody fashion bag\b/gi,
+    "Mkoba mdogo wa kifahari wa kubebea begani",
+  ],
+  [
+    /\belegant crossbody bag\b/gi,
+    "Mkoba wa kifahari wa kubebea begani",
+  ],
+  [
+    /\bcrossbody fashion bag\b/gi,
+    "Mkoba wa kifahari wa kubebea begani",
+  ],
+  [
+    /\bcrossbody bag\b/gi,
+    "mkoba wa kubebea begani",
+  ],
+  [
+    /\bshoulder bag\b/gi,
+    "mkoba wa begani",
+  ],
+  [
+    /\bhandbag\b/gi,
+    "mkoba wa mkononi",
+  ],
+  [
+    /\bbackpack\b/gi,
+    "mkoba wa mgongoni",
+  ],
+  [
+    /\btravel bag\b/gi,
+    "mkoba wa kusafiria",
+  ],
+  [
+    /\blaptop bag\b/gi,
+    "mkoba wa kompyuta mpakato",
+  ],
+
+  // ------------------------------------------------------------
+  // GENERAL PRODUCT LANGUAGE
+  // ------------------------------------------------------------
+
+  [/\bthis elegant\b/gi, "Bidhaa hii ya kifahari"],
+  [/\bthis stylish\b/gi, "Bidhaa hii ya mtindo"],
+  [/\bthis modern\b/gi, "Bidhaa hii ya kisasa"],
+
+  [/\beveryday use\b/gi, "matumizi ya kila siku"],
+  [/\bfor everyday use\b/gi, "kwa matumizi ya kila siku"],
+  [/\bdaily use\b/gi, "matumizi ya kila siku"],
+  [/\bcasual outings\b/gi, "matembezi ya kawaida"],
+  [/\bfor work\b/gi, "kwa ajili ya kazi"],
+  [/\bfor travel\b/gi, "kwa ajili ya safari"],
+  [/\bfor travelling\b/gi, "kwa ajili ya safari"],
+  [/\btravel\b/gi, "safari"],
+
+  [/\bdesigned for\b/gi, "imeundwa kwa ajili ya"],
+  [/\bdesigned to\b/gi, "imeundwa ili"],
+  [/\bperfect for\b/gi, "inafaa sana kwa"],
+  [/\bsuitable for\b/gi, "inafaa kwa"],
+  [/\bideal for\b/gi, "inafaa kwa"],
+
+  [/\bhigh quality\b/gi, "ubora wa juu"],
+  [/\bexcellent quality\b/gi, "ubora bora"],
+  [/\bpremium quality\b/gi, "ubora wa hali ya juu"],
+  [/\bdurable\b/gi, "imara"],
+  [/\blightweight\b/gi, "nyepesi"],
+  [/\bcomfortable\b/gi, "yenye starehe"],
+  [/\bstylish\b/gi, "ya mtindo"],
+  [/\belegant\b/gi, "ya kifahari"],
+  [/\bmodern\b/gi, "ya kisasa"],
+  [/\bportable\b/gi, "inayobebeka kwa urahisi"],
+  [/\bsoft\b/gi, "laini"],
+  [/\bstrong\b/gi, "imara"],
+  [/\bcompact\b/gi, "iliyoshikamana"],
+  [/\bcompact design\b/gi, "muundo ulioshikamana"],
+  [/\bslim design\b/gi, "muundo mwembamba"],
+  [/\bclassic design\b/gi, "muundo wa kawaida wa kuvutia"],
+  [/\bbeautiful design\b/gi, "muundo mzuri"],
+  [/\bwaterproof\b/gi, "isiyopenya maji"],
+  [/\bwater resistant\b/gi, "inayostahimili maji"],
+
+  // ------------------------------------------------------------
+  // BAG / PRODUCT FEATURES
+  // ------------------------------------------------------------
+
+  [/\bmultiple compartments\b/gi, "sehemu kadhaa"],
+  [/\bmain compartment\b/gi, "sehemu kuu"],
+  [/\binner pocket\b/gi, "mfuko wa ndani"],
+  [/\binner pockets\b/gi, "mifuko ya ndani"],
+  [/\bfront pocket\b/gi, "mfuko wa mbele"],
+  [/\bback pocket\b/gi, "mfuko wa nyuma"],
+  [/\badjustable shoulder strap\b/gi, "kamba ya begani inayoweza kurekebishwa"],
+  [/\badjustable strap\b/gi, "kamba inayoweza kurekebishwa"],
+  [/\bshoulder strap\b/gi, "kamba ya begani"],
+  [/\bzipper closure\b/gi, "kufungwa kwa zipu"],
+  [/\bzipper\b/gi, "zipu"],
+  [/\bkeeping your hands free\b/gi, "huku mikono ikiwa huru"],
+  [/\bwhile keeping your hands free\b/gi, "huku mikono ikiwa huru"],
+  [/\bhands-free\b/gi, "bila kuhitaji kushika kwa mikono"],
+
+  [/\bphone, wallet, keys and other essentials\b/gi,
+    "simu, pochi, funguo na vitu vingine muhimu"],
+  [/\bphone, wallet, keys\b/gi,
+    "simu, pochi na funguo"],
+  [/\bother essentials\b/gi,
+    "vitu vingine muhimu"],
+  [/\bessential items\b/gi,
+    "vitu muhimu"],
+  [/\bpersonal items\b/gi,
+    "vitu binafsi"],
+
+  [/\bcarrying\b/gi, "kubeba"],
+  [/\bcarry\b/gi, "kubeba"],
+  [/\bwear\b/gi, "kuvaa"],
+  [/\bcomfortable to wear\b/gi, "rahisi na yenye starehe kuvaa"],
+
+  // ------------------------------------------------------------
+  // CLOTHING
+  // ------------------------------------------------------------
+
+  [/\bwomen'?s clothing\b/gi, "mavazi ya wanawake"],
+  [/\bmen'?s clothing\b/gi, "mavazi ya wanaume"],
+  [/\bwomen'?s fashion\b/gi, "mitindo ya wanawake"],
+  [/\bmen'?s fashion\b/gi, "mitindo ya wanaume"],
+  [/\bwomen'?s\b/gi, "ya wanawake"],
+  [/\bmen'?s\b/gi, "ya wanaume"],
+  [/\bwomen\b/gi, "wanawake"],
+  [/\bmen\b/gi, "wanaume"],
+
+  // ------------------------------------------------------------
+  // COLORS
+  // ------------------------------------------------------------
+
+  [/\bblack\b/gi, "nyeusi"],
+  [/\bbrown\b/gi, "kahawia"],
+  [/\bpink\b/gi, "waridi"],
+  [/\bwhite\b/gi, "nyeupe"],
+  [/\bred\b/gi, "nyekundu"],
+  [/\bblue\b/gi, "bluu"],
+  [/\bgreen\b/gi, "kijani"],
+  [/\byellow\b/gi, "njano"],
+  [/\bpurple\b/gi, "zambarau"],
+  [/\borange\b/gi, "machungwa"],
+  [/\bbeige\b/gi, "beji"],
+  [/\bgray\b/gi, "kijivu"],
+  [/\bgrey\b/gi, "kijivu"],
+  [/\bgold\b/gi, "dhahabu"],
+  [/\bsilver\b/gi, "fedha"],
+  [/\bcream\b/gi, "krimu"],
+
+  // ------------------------------------------------------------
+  // MATERIALS
+  // ------------------------------------------------------------
+
+  [/\bsynthetic leather\b/gi, "ngozi bandia"],
+  [/\bfaux leather\b/gi, "ngozi bandia"],
+  [/\bpu leather\b/gi, "ngozi ya PU"],
+  [/\bleather\b/gi, "ngozi"],
+  [/\bstainless steel\b/gi, "chuma cha pua"],
+  [/\bplastic\b/gi, "plastiki"],
+  [/\bsilicone\b/gi, "silikoni"],
+  [/\bcotton\b/gi, "pamba"],
+  [/\bpolyester\b/gi, "polyesta"],
+  [/\bnylon\b/gi, "nailoni"],
+  [/\bmetal\b/gi, "chuma"],
+  [/\bwood\b/gi, "mbao"],
+  [/\bglass\b/gi, "kioo"],
+
+  // ------------------------------------------------------------
+  // SPECIFICATION TERMS
+  // ------------------------------------------------------------
+
+  [/\bmaterial\b/gi, "Nyenzo"],
+  [/\bweight\b/gi, "Uzito"],
+  [/\bgender\b/gi, "Jinsia"],
+  [/\bcolor\b/gi, "Rangi"],
+  [/\bcolour\b/gi, "Rangi"],
+  [/\bavailable colours\b/gi, "Rangi Zinazopatikana"],
+  [/\bavailable colors\b/gi, "Rangi Zinazopatikana"],
+  [/\bbag type\b/gi, "Aina ya Mkoba"],
+  [/\bsize\b/gi, "Ukubwa"],
+  [/\bclosure\b/gi, "Aina ya Kufunga"],
+  [/\bstrap\b/gi, "Kamba ya Kubebea"],
+  [/\binterior\b/gi, "Sehemu ya Ndani"],
+  [/\bpockets\b/gi, "Mifuko ya Ndani"],
+  [/\bdesign\b/gi, "Muundo"],
+  [/\bcarrying style\b/gi, "Namna ya Kubeba"],
+  [/\bsuitable for\b/gi, "Inafaa kwa"],
+  [/\bfeatures\b/gi, "Vipengele"],
+  [/\bspecifications\b/gi, "Vipimo na Sifa"],
+  [/\bstorage capacity\b/gi, "Uwezo wa Hifadhi"],
+  [/\bstorage\b/gi, "Hifadhi"],
+  [/\bbattery\b/gi, "Betri"],
+  [/\bscreen size\b/gi, "Ukubwa wa Skrini"],
+  [/\bprocessor\b/gi, "Prosesa"],
+  [/\boperating system\b/gi, "Mfumo wa Uendeshaji"],
+  [/\bbrand\b/gi, "Chapa"],
+  [/\bmodel\b/gi, "Modeli"],
+  [/\btype\b/gi, "Aina"],
+
+  // ------------------------------------------------------------
+  // SIZES
+  // ------------------------------------------------------------
+
+  [/\bextra large\b/gi, "kubwa zaidi"],
+  [/\bextra small\b/gi, "ndogo zaidi"],
+  [/\bone size\b/gi, "ukubwa wa aina moja"],
+  [/\bmedium\b/gi, "wastani"],
+  [/\blarge\b/gi, "kubwa"],
+  [/\bsmall\b/gi, "ndogo"],
+
+  // ------------------------------------------------------------
+  // COMMON ECOMMERCE WORDS
+  // ------------------------------------------------------------
+
+  [/\bnew\b/gi, "mpya"],
+  [/\bpopular\b/gi, "maarufu"],
+  [/\bbest selling\b/gi, "inayouzwa zaidi"],
+  [/\btop quality\b/gi, "ya ubora wa juu"],
+  [/\bavailable\b/gi, "inapatikana"],
+  [/\bperfect\b/gi, "inayofaa"],
+  [/\bfeatures\b/gi, "vipengele"],
+];
+
+/*
+ * Category dictionary.
+ */
+const CATEGORY_RULES: Rule[] = [
+  [/\bwomen'?s fashion\b/gi, "Mavazi ya Wanawake"],
+  [/\bmen'?s fashion\b/gi, "Mavazi ya Wanaume"],
+  [/\bphones?\s*&\s*electronics\b/gi, "Simu na Vifaa vya Elektroniki"],
+  [/\bphones?\s+and\s+electronics\b/gi, "Simu na Vifaa vya Elektroniki"],
+  [/\bhome\s*&\s*kitchen\b/gi, "Nyumbani na Jikoni"],
+  [/\bhome\s+and\s+kitchen\b/gi, "Nyumbani na Jikoni"],
+  [/\bbeauty\s*&\s*personal\s+care\b/gi, "Urembo na Huduma Binafsi"],
+  [/\bcomputers?\s*&\s*accessories\b/gi, "Kompyuta na Vifaa Vyake"],
+  [/\bbaby\s*&\s*kids\b/gi, "Watoto na Vifaa vya Watoto"],
+  [/\bsports?\s*&\s*fitness\b/gi, "Michezo na Mazoezi"],
+  [/\btools?\s*&\s*hardware\b/gi, "Zana na Vifaa vya Ujenzi"],
+  [/\bbooks?\s*&\s*stationery\b/gi, "Vitabu na Vifaa vya Kuandikia"],
+  [/\bjewelry\s*&\s*watches\b/gi, "Vito na Saa"],
+  [/\bgarden\s*&\s*outdoor\b/gi, "Bustani na Vifaa vya Nje"],
+  [/\bhealth\s*&\s*wellness\b/gi, "Afya na Ustawi"],
+  [/\bbags?\b/gi, "Mabegi"],
+  [/\bshoes?\b/gi, "Viatu"],
+  [/\bfurniture\b/gi, "Samani"],
+  [/\bautomotive\b/gi, "Magari na Vifaa Vyake"],
+  [/\bgaming\b/gi, "Michezo ya Kielektroniki"],
+  [/\bkitchen\b/gi, "Jikoni"],
+];
+
+/*
+ * Some English sentence structures need a grammatical Swahili form.
+ * These run after the phrase dictionary.
+ */
+const SENTENCE_RULES: Rule[] = [
+  [
+    /\bthis product is\b/gi,
+    "Bidhaa hii ni",
+  ],
+  [
+    /\bthis product has\b/gi,
+    "Bidhaa hii ina",
+  ],
+  [
+    /\bit has\b/gi,
+    "Ina",
+  ],
+  [
+    /\bit is\b/gi,
+    "Ni",
+  ],
+  [
+    /\bthe product is\b/gi,
+    "Bidhaa hii ni",
+  ],
+  [
+    /\bthe product has\b/gi,
+    "Bidhaa hii ina",
+  ],
+  [
+    /\bwhich makes it\b/gi,
+    "jambo linaloifanya iwe",
+  ],
+  [
+    /\bmakes it easy to\b/gi,
+    "hurahisisha",
+  ],
+  [
+    /\ballows you to\b/gi,
+    "hukuwezesha",
+  ],
+  [
+    /\ballows the user to\b/gi,
+    "humwezesha mtumiaji",
+  ],
+  [
+    /\bfor carrying\b/gi,
+    "kwa ajili ya kubeba",
+  ],
+  [
+    /\bfor storing\b/gi,
+    "kwa ajili ya kuhifadhi",
+  ],
+  [
+    /\bfor keeping\b/gi,
+    "kwa ajili ya kuhifadhi",
+  ],
+  [
+    /\bwith\b/gi,
+    "yenye",
+  ],
+  [
+    /\band\b/gi,
+    "na",
+  ],
+  [
+    /\bor\b/gi,
+    "au",
+  ],
+  [
+    /\bfrom\b/gi,
+    "kutoka",
+  ],
+  [
+    /\bwith a\b/gi,
+    "yenye",
+  ],
+  [
+    /\bwith an\b/gi,
+    "yenye",
+  ],
+];
+
+/*
+ * Technical tokens that must remain unchanged.
+ * This protects things like:
+ * PU, USB, 5G, 128GB, 350g, E508, S10+, etc.
+ */
+function protectTechnicalTokens(text: string): {
+  text: string;
+  restore: () => string;
+} {
+  const protectedValues: string[] = [];
+
+  const protectedText = text.replace(
+    /\b(?:[A-Z]{1,8}\+?|[A-Z]{1,8}-[A-Z0-9]+|\d+(?:\.\d+)?\s?(?:GB|TB|MB|KB|g|kg|cm|mm|m|V|W|Hz|MP|mAh|G|5G|4G|3G))\b/gi,
+    (match) => {
+      const index = protectedValues.length;
+      protectedValues.push(match);
+      return `__GAMORA_TECH_${index}__`;
+    }
+  );
+
+  return {
+    text: protectedText,
+    restore: () => {
+      let result = protectedText;
+
+      protectedValues.forEach((value, index) => {
+        result = result.replace(
+          new RegExp(`__GAMORA_TECH_${index}__`, "g"),
+          value
+        );
+      });
+
+      return result;
+    },
+  };
+}
+
+function normalize(value: string): string {
+  return value
+    .replace(/\r\n/g, "\n")
+    .replace(/[ \t]+/g, " ")
+    .replace(/\s+\./g, ".")
+    .replace(/\s+,/g, ",")
+    .replace(/,\s*,+/g, ",")
+    .replace(/\.\s*\./g, ".")
+    .trim();
+}
+
+function cleanupSwahili(text: string): string {
+  let result = normalize(text);
+
+  // Remove accidental duplicated spaces.
+  result = result.replace(/\s+/g, " ").trim();
+
+  // Fix punctuation.
+  result = result
+    .replace(/\s+([,.!?;:])/g, "$1")
+    .replace(/([,.!?;:])([A-Za-zÀ-ÿ])/g, "$1 $2");
+
+  // Common grammatical cleanup.
+  result = result
+    .replace(/\bya ya\b/gi, "ya")
+    .replace(/\bwa wa\b/gi, "wa")
+    .replace(/\bkwa kwa\b/gi, "kwa")
+    .replace(/\bna na\b/gi, "na")
+    .replace(/\bni ni\b/gi, "ni")
+    .replace(/\bza za\b/gi, "za");
+
+  // English possessive accidentally left behind.
+  result = result.replace(/([A-Za-zÀ-ÿ]+)'s\b/gi, "$1");
+
+  // English conjunctions commonly left after mixed translation.
+  result = result.replace(/\s+\band\b/gi, " na");
+  result = result.replace(/\s+\bor\b/gi, " au");
+
+  return result.trim();
+}
+
+function applyRules(text: string, rules: Rule[]): string {
+  let result = text;
+
+  for (const [pattern, replacement] of rules) {
+    result = result.replace(pattern, replacement);
+  }
+
+  return result;
+}
+
+/*
+ * Product-name-specific translation.
+ *
+ * This is different from ordinary sentence translation because
+ * product titles need natural Swahili noun ordering.
+ */
+function translateProductName(text: string): string {
+  let source = normalize(text);
+
+  if (!source) return "";
+
+  const exact = Object.entries(EXACT).find(
+    ([key]) => key.toLowerCase() === source.toLowerCase()
+  );
+
+  if (exact) return exact[1];
+
+  // Remove common marketing words that should not be translated literally.
+  source = source.replace(/\bfor women\b/gi, "ya wanawake");
+  source = source.replace(/\bfor men\b/gi, "ya wanaume");
+
+  // Very common ecommerce title structures.
+  source = source.replace(
+    /\bwomen'?s\s+mini\s+crossbody\s+fashion\s+bag\b/gi,
+    "Mkoba mdogo wa kifahari wa wanawake wa kubebea begani"
+  );
+
+  source = source.replace(
+    /\bmen'?s\s+mini\s+crossbody\s+fashion\s+bag\b/gi,
+    "Mkoba mdogo wa kifahari wa wanaume wa kubebea begani"
+  );
+
+  source = source.replace(
+    /\bwomen'?s\s+crossbody\s+fashion\s+bag\b/gi,
+    "Mkoba wa kifahari wa wanawake wa kubebea begani"
+  );
+
+  source = source.replace(
+    /\bmen'?s\s+crossbody\s+fashion\s+bag\b/gi,
+    "Mkoba wa kifahari wa wanaume wa kubebea begani"
+  );
+
+  source = source.replace(
+    /\bwomen'?s\s+crossbody\s+bag\b/gi,
+    "Mkoba wa wanawake wa kubebea begani"
+  );
+
+  source = source.replace(
+    /\bmen'?s\s+crossbody\s+bag\b/gi,
+    "Mkoba wa wanaume wa kubebea begani"
+  );
+
+  source = applyRules(source, PHRASE_RULES);
+
+  // Translate remaining category/product words.
+  source = applyRules(source, CATEGORY_RULES);
+
+  return cleanupSwahili(source);
+}
+
+/*
+ * Special complete sentences.
+ *
+ * These prevent phrase-by-phrase translation from producing unnatural
+ * Swahili when the exact source is a known ecommerce sentence.
+ */
+const COMPLETE_SENTENCES: Array<[RegExp, string]> = [
+  [
+    /^this elegant crossbody bag is designed for everyday use, travel, work and casual outings\.?\s*it has a compact design with multiple compartments for carrying a phone, wallet, keys and other essentials while keeping your hands free\.?$/i,
+    "Mkoba huu wa kifahari wa kubebea begani umeundwa kwa ajili ya matumizi ya kila siku, safari, kazi na matembezi ya kawaida. Una muundo ulioshikamana wenye sehemu kadhaa za kubeba simu, pochi, funguo na vitu vingine muhimu, huku mikono ikiwa huru.",
+  ],
+];
+
+function translateDescription(text: string): string {
+  let source = normalize(text);
+
+  if (!source) return "";
+
+  for (const [pattern, translation] of COMPLETE_SENTENCES) {
+    if (pattern.test(source)) {
+      return translation;
+    }
+  }
+
+  const protectedData = protectTechnicalTokens(source);
+  let result = protectedData.text;
+
+  /*
+   * Handle headings first.
+   */
+  result = result.replace(
+    /features\s*\/\s*specifications\s*:/gi,
+    "Vipengele na Sifa:"
+  );
+
+  result = result.replace(
+    /specifications\s*:/gi,
+    "Vipimo na Sifa:"
+  );
+
+  result = result.replace(
+    /features\s*:/gi,
+    "Vipengele:"
+  );
+
+  /*
+   * Longer grammatical phrases first.
+   */
+  result = applyRules(result, SENTENCE_RULES);
+  result = applyRules(result, PHRASE_RULES);
+
+  /*
+   * Categories can appear inside descriptions too.
+   */
+  result = applyRules(result, CATEGORY_RULES);
+
+  result = cleanupSwahili(result);
+
+  /*
+   * Restore protected technical tokens.
+   */
+  result = protectedData.restore();
+
+  return cleanupSwahili(result);
+}
+
+/*
+ * Translate a single value.
+ */
+export function translateToSwahiliLocal(text: string): string {
+  const source = normalize(text);
+
+  if (!source) return "";
+
+  const exact = Object.entries(EXACT).find(
+    ([key]) => key.toLowerCase() === source.toLowerCase()
+  );
+
+  if (exact) {
+    return exact[1];
+  }
+
+  /*
+   * Product-title detection.
+   */
+  const looksLikeProductTitle =
+    /\b(bag|bags|shoe|shoes|phone|smartphone|laptop|watch|dress|shirt|jeans|jacket|headphones|speaker|charger|backpack|wallet)\b/i.test(
+      source
+    );
+
+  if (looksLikeProductTitle && source.length < 150) {
+    return translateProductName(source);
+  }
+
+  return translateDescription(source);
+}
+
+/*
+ * Category-specific translation.
+ */
+export function translateCategoryLocal(category: string): string {
+  const source = normalize(category);
+
+  if (!source) return "";
+
+  const exact = Object.entries(EXACT).find(
+    ([key]) => key.toLowerCase() === source.toLowerCase()
+  );
+
+  if (exact) return exact[1];
+
+  return cleanupSwahili(applyRules(source, CATEGORY_RULES));
+}
+
+/*
+ * Specifications:
+ * translate keys and values independently.
+ *
+ * Technical values such as 350g, 128GB, PU, USB-C remain intact.
+ */
+export function translateSpecificationsLocal(
+  specifications: Record<string, string>
+): Record<string, string> {
+  const result: Record<string, string> = {};
+
+  for (const [key, value] of Object.entries(specifications || {})) {
+    const translatedKey =
+      translateSpecificationKey(key);
+
+    const translatedValue =
+      translateSpecificationValue(value);
+
+    if (translatedKey) {
+      result[translatedKey] = translatedValue;
+    }
+  }
+
+  return result;
+}
+
+function translateSpecificationKey(key: string): string {
+  const source = normalize(key);
+
+  if (!source) return "";
+
+  const exact = Object.entries(EXACT).find(
+    ([candidate]) => candidate.toLowerCase() === source.toLowerCase()
+  );
+
+  if (exact) return exact[1];
+
+  const keyRules: Rule[] = [
+    [/^display size$/i, "Ukubwa wa Skrini"],
+    [/^screen size$/i, "Ukubwa wa Skrini"],
+    [/^display technology$/i, "Teknolojia ya Skrini"],
+    [/^screen technology$/i, "Teknolojia ya Skrini"],
+    [/^input options$/i, "Chaguo za Miunganisho"],
+    [/^input ports$/i, "Milango ya Kuunganisha"],
+    [/^viewing area$/i, "Eneo la Kutazama"],
+    [/^viewing angle$/i, "Pembe ya Kutazama"],
+    [/^color$/i, "Rangi"],
+    [/^colour$/i, "Rangi"],
+    [/^size$/i, "Ukubwa"],
+    [/^material$/i, "Nyenzo"],
+    [/^weight$/i, "Uzito"],
+    [/^dimensions$/i, "Vipimo"],
+    [/^brand$/i, "Chapa"],
+    [/^model$/i, "Modeli"],
+  ];
+
+  for (const [pattern, replacement] of keyRules) {
+    if (pattern.test(source)) {
+      return replacement;
+    }
+  }
+
+  return cleanupSwahili(
+    applyRules(source, PHRASE_RULES)
+  );
+}
+
+function translateSpecificationValue(value: string): string {
+  const source = normalize(value);
+
+  if (!source) return "";
+
+  const exact = Object.entries(EXACT).find(
+    ([candidate]) => candidate.toLowerCase() === source.toLowerCase()
+  );
+
+  if (exact) return exact[1];
+
+  return cleanupSwahili(
+    applyRules(source, PHRASE_RULES)
+  );
+}
+
+/*
+ * Arrays such as colors and sizes.
+ */
+export function translateArrayLocal(values: string[]): string[] {
+  return (values || []).map((value) => {
+    const source = normalize(value);
+
+    if (!source) return "";
+
+    const exact = Object.entries(EXACT).find(
+      ([candidate]) => candidate.toLowerCase() === source.toLowerCase()
+    );
+
+    if (exact) return exact[1];
+
+    return cleanupSwahili(
+      applyRules(source, PHRASE_RULES)
+    );
+  });
+}
+
+/*
+ * Public helper for admin/product creation.
+ */
+export function translateProductNameLocal(name: string): string {
+  return translateProductName(name);
+}
+
+/*
+ * Public helper for descriptions.
+ */
+export function translateDescriptionLocal(description: string): string {
+  return translateDescription(description);
+}

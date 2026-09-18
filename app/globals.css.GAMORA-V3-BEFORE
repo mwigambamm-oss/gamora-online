@@ -1,0 +1,248 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #4C1D95;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-geist-mono);
+}
+
+html,
+body {
+  background: #ffffff;
+  color: #4C1D95;
+  font-family: var(--font-inter), Inter, Arial, Helvetica, sans-serif;
+}
+
+body {
+  min-height: 100vh;
+}
+
+/* Make normal text clearly visible */
+p,
+span,
+label,
+li,
+td,
+th {
+  color: #4C1D95;
+}
+
+/* Form fields */
+input,
+textarea,
+select {
+  color: #4C1D95;
+  background-color: #ffffff;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #555555;
+  opacity: 1;
+}
+
+/* Headings */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: #4C1D95;
+}
+
+/* Keep disabled text visible */
+button:disabled {
+  opacity: 0.6;
+}
+@keyframes gamora-marquee {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.gamora-marquee {
+  width: max-content;
+  animation: gamora-marquee 22s linear infinite;
+}
+
+/* Gamora welcome announcement marquee */
+.announcement-marquee {
+  animation: announcement-marquee 32s linear infinite;
+  will-change: transform;
+}
+
+.announcement-marquee:hover {
+  animation-play-state: paused;
+}
+
+@keyframes announcement-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (max-width: 640px) {
+  .announcement-marquee {
+    animation-duration: 27s;
+  }
+}
+
+
+.announcement-marquee,
+.announcement-marquee span {
+  color: #ffffff !important;
+}
+
+/* =========================================================
+   GAMORA GLOBAL TEXT VISIBILITY
+   Dark readable text across the whole storefront
+   ========================================================= */
+
+body {
+  color: #171717;
+}
+
+/* Normal content text */
+main p,
+main span,
+main label,
+main li,
+main td,
+main th,
+main h1,
+main h2,
+main h3,
+main h4,
+main h5,
+main h6 {
+  color: #171717;
+}
+
+/* Inputs and form controls */
+main input,
+main textarea,
+main select {
+  color: #171717;
+}
+
+/* Placeholders */
+main input::placeholder,
+main textarea::placeholder {
+  color: #6b7280;
+  opacity: 1;
+}
+
+/* Navigation and normal links */
+main a {
+  color: #171717;
+}
+
+/* Keep text readable on light sections */
+.bg-white,
+.bg-gray-50,
+.bg-gray-100,
+.bg-gray-200,
+.bg-\[\#f3f4f6\],
+.bg-\[\#FFF7ED\],
+.bg-\[\#FFFBEB\] {
+  color: #171717;
+}
+
+
+/* =========================================================
+   GAMORA - DARK TEXT EVERYWHERE
+   ========================================================= */
+
+/* Announcement / moving text */
+.announcement-marquee,
+.announcement-marquee span {
+  color: #171717 !important;
+}
+
+/* All headings */
+main h1,
+main h2,
+main h3,
+main h4,
+main h5,
+main h6 {
+  color: #171717 !important;
+}
+
+/* Section headings and normal text */
+main p,
+main span,
+main label,
+main li,
+main a {
+  color: #171717;
+}
+
+/* Buttons: dark text, keep their existing backgrounds */
+main button {
+  color: #171717 !important;
+}
+
+/* Keep icons/text inside buttons dark too */
+main button span,
+main button svg {
+  color: #171717 !important;
+}
+
+/* Search and form controls */
+main input,
+main textarea,
+main select {
+  color: #171717 !important;
+}
+
+/* Footer */
+footer,
+footer p,
+footer span,
+footer a,
+footer h1,
+footer h2,
+footer h3,
+footer h4,
+footer h5,
+footer h6 {
+  color: #171717 !important;
+}
+
+/* Disabled buttons */
+button:disabled {
+  color: #4b5563 !important;
+}
+
+
+/* Top moving announcement text stays WHITE */
+.announcement-marquee,
+.announcement-marquee span {
+  color: #ffffff !important;
+}
+
+
+/* GAMORA TOP ANNOUNCEMENT - FORCE WHITE */
+div.announcement-marquee,
+div.announcement-marquee span,
+.announcement-marquee *,
+.announcement-marquee span {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+

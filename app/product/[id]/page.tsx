@@ -503,6 +503,18 @@ window.dispatchEvent(new Event("cartUpdated"));
       : 0;
 
   /*
+   * AUTOMATIC BULK PRICING
+   * Based on the product's selling price.
+   */
+  const basePrice = Number(product.price) || 0;
+
+  const bulkPrices = {
+    ten: Math.round(basePrice * 0.98),
+    fifty: Math.round(basePrice * 0.95),
+    hundred: Math.round(basePrice * 0.90),
+  };
+
+  /*
    * REAL REVIEW SUMMARY
    */
   const reviewCount = reviews.length;
@@ -747,22 +759,72 @@ window.dispatchEvent(new Event("cartUpdated"));
                 {displayName}
               </h1>
 
-              <div className="mt-2 flex flex-wrap items-center gap-2">
-                <span className="text-lg font-bold text-[#E30613] sm:text-xl">
-                  {formatCurrency(Number(product.price), currency)}
-                </span>
-
-                {product.oldPrice && (
-                  <span className="text-xs text-slate-400 line-through">
-                    {formatCurrency(Number(product.oldPrice), currency)}
+              <div className="mt-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-lg font-bold text-[#E30613] sm:text-xl">
+                    {formatCurrency(basePrice, currency)}
                   </span>
-                )}
 
-                {discount > 0 && (
-                  <span className="rounded bg-red-50 px-2 py-0.5 text-[10px] font-semibold text-[#E30613]">
-                    -{discount}%
+                  <span className="text-[10px] font-semibold text-slate-500">
+                    / pc
                   </span>
-                )}
+
+                  {product.oldPrice && (
+                    <span className="text-xs text-slate-400 line-through">
+                      {formatCurrency(Number(product.oldPrice), currency)}
+                    </span>
+                  )}
+
+                  {discount > 0 && (
+                    <span className="rounded bg-red-50 px-2 py-0.5 text-[10px] font-semibold text-[#E30613]">
+                      -{discount}%
+                    </span>
+                  )}
+                </div>
+
+                <div className="mt-3 rounded-xl border border-slate-100 bg-slate-50/70 p-3">
+                  <div className="mb-2 text-[10px] font-bold uppercase tracking-wide text-slate-500">
+                    {t("Bulk Pricing", "Bei ya Jumla")}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                    <div className="rounded-lg bg-white px-2.5 py-2 ring-1 ring-slate-100">
+                      <div className="text-[9px] font-semibold text-slate-400">
+                        1 pc
+                      </div>
+                      <div className="mt-0.5 text-[11px] font-bold text-slate-900">
+                        {formatCurrency(basePrice, currency)}
+                      </div>
+                    </div>
+
+                    <div className="rounded-lg bg-white px-2.5 py-2 ring-1 ring-slate-100">
+                      <div className="text-[9px] font-semibold text-slate-400">
+                        10+ pcs
+                      </div>
+                      <div className="mt-0.5 text-[11px] font-bold text-slate-900">
+                        ≈ {formatCurrency(bulkPrices.ten, currency)}
+                      </div>
+                    </div>
+
+                    <div className="rounded-lg bg-white px-2.5 py-2 ring-1 ring-slate-100">
+                      <div className="text-[9px] font-semibold text-slate-400">
+                        50+ pcs
+                      </div>
+                      <div className="mt-0.5 text-[11px] font-bold text-slate-900">
+                        ≈ {formatCurrency(bulkPrices.fifty, currency)}
+                      </div>
+                    </div>
+
+                    <div className="rounded-lg bg-white px-2.5 py-2 ring-1 ring-slate-100">
+                      <div className="text-[9px] font-semibold text-slate-400">
+                        100+ pcs
+                      </div>
+                      <div className="mt-0.5 text-[11px] font-bold text-slate-900">
+                        ≈ {formatCurrency(bulkPrices.hundred, currency)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 

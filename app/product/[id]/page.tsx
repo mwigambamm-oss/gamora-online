@@ -86,10 +86,30 @@ export default function ProductPage({
             const rawKey = String(key).trim();
             const rawValue = String(value).trim();
 
-            const items = `${rawKey === rawValue ? rawValue : `${rawKey}: ${rawValue}`}`
-              .replace(/^\*{1,3}\s*specifications?\s*\*{1,3}\s*/i, "")
+            const combined =
+              rawKey === rawValue
+                ? rawValue
+                : `${rawKey}: ${rawValue}`;
+
+            const items = combined
+              // Remove old markdown/checkmark specification headings.
+              .replace(/^\*{1,3}\s*✓?\s*\*{0,3}\s*/i, "")
+              .replace(/^\s*✓\s*/i, "")
+              .replace(
+                /^\s*\*{1,3}\s*specifications?\s*\*{1,3}\s*:?\s*/i,
+                ""
+              )
+              .replace(
+                /^\s*✓?\s*specifications?\s*:?\s*/i,
+                ""
+              )
               .split(/[;,\n]/)
-              .map((item) => item.trim())
+              .map((item) =>
+                item
+                  .replace(/^\s*\*{1,3}\s*✓?\s*/i, "")
+                  .replace(/^\s*✓\s*/i, "")
+                  .trim()
+              )
               .filter(Boolean);
 
             for (const item of items) {
@@ -101,6 +121,7 @@ export default function ProductPage({
           {}
         )
       : parsedProduct.specifications;
+
 
   const [related, setRelated] = useState<Product[]>([]);
 
@@ -800,7 +821,7 @@ window.dispatchEvent(new Event("cartUpdated"));
                   </span>
 
                   {product.oldPrice && (
-                    <span className="text-xs text-slate-400 line-through">
+                    <span className="text-xs text-[#E30613] line-through">
                       {formatCurrency(Number(product.oldPrice), currency)}
                     </span>
                   )}
@@ -813,13 +834,13 @@ window.dispatchEvent(new Event("cartUpdated"));
                 </div>
 
                 <div className="mt-3 rounded-xl border border-slate-100 bg-slate-50/70 p-3">
-                  <div className="mb-2 text-[10px] font-bold uppercase tracking-wide text-slate-500">
+                  <div className="mb-2 text-[10px] font-bold uppercase tracking-wide text-[#D97706]">
                     {t("Bulk Pricing", "Bei ya Jumla")}
                   </div>
 
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                     <div className="rounded-lg bg-white px-2.5 py-2 ring-1 ring-slate-100">
-                      <div className="text-[9px] font-semibold text-slate-400">
+                      <div className="text-[9px] font-semibold text-[#E30613]">
                         1 pc
                       </div>
                       <div className="mt-0.5 text-[11px] font-bold text-slate-900">
@@ -828,7 +849,7 @@ window.dispatchEvent(new Event("cartUpdated"));
                     </div>
 
                     <div className="rounded-lg bg-white px-2.5 py-2 ring-1 ring-slate-100">
-                      <div className="text-[9px] font-semibold text-slate-400">
+                      <div className="text-[9px] font-semibold text-[#E30613]">
                         10+ pcs
                       </div>
                       <div className="mt-0.5 text-[11px] font-bold text-slate-900">
@@ -837,7 +858,7 @@ window.dispatchEvent(new Event("cartUpdated"));
                     </div>
 
                     <div className="rounded-lg bg-white px-2.5 py-2 ring-1 ring-slate-100">
-                      <div className="text-[9px] font-semibold text-slate-400">
+                      <div className="text-[9px] font-semibold text-[#E30613]">
                         50+ pcs
                       </div>
                       <div className="mt-0.5 text-[11px] font-bold text-slate-900">
@@ -846,7 +867,7 @@ window.dispatchEvent(new Event("cartUpdated"));
                     </div>
 
                     <div className="rounded-lg bg-white px-2.5 py-2 ring-1 ring-slate-100">
-                      <div className="text-[9px] font-semibold text-slate-400">
+                      <div className="text-[9px] font-semibold text-[#E30613]">
                         100+ pcs
                       </div>
                       <div className="mt-0.5 text-[11px] font-bold text-slate-900">
@@ -870,16 +891,46 @@ window.dispatchEvent(new Event("cartUpdated"));
                 }
                 className={`inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-[11px] font-medium transition ${
                   liked
-                    ? "border-red-200 bg-red-50 text-red-600"
-                    : "border-slate-200 bg-white text-slate-600 hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+                    ? "border-red-200 bg-red-50 text-[#E30613]"
+                    : "border-red-200 bg-white text-[#E30613] hover:bg-red-50"
                 } ${likeLoading ? "opacity-60" : ""}`}
               >
-                <span className="text-sm">{liked ? "❤️" : "♡"}</span>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  className="h-4 w-4"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78Z"
+                  />
+                </svg>
                 <span>{likes}+ {t("Likes", "Likes")}</span>
               </button>
 
-              <div className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-medium text-slate-600">
-                <span className="text-sm">🛒</span>
+              <div className="inline-flex items-center gap-1.5 rounded-md border border-red-200 bg-white px-3 py-1.5 text-[11px] font-medium text-[#E30613]">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  className="h-4 w-4"
+                  aria-hidden="true"
+                >
+                  <circle cx="9" cy="20" r="1" />
+                  <circle cx="19" cy="20" r="1" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 2-1.6L21 8H6"
+                  />
+                </svg>
                 <span>{orders}+ {t("Orders", "Orders")}</span>
               </div>
             </div>

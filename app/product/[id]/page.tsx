@@ -938,8 +938,8 @@ window.dispatchEvent(new Event("cartUpdated"));
                             >
                               {isSameValue ? (
                                 <>
-                                  <span className="font-semibold text-slate-700">
-                                    {t("Details", "Maelezo")}
+                                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-red-50 text-xs font-bold text-[#E30613]">
+                                    ✓
                                   </span>
                                   <span className="text-slate-600">
                                     {String(value)}

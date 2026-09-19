@@ -37,6 +37,8 @@ const COMMON_SPEC_KEYS = [
   "color",
   "colour",
   "application",
+  "purpose",
+  "usage",
   "engine",
   "engine type",
   "power",
@@ -67,13 +69,23 @@ function clean(value: string): string {
 function normalizeHeading(value: string): string {
   return clean(value)
     .replace(/^[#*\-–—•·\s]+/, "")
+    .replace(/[*#]+$/, "")
     .replace(/[:：]\s*$/, "")
     .replace(/\s+/g, " ")
     .toLowerCase();
 }
 
-function stripBullet(value: string): string {
+function stripMarkdown(value: string): string {
   return clean(value)
+    .replace(/^\*{1,3}/, "")
+    .replace(/\*{1,3}$/, "")
+    .replace(/^_{1,3}/, "")
+    .replace(/_{1,3}$/, "")
+    .trim();
+}
+
+function stripBullet(value: string): string {
+  return stripMarkdown(value)
     .replace(/^[•●▪◦‣⁃*]\s+/, "")
     .replace(/^[-–—]\s+/, "")
     .replace(/^\d+[.)]\s+/, "")
@@ -81,17 +93,19 @@ function stripBullet(value: string): string {
 }
 
 function cleanKey(value: string): string {
-  return clean(value)
+  return stripMarkdown(value)
     .replace(/^[-–—•·*]\s*/, "")
     .replace(/[:：]\s*$/, "")
-    .replace(/\s+/g, " ");
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function cleanValue(value: string): string {
-  return clean(value)
+  return stripMarkdown(value)
     .replace(/^[:：]\s*/, "")
     .replace(/^[-–—→]\s*/, "")
-    .replace(/\s+/g, " ");
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function isFeatureHeading(value: string): boolean {
@@ -174,7 +188,9 @@ function parseStructuredSpecificationLine(
   const commonKeyPattern = COMMON_SPEC_KEYS
     .slice()
     .sort((a, b) => b.length - a.length)
-    .map((key) => key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+    .map((key) =>
+      key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    )
     .join("|");
 
   const spaceMatch = text.match(
@@ -201,7 +217,6 @@ function splitFeatureLine(line: string): string[] {
     return [];
   }
 
-  // Support multiple features written on one line.
   if (text.includes(";")) {
     return text
       .split(";")
@@ -247,6 +262,11 @@ function parseSpecificationLines(
       continue;
     }
 
+    // Ignore a repeated heading inside the section.
+    if (isSpecificationHeading(text)) {
+      continue;
+    }
+
     const structured = parseStructuredSpecificationLine(text);
 
     if (structured) {
@@ -258,13 +278,15 @@ function parseSpecificationLines(
       continue;
     }
 
-    // Plain specification line:
-    // Petrol engine
-    // Bush cutter design
-    // Grass trimming application
-    //
-    // Store it as key=value so it can persist in the existing
-    // Record<string, string> database structure and render cleanly.
+    /*
+     * Plain specification line.
+     *
+     * Example:
+     * Petrol engine
+     *
+     * Store it as key=value so the existing
+     * Record<string, string> structure remains compatible.
+     */
     addSpecification(specifications, text, text);
   }
 
@@ -342,11 +364,7 @@ export function normalizeProductDescription(
    * No Features/Specifications heading:
    *
    * Keep the whole description intact.
-   * Only extract clearly-labelled common specification lines
-   * such as "Model 123", "Type: Petrol", etc.
-   *
-   * This prevents ordinary prose from accidentally becoming
-   * specifications.
+   * Only extract clearly-labelled common specification lines.
    */
   if (featureIndex === -1 && specificationIndex === -1) {
     const standaloneSpecifications =

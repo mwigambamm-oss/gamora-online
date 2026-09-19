@@ -246,13 +246,11 @@ setProduct(item);
       const all = await getProducts();
 
       setRelated(
-        all
-          .filter(
-            (p) =>
-              p.id !== productId &&
-              p.category === item.category
-          )
-          .slice(0, 5)
+        all.filter(
+          (p) =>
+            p.id !== productId &&
+            p.category === item.category
+        )
       );
 
       /*

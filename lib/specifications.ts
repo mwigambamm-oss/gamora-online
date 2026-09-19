@@ -75,6 +75,12 @@ function normalizeHeading(value: string): string {
     .toLowerCase();
 }
 
+function stripAttachedSpecificationHeading(value: string): string {
+  return clean(value)
+    .replace(/^\*{1,3}specifications?\*{1,3}\s*/i, "")
+    .trim();
+}
+
 function stripMarkdown(value: string): string {
   return clean(value)
     .replace(/^\*{1,3}/, "")
@@ -256,17 +262,37 @@ function parseSpecificationLines(
   const specifications: Record<string, string> = {};
 
   for (const line of lines) {
-    const text = stripBullet(line);
+    let text = stripBullet(line);
 
     if (!text) {
       continue;
     }
 
-    // Ignore a repeated heading inside the section.
+    // Remove Specification/Specifications headings, including
+    // headings attached directly to the first specification.
+    text = stripAttachedSpecificationHeading(text);
+
+    text = text.replace(
+      /^\*{1,3}\s*specifications?\s*\*{1,3}\s*/i,
+      ""
+    ).trim();
+
+    if (!text) {
+      continue;
+    }
+
+    // Ignore a heading entered on its own line.
     if (isSpecificationHeading(text)) {
       continue;
     }
 
+    /*
+     * First preserve structured specifications such as:
+     * Model: TGT612131
+     * Model - TGT612131
+     * Model → TGT612131
+     * Model TGT612131
+     */
     const structured = parseStructuredSpecificationLine(text);
 
     if (structured) {
@@ -279,15 +305,57 @@ function parseSpecificationLines(
     }
 
     /*
-     * Plain specification line.
+     * Plain specifications can be entered either:
      *
-     * Example:
-     * Petrol engine
+     * Electric-powered lawn mower
+     * Designed for lawn cutting
      *
-     * Store it as key=value so the existing
-     * Record<string, string> structure remains compatible.
+     * OR:
+     *
+     * Electric-powered lawn mower, Designed for lawn cutting,
+     * Suitable for routine lawn maintenance, Model TGT612131
+     *
+     * Split comma/semicolon separated values into individual
+     * specification items.
      */
-    addSpecification(specifications, text, text);
+    const items = text
+      .split(/[;,]/)
+      .map((item) => stripBullet(item))
+      .map((item) => clean(item))
+      .filter(Boolean);
+
+    for (const item of items) {
+      if (!item) {
+        continue;
+      }
+
+      /*
+       * If a separated item itself contains a structured
+       * specification, preserve it as key/value.
+       */
+      const itemStructured =
+        parseStructuredSpecificationLine(item);
+
+      if (itemStructured) {
+        addSpecification(
+          specifications,
+          itemStructured.key,
+          itemStructured.value
+        );
+        continue;
+      }
+
+      /*
+       * Plain item is stored as key=value.
+       * The existing product UI recognizes key=value as a
+       * plain specification and displays it with the red tick.
+       */
+      addSpecification(
+        specifications,
+        item,
+        item
+      );
+    }
   }
 
   return specifications;

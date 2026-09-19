@@ -81,7 +81,25 @@ export default function ProductPage({
 
   const displaySpecifications =
     Object.keys(storedSpecifications).length > 0
-      ? storedSpecifications
+      ? Object.entries(storedSpecifications).reduce(
+          (result: Record<string, string>, [key, value]) => {
+            const rawKey = String(key).trim();
+            const rawValue = String(value).trim();
+
+            const items = `${rawKey === rawValue ? rawValue : `${rawKey}: ${rawValue}`}`
+              .replace(/^\*{1,3}\s*specifications?\s*\*{1,3}\s*/i, "")
+              .split(/[;,\n]/)
+              .map((item) => item.trim())
+              .filter(Boolean);
+
+            for (const item of items) {
+              result[item] = item;
+            }
+
+            return result;
+          },
+          {}
+        )
       : parsedProduct.specifications;
 
   const [related, setRelated] = useState<Product[]>([]);

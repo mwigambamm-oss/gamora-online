@@ -4,102 +4,309 @@ export type ProductStructure = {
   specifications: Record<string, string>;
 };
 
-const KEY_FEATURES_MARKER =
-  /(?:key\s*features?|features?)\s*:?\s*/i;
+const FEATURE_HEADINGS = new Set([
+  "feature",
+  "features",
+  "key feature",
+  "key features",
+  "vipengele",
+  "kipengele",
+  "vipengele muhimu",
+]);
 
-const SPECIFICATIONS_MARKER =
-  /(?:features?\s*\/\s*specifications?|features?\s+and\s+specifications?|specifications?)\s*:?\s*/i;
+const SPECIFICATION_HEADINGS = new Set([
+  "specification",
+  "specifications",
+  "technical specification",
+  "technical specifications",
+  "product specification",
+  "product specifications",
+  "spec",
+  "specs",
+  "vipimo",
+  "maelezo ya kiufundi",
+  "vipimo vya bidhaa",
+]);
+
+const COMMON_SPEC_KEYS = [
+  "model",
+  "type",
+  "brand",
+  "material",
+  "size",
+  "color",
+  "colour",
+  "application",
+  "engine",
+  "engine type",
+  "power",
+  "voltage",
+  "capacity",
+  "weight",
+  "length",
+  "width",
+  "height",
+  "country",
+  "warranty",
+  "battery",
+  "battery type",
+  "fuel type",
+  "speed",
+  "frequency",
+  "dimensions",
+  "dimension",
+];
 
 function clean(value: string): string {
   return value
-    .replace(/\r?\n/g, " ")
-    .replace(/\s+/g, " ")
+    .replace(/\r/g, "")
+    .replace(/\u00a0/g, " ")
     .trim();
 }
 
-function splitFeatures(value: string): string[] {
-  const text = value.trim();
-
-  if (!text) return [];
-
-  // Already separated bullets / lines / semicolons
-  const separated = text
-    .replace(/\r?\n/g, "|")
-    .replace(/[•●▪◦]/g, "|")
-    .replace(/\s*[;|]\s*/g, "|")
-    .split("|")
-    .map((item) => item.replace(/^[-*]\s*/, "").trim())
-    .filter(Boolean);
-
-  if (separated.length > 1) {
-    return separated;
-  }
-
-  // Common product-feature phrases used by Gamora products.
-  // These boundaries allow admin to paste features as normal text.
-  const boundaries = [
-    /\s+(?=\d+(?:\.\d+)?[- ]?inch\b)/i,
-    /\s+(?=LED\b)/i,
-    /\s+(?=LCD\b)/i,
-    /\s+(?=HDMI\b)/i,
-    /\s+(?=VGA\b)/i,
-    /\s+(?=USB\b)/i,
-    /\s+(?=Bluetooth\b)/i,
-    /\s+(?=Wi[- ]?Fi\b)/i,
-    /\s+(?=Adjustable\b)/i,
-    /\s+(?=Desktop\b)/i,
-    /\s+(?=Portable\b)/i,
-    /\s+(?=Rechargeable\b)/i,
-    /\s+(?=Water[- ]?resistant\b)/i,
-    /\s+(?=Suitable for\b)/i,
-    /\s+(?=Compatible with\b)/i,
-    /\s+(?=Premium\b)/i,
-    /\s+(?=Modern\b)/i,
-    /\s+(?=Durable\b)/i,
-    /\s+(?=Lightweight\b)/i,
-    /\s+(?=Wireless\b)/i,
-  ];
-
-  let parts = [text];
-
-  for (const boundary of boundaries) {
-    parts = parts.flatMap((part) => part.split(boundary));
-  }
-
-  return parts
-    .map((item) => item.replace(/^[-*]\s*/, "").trim())
-    .filter(Boolean);
+function normalizeHeading(value: string): string {
+  return clean(value)
+    .replace(/^[#*\-–—•·\s]+/, "")
+    .replace(/[:：]\s*$/, "")
+    .replace(/\s+/g, " ")
+    .toLowerCase();
 }
 
-export function extractSpecifications(
+function stripBullet(value: string): string {
+  return clean(value)
+    .replace(/^[•●▪◦‣⁃*]\s+/, "")
+    .replace(/^[-–—]\s+/, "")
+    .replace(/^\d+[.)]\s+/, "")
+    .trim();
+}
+
+function cleanKey(value: string): string {
+  return clean(value)
+    .replace(/^[-–—•·*]\s*/, "")
+    .replace(/[:：]\s*$/, "")
+    .replace(/\s+/g, " ");
+}
+
+function cleanValue(value: string): string {
+  return clean(value)
+    .replace(/^[:：]\s*/, "")
+    .replace(/^[-–—→]\s*/, "")
+    .replace(/\s+/g, " ");
+}
+
+function isFeatureHeading(value: string): boolean {
+  return FEATURE_HEADINGS.has(normalizeHeading(value));
+}
+
+function isSpecificationHeading(value: string): boolean {
+  return SPECIFICATION_HEADINGS.has(normalizeHeading(value));
+}
+
+function isLikelySpecificationKey(key: string): boolean {
+  const normalized = cleanKey(key).toLowerCase();
+  return COMMON_SPEC_KEYS.includes(normalized);
+}
+
+function addSpecification(
+  specifications: Record<string, string>,
+  key: string,
   value: string
-): Record<string, string> {
-  const result: Record<string, string> = {};
-  const text = clean(value);
+): void {
+  const cleanKeyValue = cleanKey(key);
+  const cleanValueValue = cleanValue(value);
 
-  if (!text) return result;
+  if (!cleanKeyValue || !cleanValueValue) {
+    return;
+  }
 
-  const regex =
-    /([A-Za-z][A-Za-z0-9 /&()'_-]{1,59}):\s*([^:]+?)(?=\s+[A-Za-z][A-Za-z0-9 /&()'_-]{1,59}:\s|$)/g;
+  specifications[cleanKeyValue] = cleanValueValue;
+}
 
-  let match: RegExpExecArray | null;
+function parseStructuredSpecificationLine(
+  line: string
+): { key: string; value: string } | null {
+  const text = stripBullet(line);
 
-  while ((match = regex.exec(text)) !== null) {
-    const key = clean(match[1]);
-    const value = clean(match[2]);
+  if (!text) {
+    return null;
+  }
 
-    if (key && value) {
-      result[key] = value;
+  // Key: Value
+  const colonMatch = text.match(
+    /^([A-Za-z][A-Za-z0-9 /&()'_.]{0,59})\s*[:：]\s*(.+)$/
+  );
+
+  if (colonMatch) {
+    return {
+      key: cleanKey(colonMatch[1]),
+      value: cleanValue(colonMatch[2]),
+    };
+  }
+
+  // Key - Value / Key – Value / Key — Value
+  const dashMatch = text.match(
+    /^([A-Za-z][A-Za-z0-9 /&()'_.]{0,59})\s*[-–—]\s+(.+)$/
+  );
+
+  if (dashMatch) {
+    return {
+      key: cleanKey(dashMatch[1]),
+      value: cleanValue(dashMatch[2]),
+    };
+  }
+
+  // Key → Value
+  const arrowMatch = text.match(
+    /^([A-Za-z][A-Za-z0-9 /&()'_.]{0,59})\s*→\s*(.+)$/
+  );
+
+  if (arrowMatch) {
+    return {
+      key: cleanKey(arrowMatch[1]),
+      value: cleanValue(arrowMatch[2]),
+    };
+  }
+
+  // Common specification key followed by its value:
+  // Model 56272727
+  // Engine Petrol
+  // Power 2.5 HP
+  const commonKeyPattern = COMMON_SPEC_KEYS
+    .slice()
+    .sort((a, b) => b.length - a.length)
+    .map((key) => key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+    .join("|");
+
+  const spaceMatch = text.match(
+    new RegExp(
+      `^(${commonKeyPattern})\\s+(.+)$`,
+      "i"
+    )
+  );
+
+  if (spaceMatch) {
+    return {
+      key: cleanKey(spaceMatch[1]),
+      value: cleanValue(spaceMatch[2]),
+    };
+  }
+
+  return null;
+}
+
+function splitFeatureLine(line: string): string[] {
+  const text = stripBullet(line);
+
+  if (!text) {
+    return [];
+  }
+
+  // Support multiple features written on one line.
+  if (text.includes(";")) {
+    return text
+      .split(";")
+      .map((item) => clean(item))
+      .filter(Boolean);
+  }
+
+  return [text];
+}
+
+function parseFeatureLines(lines: string[]): string[] {
+  const features: string[] = [];
+
+  for (const line of lines) {
+    const items = splitFeatureLine(line);
+
+    for (const item of items) {
+      if (!item) continue;
+
+      if (
+        !features.some(
+          (existing) =>
+            existing.toLowerCase() === item.toLowerCase()
+        )
+      ) {
+        features.push(item);
+      }
     }
   }
 
-  return result;
+  return features;
+}
+
+function parseSpecificationLines(
+  lines: string[]
+): Record<string, string> {
+  const specifications: Record<string, string> = {};
+
+  for (const line of lines) {
+    const text = stripBullet(line);
+
+    if (!text) {
+      continue;
+    }
+
+    const structured = parseStructuredSpecificationLine(text);
+
+    if (structured) {
+      addSpecification(
+        specifications,
+        structured.key,
+        structured.value
+      );
+      continue;
+    }
+
+    // Plain specification line:
+    // Petrol engine
+    // Bush cutter design
+    // Grass trimming application
+    //
+    // Store it as key=value so it can persist in the existing
+    // Record<string, string> database structure and render cleanly.
+    addSpecification(specifications, text, text);
+  }
+
+  return specifications;
+}
+
+function extractStandaloneStructuredSpecifications(
+  lines: string[]
+): Record<string, string> {
+  const specifications: Record<string, string> = {};
+
+  for (const line of lines) {
+    const structured = parseStructuredSpecificationLine(line);
+
+    if (!structured) {
+      continue;
+    }
+
+    if (!isLikelySpecificationKey(structured.key)) {
+      continue;
+    }
+
+    addSpecification(
+      specifications,
+      structured.key,
+      structured.value
+    );
+  }
+
+  return specifications;
+}
+
+export function extractSpecifications(
+  description: string = ""
+): Record<string, string> {
+  return normalizeProductDescription(description).specifications;
 }
 
 export function normalizeProductDescription(
-  description?: string
+  description: string = ""
 ): ProductStructure {
-  const original = clean(description || "");
+  const original = clean(description);
 
   if (!original) {
     return {
@@ -109,50 +316,107 @@ export function normalizeProductDescription(
     };
   }
 
-  let descriptionPart = original;
-  let keyFeatures: string[] = [];
-  let specifications: Record<string, string> = {};
+  const lines = original
+    .split("\n")
+    .map((line) => clean(line));
 
-  const specificationMatch = original.match(
-    SPECIFICATIONS_MARKER
-  );
+  let featureIndex = -1;
+  let specificationIndex = -1;
 
-  if (specificationMatch) {
-    const before = original.slice(
-      0,
-      specificationMatch.index
-    );
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index];
 
-    const after = original.slice(
-      (specificationMatch.index || 0) +
-        specificationMatch[0].length
-    );
+    if (isFeatureHeading(line) && featureIndex === -1) {
+      featureIndex = index;
+    }
 
-    descriptionPart = clean(before);
-    specifications = extractSpecifications(after);
+    if (
+      isSpecificationHeading(line) &&
+      specificationIndex === -1
+    ) {
+      specificationIndex = index;
+    }
   }
 
-  const keyMatch = descriptionPart.match(
-    KEY_FEATURES_MARKER
-  );
+  /*
+   * No Features/Specifications heading:
+   *
+   * Keep the whole description intact.
+   * Only extract clearly-labelled common specification lines
+   * such as "Model 123", "Type: Petrol", etc.
+   *
+   * This prevents ordinary prose from accidentally becoming
+   * specifications.
+   */
+  if (featureIndex === -1 && specificationIndex === -1) {
+    const standaloneSpecifications =
+      extractStandaloneStructuredSpecifications(lines);
 
-  if (keyMatch) {
-    const before = descriptionPart.slice(
-      0,
-      keyMatch.index
+    const descriptionLines = lines.filter(
+      (line) => !parseStructuredSpecificationLine(line)
     );
 
-    const after = descriptionPart.slice(
-      (keyMatch.index || 0) + keyMatch[0].length
+    return {
+      description: descriptionLines.join("\n").trim(),
+      key_features: [],
+      specifications: standaloneSpecifications,
+    };
+  }
+
+  const sectionIndexes = [
+    featureIndex,
+    specificationIndex,
+  ].filter((index) => index >= 0);
+
+  const firstSectionIndex = Math.min(...sectionIndexes);
+
+  const descriptionLines = lines
+    .slice(0, firstSectionIndex)
+    .filter(Boolean);
+
+  const keyFeatures: string[] = [];
+  const specifications: Record<string, string> = {};
+
+  /*
+   * Parse Features section.
+   */
+  if (featureIndex >= 0) {
+    const featureEnd =
+      specificationIndex > featureIndex
+        ? specificationIndex
+        : lines.length;
+
+    const featureLines = lines.slice(
+      featureIndex + 1,
+      featureEnd
     );
 
-    descriptionPart = clean(before);
-    keyFeatures = splitFeatures(after);
+    keyFeatures.push(...parseFeatureLines(featureLines));
+  }
+
+  /*
+   * Parse Specifications section.
+   */
+  if (specificationIndex >= 0) {
+    const specificationEnd =
+      featureIndex > specificationIndex
+        ? featureIndex
+        : lines.length;
+
+    const specificationLines = lines.slice(
+      specificationIndex + 1,
+      specificationEnd
+    );
+
+    Object.assign(
+      specifications,
+      parseSpecificationLines(specificationLines)
+    );
   }
 
   return {
-    description: descriptionPart,
-    key_features: Array.from(new Set(keyFeatures)),
+    description: descriptionLines.join("\n").trim(),
+    key_features: keyFeatures,
     specifications,
   };
 }

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { updateProduct } from "@/lib/products";
+import { normalizeProductDescription } from "@/lib/specifications";
 import {
   translateToSwahili,
   translateSpecificationsToSwahili,
@@ -36,12 +37,11 @@ export async function PUT(
         ? body.description.trim()
         : "";
 
+    const normalizedDescription =
+      normalizeProductDescription(description);
+
     const specifications =
-      body.specifications &&
-      typeof body.specifications === "object" &&
-      !Array.isArray(body.specifications)
-        ? body.specifications
-        : {};
+      normalizedDescription.specifications;
 
     const hasNameSw =
       typeof body.name_sw === "string" &&

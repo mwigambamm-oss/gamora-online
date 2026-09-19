@@ -1,5 +1,39 @@
 import { supabase } from "./supabase";
 
+
+function normalizeProductColors(colors: unknown): string[] {
+  if (Array.isArray(colors)) {
+    return colors
+      .flatMap((color) =>
+        String(color)
+          .split(/[\/,]+/)
+          .map((item) => item.trim())
+          .filter(Boolean)
+      )
+      .filter(
+        (color, index, list) =>
+          list.findIndex(
+            (item) => item.toLowerCase() === color.toLowerCase()
+          ) === index
+      );
+  }
+
+  if (typeof colors === "string") {
+    return colors
+      .split(/[\/,]+/)
+      .map((item) => item.trim())
+      .filter(Boolean)
+      .filter(
+        (color, index, list) =>
+          list.findIndex(
+            (item) => item.toLowerCase() === color.toLowerCase()
+          ) === index
+      );
+  }
+
+  return [];
+}
+
 export type Product = {
   id: number;
   name: string;
@@ -50,7 +84,9 @@ function mapProduct(p: any): Product {
     images: Array.isArray(p.images) ? p.images : [],
     cost_price: Number(p.cost_price || 0),
     colors: Array.isArray(p.colors) ? p.colors : [],
+    colors_sw: Array.isArray(p.colors_sw) ? p.colors_sw : [],
     sizes: Array.isArray(p.sizes) ? p.sizes : [],
+    sizes_sw: Array.isArray(p.sizes_sw) ? p.sizes_sw : [],
     storageOptions: Array.isArray(p.storage_options)
       ? p.storage_options
       : [],
@@ -59,6 +95,12 @@ function mapProduct(p: any): Product {
       typeof p.specifications === "object" &&
       !Array.isArray(p.specifications)
         ? p.specifications
+        : {},
+    specifications_sw:
+      p.specifications_sw &&
+      typeof p.specifications_sw === "object" &&
+      !Array.isArray(p.specifications_sw)
+        ? p.specifications_sw
         : {},
     discount: Number(p.discount || 0),
     orders_count: Number(p.orders_count || 0),
@@ -117,9 +159,10 @@ export async function saveProduct(product: Omit<Product, "id">) {
     description_sw: product.description_sw || "",
     image: product.image || "",
     images: product.images || [],
-    colors: product.colors || [],
+    colors: normalizeProductColors(product.colors),
     sizes: product.sizes || [],
     specifications: product.specifications || {},
+    specifications_sw: product.specifications_sw || {},
     discount: Number(product.discount || 0),
     likes: Math.floor(Math.random() * 1301) + 200,
     orders_count: Math.floor(Math.random() * 1701) + 300,
@@ -203,6 +246,10 @@ export async function updateProduct(
 
   if (product.specifications !== undefined) {
     dbProduct.specifications = product.specifications || {};
+  }
+
+  if (product.specifications_sw !== undefined) {
+    dbProduct.specifications_sw = product.specifications_sw || {};
   }
 
   if (product.discount !== undefined) {

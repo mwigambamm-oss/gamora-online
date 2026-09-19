@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { saveProduct } from "@/lib/products";
+import { normalizeProductDescription } from "@/lib/specifications";
 import {
   translateToSwahili,
   translateSpecificationsToSwahili,
@@ -12,7 +13,11 @@ export async function POST(req: Request) {
     const name = body.name || "";
     const category = body.category || "";
     const description = body.description || "";
-    const specifications = body.specifications || {};
+    const normalizedDescription =
+      normalizeProductDescription(description);
+
+    const specifications =
+      normalizedDescription.specifications;
     const colors = Array.isArray(body.colors) ? body.colors : [];
     const sizes = Array.isArray(body.sizes) ? body.sizes : [];
 

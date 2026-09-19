@@ -4,11 +4,8 @@ import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import {
   Product,
   getProducts,
-  saveProduct,
-  updateProduct,
   deleteProduct,
 } from "@/lib/products";
-import { extractSpecifications } from "@/lib/specifications";
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -117,7 +114,7 @@ export default function ProductsPage() {
         images: uploadedImages,
       }));
 
-console.log("TOTAL UPLOADED:", uploadedImages.length);
+      console.log("TOTAL UPLOADED:", uploadedImages.length);
     } catch (error) {
       console.error("Image upload error:", error);
       alert("Failed to upload images.");
@@ -154,18 +151,41 @@ console.log("TOTAL UPLOADED:", uploadedImages.length);
         price: Number(item.price),
         stock: Number(item.stock),
       })),
-      specifications: extractSpecifications(form.description),
       discount: Number(form.discount || 0),
     };
 
     try {
-      if (editingId !== null) {
-        await updateProduct(editingId, productData);
-        alert("Product updated successfully!");
-      } else {
-        await saveProduct(productData);
-        alert("Product saved successfully!");
+      const endpoint =
+        editingId !== null
+          ? `/api/admin/products/${editingId}`
+          : "/api/admin/products";
+
+      const method = editingId !== null ? "PUT" : "POST";
+
+      const response = await fetch(endpoint, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(productData),
+      });
+
+      const result = await response.json().catch(() => null);
+
+      if (!response.ok || !result?.success) {
+        throw new Error(
+          result?.error ||
+            (editingId !== null
+              ? "Failed to update product."
+              : "Failed to save product.")
+        );
       }
+
+      alert(
+        editingId !== null
+          ? "Product updated successfully!"
+          : "Product saved successfully!"
+      );
 
       await loadProducts();
       setForm(emptyForm);
@@ -173,10 +193,13 @@ console.log("TOTAL UPLOADED:", uploadedImages.length);
       setShowForm(false);
     } catch (error) {
       console.error("Product save error:", error);
+
       alert(
-        editingId !== null
-          ? "Failed to update product."
-          : "Failed to save product."
+        error instanceof Error
+          ? error.message
+          : editingId !== null
+            ? "Failed to update product."
+            : "Failed to save product."
       );
     }
   }
@@ -552,10 +575,41 @@ console.log("TOTAL UPLOADED:", uploadedImages.length);
                   name="description"
                   value={form.description}
                   onChange={handleChange}
-                  rows={4}
-                  placeholder="Describe your product..."
+                  rows={8}
+                  placeholder={`Describe your product...
+
+Optional structure:
+
+features
+Petrol engine
+Bush cutter design
+Easy to operate
+
+specifications
+Model: 56272727
+Engine Type: Petrol
+Weight: 7 kg`}
                   className="w-full rounded-lg border px-4 py-3"
                 />
+
+                <div className="mt-2 rounded-lg bg-gray-50 px-4 py-3 text-xs leading-5 text-gray-500">
+                  <p className="font-bold text-gray-700">
+                    Automatic Features & Specifications
+                  </p>
+
+                  <p className="mt-1">
+                    Write your normal English description. If you want
+                    Features or Specifications, add the corresponding heading
+                    and list the items below it. You can use either section
+                    alone or both.
+                  </p>
+
+                  <p className="mt-2">
+                    Example: <strong>Model: 56272727</strong>,{" "}
+                    <strong>Model - 56272727</strong>, or{" "}
+                    <strong>Model 56272727</strong>.
+                  </p>
+                </div>
               </div>
 
               <div className="md:col-span-2">
@@ -624,6 +678,7 @@ console.log("TOTAL UPLOADED:", uploadedImages.length);
           {filteredProducts.length === 0 ? (
             <div className="rounded-xl bg-gray-50 py-16 text-center">
               <div className="text-6xl">🛍️</div>
+
               <p className="mt-4 font-bold text-gray-500">
                 No products found.
               </p>

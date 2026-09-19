@@ -24,6 +24,8 @@ type Product = {
   images?: string[];
   colors?: string[];
   sizes?: string[];
+  specifications?: Record<string, string>;
+  specifications_sw?: Record<string, string>;
   orders_count?: number;
   likes?: number;
 };
@@ -55,8 +57,13 @@ export default function ProductPage({
 
   const displayCategory = product?.category;
 
+  const activeDescription =
+    language === "sw"
+      ? product?.description_sw || product?.description || ""
+      : product?.description || "";
+
   const parsedProduct = product
-    ? normalizeProductDescription(product.description || "")
+    ? normalizeProductDescription(activeDescription)
     : {
         description: "",
         key_features: [],
@@ -67,10 +74,15 @@ export default function ProductPage({
 
   const displayKeyFeatures = parsedProduct.key_features;
 
+  const storedSpecifications =
+    language === "sw"
+      ? product?.specifications_sw || {}
+      : product?.specifications || {};
+
   const displaySpecifications =
-    Object.keys(parsedProduct.specifications).length > 0
-      ? parsedProduct.specifications
-      : {};
+    Object.keys(storedSpecifications).length > 0
+      ? storedSpecifications
+      : parsedProduct.specifications;
 
   const [related, setRelated] = useState<Product[]>([]);
 
@@ -860,7 +872,7 @@ window.dispatchEvent(new Event("cartUpdated"));
                   {t("Description", "Maelezo")}
                 </h3>
 
-                <p className="mt-1.5 max-w-3xl text-xs leading-5 text-slate-600 sm:text-sm sm:leading-6">
+                <p className="mt-1.5 max-w-3xl whitespace-pre-line text-xs leading-5 text-slate-600 sm:text-sm sm:leading-6">
                   {displayDescription}
                 </p>
               </div>
@@ -869,57 +881,88 @@ window.dispatchEvent(new Event("cartUpdated"));
             {(displayKeyFeatures.length > 0 ||
               Object.keys(displaySpecifications).length > 0) && (
               <div className="mt-5 border-t border-slate-100 pt-4">
-                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
 
-                  {displayKeyFeatures.length > 0 && (
-                    <div>
-                      <h3 className="text-sm font-bold text-slate-900 sm:text-base">
-                        <span className="mr-1.5 text-[#E30613]">✓</span>
-                        {t("Key Features", "Vipengele Muhimu")}
-                      </h3>
+                {displayKeyFeatures.length > 0 && (
+                  <section className="min-w-0">
+                    <h3 className="flex items-center text-sm font-bold text-slate-900 sm:text-base">
+                      <span className="mr-2 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-red-50 text-sm font-bold text-[#E30613]">
+                        ✓
+                      </span>
+                      {t("Key Features", "Vipengele Muhimu")}
+                    </h3>
 
-                      <ul className="mt-2 space-y-1.5 pl-4 text-xs leading-5 text-slate-600 sm:text-sm">
+                    <div className="mt-3 rounded-lg border border-slate-100 bg-slate-50/50 px-4 py-3">
+                      <ul className="space-y-2.5">
                         {displayKeyFeatures.map((feature, index) => (
                           <li
                             key={`${feature}-${index}`}
-                            className="list-disc"
+                            className="flex items-start gap-2.5 text-xs leading-5 text-slate-600 sm:text-sm"
                           >
-                            {feature}
+                            <span className="mt-1.5 flex h-1.5 w-1.5 shrink-0 rounded-full bg-[#E30613]" />
+                            <span className="min-w-0">
+                              {feature}
+                            </span>
                           </li>
                         ))}
                       </ul>
                     </div>
-                  )}
+                  </section>
+                )}
 
-                  {Object.keys(displaySpecifications).length > 0 && (
-                    <div>
-                      <h3 className="text-sm font-bold text-slate-900 sm:text-base">
-                        <span className="mr-1.5 text-[#E30613]">⚙</span>
-                        {t("Specifications", "Specifications")}
-                      </h3>
+                {Object.keys(displaySpecifications).length > 0 && (
+                  <section
+                    className={
+                      displayKeyFeatures.length > 0
+                        ? "mt-5 min-w-0"
+                        : "min-w-0"
+                    }
+                  >
+                    <h3 className="flex items-center text-sm font-bold text-slate-900 sm:text-base">
+                      <span className="mr-2 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-red-50 text-xs text-[#E30613]">
+                        ⚙
+                      </span>
+                      {t("Specifications", "Specifications")}
+                    </h3>
 
-                      <div className="mt-2 overflow-hidden rounded-md border border-slate-100">
-                        {Object.entries(displaySpecifications).map(
-                          ([key, value]) => (
+                    <div className="mt-3 overflow-hidden rounded-lg border border-red-100/70 bg-red-50/25">
+                      {Object.entries(displaySpecifications).map(
+                        ([key, value], index) => {
+                          const isSameValue =
+                            String(key).trim().toLowerCase() ===
+                            String(value).trim().toLowerCase();
+
+                          return (
                             <div
-                              key={key}
-                              className="grid grid-cols-[minmax(90px,0.8fr)_minmax(0,1.2fr)] gap-3 border-b border-slate-100 px-3 py-1.5 text-xs last:border-b-0 sm:text-sm"
+                              key={`${key}-${index}`}
+                              className="grid grid-cols-[minmax(100px,0.8fr)_minmax(0,1.2fr)] gap-3 border-b border-red-100/60 px-3 py-2.5 last:border-b-0 sm:grid-cols-[minmax(140px,0.8fr)_minmax(0,1.2fr)] sm:px-4"
                             >
-                              <span className="font-medium text-slate-700">
-                                {key}
-                              </span>
-
-                              <span className="text-slate-600">
-                                {String(value)}
-                              </span>
+                              {isSameValue ? (
+                                <>
+                                  <span className="font-semibold text-slate-700">
+                                    {t("Details", "Maelezo")}
+                                  </span>
+                                  <span className="text-slate-600">
+                                    {String(value)}
+                                  </span>
+                                </>
+                              ) : (
+                                <>
+                                  <span className="font-semibold text-slate-700">
+                                    {key}
+                                  </span>
+                                  <span className="text-slate-600">
+                                    {String(value)}
+                                  </span>
+                                </>
+                              )}
                             </div>
-                          )
-                        )}
-                      </div>
+                          );
+                        }
+                      )}
                     </div>
-                  )}
+                  </section>
+                )}
 
-                </div>
               </div>
             )}
 

@@ -35,12 +35,7 @@ export async function POST(req: Request) {
           ? Promise.resolve(body.description_sw)
           : translateToSwahili(description),
 
-        body.specifications_sw &&
-        typeof body.specifications_sw === "object" &&
-        !Array.isArray(body.specifications_sw) &&
-        Object.keys(body.specifications_sw).length > 0
-          ? Promise.resolve(body.specifications_sw)
-          : translateSpecificationsToSwahili(specifications),
+        translateSpecificationsToSwahili(specifications),
 
         body.colors_sw &&
         Array.isArray(body.colors_sw) &&

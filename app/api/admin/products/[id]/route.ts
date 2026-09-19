@@ -55,12 +55,6 @@ export async function PUT(
       typeof body.description_sw === "string" &&
       body.description_sw.trim().length > 0;
 
-    const hasSpecificationsSw =
-      body.specifications_sw &&
-      typeof body.specifications_sw === "object" &&
-      !Array.isArray(body.specifications_sw) &&
-      Object.keys(body.specifications_sw).length > 0;
-
     const [
       name_sw,
       category_sw,
@@ -85,9 +79,7 @@ export async function PUT(
           ? translateToSwahili(description)
           : Promise.resolve(""),
 
-      hasSpecificationsSw
-        ? Promise.resolve(body.specifications_sw)
-        : translateSpecificationsToSwahili(specifications),
+      translateSpecificationsToSwahili(specifications),
     ]);
 
     const product = await updateProduct(productId, {

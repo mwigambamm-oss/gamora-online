@@ -68,10 +68,13 @@ function clean(value: string): string {
 
 function normalizeHeading(value: string): string {
   return clean(value)
-    .replace(/^[#*\-–—•·\s]+/, "")
-    .replace(/[*#]+$/, "")
-    .replace(/[:：]\s*$/, "")
+    // Remove Markdown heading/bold markers and UI symbols.
+    .replace(/^[#*\-–—•·✓⚙️\s]+/u, "")
+    .replace(/[*#]+$/g, "")
+    .replace(/[:：]\s*$/g, "")
+    .replace(/^[^A-Za-z0-9]+/, "")
     .replace(/\s+/g, " ")
+    .trim()
     .toLowerCase();
 }
 
@@ -406,103 +409,164 @@ export function normalizeProductDescription(
     };
   }
 
-  const lines = original
-    .split("\n")
-    .map((line) => clean(line));
+  /*
+   * IMPORTANT:
+   * Find section headings in the WHOLE description, not only at
+   * the beginning of a line. This handles Markdown such as:
+   *
+   * **Key Features:**
+   * ### Key Features:
+   * Key Features:
+   *
+   * and the same variations for Specifications.
+   */
 
-  let featureIndex = -1;
-  let specificationIndex = -1;
+  const keyFeaturesRegex =
+    /(?:^|\n)\s*(?:[#*_\-–—•·✓⚙️]+\s*)*key\s+features?\s*[:：]\s*/i;
 
-  for (let index = 0; index < lines.length; index += 1) {
-    const line = lines[index];
+  const specificationsRegex =
+    /(?:^|\n)\s*(?:[#*_\-–—•·✓⚙️]+\s*)*specifications?\s*[:：]\s*/i;
 
-    if (isFeatureHeading(line) && featureIndex === -1) {
-      featureIndex = index;
-    }
+  const keyMatch = original.match(keyFeaturesRegex);
+  const specificationMatch = original.match(specificationsRegex);
 
-    if (
-      isSpecificationHeading(line) &&
-      specificationIndex === -1
-    ) {
-      specificationIndex = index;
-    }
-  }
+  const keyStart = keyMatch?.index ?? -1;
+  const specificationStart = specificationMatch?.index ?? -1;
 
   /*
-   * No Features/Specifications heading:
-   *
-   * Keep the whole description intact.
-   * Only extract clearly-labelled common specification lines.
+   * Case 1:
+   * Both sections exist.
    */
-  if (featureIndex === -1 && specificationIndex === -1) {
-    const standaloneSpecifications =
-      extractStandaloneStructuredSpecifications(lines);
+  if (keyStart >= 0 && specificationStart >= 0) {
+    const keyHeadingLength = keyMatch?.[0].length ?? 0;
+    const specificationHeadingLength =
+      specificationMatch?.[0].length ?? 0;
 
-    const descriptionLines = lines.filter(
-      (line) => !parseStructuredSpecificationLine(line)
+    const firstSectionStart = Math.min(
+      keyStart,
+      specificationStart
+    );
+
+    const descriptionText = original
+      .slice(0, firstSectionStart)
+      .trim();
+
+    const keyFeatures =
+      keyStart < specificationStart
+        ? parseFeatureLines(
+            original
+              .slice(keyStart + keyHeadingLength, specificationStart)
+              .split("\n")
+              .map((line) => clean(line))
+              .filter(Boolean)
+          )
+        : parseFeatureLines(
+            original
+              .slice(
+                specificationStart + specificationHeadingLength,
+                keyStart
+              )
+              .split("\n")
+              .map((line) => clean(line))
+              .filter(Boolean)
+          );
+
+    const specificationText =
+      keyStart < specificationStart
+        ? original.slice(
+            specificationStart + specificationHeadingLength
+          )
+        : original.slice(
+            keyStart + keyHeadingLength
+          );
+
+    const specifications = parseSpecificationLines(
+      specificationText
+        .split("\n")
+        .map((line) => clean(line))
+        .filter(Boolean)
     );
 
     return {
-      description: descriptionLines.join("\n").trim(),
-      key_features: [],
-      specifications: standaloneSpecifications,
+      description: descriptionText,
+      key_features: keyFeatures,
+      specifications,
     };
   }
 
-  const sectionIndexes = [
-    featureIndex,
-    specificationIndex,
-  ].filter((index) => index >= 0);
+  /*
+   * Case 2:
+   * Only Key Features exists.
+   */
+  if (keyStart >= 0) {
+    const keyHeadingLength = keyMatch?.[0].length ?? 0;
 
-  const firstSectionIndex = Math.min(...sectionIndexes);
+    const descriptionText = original
+      .slice(0, keyStart)
+      .trim();
 
-  const descriptionLines = lines
-    .slice(0, firstSectionIndex)
+    const keyFeatures = parseFeatureLines(
+      original
+        .slice(keyStart + keyHeadingLength)
+        .split("\n")
+        .map((line) => clean(line))
+        .filter(Boolean)
+    );
+
+    return {
+      description: descriptionText,
+      key_features: keyFeatures,
+      specifications: {},
+    };
+  }
+
+  /*
+   * Case 3:
+   * Only Specifications exists.
+   */
+  if (specificationStart >= 0) {
+    const specificationHeadingLength =
+      specificationMatch?.[0].length ?? 0;
+
+    const descriptionText = original
+      .slice(0, specificationStart)
+      .trim();
+
+    const specifications = parseSpecificationLines(
+      original
+        .slice(specificationStart + specificationHeadingLength)
+        .split("\n")
+        .map((line) => clean(line))
+        .filter(Boolean)
+    );
+
+    return {
+      description: descriptionText,
+      key_features: [],
+      specifications,
+    };
+  }
+
+  /*
+   * Case 4:
+   * No explicit sections.
+   * Preserve the existing standalone specification behaviour.
+   */
+  const fallbackLines = original
+    .split("\n")
+    .map((line) => clean(line))
     .filter(Boolean);
 
-  const keyFeatures: string[] = [];
-  const specifications: Record<string, string> = {};
+  const standaloneSpecifications =
+    extractStandaloneStructuredSpecifications(fallbackLines);
 
-  /*
-   * Parse Features section.
-   */
-  if (featureIndex >= 0) {
-    const featureEnd =
-      specificationIndex > featureIndex
-        ? specificationIndex
-        : lines.length;
-
-    const featureLines = lines.slice(
-      featureIndex + 1,
-      featureEnd
-    );
-
-    keyFeatures.push(...parseFeatureLines(featureLines));
-  }
-
-  /*
-   * Parse Specifications section.
-   */
-  if (specificationIndex >= 0) {
-    const specificationEnd =
-      featureIndex > specificationIndex
-        ? featureIndex
-        : lines.length;
-
-    const specificationLines = lines.slice(
-      specificationIndex + 1,
-      specificationEnd
-    );
-
-    Object.assign(
-      specifications,
-      parseSpecificationLines(specificationLines)
-    );
-  }
+  const descriptionLines = fallbackLines.filter(
+    (line) => !parseStructuredSpecificationLine(line)
+  );
 
   return {
     description: descriptionLines.join("\n").trim(),
-    key_features: keyFeatures,
-    specifications,
+    key_features: [],
+    specifications: standaloneSpecifications,
   };
 }

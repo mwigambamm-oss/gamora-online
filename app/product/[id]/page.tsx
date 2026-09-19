@@ -79,49 +79,15 @@ export default function ProductPage({
       ? product?.specifications_sw || {}
       : product?.specifications || {};
 
+  /*
+   * Always prefer specifications parsed from the active description.
+   * This prevents old/corrupted stored specification records from
+   * mixing Key Features into the Specifications section.
+   */
   const displaySpecifications =
-    Object.keys(storedSpecifications).length > 0
-      ? Object.entries(storedSpecifications).reduce(
-          (result: Record<string, string>, [key, value]) => {
-            const rawKey = String(key).trim();
-            const rawValue = String(value).trim();
-
-            const combined =
-              rawKey === rawValue
-                ? rawValue
-                : `${rawKey}: ${rawValue}`;
-
-            const items = combined
-              // Remove old markdown/checkmark specification headings.
-              .replace(/^\*{1,3}\s*✓?\s*\*{0,3}\s*/i, "")
-              .replace(/^\s*✓\s*/i, "")
-              .replace(
-                /^\s*\*{1,3}\s*specifications?\s*\*{1,3}\s*:?\s*/i,
-                ""
-              )
-              .replace(
-                /^\s*✓?\s*specifications?\s*:?\s*/i,
-                ""
-              )
-              .split(/[;,\n]/)
-              .map((item) =>
-                item
-                  .replace(/^\s*\*{1,3}\s*✓?\s*/i, "")
-                  .replace(/^\s*✓\s*/i, "")
-                  .trim()
-              )
-              .filter(Boolean);
-
-            for (const item of items) {
-              result[item] = item;
-            }
-
-            return result;
-          },
-          {}
-        )
-      : parsedProduct.specifications;
-
+    Object.keys(parsedProduct.specifications).length > 0
+      ? parsedProduct.specifications
+      : storedSpecifications;
 
   const [related, setRelated] = useState<Product[]>([]);
 

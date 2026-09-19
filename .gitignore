@@ -44,3 +44,9 @@ next-env.d.ts
 node_modules/
 
 certificates
+# Local translation Python environment
+.translation-venv/
+
+# Local backups
+backup/
+*.backup

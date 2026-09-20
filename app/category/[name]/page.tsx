@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { getProducts, type Product } from "@/lib/products";
+import { getProducts, shuffleProducts, type Product } from "@/lib/products";
 
 const CATEGORY_IMAGES: Record<string,string> = {
   Fashion: "/categories/fashion.jpg",
@@ -27,10 +27,12 @@ export default function CategoryPage() {
       const all = await getProducts();
 
       setProducts(
-        all.filter(
-          (p) =>
-            p.category?.toLowerCase() ===
-            name.toLowerCase()
+        shuffleProducts(
+          all.filter(
+            (p) =>
+              p.category?.toLowerCase() ===
+              name.toLowerCase()
+          )
         )
       );
     }

@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { FaFacebookF, FaInstagram, FaTiktok } from "react-icons/fa";
 import { translations, type Language } from "@/lib/translations";
 import { formatCurrency, type Currency } from "@/lib/currency";
-import { getProducts as getSupabaseProducts, type Product } from "@/lib/products";
+import { getProducts as getSupabaseProducts, shuffleProducts, type Product } from "@/lib/products";
 import { supabase } from "@/lib/supabase";
 import {
   useEffect,
@@ -244,7 +244,7 @@ export default function HomePage() {
         const data = await getSupabaseProducts();
 
         if (active) {
-          setProducts(data);
+          setProducts(shuffleProducts(data));
         }
       } catch (error) {
         console.error("Failed to load products:", error);

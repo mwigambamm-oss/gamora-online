@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getProductById, getProducts } from "@/lib/products";
+import { getProductById, getProducts, shuffleProducts } from "@/lib/products";
 import { supabase } from "@/lib/supabase";
 import RelatedProducts from "@/components/product/RelatedProducts";
 import { formatCurrency, type Currency } from "@/lib/currency";
@@ -212,10 +212,12 @@ setProduct(item);
       const all = await getProducts();
 
       setRelated(
-        all.filter(
-          (p) =>
-            p.id !== productId &&
-            p.category === item.category
+        shuffleProducts(
+          all.filter(
+            (p) =>
+              p.id !== productId &&
+              p.category === item.category
+          )
         )
       );
 

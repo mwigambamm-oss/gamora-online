@@ -623,13 +623,25 @@ window.dispatchEvent(new Event("cartUpdated"));
         {/* BREADCRUMB */}
 
         <div className="mb-4 overflow-hidden whitespace-nowrap text-[11px] text-slate-400 sm:mb-5 sm:text-xs">
-          <span>{t("Home", "Nyumbani")}</span>
+          <a
+            href="/"
+            className="transition-colors hover:text-[#D00000]"
+          >
+            {t("Home", "Nyumbani")}
+          </a>
 
           <span className="mx-2">›</span>
 
-          <span>
-            {displayCategory || t("Products", "Bidhaa")}
-          </span>
+          {displayCategory ? (
+            <a
+              href={`/category/${encodeURIComponent(displayCategory)}`}
+              className="transition-colors hover:text-[#D00000]"
+            >
+              {displayCategory}
+            </a>
+          ) : (
+            <span>{t("Products", "Bidhaa")}</span>
+          )}
 
           <span className="mx-2">›</span>
 

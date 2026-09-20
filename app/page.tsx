@@ -383,11 +383,223 @@ export default function HomePage() {
   const filteredProducts = useMemo(() => {
     const query = search.toLowerCase().trim();
 
+    const normalize = (value: unknown) =>
+      String(value || "")
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\\u0300-\\u036f]/g, "")
+        .replace(/[^a-z0-9\\s]/g, " ")
+        .replace(/\\s+/g, " ")
+        .trim();
+
+    const normalizedQuery = normalize(query);
+
+    const searchAliases: Record<string, string[]> = {
+      shoes: [
+        "shoe",
+        "shoes",
+        "kiatu",
+        "viatu",
+        "footwear",
+        "sandal",
+        "sandals",
+        "sneaker",
+        "sneakers",
+        "boot",
+        "boots",
+      ],
+      bags: [
+        "bag",
+        "bags",
+        "mkoba",
+        "mikoba",
+        "handbag",
+        "handbags",
+        "backpack",
+        "backpacks",
+      ],
+      phones: [
+        "phone",
+        "phones",
+        "simu",
+        "smartphone",
+        "smartphones",
+        "mobile",
+        "mobiles",
+        "iphone",
+        "android",
+      ],
+      clothes: [
+        "clothes",
+        "clothing",
+        "nguo",
+        "dress",
+        "dresses",
+        "shirt",
+        "shirts",
+        "tshirt",
+        "t shirts",
+        "jeans",
+        "trouser",
+        "trousers",
+        "suruali",
+        "skirt",
+        "skirts",
+      ],
+      electronics: [
+        "electronics",
+        "electronic",
+        "electronics",
+        "elektroniki",
+        "device",
+        "devices",
+        "gadget",
+        "gadgets",
+      ],
+      beauty: [
+        "beauty",
+        "cosmetics",
+        "cosmetic",
+        "urembo",
+        "makeup",
+        "skincare",
+        "skin care",
+        "perfume",
+        "parfum",
+      ],
+      furniture: [
+        "furniture",
+        "samani",
+        "chair",
+        "chairs",
+        "kiti",
+        "viti",
+        "table",
+        "tables",
+        "meza",
+        "sofa",
+        "sofas",
+      ],
+    };
+
+    const categoryMatchesAlias = (category: unknown, categorySw: unknown) => {
+      const categories = [normalize(category), normalize(categorySw)];
+
+      if (!normalizedQuery) return false;
+
+      return Object.entries(searchAliases).some(([key, aliases]) => {
+        const queryMatches = aliases.some(
+          (alias) =>
+            normalizedQuery === normalize(alias) ||
+            normalizedQuery.includes(normalize(alias)) ||
+            normalize(alias).includes(normalizedQuery)
+        );
+
+        if (!queryMatches) return false;
+
+        return categories.some((value) => {
+          if (key === "shoes") {
+            return (
+              value.includes("shoe") ||
+              value.includes("viatu") ||
+              value.includes("kiatu") ||
+              value.includes("footwear")
+            );
+          }
+
+          if (key === "bags") {
+            return (
+              value.includes("bag") ||
+              value.includes("mkoba") ||
+              value.includes("accessor")
+            );
+          }
+
+          if (key === "phones") {
+            return (
+              value.includes("phone") ||
+              value.includes("simu") ||
+              value.includes("mobile") ||
+              value.includes("electronic")
+            );
+          }
+
+          if (key === "clothes") {
+            return (
+              value.includes("fashion") ||
+              value.includes("clothes") ||
+              value.includes("nguo") ||
+              value.includes("apparel")
+            );
+          }
+
+          if (key === "electronics") {
+            return (
+              value.includes("electronic") ||
+              value.includes("electronics") ||
+              value.includes("elektroniki") ||
+              value.includes("gadget")
+            );
+          }
+
+          if (key === "beauty") {
+            return (
+              value.includes("beauty") ||
+              value.includes("cosmetic") ||
+              value.includes("urembo")
+            );
+          }
+
+          if (key === "furniture") {
+            return (
+              value.includes("furniture") ||
+              value.includes("samani")
+            );
+          }
+
+          return value.includes(key);
+        });
+      });
+    };
+
+    const productText = (product: Product) => {
+      const specificationText = Object.entries(
+        product.specifications || {}
+      )
+        .map(([key, value]) => `${key} ${value}`)
+        .join(" ");
+
+      const specificationSwText = Object.entries(
+        product.specifications_sw || {}
+      )
+        .map(([key, value]) => `${key} ${value}`)
+        .join(" ");
+
+      return normalize(
+        [
+          product.name,
+          product.name_sw,
+          product.category,
+          product.category_sw,
+          product.description,
+          product.description_sw,
+          ...(product.colors || []),
+          ...(product.colors_sw || []),
+          ...(product.sizes || []),
+          ...(product.sizes_sw || []),
+          specificationText,
+          specificationSwText,
+        ].join(" ")
+      );
+    };
+
     return products.filter((product) => {
+      const text = productText(product);
+
       const matchesSearch =
-        !query ||
-        product.name.toLowerCase().includes(query) ||
-        product.category.toLowerCase().includes(query);
+        !normalizedQuery ||
+        text.includes(normalizedQuery) ||
+        categoryMatchesAlias(product.category, product.category_sw);
 
       const matchesCategory =
         selectedCategory === "All" ||

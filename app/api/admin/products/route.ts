@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { saveProduct } from "@/lib/products";
 import { normalizeProductDescription } from "@/lib/specifications";
+import { analyzeProductImageColors } from "@/lib/ai/imageColorMapper";
 import {
   translateToSwahili,
   translateSpecificationsToSwahili,
@@ -20,6 +21,12 @@ export async function POST(req: Request) {
       normalizedDescription.specifications;
     const colors = Array.isArray(body.colors) ? body.colors : [];
     const sizes = Array.isArray(body.sizes) ? body.sizes : [];
+    const images = Array.isArray(body.images) ? body.images : [];
+
+    const image_color_map = await analyzeProductImageColors(
+      images,
+      colors
+    );
 
     const [name_sw, category_sw, description_sw, specifications_sw, colors_sw, sizes_sw] =
       await Promise.all([
@@ -61,7 +68,8 @@ export async function POST(req: Request) {
       description,
       description_sw,
       image: body.image || "",
-      images: body.images || [],
+      images,
+      image_color_map,
       cost_price: Number(body.cost_price || 0),
       colors,
       colors_sw,

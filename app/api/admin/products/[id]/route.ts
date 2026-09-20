@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
-import { updateProduct } from "@/lib/products";
+import {
+  getProductById,
+  updateProduct,
+} from "@/lib/products";
+import { analyzeProductImageColors } from "@/lib/ai/imageColorMapper";
 import { normalizeProductDescription } from "@/lib/specifications";
 import {
   translateToSwahili,
@@ -26,6 +30,18 @@ export async function PUT(
 
     const body = await req.json();
 
+    const existingProduct = await getProductById(productId);
+
+    if (!existingProduct) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Product not found",
+        },
+        { status: 404 }
+      );
+    }
+
     const name =
       typeof body.name === "string" ? body.name.trim() : "";
 
@@ -42,6 +58,26 @@ export async function PUT(
 
     const specifications =
       normalizedDescription.specifications;
+
+    const imagesChanged = Array.isArray(body.images);
+    const colorsChanged = Array.isArray(body.colors);
+
+    let image_color_map = existingProduct.image_color_map || {};
+
+    if (imagesChanged || colorsChanged) {
+      const effectiveImages = imagesChanged
+        ? body.images
+        : existingProduct.images || [];
+
+      const effectiveColors = colorsChanged
+        ? body.colors
+        : existingProduct.colors || [];
+
+      image_color_map = await analyzeProductImageColors(
+        effectiveImages,
+        effectiveColors
+      );
+    }
 
     const hasNameSw =
       typeof body.name_sw === "string" &&
@@ -92,6 +128,9 @@ export async function PUT(
       description_sw,
       specifications,
       specifications_sw,
+      ...(imagesChanged || colorsChanged
+        ? { image_color_map }
+        : {}),
     });
 
     return NextResponse.json({

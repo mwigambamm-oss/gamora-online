@@ -22,6 +22,13 @@ type Product = {
   description_sw?: string;
   image?: string;
   images?: string[];
+  image_color_map?: Record<
+    string,
+    {
+      images: string[];
+      confidence: number;
+    }
+  >;
   colors?: string[];
   sizes?: string[];
   specifications?: Record<string, string>;
@@ -270,12 +277,36 @@ setProduct(item);
   /*
    * PRODUCT IMAGES
    */
-  const images =
-    product?.images && product.images.length > 0
+  const hasColorImageMap =
+    !!product?.image_color_map &&
+    Object.keys(product.image_color_map).length > 0;
+
+  const selectedColorImages =
+    selectedColor &&
+    product?.image_color_map?.[selectedColor]?.images
+      ? product.image_color_map[selectedColor].images
+      : [];
+
+  const colorOutOfStock =
+    !!selectedColor &&
+    hasColorImageMap &&
+    selectedColorImages.length === 0;
+
+  const variantImages = hasColorImageMap
+    ? selectedColor
+      ? selectedColorImages
+      : product?.images && product.images.length > 0
       ? product.images
       : product?.image
       ? [product.image]
-      : [];
+      : []
+    : product?.images && product.images.length > 0
+    ? product.images
+    : product?.image
+    ? [product.image]
+    : [];
+
+  const images = variantImages;
 
   /*
    * AUTO SLIDE
@@ -297,7 +328,7 @@ setProduct(item);
    */
   useEffect(() => {
     setActiveImage(0);
-  }, [product?.id]);
+  }, [product?.id, selectedColor]);
 
   /*
    * NEXT IMAGE
@@ -401,9 +432,8 @@ setProduct(item);
     if (!product) return;
 
     const cartImage =
-      product.images?.[0] ||
-      product.image ||
       images[0] ||
+      product.image ||
       "";
 
     const cartItem = {
@@ -425,12 +455,12 @@ setProduct(item);
       const existingIndex = cart.findIndex(
         (item: {
           id: number;
-          color?: string;
-          size?: string;
+          selectedColor?: string;
+          selectedSize?: string;
         }) =>
           item.id === product.id &&
-          item.color === selectedColor &&
-          item.size === selectedSize
+          item.selectedColor === selectedColor &&
+          item.selectedSize === selectedSize
       );
 
       if (existingIndex >= 0) {
@@ -456,9 +486,8 @@ window.dispatchEvent(new Event("cartUpdated"));
     if (!product) return;
 
     const cartImage =
-      product.images?.[0] ||
-      product.image ||
       images[0] ||
+      product.image ||
       "";
 
     const cartItem = {
@@ -667,6 +696,17 @@ window.dispatchEvent(new Event("cartUpdated"));
               onTouchEnd={handleTouchEnd}
             >
 
+              {colorOutOfStock ? (
+                <div className="flex h-full w-full flex-col items-center justify-center px-6 text-center">
+                  <div className="mb-3 text-4xl">×</div>
+                  <p className="text-base font-semibold text-slate-800 sm:text-lg">
+                    {selectedColor}
+                  </p>
+                  <p className="mt-1 text-sm font-medium text-[#E30613]">
+                    {t("This color is out of stock", "Rangi hii imekwisha")}
+                  </p>
+                </div>
+              ) : (
               <div
                 className="flex h-full transition-transform duration-500 ease-out"
                 style={{
@@ -692,6 +732,7 @@ window.dispatchEvent(new Event("cartUpdated"));
                 ))}
 
               </div>
+              )}
 
               {/* PREVIOUS */}
 

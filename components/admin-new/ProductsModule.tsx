@@ -230,6 +230,35 @@ export default function ProductsModule() {
 
 
 
+  async function analyzeProductImages(productId: number) {
+    try {
+      const response = await fetch(
+        `/api/admin/products/${productId}/analyze-images`,
+        {
+          method: "POST",
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(
+          result?.error || "AI image color analysis failed"
+        );
+      }
+
+      return result.image_color_map;
+    } catch (error) {
+      console.error(
+        "AI image color analysis failed:",
+        error
+      );
+
+      return null;
+    }
+  }
+
+
   async function handleSubmit(
     e:FormEvent
   ){
@@ -305,6 +334,7 @@ export default function ProductsModule() {
 
     try{
 
+      let productId: number | null = null;
 
       if(editingId){
 
@@ -313,6 +343,19 @@ export default function ProductsModule() {
           product
         );
 
+        productId = editingId;
+
+        const imageColorMap =
+          await analyzeProductImages(
+            productId
+          );
+
+        if(imageColorMap) {
+          console.log(
+            "AI image color mapping updated:",
+            imageColorMap
+          );
+        }
 
         alert(
           "Product updated successfully"
@@ -321,10 +364,24 @@ export default function ProductsModule() {
 
       }else{
 
+        const savedProduct =
+          await saveProduct(
+            product
+          );
 
-        await saveProduct(
-          product
-        );
+        productId = savedProduct.id;
+
+        const imageColorMap =
+          await analyzeProductImages(
+            productId
+          );
+
+        if(imageColorMap) {
+          console.log(
+            "AI image color mapping created:",
+            imageColorMap
+          );
+        }
 
         alert(
           "Product saved successfully"

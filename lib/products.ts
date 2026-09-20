@@ -74,6 +74,13 @@ export type Product = {
   orders_count?: number;
   likes?: number;
   rating?: number;
+  image_color_map?: Record<
+    string,
+    {
+      images: string[];
+      confidence: number;
+    }
+  >;
 };
 
 function mapProduct(p: any): Product {
@@ -117,6 +124,12 @@ function mapProduct(p: any): Product {
     orders_count: Number(p.orders_count || 0),
     likes: Number(p.likes || 200),
     rating: Number(p.rating || 0),
+    image_color_map:
+      p.image_color_map &&
+      typeof p.image_color_map === "object" &&
+      !Array.isArray(p.image_color_map)
+        ? p.image_color_map
+        : {},
   };
 }
 
@@ -172,6 +185,7 @@ export async function saveProduct(product: Omit<Product, "id">) {
     images: product.images || [],
     colors: normalizeProductColors(product.colors),
     sizes: product.sizes || [],
+    image_color_map: product.image_color_map || {},
     specifications: product.specifications || {},
     specifications_sw: product.specifications_sw || {},
     discount: Number(product.discount || 0),
@@ -253,6 +267,10 @@ export async function updateProduct(
 
   if (product.sizes !== undefined) {
     dbProduct.sizes = product.sizes;
+  }
+
+  if (product.image_color_map !== undefined) {
+    dbProduct.image_color_map = product.image_color_map || {};
   }
 
   if (product.specifications !== undefined) {

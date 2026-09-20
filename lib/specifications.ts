@@ -422,10 +422,10 @@ export function normalizeProductDescription(
    */
 
   const keyFeaturesRegex =
-    /(?:^|\n)\s*(?:[#*_\-–—•·✓⚙️]+\s*)*key\s+features?\s*[:：]\s*/i;
+    /(?:^|\n)\s*(?:[#*_\-–—•·✓⚙️]+\s*)*(?:key\s+)?features?\s*[:：]?\s*(?=\n|$)/i;
 
   const specificationsRegex =
-    /(?:^|\n)\s*(?:[#*_\-–—•·✓⚙️]+\s*)*specifications?\s*[:：]\s*/i;
+    /(?:^|\n)\s*(?:[#*_\-–—•·✓⚙️]+\s*)*specifications?\s*[:：]?\s*(?=\n|$)/i;
 
   const keyMatch = original.match(keyFeaturesRegex);
   const specificationMatch = original.match(specificationsRegex);

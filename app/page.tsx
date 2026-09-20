@@ -1532,7 +1532,7 @@ export default function HomePage() {
                 </button>
               </div>
 
-              <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-6">
+              <div className="mt-6 grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-6">
                 {categoryItems.slice(0, categoryVisibleCounts[category] || 50).map((product) => (
                   <ProductCard
                     key={product.id}
@@ -1612,7 +1612,7 @@ export default function HomePage() {
 
           {filteredProducts.length > 0 ? (
             <>
-              <div className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+              <div className="mt-7 grid grid-cols-2 gap-5 sm:grid-cols-3 sm:gap-5 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
                 {filteredProducts.slice(0, visibleProductsCount).map((product) => (
                   <ProductCard
                     key={product.id}
@@ -2068,7 +2068,7 @@ function Carousel({
   return (
     <div
       ref={carouselRef}
-      className="mt-6 flex gap-3 overflow-x-auto pb-4 scrollbar-hide"
+      className="mt-6 flex gap-1 overflow-x-auto pb-4 scrollbar-hide [&>*]:!w-[210px] [&>*]:!min-w-[210px] [&>*]:!max-w-[210px] [&>*]:shrink-0 sm:[&>*]:!w-[230px] sm:[&>*]:!min-w-[230px] sm:[&>*]:!max-w-[230px] lg:[&>*]:!w-[250px] lg:[&>*]:!min-w-[250px] lg:[&>*]:!max-w-[250px]"
     >
       {children}
     </div>
@@ -2168,7 +2168,9 @@ function ProductCard({
     };
   }, [product.id]);
 
-  const toggleLike = async (e: React.MouseEvent<HTMLButtonElement>) => {
+  const toggleLike = async (
+    e: React.MouseEvent<HTMLButtonElement>
+  ) => {
     e.stopPropagation();
 
     if (likeLoading) return;
@@ -2212,6 +2214,7 @@ function ProductCard({
       }
 
       setLiked(Boolean(data.liked));
+      setLikes(Math.max(200, Number(data.likes || likes)));
     } catch (error) {
       console.error("Failed to toggle product like:", error);
 
@@ -2226,110 +2229,125 @@ function ProductCard({
   };
 
   return (
-    <article className="group relative min-w-[180px] shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg sm:min-w-[205px] lg:min-w-0">
-      <div className="absolute right-2 top-2 z-20 flex flex-col items-center gap-2">
-        <button
-          type="button"
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-[#2563eb] text-sm text-white shadow-md transition hover:bg-[#1d4ed8]"
-          onClick={(e) => {
-            e.stopPropagation();
-            addToCart(product);
-          }}
-          aria-label="Add to cart"
-        >
-          🛒
-        </button>
+    <article className="group min-w-0 bg-transparent">
+      <div className="relative">
+        {discount > 0 && (
+          <span className="pointer-events-none absolute right-1 top-1 z-20 inline-flex w-auto max-w-fit items-center justify-center rounded-md bg-[#D00000] px-1.5 py-0.5 text-[9px] font-black leading-none text-white">
+            -{discount}%
+          </span>
+        )}
+
+        <div className="absolute right-1 top-8 z-30 flex flex-col items-center gap-1">
+          <button
+            type="button"
+            onClick={toggleLike}
+            disabled={likeLoading}
+            aria-label={liked ? "Unlike product" : "Like product"}
+            className={`flex h-7 w-7 items-center justify-center rounded-full bg-white shadow-sm ${
+              liked ? "text-[#D00000]" : "text-[#555]"
+            } transition hover:text-[#D00000]`}
+          >
+            <svg
+              viewBox="0 0 24 24"
+              className="h-[15px] w-[15px]"
+              fill={liked ? "currentColor" : "none"}
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path
+                d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78Z"
+              />
+            </svg>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => addToCart(product)}
+            aria-label={
+              language === "sw"
+                ? "Ongeza kwenye kikapu"
+                : "Add to cart"
+            }
+            className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-[#D00000] shadow-sm transition hover:bg-[#D00000] hover:text-white"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              className="h-[16px] w-[16px]"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M2.5 3h2.2l2.1 10.1a2 2 0 0 0 2 1.6h8.4a2 2 0 0 0 1.9-1.4L21 7H5.2" />
+              <circle cx="9" cy="19" r="1.3" />
+              <circle cx="18" cy="19" r="1.3" />
+            </svg>
+          </button>
+        </div>
 
         <button
           type="button"
-          className={`flex h-9 w-9 items-center justify-center rounded-full text-sm text-white shadow-md transition ${
-            liked
-              ? "bg-[#E30613] hover:bg-[#c80511]"
-              : "bg-[#ef4444] hover:bg-[#dc2626]"
-          }`}
-          onClick={toggleLike}
-          disabled={likeLoading}
-          aria-label={liked ? "Unlike product" : "Like product"}
+          onClick={() =>
+            window.location.href = `/product/${product.id}`
+          }
+          className="block w-full text-left"
         >
-          {liked ? "❤️" : "♡"}
+          <div className="relative flex h-[175px] w-full items-center justify-center overflow-hidden bg-transparent sm:h-[195px] lg:h-[210px]">
+            {image ? (
+              <img
+                src={image}
+                alt={product.name}
+                className="h-full w-full object-contain object-center transition-transform duration-300 group-hover:scale-[1.03]"
+              />
+            ) : (
+              <div className="text-3xl opacity-20">
+                🛍️
+              </div>
+            )}
+          </div>
         </button>
       </div>
 
-      {discount > 0 && (
-        <span className="absolute left-2 top-2 z-20 rounded-md bg-[#ef4444] px-2 py-1 text-[9px] font-bold text-white">
-          -{discount}%
-        </span>
-      )}
+      <div className="pt-1 text-center">
+        <div className="flex flex-wrap items-baseline justify-center gap-1">
+          <span className="text-[11px] font-black text-[#D00000] sm:text-[12px]">
+            {formatCurrency(Number(product.price || 0), currency)}
+          </span>
 
-      {bestSeller && (
-        <span className="absolute left-2 top-9 z-20 rounded-md bg-[#1f2937] px-2 py-1 text-[9px] font-bold text-white">
-          {language === "sw"
-            ? "BEST SELLER"
-            : "BEST SELLER"}
-        </span>
-      )}
-
-      <button
-        type="button"
-        onClick={() =>
-          window.location.href = `/product/${product.id}`
-        }
-        className="block w-full text-left"
-      >
-        <div className="flex h-[145px] items-center justify-center overflow-hidden bg-white sm:h-[160px]">
-          {image ? (
-            <img
-              src={image}
-              alt={product.name}
-              className="h-full w-full object-contain p-0 transition duration-500 group-hover:scale-105"
-            />
-          ) : (
-            <div className="text-5xl opacity-20">
-              🛍️
-            </div>
-          )}
+          {typeof product.oldPrice === "number" &&
+            product.oldPrice > Number(product.price || 0) && (
+              <span className="text-[8px] font-bold text-black line-through sm:text-[8px]">
+                {formatCurrency(product.oldPrice, currency)}
+              </span>
+            )}
         </div>
 
-        <div className="px-3 py-2">
-          <div className="flex items-end justify-between gap-2">
-            <div>
-              <p className="text-sm font-medium text-[#e30613]">
-                {formatCurrency(
-                  Number(product.price || 0),
-                  currency
-                )}
-              </p>
+        <div className="mt-0.5 flex items-center justify-center gap-1.5 whitespace-nowrap text-[8px] font-bold text-black sm:text-[8px]">
+          <span>
+            <span className="mr-0.5 text-[9px] font-black text-[#D00000]">
+              ♥
+            </span>{" "}
+            {likes} Likes
+          </span>
 
-              {typeof product.oldPrice === "number" &&
-                product.oldPrice >
-                  Number(product.price || 0) && (
-                  <p className="text-[9px] text-slate-400 line-through">
-                    {formatCurrency(
-                      product.oldPrice,
-                      currency
-                    )}
-                  </p>
-                )}
-            </div>
-          </div>
-
-          <div className="mt-1 flex items-center gap-3 text-[9px] text-slate-500">
-            <span>❤️ {likes} Likes</span>
-            <span>🛒 {orders} Ordered</span>
-          </div>
+          <span>
+            <span className="mr-0.5 text-[9px] font-black text-[#D00000]">
+              🛒
+            </span>{" "}
+            {orders} Ordered
+          </span>
         </div>
-      </button>
 
-      <div className="px-3 pb-3">
-        <button
-          type="button"
-          onClick={() => addToCart(product)}
-          className="w-full rounded-lg bg-[#2563eb] py-2 text-[9px] font-medium text-white transition hover:bg-[#1d4ed8]"
-        >
-          {language === "sw"
-            ? "ONGEZA KIKAPUNI"
-            : "ADD TO CART"}
-        </button>
+        <div className="mt-1 flex justify-center">
+          <button
+            type="button"
+            onClick={() => addToCart(product)}
+            className="inline-flex rounded-md bg-[#E30613] px-8 py-1.5 text-[10px] font-semibold text-white transition hover:bg-[#c80511]"
+          >
+            {language === "sw" ? "Ongeza" : "Add"}
+          </button>
+        </div>
       </div>
     </article>
   );

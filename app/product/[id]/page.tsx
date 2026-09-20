@@ -592,17 +592,14 @@ window.dispatchEvent(new Event("cartUpdated"));
 
       const data = await response.json();
 
-      if (response.status === 401) {
-        alert(
-          t(
-            "Please login to like this product.",
-            "Tafadhali ingia kwenye account yako ili ku-like bidhaa hii."
-          )
-        );
-        return;
-      }
-
       if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error(
+            data?.message ||
+              data?.error ||
+              "Unable to update like"
+          );
+        }
         throw new Error(data?.error || "Failed to update like");
       }
 

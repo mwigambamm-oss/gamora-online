@@ -1112,12 +1112,33 @@ window.dispatchEvent(new Event("cartUpdated"));
               </button>
             </div>
 
-            <a
-              href="https://wa.me/255798555221"
-              className="mt-2 inline-flex rounded-md bg-green-600 px-4 py-2 text-[11px] font-medium text-white hover:bg-green-700"
-            >
-              💬 {t("WhatsApp", "WhatsApp")}
-            </a>
+            <div className="mt-4 w-full text-center">
+              <p className="text-sm font-semibold text-slate-800">
+                {t("Buying in bulk or selling wholesale?", "Unanunua kwa jumla au unauza kwa jumla?")}
+              </p>
+              <p className="mt-1 text-xs leading-5 text-slate-600">
+                {t(
+                  "Contact Gamora Online for wholesale prices and bulk orders. You can reach us through WhatsApp or email us at ",
+                  "Wasiliana na Gamora Online kwa bei za jumla na oda kubwa. Unaweza kuwasiliana nasi kupitia WhatsApp au barua pepe "
+                )}
+                <a
+                  href="mailto:officialgamoraonline@gmail.com"
+                  className="font-semibold italic text-[#E30613] underline hover:text-red-700"
+                >
+                  officialgamoraonline@gmail.com
+                </a>
+                {t(".", ".")}
+              </p>
+            </div>
+
+            <div className="mt-2 flex w-full justify-end pr-64">
+              <a
+                href="https://wa.me/255798555221"
+                className="inline-flex rounded-md bg-green-600 px-4 py-2 text-[11px] font-medium text-white hover:bg-green-700"
+              >
+                💬 {t("WhatsApp", "WhatsApp")}
+              </a>
+            </div>
 
           </div>
 

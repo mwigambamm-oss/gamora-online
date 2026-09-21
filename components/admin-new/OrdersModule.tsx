@@ -40,6 +40,12 @@ export default function OrdersModule() {
 
   useEffect(() => {
     loadOrders();
+
+    const interval = setInterval(() => {
+      loadOrders();
+    }, 15000);
+
+    return () => clearInterval(interval);
   }, []);
 
   async function handleStatusChange(id: string, status: string) {

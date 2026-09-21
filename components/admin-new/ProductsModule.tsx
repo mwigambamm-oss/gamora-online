@@ -44,6 +44,8 @@ export default function ProductsModule() {
     stock: "",
     colors: "",
     sizes: "",
+    sizePrices: {} as Record<string, string>,
+    sizeQuantities: {} as Record<string, string>,
     description: "",
     image: "",
     images: [] as string[],
@@ -401,6 +403,40 @@ export default function ProductsModule() {
         .map((item) => item.trim())
         .filter(Boolean),
 
+      sizePrices: Object.fromEntries(
+        form.sizes
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean)
+          .map((size) => {
+            const value = form.sizePrices[size];
+            return [
+              size,
+              value !== undefined && value !== ""
+                ? Number(value)
+                : undefined,
+            ];
+          })
+          .filter(([, value]) => value !== undefined)
+      ),
+
+      sizeQuantities: Object.fromEntries(
+        form.sizes
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean)
+          .map((size) => {
+            const value = form.sizeQuantities[size];
+            return [
+              size,
+              value !== undefined && value !== ""
+                ? Number(value)
+                : undefined,
+            ];
+          })
+          .filter(([, value]) => value !== undefined)
+      ),
+
       description: form.description,
 
       specifications: extractSpecifications(form.description),
@@ -542,6 +578,18 @@ export default function ProductsModule() {
 
       sizes:
         (product.sizes || []).join(", "),
+
+      sizePrices: Object.fromEntries(
+        Object.entries(product.sizePrices || {}).map(
+          ([size, price]) => [size, String(price)]
+        )
+      ),
+
+      sizeQuantities: Object.fromEntries(
+        Object.entries(product.sizeQuantities || {}).map(
+          ([size, quantity]) => [size, String(quantity)]
+        )
+      ),
 
       description:
         product.description || "",
@@ -761,6 +809,138 @@ export default function ProductsModule() {
                   <p className="mt-1 text-xs text-gray-400">
                     Separate sizes with commas.
                   </p>
+
+                  {(() => {
+                    const sizeList = form.sizes
+                      .split(",")
+                      .map((item) => item.trim())
+                      .filter(Boolean);
+
+                    const totalStock = Number(form.stock || 0);
+
+                    let allocated = 0;
+
+                    return sizeList.length > 0 ? (
+                      <div className="mt-3 overflow-hidden rounded-xl border border-gray-200 bg-white">
+                        <div className="grid grid-cols-3 bg-gray-50 text-xs font-bold uppercase tracking-wide text-gray-600">
+                          <div className="border-r border-gray-200 px-3 py-2.5">
+                            Size
+                          </div>
+                          <div className="border-r border-gray-200 px-3 py-2.5">
+                            Optional Price
+                          </div>
+                          <div className="px-3 py-2.5">
+                            Quantity
+                          </div>
+                        </div>
+
+                        {sizeList.map((size) => {
+                          const currentQuantity = Number(
+                            form.sizeQuantities[size] || 0
+                          );
+
+                          const remainingBefore =
+                            Math.max(0, totalStock - allocated);
+
+                          allocated += currentQuantity;
+
+                          const remainingAfter =
+                            Math.max(0, totalStock - allocated);
+
+                          return (
+                            <div
+                              key={size}
+                              className="border-t border-gray-200"
+                            >
+                              <div className="grid grid-cols-3">
+                                <div className="flex items-center border-r border-gray-200 px-3 py-2.5 text-sm font-semibold text-gray-700">
+                                  {size}
+                                </div>
+
+                                <div className="border-r border-gray-200 p-2">
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    value={form.sizePrices[size] ?? ""}
+                                    onChange={(e) =>
+                                      setForm((current) => ({
+                                        ...current,
+                                        sizePrices: {
+                                          ...current.sizePrices,
+                                          [size]: e.target.value,
+                                        },
+                                      }))
+                                    }
+                                    placeholder={`Main: ${form.price || "—"}`}
+                                    className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
+                                  />
+                                </div>
+
+                                <div className="p-2">
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    max={remainingBefore + currentQuantity}
+                                    value={form.sizeQuantities[size] ?? ""}
+                                    onChange={(e) => {
+                                      const value = e.target.value;
+                                      const numericValue =
+                                        value === "" ? 0 : Number(value);
+
+                                      const maxAllowed =
+                                        remainingBefore + currentQuantity;
+
+                                      if (numericValue > maxAllowed) {
+                                        alert(
+                                          `Only ${maxAllowed} units are available for size ${size}.`
+                                        );
+                                        return;
+                                      }
+
+                                      setForm((current) => ({
+                                        ...current,
+                                        sizeQuantities: {
+                                          ...current.sizeQuantities,
+                                          [size]: value,
+                                        },
+                                      }));
+                                    }}
+                                    placeholder={String(remainingBefore)}
+                                    className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
+                                  />
+
+                                  <div className="mt-1 text-[11px] text-gray-400">
+                                    Available: {remainingBefore}
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="border-t border-gray-100 px-3 py-1.5 text-right text-[11px] text-gray-400">
+                                Remaining after {size}: {remainingAfter}
+                              </div>
+                            </div>
+                          );
+                        })}
+
+                        <div className="border-t-2 border-gray-200 bg-gray-50 px-3 py-2.5 text-xs font-semibold">
+                          <div className="flex justify-between">
+                            <span>Total Stock</span>
+                            <span>{totalStock}</span>
+                          </div>
+                          <div className="mt-1 flex justify-between">
+                            <span>Allocated to Sizes</span>
+                            <span>{allocated}</span>
+                          </div>
+                          <div className="mt-1 flex justify-between">
+                            <span>Remaining</span>
+                            <span>
+                              {Math.max(0, totalStock - allocated)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ) : null;
+                  })()}
                 </div>
 
               </div>

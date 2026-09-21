@@ -45,6 +45,198 @@ function normalizeProductColors(colors: unknown): string[] {
   return [];
 }
 
+export type ProductVariant = {
+  id: number;
+  product_id: number;
+  color?: string;
+  size?: string;
+  model?: string;
+  sku: string;
+  price?: number;
+  old_price?: number;
+  stock: number;
+  images: string[];
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+};
+
+function mapProductVariant(v: any): ProductVariant {
+  return {
+    id: Number(v.id),
+    product_id: Number(v.product_id),
+    color: v.color || "",
+    size: v.size || "",
+    model: v.model || "",
+    sku: v.sku || "",
+    price:
+      v.price !== null && v.price !== undefined
+        ? Number(v.price)
+        : undefined,
+    old_price:
+      v.old_price !== null && v.old_price !== undefined
+        ? Number(v.old_price)
+        : undefined,
+    stock: Number(v.stock || 0),
+    images: Array.isArray(v.images) ? v.images : [],
+    is_active: v.is_active !== false,
+    created_at: v.created_at || undefined,
+    updated_at: v.updated_at || undefined,
+  };
+}
+
+export async function getProductVariants(
+  productId: number
+): Promise<ProductVariant[]> {
+  const { data, error } = await supabase
+    .from("product_variants")
+    .select("*")
+    .eq("product_id", productId)
+    .order("id", { ascending: true });
+
+  if (error) {
+    console.error("Failed to load product variants:", {
+      message: error.message,
+      code: error.code,
+      details: error.details,
+      hint: error.hint,
+    });
+    return [];
+  }
+
+  return (data || []).map(mapProductVariant);
+}
+
+export async function getProductVariantById(
+  variantId: number
+): Promise<ProductVariant | null> {
+  const { data, error } = await supabase
+    .from("product_variants")
+    .select("*")
+    .eq("id", variantId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Failed to load product variant:", error);
+    return null;
+  }
+
+  return data ? mapProductVariant(data) : null;
+}
+
+export async function createProductVariant(
+  variant: Omit<ProductVariant, "id" | "created_at" | "updated_at">
+): Promise<ProductVariant> {
+  const { data, error } = await supabase
+    .from("product_variants")
+    .insert({
+      product_id: variant.product_id,
+      color: variant.color || null,
+      size: variant.size || null,
+      model: variant.model || null,
+      sku: variant.sku,
+      price:
+        variant.price !== undefined && variant.price !== null
+          ? Number(variant.price)
+          : null,
+      old_price:
+        variant.old_price !== undefined && variant.old_price !== null
+          ? Number(variant.old_price)
+          : null,
+      stock: Number(variant.stock || 0),
+      images: variant.images || [],
+      is_active: variant.is_active !== false,
+    })
+    .select("*")
+    .single();
+
+  if (error) {
+    console.error("Failed to create product variant:", error);
+    throw error;
+  }
+
+  return mapProductVariant(data);
+}
+
+export async function updateProductVariant(
+  variantId: number,
+  variant: Partial<ProductVariant>
+): Promise<ProductVariant> {
+  const dbVariant: Record<string, any> = {};
+
+  if (variant.product_id !== undefined) {
+    dbVariant.product_id = Number(variant.product_id);
+  }
+
+  if (variant.color !== undefined) {
+    dbVariant.color = variant.color || null;
+  }
+
+  if (variant.size !== undefined) {
+    dbVariant.size = variant.size || null;
+  }
+
+  if (variant.model !== undefined) {
+    dbVariant.model = variant.model || null;
+  }
+
+  if (variant.sku !== undefined) {
+    dbVariant.sku = variant.sku;
+  }
+
+  if (variant.price !== undefined) {
+    dbVariant.price =
+      variant.price === null ? null : Number(variant.price);
+  }
+
+  if (variant.old_price !== undefined) {
+    dbVariant.old_price =
+      variant.old_price === null ? null : Number(variant.old_price);
+  }
+
+  if (variant.stock !== undefined) {
+    dbVariant.stock = Number(variant.stock);
+  }
+
+  if (variant.images !== undefined) {
+    dbVariant.images = variant.images || [];
+  }
+
+  if (variant.is_active !== undefined) {
+    dbVariant.is_active = Boolean(variant.is_active);
+  }
+
+  dbVariant.updated_at = new Date().toISOString();
+
+  const { data, error } = await supabase
+    .from("product_variants")
+    .update(dbVariant)
+    .eq("id", variantId)
+    .select("*")
+    .single();
+
+  if (error) {
+    console.error("Failed to update product variant:", error);
+    throw error;
+  }
+
+  return mapProductVariant(data);
+}
+
+export async function deleteProductVariant(
+  variantId: number
+): Promise<void> {
+  const { error } = await supabase
+    .from("product_variants")
+    .delete()
+    .eq("id", variantId);
+
+  if (error) {
+    console.error("Failed to delete product variant:", error);
+    throw error;
+  }
+}
+
 export type Product = {
   id: number;
   name: string;
@@ -63,6 +255,8 @@ export type Product = {
   colors_sw?: string[];
   sizes?: string[];
   sizes_sw?: string[];
+  sizePrices?: Record<string, number>;
+  sizeQuantities?: Record<string, number>;
   storageOptions?: {
     storage: string;
     price: number;
@@ -105,6 +299,17 @@ function mapProduct(p: any): Product {
     colors_sw: Array.isArray(p.colors_sw) ? p.colors_sw : [],
     sizes: Array.isArray(p.sizes) ? p.sizes : [],
     sizes_sw: Array.isArray(p.sizes_sw) ? p.sizes_sw : [],
+    sizePrices:
+      p.size_prices &&
+      typeof p.size_prices === "object" &&
+      !Array.isArray(p.size_prices)
+        ? Object.fromEntries(
+            Object.entries(p.size_prices).map(([size, price]) => [
+              size,
+              Number(price),
+            ])
+          )
+        : {},
     storageOptions: Array.isArray(p.storage_options)
       ? p.storage_options
       : [],
@@ -185,6 +390,8 @@ export async function saveProduct(product: Omit<Product, "id">) {
     images: product.images || [],
     colors: normalizeProductColors(product.colors),
     sizes: product.sizes || [],
+    size_prices: product.sizePrices || {},
+    size_quantities: product.sizeQuantities || {},
     image_color_map: product.image_color_map || {},
     specifications: product.specifications || {},
     specifications_sw: product.specifications_sw || {},
@@ -267,6 +474,10 @@ export async function updateProduct(
 
   if (product.sizes !== undefined) {
     dbProduct.sizes = product.sizes;
+  }
+
+  if (product.sizePrices !== undefined) {
+    dbProduct.size_prices = product.sizePrices || {};
   }
 
   if (product.image_color_map !== undefined) {

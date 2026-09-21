@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 
+const GUEST_COOKIE = "gamora_guest_id";
+
 function getAdminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -11,6 +13,21 @@ function getAdminClient() {
   }
 
   return createClient(url, serviceKey);
+}
+
+function getGuestId(request: Request) {
+  const cookieHeader = request.headers.get("cookie") || "";
+
+  const match = cookieHeader
+    .split(";")
+    .map((cookie) => cookie.trim())
+    .find((cookie) => cookie.startsWith(`${GUEST_COOKIE}=`));
+
+  return match ? decodeURIComponent(match.split("=").slice(1).join("=")) : null;
+}
+
+function createGuestId() {
+  return crypto.randomUUID();
 }
 
 async function getAuthenticatedUser(request: Request) {
@@ -55,7 +72,8 @@ async function getAuthenticatedUser(request: Request) {
 
 async function getLikeState(
   productId: number,
-  userId?: string
+  userId?: string,
+  guestId?: string
 ) {
   const admin = getAdminClient();
 
@@ -96,6 +114,19 @@ async function getLikeState(
     }
 
     liked = Boolean(existingLike);
+  } else if (guestId) {
+    const { data: existingLike, error: likeError } = await admin
+      .from("product_likes")
+      .select("id")
+      .eq("product_id", productId)
+      .eq("guest_id", guestId)
+      .maybeSingle();
+
+    if (likeError) {
+      throw new Error(likeError.message);
+    }
+
+    liked = Boolean(existingLike);
   }
 
   const baselineLikes = Math.max(
@@ -116,6 +147,26 @@ async function getLikeState(
   };
 }
 
+function applyGuestCookie(
+  response: NextResponse,
+  guestId: string,
+  shouldSetCookie: boolean
+) {
+  if (shouldSetCookie) {
+    response.cookies.set({
+      name: GUEST_COOKIE,
+      value: guestId,
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 365,
+    });
+  }
+
+  return response;
+}
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -133,16 +184,30 @@ export async function GET(
 
     const user = await getAuthenticatedUser(request);
 
+    let guestId = getGuestId(request);
+    const shouldSetGuestCookie = !user && !guestId;
+
+    if (!user && !guestId) {
+      guestId = createGuestId();
+    }
+
     const state = await getLikeState(
       productId,
-      user?.id
+      user?.id,
+      user ? undefined : guestId || undefined
     );
 
-    return NextResponse.json(state, {
+    const response = NextResponse.json(state, {
       headers: {
         "Cache-Control": "no-store",
       },
     });
+
+    if (!user && guestId) {
+      applyGuestCookie(response, guestId, shouldSetGuestCookie);
+    }
+
+    return response;
   } catch (error) {
     console.error("Like GET error:", error);
 
@@ -175,38 +240,61 @@ export async function POST(
 
     const user = await getAuthenticatedUser(request);
 
-    if (!user) {
-      return NextResponse.json(
-        {
-          error: "LOGIN_REQUIRED",
-          message: "Please login to like this product.",
-        },
-        { status: 401 }
-      );
+    let guestId = getGuestId(request);
+    const shouldSetGuestCookie = !user && !guestId;
+
+    if (!user && !guestId) {
+      guestId = createGuestId();
     }
 
     const admin = getAdminClient();
 
-    const { data: existingLike, error: existingError } =
-      await admin
+    let existingLike: { id: number } | null = null;
+
+    if (user) {
+      const { data, error } = await admin
         .from("product_likes")
         .select("id")
         .eq("product_id", productId)
         .eq("user_id", user.id)
         .maybeSingle();
 
-    if (existingError) {
-      throw new Error(existingError.message);
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      existingLike = data;
+    } else if (guestId) {
+      const { data, error } = await admin
+        .from("product_likes")
+        .select("id")
+        .eq("product_id", productId)
+        .eq("guest_id", guestId)
+        .maybeSingle();
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      existingLike = data;
     }
 
     let liked = false;
 
     if (existingLike) {
-      const { error: deleteError } = await admin
+      let deleteQuery = admin
         .from("product_likes")
         .delete()
         .eq("id", existingLike.id)
-        .eq("user_id", user.id);
+        .eq("product_id", productId);
+
+      if (user) {
+        deleteQuery = deleteQuery.eq("user_id", user.id);
+      } else if (guestId) {
+        deleteQuery = deleteQuery.eq("guest_id", guestId);
+      }
+
+      const { error: deleteError } = await deleteQuery;
 
       if (deleteError) {
         throw new Error(deleteError.message);
@@ -214,12 +302,19 @@ export async function POST(
 
       liked = false;
     } else {
-      const { error: insertError } = await admin
-        .from("product_likes")
-        .insert({
-          product_id: productId,
-          user_id: user.id,
-        });
+      const { error: insertError } = user
+        ? await admin
+            .from("product_likes")
+            .insert({
+              product_id: productId,
+              user_id: user.id,
+            })
+        : await admin
+            .from("product_likes")
+            .insert({
+              product_id: productId,
+              guest_id: guestId!,
+            });
 
       if (insertError) {
         if (insertError.code === "23505") {
@@ -234,17 +329,27 @@ export async function POST(
 
     const state = await getLikeState(
       productId,
-      user.id
+      user?.id,
+      user ? undefined : guestId || undefined
     );
 
-    return NextResponse.json({
-      ...state,
-      liked,
-    }, {
-      headers: {
-        "Cache-Control": "no-store",
+    const response = NextResponse.json(
+      {
+        ...state,
+        liked,
       },
-    });
+      {
+        headers: {
+          "Cache-Control": "no-store",
+        },
+      }
+    );
+
+    if (!user && guestId) {
+      applyGuestCookie(response, guestId, shouldSetGuestCookie);
+    }
+
+    return response;
   } catch (error) {
     console.error("Like POST error:", error);
 

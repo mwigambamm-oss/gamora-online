@@ -51,29 +51,71 @@ export default function CartPage() {
     localStorage.setItem("gamora_cart", JSON.stringify(updatedCart));
   }
 
-  function increase(id: number) {
+  function isSameCartItem(
+    item: CartItem,
+    id: number,
+    selectedColor?: string,
+    selectedSize?: string
+  ) {
+    return (
+      item.id === id &&
+      (item.selectedColor || "") === (selectedColor || "") &&
+      (item.selectedSize || "") === (selectedSize || "")
+    );
+  }
+
+  function increase(
+    id: number,
+    selectedColor?: string,
+    selectedSize?: string
+  ) {
+    const updated = cart.map((item) => {
+      if (!isSameCartItem(item, id, selectedColor, selectedSize)) {
+        return item;
+      }
+
+      const maxStock = Number(item.stock || 0);
+      const nextQuantity = Number(item.quantity || 0) + 1;
+
+      return {
+        ...item,
+        quantity:
+          maxStock > 0
+            ? Math.min(maxStock, nextQuantity)
+            : nextQuantity,
+      };
+    });
+
+    saveCart(updated);
+  }
+
+  function decrease(
+    id: number,
+    selectedColor?: string,
+    selectedSize?: string
+  ) {
     const updated = cart.map((item) =>
-      item.id === id
-        ? { ...item, quantity: item.quantity + 1 }
+      isSameCartItem(item, id, selectedColor, selectedSize)
+        ? {
+            ...item,
+            quantity: Math.max(1, Number(item.quantity || 0) - 1),
+          }
         : item
     );
 
     saveCart(updated);
   }
 
-  function decrease(id: number) {
-    const updated = cart
-      .map((item) =>
-        item.id === id
-          ? { ...item, quantity: Math.max(1, item.quantity - 1) }
-          : item
-      );
+  function removeItem(
+    id: number,
+    selectedColor?: string,
+    selectedSize?: string
+  ) {
+    const updated = cart.filter(
+      (item) =>
+        !isSameCartItem(item, id, selectedColor, selectedSize)
+    );
 
-    saveCart(updated);
-  }
-
-  function removeItem(id: number) {
-    const updated = cart.filter((item) => item.id !== id);
     saveCart(updated);
   }
 
@@ -293,6 +335,28 @@ const total =
                         {formatCurrency(Number(item.price), currency)}
                       </p>
 
+                      {(item.selectedColor || item.selectedSize) && (
+                        <div className="mt-2 space-y-1 text-xs text-slate-500">
+                          {item.selectedColor && (
+                            <p>
+                              <span className="font-medium text-slate-600">
+                                {language === "sw" ? "Rangi" : "Colour"}:
+                              </span>{" "}
+                              {item.selectedColor}
+                            </p>
+                          )}
+
+                          {item.selectedSize && (
+                            <p>
+                              <span className="font-medium text-slate-600">
+                                {language === "sw" ? "Ukubwa" : "Size"}:
+                              </span>{" "}
+                              {item.selectedSize}
+                            </p>
+                          )}
+                        </div>
+                      )}
+
                       <p className="mt-2 text-xs text-slate-500">
                         {t.quantity}
                       </p>
@@ -300,7 +364,7 @@ const total =
                       <div className="mt-2 flex items-center gap-3">
 
                         <button
-                          onClick={() => decrease(item.id)}
+                          onClick={() => decrease(item.id, item.selectedColor, item.selectedSize)}
                           className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-xs font-medium hover:bg-slate-200"
                         >
                           −
@@ -311,7 +375,7 @@ const total =
                         </span>
 
                         <button
-                          onClick={() => increase(item.id)}
+                          onClick={() => increase(item.id, item.selectedColor, item.selectedSize)}
                           className="flex h-9 w-9 items-center justify-center rounded-lg bg-sky-700 text-xs font-medium text-white hover:bg-sky-800"
                         >
                           +
@@ -323,7 +387,7 @@ const total =
 
                     {/* REMOVE */}
                     <button
-                      onClick={() => removeItem(item.id)}
+                      onClick={() => removeItem(item.id, item.selectedColor, item.selectedSize)}
                       className="self-start text-xs font-normal text-red-500 hover:text-red-700"
                     >
                       🗑️ {t.remove}

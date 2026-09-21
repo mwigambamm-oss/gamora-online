@@ -12,6 +12,13 @@ type OrderNotification = {
   order_number: string;
   customer_name?: string;
   customer_phone?: string;
+  customer_address?: string;
+  location?: {
+    latitude?: number | null;
+    longitude?: number | null;
+  } | null;
+  distance_km?: number;
+  delivery_method?: "pickup" | "delivery";
   items?: OrderItem[];
   subtotal?: number;
   delivery_fee?: number;
@@ -71,7 +78,15 @@ export async function orderRobotNotification(
     "🛒 GAMORA ONLINE - NEW ORDER\n\n" +
     `📦 Order: ${order.order_number}\n` +
     `👤 Customer: ${order.customer_name || "-"}\n` +
-    `📞 Phone: ${order.customer_phone || "-"}\n\n` +
+    `📞 Phone: ${order.customer_phone || "-"}\n` +
+    `📍 Address: ${order.customer_address || "-"}\n` +
+    `🚚 Method: ${order.delivery_method || "delivery"}\n` +
+    `📏 Distance: ${Number(order.distance_km || 0).toFixed(1)} km\n` +
+    (order.location?.latitude != null &&
+    order.location?.longitude != null
+      ? `🗺️ Location: ${order.location.latitude}, ${order.location.longitude}\n`
+      : "") +
+    "\n" +
     "🛍️ PRODUCTS\n" +
     itemsText +
     "\n\n" +

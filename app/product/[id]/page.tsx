@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getProductById, getProducts, shuffleProducts } from "@/lib/products";
+import { getProductById, getProducts, shuffleProducts, getProductVariants, type ProductVariant } from "@/lib/products";
 import { supabase } from "@/lib/supabase";
 import RelatedProducts from "@/components/product/RelatedProducts";
 import { formatCurrency, type Currency } from "@/lib/currency";
@@ -31,6 +31,8 @@ type Product = {
   >;
   colors?: string[];
   sizes?: string[];
+  sizePrices?: Record<string, number>;
+  sizeQuantities?: Record<string, number>;
   specifications?: Record<string, string>;
   specifications_sw?: Record<string, string>;
   orders_count?: number;
@@ -59,6 +61,7 @@ export default function ProductPage({
   const t = (en: string, sw: string) => (language === "sw" ? sw : en);
 
   const [product, setProduct] = useState<Product | null>(null);
+  const [variants, setVariants] = useState<ProductVariant[]>([]);
 
   const displayName = product?.name;
 
@@ -113,6 +116,7 @@ const [cartCount, setCartCount] = useState(0);
 
   const [selectedColor, setSelectedColor] = useState("");
   const [selectedSize, setSelectedSize] = useState("");
+  const [selectedModel, setSelectedModel] = useState("");
   const [activeTab, setActiveTab] = useState("description");
   const [likes, setLikes] = useState(200);
   const [orders, setOrders] = useState(300);
@@ -145,6 +149,10 @@ if (!item) {
 }
 
 setProduct(item);
+
+      // LOAD PRODUCT VARIANTS
+      const productVariants = await getProductVariants(productId);
+      setVariants(productVariants);
 
       // LOAD PERSISTENT LIKES + ORDERS
       try {
@@ -252,11 +260,7 @@ setProduct(item);
       const existing = localStorage.getItem("gamora_cart");
       const cart = existing ? JSON.parse(existing) : [];
 
-      const count = cart.reduce(
-        (total: number, item: { quantity?: number }) =>
-          total + Number(item.quantity || 0),
-        0
-      );
+      const count = Array.isArray(cart) ? cart.length : 0;
 
       setCartCount(count);
     } catch (error) {
@@ -275,6 +279,66 @@ setProduct(item);
 }, []);
 
   /*
+   * ACTIVE PRODUCT VARIANT
+   */
+  const availableVariants = variants.filter(
+    (variant) => variant.is_active !== false
+  );
+
+  const selectedVariant =
+    availableVariants.find((variant) => {
+      const colorMatches =
+        !selectedColor ||
+        (variant.color || "").trim().toLowerCase() ===
+          selectedColor.trim().toLowerCase();
+
+      const sizeMatches =
+        !selectedSize ||
+        (variant.size || "").trim().toLowerCase() ===
+          selectedSize.trim().toLowerCase();
+
+      const modelMatches =
+        !selectedModel ||
+        (variant.model || "").trim().toLowerCase() ===
+          selectedModel.trim().toLowerCase();
+
+      return colorMatches && sizeMatches && modelMatches;
+    }) || null;
+
+  const sizePrice =
+    selectedSize && product?.sizePrices
+      ? product.sizePrices[selectedSize]
+      : undefined;
+
+  const displayPrice =
+    sizePrice !== undefined && Number.isFinite(Number(sizePrice))
+      ? Number(sizePrice)
+      : selectedVariant?.price !== undefined
+        ? Number(selectedVariant.price)
+        : Number(product?.price) || 0;
+
+  const displayOldPrice =
+    selectedVariant?.old_price !== undefined
+      ? Number(selectedVariant.old_price)
+      : Number(product?.oldPrice) || 0;
+
+  const sizeQuantity =
+    selectedSize && product?.sizeQuantities
+      ? product.sizeQuantities[selectedSize]
+      : undefined;
+
+  const displayStock =
+    sizeQuantity !== undefined &&
+    Number.isFinite(Number(sizeQuantity))
+      ? Number(sizeQuantity)
+      : selectedVariant
+        ? Number(selectedVariant.stock) || 0
+        : Number(product?.stock) || 0;
+
+  const displaySku =
+    selectedVariant?.sku || "";
+
+  /*
    * PRODUCT IMAGES
    */
   const hasColorImageMap =
@@ -288,23 +352,25 @@ setProduct(item);
       : [];
 
   const colorOutOfStock =
-    !!selectedColor &&
-    hasColorImageMap &&
-    selectedColorImages.length === 0;
+    !!selectedVariant &&
+    displayStock <= 0;
 
-  const variantImages = hasColorImageMap
-    ? selectedColor
-      ? selectedColorImages
+  const variantImages =
+    selectedVariant?.images && selectedVariant.images.length > 0
+      ? selectedVariant.images
+      : hasColorImageMap
+      ? selectedColor
+        ? selectedColorImages
+        : product?.images && product.images.length > 0
+        ? product.images
+        : product?.image
+        ? [product.image]
+        : []
       : product?.images && product.images.length > 0
       ? product.images
       : product?.image
       ? [product.image]
-      : []
-    : product?.images && product.images.length > 0
-    ? product.images
-    : product?.image
-    ? [product.image]
-    : [];
+      : [];
 
   const images = variantImages;
 
@@ -328,7 +394,7 @@ setProduct(item);
    */
   useEffect(() => {
     setActiveImage(0);
-  }, [product?.id, selectedColor]);
+  }, [product?.id, selectedColor, selectedSize, selectedModel, selectedVariant?.id]);
 
   /*
    * NEXT IMAGE
@@ -443,14 +509,17 @@ setProduct(item);
 
     const cartItem = {
       id: product.id,
+      variantId: selectedVariant?.id || null,
+      sku: selectedVariant?.sku || "",
       name: product.name,
-      price: product.price,
-      oldPrice: product.oldPrice,
-      stock: product.stock,
+      price: displayPrice,
+      oldPrice: displayOldPrice || undefined,
+      stock: displayStock,
       image: cartImage,
       quantity: quantity,
       selectedColor: selectedColor,
       selectedSize: selectedSize,
+      selectedModel: selectedModel,
     };
 
     try {
@@ -460,12 +529,16 @@ setProduct(item);
       const existingIndex = cart.findIndex(
         (item: {
           id: number;
+          variantId?: number | null;
           selectedColor?: string;
           selectedSize?: string;
+          selectedModel?: string;
         }) =>
           item.id === product.id &&
+          (item.variantId || null) === (selectedVariant?.id || null) &&
           item.selectedColor === selectedColor &&
-          item.selectedSize === selectedSize
+          item.selectedSize === selectedSize &&
+          item.selectedModel === selectedModel
       );
 
       if (existingIndex >= 0) {
@@ -502,14 +575,17 @@ window.dispatchEvent(new Event("cartUpdated"));
 
     const cartItem = {
       id: product.id,
+      variantId: selectedVariant?.id || null,
+      sku: selectedVariant?.sku || "",
       name: product.name,
-      price: product.price,
-      oldPrice: product.oldPrice,
-      stock: product.stock,
+      price: displayPrice,
+      oldPrice: displayOldPrice || undefined,
+      stock: displayStock,
       image: cartImage,
       quantity: quantity,
       selectedColor: selectedColor,
       selectedSize: selectedSize,
+      selectedModel: selectedModel,
     };
 
     try {
@@ -550,10 +626,10 @@ window.dispatchEvent(new Event("cartUpdated"));
    * DISCOUNT
    */
   const discount =
-    product.oldPrice && product.oldPrice > product.price
+    displayOldPrice > displayPrice
       ? Math.round(
-          ((product.oldPrice - product.price) /
-            product.oldPrice) *
+          ((displayOldPrice - displayPrice) /
+            displayOldPrice) *
             100
         )
       : 0;
@@ -562,7 +638,7 @@ window.dispatchEvent(new Event("cartUpdated"));
    * AUTOMATIC BULK PRICING
    * Based on the product's selling price.
    */
-  const basePrice = Number(product.price) || 0;
+  const basePrice = displayPrice;
 
   const bulkPrices = {
     ten: Math.round(basePrice * 0.98),
@@ -848,7 +924,7 @@ window.dispatchEvent(new Event("cartUpdated"));
 
                   {product.oldPrice && (
                     <span className="text-xs text-[#E30613] line-through">
-                      {formatCurrency(Number(product.oldPrice), currency)}
+                      {formatCurrency(displayOldPrice, currency)}
                     </span>
                   )}
 
@@ -962,7 +1038,7 @@ window.dispatchEvent(new Event("cartUpdated"));
             </div>
 
             <div className="mt-4 text-xs font-medium text-green-600 sm:text-sm">
-              ✓ {t("In Stock", "Zinapatikana")} ({product.stock})
+              ✓ {t("In Stock", "Zinapatikana")} ({displayStock})
             </div>
 
             <div className="mt-3 flex flex-wrap items-end gap-4">
@@ -1010,6 +1086,45 @@ window.dispatchEvent(new Event("cartUpdated"));
                         }`}
                       >
                         {size}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {Array.from(
+                new Set(
+                  availableVariants
+                    .map((variant) => variant.model)
+                    .filter(Boolean)
+                )
+              ).length > 0 && (
+                <div>
+                  <p className="mb-1.5 text-xs font-medium text-slate-600">
+                    {t("Model", "Modeli")}
+                  </p>
+
+                  <div className="flex flex-wrap gap-1.5">
+                    {Array.from(
+                      new Set(
+                        availableVariants
+                          .map((variant) => variant.model)
+                          .filter(
+                            (model): model is string => Boolean(model)
+                          )
+                      )
+                    ).map((model) => (
+                      <button
+                        key={model}
+                        type="button"
+                        onClick={() => setSelectedModel(model)}
+                        className={`rounded-md px-3 py-1.5 text-xs transition ${
+                          selectedModel === model
+                            ? "border border-[#E30613] bg-red-50 text-[#E30613]"
+                            : "border border-slate-200 bg-white text-slate-600 hover:border-red-200"
+                        }`}
+                      >
+                        {model}
                       </button>
                     ))}
                   </div>

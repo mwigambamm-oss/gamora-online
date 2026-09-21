@@ -475,6 +475,18 @@ for (const cost of productCosts || []) {
         customer_phone:
           data.customer_phone,
 
+        customer_address:
+          data.customer_address,
+
+        location:
+          location || null,
+
+        distance_km:
+          Number(distanceKm || 0),
+
+        delivery_method:
+          deliveryMethod || "delivery",
+
         items:
           orderItems.map((item) => ({
             ...item,

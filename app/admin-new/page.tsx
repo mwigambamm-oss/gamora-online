@@ -268,8 +268,12 @@ return (
                   </div>
                 </div>
 
-<div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#800020] text-lg font-black text-white">
-  A
+<div className="h-20 w-20 overflow-hidden rounded-full border-2 border-[#800020] bg-white">
+  <img
+    src="/admin-picture.jpeg"
+    alt="Administrator"
+    className="h-full w-full object-contain"
+  />
 </div>
               </div>
 

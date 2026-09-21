@@ -60,6 +60,23 @@ export default function NewAdminPage() {
   const [loading, setLoading] = useState(true);
   const [adminEmail, setAdminEmail] = useState("");
   const [active, setActive] = useState("Dashboard");
+  const [activeLoaded, setActiveLoaded] = useState(false);
+
+  useEffect(() => {
+    const savedTab = localStorage.getItem("gamora_admin_active_tab");
+
+    if (savedTab) {
+      setActive(savedTab);
+    }
+
+    setActiveLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (!activeLoaded) return;
+
+    localStorage.setItem("gamora_admin_active_tab", active);
+  }, [active, activeLoaded]);
 const [period, setPeriod] = useState("Today");
 const [fromDate, setFromDate] = useState("");
 const [toDate, setToDate] = useState("");

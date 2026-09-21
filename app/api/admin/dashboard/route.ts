@@ -118,15 +118,11 @@ if (period === "Custom Range" && customFrom && customTo) {
             .in("order_id", orderIds)
         : Promise.resolve({ data: [], error: null }),
 
-      supabase
-        .from("payments")
-        .select("status")
-        .gte("created_at", fromDate!.toISOString())
-        .lte("created_at", toDate!.toISOString()),
+      Promise.resolve({ data: [], error: null }),
 
       supabase
         .from("products")
-        .select("id,stock,cost_price"),
+        .select("id,name,stock,cost_price"),
 
       supabase
         .from("expenses")
@@ -191,8 +187,8 @@ const cogs = orderItems.reduce((sum, item) => {
 
     const pendingPayments = payments.filter(
       (payment: any) =>
-        payment.status === "Pending" ||
-        payment.status === "Processing"
+        payment.payment_status === "Pending" ||
+        payment.payment_status === "Processing"
     ).length;
 
     const lowStock = products.filter(
@@ -224,6 +220,9 @@ const cogs = orderItems.reduce((sum, item) => {
 
       orders,
       orderItems,
+      products,
+      payments,
+      expenses,
     });
   } catch (error) {
     console.error("Admin dashboard error:", error);
@@ -234,7 +233,7 @@ const cogs = orderItems.reduce((sum, item) => {
         error:
           error instanceof Error
             ? error.message
-            : "Failed to load dashboard",
+            : JSON.stringify(error),
       },
       { status: 500 }
     );

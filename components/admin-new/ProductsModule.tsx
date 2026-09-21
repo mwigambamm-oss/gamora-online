@@ -1358,34 +1358,13 @@ export default function ProductsModule() {
               key={category.name}
               type="button"
               onClick={() => setSelectedCategory(category.name)}
-              className={`group overflow-hidden rounded-lg border bg-white text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
+              className={`rounded-md border px-2.5 py-1 text-[11px] font-semibold transition ${
                 selectedCategory === category.name
-                  ? "border-blue-600 ring-2 ring-blue-100"
-                  : "border-gray-200"
+                  ? "border-[#800020] bg-[#800020] text-white shadow-md"
+                  : "border-[#800020] bg-white text-[#800020] hover:bg-[#800020] hover:text-white"
               }`}
             >
-              <div className="h-14 w-full overflow-hidden bg-gray-100">
-                <img
-                  src={category.image}
-                  alt={category.name}
-                  className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
-                />
-              </div>
-
-              <div className="px-3 py-2">
-                <p className="text-xs font-semibold leading-tight text-gray-800">
-                  {category.name}
-                </p>
-
-                <p className="mt-1 text-[11px] text-gray-500">
-                  {category.name === "All Products"
-                    ? products.length
-                    : products.filter(
-                        (product) => product.category === category.name
-                      ).length}{" "}
-                  Products
-                </p>
-              </div>
+              {category.name}
             </button>
           ))}
         </div>

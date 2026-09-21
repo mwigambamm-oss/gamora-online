@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { updateProduct } from "@/lib/products";
 
 const OrdersModule = dynamic(() => import("@/components/admin-new/OrdersModule"));
 const SettingsModule = dynamic(() => import("@/components/admin-new/SettingsModule"));
@@ -25,6 +26,8 @@ type DashboardData = {
   orders?: any[];
   orderItems?: any[];
   products?: any[];
+  payments?: any[];
+  expenses?: any[];
 
   summary: {
     orders: number;
@@ -149,6 +152,37 @@ const response = await fetch(
 
   const money = (value: number) =>
     `TZS ${Number(value || 0).toLocaleString()}`;
+
+  const [selectedCard, setSelectedCard] = useState<string | null>(null);
+  const [updatingStockId, setUpdatingStockId] = useState<number | null>(null);
+
+  async function handleLowStockUpdate(product: any, value: string) {
+    const stock = Number(value);
+
+    if (!Number.isFinite(stock) || stock < 0) return;
+
+    try {
+      setUpdatingStockId(Number(product.id));
+
+      const updated = await updateProduct(Number(product.id), { stock });
+
+      setData((current) => {
+        if (!current) return current;
+
+        return {
+          ...current,
+          products: (current.products || []).map((item: any) =>
+            Number(item.id) === Number(updated.id) ? updated : item
+          ),
+        };
+      });
+    } catch (error) {
+      console.error("Failed to update stock:", error);
+      alert("Failed to update stock.");
+    } finally {
+      setUpdatingStockId(null);
+    }
+  }
 
   const cards = data
     ? [
@@ -446,9 +480,11 @@ return (
                 ) : (
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
                     {cards.map((card) => (
-                      <div
+                      <button
                         key={card.title}
-                        className="rounded-xl border bg-white p-3 shadow-sm"
+                        type="button"
+                        onClick={() => setSelectedCard(card.title)}
+                        className="rounded-xl border bg-white p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md active:scale-[0.99]"
                       >
                         <div className="flex items-center justify-between">
                           <span className="text-lg">
@@ -463,8 +499,399 @@ return (
                         <div className="mt-3 text-lg font-black text-[#800020]">
                           {card.value}
                         </div>
-                      </div>
+                      </button>
                     ))}
+                  </div>
+                )}
+
+                {/* KPI DETAILS */}
+                {selectedCard && data && (
+                  <div className="mt-4 rounded-2xl border bg-white p-5 shadow-sm">
+                    <div className="mb-4 flex items-center justify-between">
+                      <h3 className="text-lg font-black text-[#800020]">
+                        {selectedCard} Details
+                      </h3>
+
+                      <button
+                        type="button"
+                        onClick={() => setSelectedCard(null)}
+                        className="rounded-lg border px-3 py-1.5 text-sm font-bold text-slate-600 hover:bg-slate-50"
+                      >
+                        Close
+                      </button>
+                    </div>
+
+                    {selectedCard === "Orders" && (
+                      <div className="space-y-2">
+                        {(data.orders || []).map((order: any) => (
+                          <div
+                            key={order.id}
+                            className="rounded-xl border p-3"
+                          >
+                            <div className="flex flex-wrap justify-between gap-2">
+                              <span className="font-bold">
+                                {order.order_number || `Order #${order.id}`}
+                              </span>
+                              <span className="font-black">
+                                {money(order.total)}
+                              </span>
+                            </div>
+                            <div className="mt-1 text-sm text-slate-500">
+                              {order.status} •{" "}
+                              {new Date(order.created_at).toLocaleString()}
+                            </div>
+                          </div>
+                        ))}
+
+                        {(!data.orders || data.orders.length === 0) && (
+                          <div className="py-6 text-center text-slate-500">
+                            No orders found for this period.
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {selectedCard === "Revenue" && (
+                      <div className="space-y-2">
+                        {(data.orders || [])
+                          .filter((order: any) => order.status !== "Cancelled")
+                          .map((order: any) => (
+                            <div
+                              key={order.id}
+                              className="rounded-xl border p-3"
+                            >
+                              <div className="flex flex-wrap justify-between gap-2">
+                                <span className="font-bold">
+                                  {order.order_number || `Order #${order.id}`}
+                                </span>
+                                <span className="font-black">
+                                  {money(order.total)}
+                                </span>
+                              </div>
+                              <div className="mt-1 text-sm text-slate-500">
+                                {order.status} •{" "}
+                                {new Date(order.created_at).toLocaleString()}
+                              </div>
+                            </div>
+                          ))}
+
+                        {(!data.orders ||
+                          data.orders.filter(
+                            (order: any) => order.status !== "Cancelled"
+                          ).length === 0) && (
+                          <div className="py-6 text-center text-slate-500">
+                            No revenue records found for this period.
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {selectedCard === "COGS" && (
+                      <div className="space-y-2">
+                        {(data.orderItems || []).map((item: any, index: number) => {
+                          const cost =
+                            Number(item.cost_price_at_sale || 0) *
+                            Number(item.quantity || 0);
+
+                          return (
+                            <div
+                              key={`${item.order_id}-${item.product_id}-${index}`}
+                              className="rounded-xl border p-3"
+                            >
+                              <div className="flex flex-wrap justify-between gap-2">
+                                <span className="font-bold">
+                                  {item.product_name}
+                                </span>
+                                <span className="font-black">
+                                  {money(cost)}
+                                </span>
+                              </div>
+
+                              <div className="mt-1 text-sm text-slate-500">
+                                Qty: {item.quantity} • Cost/unit:{" "}
+                                {money(item.cost_price_at_sale)}
+                              </div>
+                            </div>
+                          );
+                        })}
+
+                        {(!data.orderItems ||
+                          data.orderItems.length === 0) && (
+                          <div className="py-6 text-center text-slate-500">
+                            No COGS records found for this period.
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {selectedCard === "Gross Profit" && (
+                      <div className="grid gap-3 sm:grid-cols-3">
+                        <div className="rounded-xl border p-4">
+                          <div className="text-sm text-slate-500">Revenue</div>
+                          <div className="mt-1 font-black">
+                            {money(data.summary.revenue)}
+                          </div>
+                        </div>
+
+                        <div className="rounded-xl border p-4">
+                          <div className="text-sm text-slate-500">COGS</div>
+                          <div className="mt-1 font-black">
+                            {money(data.summary.cogs)}
+                          </div>
+                        </div>
+
+                        <div className="rounded-xl border p-4">
+                          <div className="text-sm text-slate-500">Gross Profit</div>
+                          <div className="mt-1 font-black">
+                            {money(data.summary.grossProfit)}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {selectedCard === "Expenses" && (
+                      <div className="space-y-3">
+                        <div className="rounded-xl border p-4">
+                          <div className="text-sm text-slate-500">
+                            Total expenses for selected period
+                          </div>
+                          <div className="mt-1 text-xl font-black">
+                            {money(data.summary.expenses)}
+                          </div>
+                        </div>
+
+                        {(data.expenses || []).map(
+                          (expense: any, index: number) => (
+                            <div
+                              key={`${expense.expense_date}-${index}`}
+                              className="flex flex-wrap justify-between gap-2 rounded-xl border p-3"
+                            >
+                              <span className="font-bold">
+                                {expense.expense_date}
+                              </span>
+                              <span className="font-black">
+                                {money(expense.amount)}
+                              </span>
+                            </div>
+                          )
+                        )}
+
+                        {(!data.expenses || data.expenses.length === 0) && (
+                          <div className="py-6 text-center text-slate-500">
+                            No expense records found for this period.
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {selectedCard === "Net Profit" && (
+                      <div className="grid gap-3 sm:grid-cols-5">
+                        {[
+                          ["Revenue", data.summary.revenue],
+                          ["COGS", data.summary.cogs],
+                          ["Gross Profit", data.summary.grossProfit],
+                          ["Expenses", data.summary.expenses],
+                          ["Net Profit", data.summary.netProfit],
+                        ].map(([label, value]) => (
+                          <div key={String(label)} className="rounded-xl border p-4">
+                            <div className="text-sm text-slate-500">
+                              {label}
+                            </div>
+                            <div className="mt-1 font-black">
+                              {money(Number(value))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {selectedCard === "Pending Orders" && (
+                      <div className="space-y-2">
+                        {(data.orders || [])
+                          .filter(
+                            (order: any) =>
+                              order.status === "Pending" ||
+                              order.status === "Processing"
+                          )
+                          .map((order: any) => (
+                            <div key={order.id} className="rounded-xl border p-3">
+                              <div className="flex flex-wrap justify-between gap-2">
+                                <span className="font-bold">
+                                  {order.order_number || `Order #${order.id}`}
+                                </span>
+                                <span className="font-black">
+                                  {money(order.total)}
+                                </span>
+                              </div>
+                              <div className="mt-1 text-sm text-slate-500">
+                                {order.status} •{" "}
+                                {new Date(order.created_at).toLocaleString()}
+                              </div>
+                            </div>
+                          ))}
+                        {(data.orders || []).filter(
+                          (order: any) =>
+                            order.status === "Pending" ||
+                            order.status === "Processing"
+                        ).length === 0 && (
+                          <div className="py-6 text-center text-slate-500">
+                            No pending orders found for this period.
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {selectedCard === "Pending Payments" && (
+                      <div className="space-y-2">
+                        {(data.payments || [])
+                          .filter(
+                            (payment: any) =>
+                              payment.payment_status === "Pending" ||
+                              payment.payment_status === "Processing"
+                          )
+                          .map((payment: any, index: number) => {
+                            const order = (data.orders || []).find(
+                              (item: any) =>
+                                Number(item.id) === Number(payment.order_id)
+                            );
+
+                            return (
+                              <div
+                                key={`${payment.order_id}-${index}`}
+                                className="rounded-xl border p-3"
+                              >
+                                <div className="flex flex-wrap justify-between gap-2">
+                                  <span className="font-bold">
+                                    {order?.order_number ||
+                                      `Order #${payment.order_id}`}
+                                  </span>
+                                  <span className="font-black">
+                                    {money(payment.amount)}
+                                  </span>
+                                </div>
+                                <div className="mt-1 text-sm text-slate-500">
+                                  {payment.payment_status} •{" "}
+                                  {new Date(payment.created_at).toLocaleString()}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        {(data.payments || []).filter(
+                          (payment: any) =>
+                            payment.payment_status === "Pending" ||
+                            payment.payment_status === "Processing"
+                        ).length === 0 && (
+                          <div className="py-6 text-center text-slate-500">
+                            No pending payments found for this period.
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {selectedCard === "Low Stock" && (
+                      <div className="space-y-2">
+                        {(data.products || [])
+                          .filter(
+                            (product: any) =>
+                              Number(product.stock || 0) > 0 &&
+                              Number(product.stock || 0) <= 5
+                          )
+                          .map((product: any) => (
+                            <div
+                              key={product.id}
+                              className="flex flex-wrap items-center justify-between gap-3 rounded-xl border p-3"
+                            >
+                              <div className="min-w-[180px]">
+                                <div className="font-bold">
+                                  {product.name || `Product #${product.id}`}
+                                </div>
+                                <div className="text-sm text-slate-500">
+                                  Cost: {money(product.cost_price)}
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="number"
+                                  min="0"
+                                  defaultValue={Number(product.stock || 0)}
+                                  className="w-20 rounded-lg border px-3 py-2 text-center font-bold outline-none focus:border-[#800020]"
+                                  aria-label={`Stock for ${product.name || `Product #${product.id}`}`}
+                                  onChange={(event) => {
+                                    const value = Number(event.target.value);
+                                    if (Number.isFinite(value) && value >= 0) {
+                                      event.currentTarget.dataset.value = String(value);
+                                    }
+                                  }}
+                                />
+
+                                <button
+                                  type="button"
+                                  disabled={updatingStockId === Number(product.id)}
+                                  onClick={(event) => {
+                                    const input = event.currentTarget
+                                      .previousElementSibling as HTMLInputElement | null;
+
+                                    if (input) {
+                                      handleLowStockUpdate(product, input.value);
+                                    }
+                                  }}
+                                  className="rounded-lg bg-[#800020] px-3 py-2 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                  {updatingStockId === Number(product.id)
+                                    ? "Saving..."
+                                    : "Save"}
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        {(data.products || []).filter(
+                          (product: any) =>
+                            Number(product.stock || 0) > 0 &&
+                            Number(product.stock || 0) <= 5
+                        ).length === 0 && (
+                          <div className="py-6 text-center text-slate-500">
+                            No low-stock products found.
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {selectedCard === "Out of Stock" && (
+                      <div className="space-y-2">
+                        {(data.products || [])
+                          .filter(
+                            (product: any) =>
+                              Number(product.stock || 0) <= 0
+                          )
+                          .map((product: any) => (
+                            <div
+                              key={product.id}
+                              className="flex flex-wrap items-center justify-between gap-2 rounded-xl border p-3"
+                            >
+                              <div>
+                                <div className="font-bold">
+                                  {product.name || `Product #${product.id}`}
+                                </div>
+                                <div className="text-sm text-slate-500">
+                                  Cost: {money(product.cost_price)}
+                                </div>
+                              </div>
+                              <div className="font-black text-red-600">
+                                Stock: 0
+                              </div>
+                            </div>
+                          ))}
+                        {(data.products || []).filter(
+                          (product: any) =>
+                            Number(product.stock || 0) <= 0
+                        ).length === 0 && (
+                          <div className="py-6 text-center text-slate-500">
+                            No out-of-stock products found.
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
 

@@ -64,6 +64,24 @@ export default function ProductsModule() {
 
   const [uploading, setUploading] = useState(false);
 
+  type ColorDetection = {
+    image: string;
+    detectedColor: string;
+    confidence: number;
+    coverage: number;
+    alternatives: {
+      color: string;
+      confidence: number;
+      coverage: number;
+    }[];
+  };
+
+  const [colorDetections, setColorDetections] = useState<
+    ColorDetection[]
+  >([]);
+
+  const [detectingColors, setDetectingColors] = useState(false);
+
 
   async function loadProducts() {
     const data = await getProducts();
@@ -232,6 +250,8 @@ export default function ProductsModule() {
 
   async function analyzeProductImages(productId: number) {
     try {
+      setDetectingColors(true);
+
       const response = await fetch(
         `/api/admin/products/${productId}/detect-colors`,
         {
@@ -243,18 +263,88 @@ export default function ProductsModule() {
 
       if (!response.ok || !result.success) {
         throw new Error(
-          result?.error || "AI image color analysis failed"
+          result?.error || "OpenCV image color detection failed"
         );
       }
+
+      setColorDetections(
+        Array.isArray(result.imageDetections)
+          ? result.imageDetections
+          : []
+      );
 
       return result.image_color_map;
     } catch (error) {
       console.error(
-        "AI image color analysis failed:",
+        "OpenCV image color detection failed:",
         error
       );
 
+      setColorDetections([]);
+
       return null;
+    } finally {
+      setDetectingColors(false);
+    }
+  }
+
+
+  async function confirmColorMapping() {
+    if (!editingId || !colorDetections.length) {
+      return;
+    }
+
+    try {
+      const imageColorMap: Record<
+        string,
+        { images: string[]; confidence: number }
+      > = {};
+
+      for (const detection of colorDetections) {
+        const color = detection.detectedColor.trim();
+
+        if (!color) continue;
+
+        if (!imageColorMap[color]) {
+          imageColorMap[color] = {
+            images: [],
+            confidence: detection.confidence,
+          };
+        }
+
+        imageColorMap[color].images.push(detection.image);
+
+        imageColorMap[color].confidence = Math.max(
+          imageColorMap[color].confidence,
+          detection.confidence
+        );
+      }
+
+      for (const color of Object.keys(imageColorMap)) {
+        imageColorMap[color].images = [
+          ...new Set(imageColorMap[color].images),
+        ];
+      }
+
+      await updateProduct(editingId, {
+        image_color_map: imageColorMap,
+      });
+
+      alert("Product color mapping confirmed successfully.");
+
+      setColorDetections([]);
+      setForm(emptyForm);
+      setEditingId(null);
+      setShowForm(false);
+
+      await loadProducts();
+    } catch (error) {
+      console.error(
+        "Failed saving confirmed color mapping:",
+        error
+      );
+
+      alert("Failed saving color mapping.");
     }
   }
 
@@ -352,14 +442,16 @@ export default function ProductsModule() {
 
         if(imageColorMap) {
           console.log(
-            "AI image color mapping updated:",
+            "OpenCV image color mapping updated:",
             imageColorMap
           );
         }
 
         alert(
-          "Product updated successfully"
+          "Product updated. Review the detected colors before closing."
         );
+
+        return;
 
 
       }else{
@@ -378,14 +470,17 @@ export default function ProductsModule() {
 
         if(imageColorMap) {
           console.log(
-            "AI image color mapping created:",
+            "OpenCV image color mapping created:",
             imageColorMap
           );
         }
 
         alert(
-          "Product saved successfully"
+          "Product saved. Review the detected colors before closing."
         );
+
+        setEditingId(productId);
+        return;
 
 
       }
@@ -810,6 +905,119 @@ export default function ProductsModule() {
               {uploading && (
                 <div className="mt-3 rounded-xl bg-blue-50 px-4 py-3 text-sm font-medium text-blue-700">
                   Uploading images...
+                </div>
+              )}
+
+              {detectingColors && (
+                <div className="mt-4 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm font-medium text-blue-700">
+                  OpenCV is detecting product colors...
+                </div>
+              )}
+
+              {colorDetections.length > 0 && (
+                <div className="mt-5 rounded-2xl border border-gray-200 bg-white p-4">
+                  <div className="mb-4">
+                    <h4 className="text-sm font-bold text-gray-800">
+                      OpenCV Color Detection
+                    </h4>
+                    <p className="mt-1 text-xs text-gray-500">
+                      Review each image and correct the detected color if necessary.
+                    </p>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {colorDetections.map((detection, index) => (
+                      <div
+                        key={`${detection.image}-${index}`}
+                        className="overflow-hidden rounded-xl border border-gray-200 bg-gray-50"
+                      >
+                        <div className="aspect-square bg-white">
+                          <img
+                            src={detection.image}
+                            alt={`Product image ${index + 1}`}
+                            className="h-full w-full object-contain"
+                          />
+                        </div>
+
+                        <div className="space-y-3 p-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-semibold text-gray-500">
+                              Detected color
+                            </span>
+
+                            <span className="rounded-full bg-green-50 px-2.5 py-1 text-xs font-bold text-green-700">
+                              {Math.round(detection.confidence * 100)}%
+                            </span>
+                          </div>
+
+                          <select
+                            value={detection.detectedColor}
+                            onChange={(e) => {
+                              const value = e.target.value;
+
+                              setColorDetections((current) =>
+                                current.map((item, itemIndex) =>
+                                  itemIndex === index
+                                    ? {
+                                        ...item,
+                                        detectedColor: value,
+                                      }
+                                    : item
+                                )
+                              );
+                            }}
+                            className="w-full rounded-lg border border-gray-200 bg-white p-2.5 text-sm font-semibold text-gray-800 outline-none focus:border-blue-500"
+                          >
+                            {Array.from(
+                              new Set([
+                                ...form.colors
+                                  .split(",")
+                                  .map((color) => color.trim())
+                                  .filter(Boolean),
+                                ...detection.alternatives.map(
+                                  (item) => item.color
+                                ),
+                                detection.detectedColor,
+                              ])
+                            ).map((color) => (
+                              <option key={color} value={color}>
+                                {color}
+                              </option>
+                            ))}
+                          </select>
+
+                          {detection.alternatives.length > 1 && (
+                            <p className="text-[11px] text-gray-400">
+                              Alternatives:{" "}
+                              {detection.alternatives
+                                .slice(1, 4)
+                                .map((item) => item.color)
+                                .join(", ")}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-5 flex flex-col gap-3 border-t border-gray-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-700">
+                        Review complete?
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        Confirm the colors to save the image-to-color mapping.
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={confirmColorMapping}
+                      className="rounded-xl bg-green-600 px-6 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-green-700"
+                    >
+                      Confirm Colors
+                    </button>
+                  </div>
                 </div>
               )}
             </section>

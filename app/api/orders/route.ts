@@ -9,6 +9,8 @@ type OrderItem = {
   price: number;
   quantity: number;
   image?: string;
+  selectedColor?: string;
+  selectedSize?: string;
 };
 
 type OrderBody = {

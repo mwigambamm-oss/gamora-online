@@ -431,6 +431,11 @@ setProduct(item);
   function addToCart() {
     if (!product) return;
 
+    if (colorOutOfStock) {
+      alert("This color is currently unavailable.");
+      return;
+    }
+
     const cartImage =
       images[0] ||
       product.image ||
@@ -484,6 +489,11 @@ window.dispatchEvent(new Event("cartUpdated"));
 
   function buyNow() {
     if (!product) return;
+
+    if (colorOutOfStock) {
+      alert("This color is currently unavailable.");
+      return;
+    }
 
     const cartImage =
       images[0] ||

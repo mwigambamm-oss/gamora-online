@@ -4,6 +4,8 @@ type OrderItem = {
   price: number;
   quantity: number;
   image?: string;
+  selectedColor?: string;
+  selectedSize?: string;
 };
 
 type OrderNotification = {
@@ -41,8 +43,20 @@ export async function orderRobotNotification(
       const quantity =
         Number(item.quantity || 0);
 
+      const variantLines = [
+        item.selectedColor
+          ? `   🎨 Color: ${item.selectedColor}`
+          : "",
+        item.selectedSize
+          ? `   📏 Size: ${item.selectedSize}`
+          : "",
+      ].filter(Boolean);
+
       return (
         `${index + 1}. ${item.name}\n` +
+        (variantLines.length
+          ? variantLines.join("\n") + "\n"
+          : "") +
         `   ${quantity} x TZS ${price.toLocaleString()}`
       );
     }
@@ -153,16 +167,23 @@ export async function orderRobotNotification(
     }
 
     try {
-      const caption =
-        `📦 ${item.name}\n` +
-        `🔢 Qty: ${Number(
-          item.quantity || 0
-        )}\n` +
+      const captionLines = [
+        `📦 ${item.name}`,
+        item.selectedColor
+          ? `🎨 Color: ${item.selectedColor}`
+          : "",
+        item.selectedSize
+          ? `📏 Size: ${item.selectedSize}`
+          : "",
+        `🔢 Qty: ${Number(item.quantity || 0)}`,
         `💵 TZS ${(
           Number(item.price || 0) *
           Number(item.quantity || 0)
-        ).toLocaleString()}\n` +
-        `🛒 Order: ${order.order_number}`;
+        ).toLocaleString()}`,
+        `🛒 Order: ${order.order_number}`,
+      ].filter(Boolean);
+
+      const caption = captionLines.join("\n");
 
       console.log("SENDING TELEGRAM PHOTO:", image);
 

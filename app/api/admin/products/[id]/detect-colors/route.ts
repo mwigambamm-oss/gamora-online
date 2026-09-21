@@ -153,10 +153,6 @@ export async function POST(
       ];
     }
 
-    await updateProduct(productId, {
-      image_color_map: imageColorMap,
-    });
-
     return NextResponse.json({
       success: true,
       productId,

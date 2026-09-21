@@ -13,6 +13,8 @@ type CartItem = {
   quantity: number;
   stock?: number;
   image?: string;
+  selectedColor?: string;
+  selectedSize?: string;
 };
 
 type Coordinates = {

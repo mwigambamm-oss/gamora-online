@@ -1,23 +1,25 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import OrdersModule from "@/components/admin-new/OrdersModule";
-import SettingsModule from "@/components/admin-new/SettingsModule";
-import AuditLogModule from "@/components/admin-new/AuditLogModule";
-import AdminUsersModule from "@/components/admin-new/AdminUsersModule";
-import NotificationsModule from "@/components/admin-new/NotificationsModule";
-import ReviewsModule from "@/components/admin-new/ReviewsModule";
-import ReportsModule from "@/components/admin-new/ReportsModule";
-import AccountingModule from "@/components/admin-new/AccountingModule";
-import PaymentsModule from "@/components/admin-new/PaymentsModule";
-import CustomersModule from "@/components/admin-new/CustomersModule";
-import InventoryModule from "@/components/admin-new/InventoryModule";
-import ProductsModule from "@/components/admin-new/ProductsModule";
-import SalesChart from "@/components/admin-new/dashboard/SalesChart";
-import TopProducts from "@/components/admin-new/dashboard/TopProducts";
-import NotificationBell from "@/components/admin-new/dashboard/NotificationBell";
-import MessagesModule from "@/components/admin-new/MessagesModule";
+
+const OrdersModule = dynamic(() => import("@/components/admin-new/OrdersModule"));
+const SettingsModule = dynamic(() => import("@/components/admin-new/SettingsModule"));
+const AuditLogModule = dynamic(() => import("@/components/admin-new/AuditLogModule"));
+const AdminUsersModule = dynamic(() => import("@/components/admin-new/AdminUsersModule"));
+const NotificationsModule = dynamic(() => import("@/components/admin-new/NotificationsModule"));
+const ReviewsModule = dynamic(() => import("@/components/admin-new/ReviewsModule"));
+const ReportsModule = dynamic(() => import("@/components/admin-new/ReportsModule"));
+const AccountingModule = dynamic(() => import("@/components/admin-new/AccountingModule"));
+const PaymentsModule = dynamic(() => import("@/components/admin-new/PaymentsModule"));
+const CustomersModule = dynamic(() => import("@/components/admin-new/CustomersModule"));
+const InventoryModule = dynamic(() => import("@/components/admin-new/InventoryModule"));
+const ProductsModule = dynamic(() => import("@/components/admin-new/ProductsModule"));
+const SalesChart = dynamic(() => import("@/components/admin-new/dashboard/SalesChart"));
+const TopProducts = dynamic(() => import("@/components/admin-new/dashboard/TopProducts"));
+const NotificationBell = dynamic(() => import("@/components/admin-new/dashboard/NotificationBell"));
+const MessagesModule = dynamic(() => import("@/components/admin-new/MessagesModule"));
 
 type DashboardData = {
   orders?: any[];

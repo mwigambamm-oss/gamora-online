@@ -86,64 +86,78 @@ if (period === "Custom Range" && customFrom && customTo) {
 }
 
   try {
-    const [
-  ordersResult,
-  orderItemsResult,
-  paymentsResult,
-  productsResult,
-  expensesResult,
-] = await Promise.all([
-  supabase
-    .from("orders")
-    .select("id,order_number,status,total,created_at")
-    .gte(
-      "created_at",
-      (fromDate || new Date(0)).toISOString()
-    )
-    .lte(
-      "created_at",
-      (toDate || new Date()).toISOString()
-    ),
-
-  supabase
-    .from("order_items")
-    .select(
-      "order_id,order_number,product_id,product_name,price,quantity,total,cost_price_at_sale,subtotal"
-    ),
-
-  supabase
-    .from("payments")
-    .select("*")
-    .gte("created_at", fromDate!.toISOString())
-    .lte("created_at", toDate!.toISOString()),
-
-  supabase
-    .from("products")
-    .select("id,name,price,stock,cost_price"),
-
-  supabase
-    .from("expenses")
-    .select("*")
-    .gte("expense_date", fromDate!.toISOString().slice(0, 10))
-    .lte("expense_date", toDate!.toISOString().slice(0, 10)),
-]);
+    const ordersResult = await supabase
+      .from("orders")
+      .select("id,order_number,status,total,created_at")
+      .gte(
+        "created_at",
+        (fromDate || new Date(0)).toISOString()
+      )
+      .lte(
+        "created_at",
+        (toDate || new Date()).toISOString()
+      );
 
     if (ordersResult.error) throw ordersResult.error;
+
+    const orders = ordersResult.data || [];
+    const orderIds = orders.map((order) => Number(order.id));
+
+    const [
+      orderItemsResult,
+      paymentsResult,
+      productsResult,
+      expensesResult,
+    ] = await Promise.all([
+      orderIds.length > 0
+        ? supabase
+            .from("order_items")
+            .select(
+              "order_id,product_id,product_name,quantity,cost_price_at_sale"
+            )
+            .in("order_id", orderIds)
+        : Promise.resolve({ data: [], error: null }),
+
+      supabase
+        .from("payments")
+        .select("status")
+        .gte("created_at", fromDate!.toISOString())
+        .lte("created_at", toDate!.toISOString()),
+
+      supabase
+        .from("products")
+        .select("id,stock,cost_price"),
+
+      supabase
+        .from("expenses")
+        .select("amount")
+        .gte(
+          "expense_date",
+          fromDate!.toISOString().slice(0, 10)
+        )
+        .lte(
+          "expense_date",
+          toDate!.toISOString().slice(0, 10)
+        ),
+    ]);
+
     if (orderItemsResult.error) throw orderItemsResult.error;
+    if (paymentsResult.error) throw paymentsResult.error;
+    if (productsResult.error) throw productsResult.error;
+    if (expensesResult.error) throw expensesResult.error;
 
-const orders = ordersResult.data || [];
+    const orderItems = orderItemsResult.data || [];
+    const payments = paymentsResult.data || [];
+    const products = productsResult.data || [];
+    const expenses = expensesResult.data || [];
 
-const orderIds = new Set(
-  orders.map((order) => Number(order.id))
-);
+    const productCostMap = new Map(
+      products.map((product) => [
+        Number(product.id),
+        Number(product.cost_price || 0),
+      ])
+    );
 
-const orderItems = (orderItemsResult.data || []).filter(
-  (item) => orderIds.has(Number(item.order_id))
-);
-
-const payments = paymentsResult.data || [];
-const products = productsResult.data || [];
-const expenses = expensesResult.data || [];
     const revenue = orders
       .filter((order) => order.status !== "Cancelled")
       .reduce(
@@ -152,13 +166,9 @@ const expenses = expensesResult.data || [];
       );
 
 const cogs = orderItems.reduce((sum, item) => {
-  const product = products.find(
-    (p) => Number(p.id) === Number(item.product_id)
-  );
-
   const costPrice =
     Number(item.cost_price_at_sale || 0) ||
-    Number(product?.cost_price || 0);
+    Number(productCostMap.get(Number(item.product_id)) || 0);
 
   return (
     sum +
@@ -214,9 +224,6 @@ const cogs = orderItems.reduce((sum, item) => {
 
       orders,
       orderItems,
-      payments,
-      products,
-      expenses,
     });
   } catch (error) {
     console.error("Admin dashboard error:", error);

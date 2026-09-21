@@ -241,7 +241,7 @@ export default function HomePage() {
 
     async function loadProducts() {
       try {
-        const data = await getSupabaseProducts();
+        const data = await getSupabaseProducts({ limit: 100 });
 
         if (active) {
           setProducts(shuffleProducts(data));
@@ -2338,48 +2338,6 @@ function ProductCard({
   const [liked, setLiked] = useState(false);
   const [likeLoading, setLikeLoading] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
-
-    const loadLikeState = async () => {
-      try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-
-        const headers: HeadersInit = session?.access_token
-          ? { Authorization: `Bearer ${session.access_token}` }
-          : {};
-
-        const response = await fetch(
-          `/api/products/${product.id}/like`,
-          {
-            headers,
-            cache: "no-store",
-          }
-        );
-
-        if (!response.ok) return;
-
-        const data = await response.json();
-
-        if (!cancelled) {
-          setLikes(Math.max(200, Number(data.likes || 200)));
-          setOrders(Math.max(300, Number(data.orders || 300)));
-          setLiked(Boolean(data.liked));
-        }
-      } catch (error) {
-        console.error("Failed to load product like state:", error);
-      }
-    };
-
-    loadLikeState();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [product.id]);
-
   const toggleLike = async (
     e: React.MouseEvent<HTMLButtonElement>
   ) => {
@@ -2510,6 +2468,8 @@ function ProductCard({
               <img
                 src={image}
                 alt={product.name}
+                loading="lazy"
+                decoding="async"
                 className="h-full w-full object-contain object-center transition-transform duration-300 group-hover:scale-[1.03]"
               />
             ) : (

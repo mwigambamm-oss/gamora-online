@@ -338,11 +338,53 @@ function mapProduct(p: any): Product {
   };
 }
 
-export async function getProducts(): Promise<Product[]> {
-  const { data, error } = await supabase
+export async function getProducts(options?: {
+  category?: string;
+  limit?: number;
+}): Promise<Product[]> {
+  const customerFields = [
+    "id",
+    "name",
+    "name_sw",
+    "price",
+    "old_price",
+    "category",
+    "category_sw",
+    "stock",
+    "description",
+    "description_sw",
+    "image",
+    "images",
+    "colors",
+    "colors_sw",
+    "sizes",
+    "sizes_sw",
+    "size_prices",
+    "size_quantities",
+    "storage_options",
+    "specifications",
+    "specifications_sw",
+    "discount",
+    "orders_count",
+    "likes",
+    "rating",
+    "image_color_map",
+  ].join(",");
+
+  let query = supabase
     .from("products")
-    .select("*")
+    .select(options ? customerFields : "*")
     .order("id", { ascending: false });
+
+  if (options?.category) {
+    query = query.eq("category", options.category);
+  }
+
+  if (options?.limit) {
+    query = query.limit(options.limit);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error("Failed to load products:", error);

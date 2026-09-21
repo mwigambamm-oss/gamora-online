@@ -24,17 +24,12 @@ export default function CategoryPage() {
 
   useEffect(() => {
     async function load() {
-      const all = await getProducts();
+      const products = await getProducts({
+        category: name.toLowerCase(),
+        limit: 100,
+      });
 
-      setProducts(
-        shuffleProducts(
-          all.filter(
-            (p) =>
-              p.category?.toLowerCase() ===
-              name.toLowerCase()
-          )
-        )
-      );
+      setProducts(shuffleProducts(products));
     }
 
     load();

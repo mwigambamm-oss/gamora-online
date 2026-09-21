@@ -961,6 +961,107 @@ window.dispatchEvent(new Event("cartUpdated"));
               </div>
             </div>
 
+            <div className="mt-4 text-xs font-medium text-green-600 sm:text-sm">
+              ✓ {t("In Stock", "Zinapatikana")} ({product.stock})
+            </div>
+
+            {product.colors && product.colors.length > 0 && (
+              <div className="mt-3">
+                <p className="mb-1.5 text-xs font-medium text-slate-600">
+                  {t("Color", "Rangi")}
+                </p>
+
+                <div className="flex flex-wrap gap-1.5">
+                  {product.colors.map((color) => (
+                    <button
+                      key={color}
+                      type="button"
+                      onClick={() => setSelectedColor(color)}
+                      className={`rounded-md px-3 py-1.5 text-xs transition ${
+                        selectedColor === color
+                          ? "border border-[#E30613] bg-red-50 text-[#E30613]"
+                          : "border border-slate-200 bg-white text-slate-600 hover:border-red-200"
+                      }`}
+                    >
+                      {color}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {product.sizes && product.sizes.length > 0 && (
+              <div className="mt-3">
+                <p className="mb-1.5 text-xs font-medium text-slate-600">
+                  {t("Size", "Ukubwa")}
+                </p>
+
+                <div className="flex flex-wrap gap-1.5">
+                  {product.sizes.map((size) => (
+                    <button
+                      key={size}
+                      type="button"
+                      onClick={() => setSelectedSize(size)}
+                      className={`rounded-md px-3 py-1.5 text-xs transition ${
+                        selectedSize === size
+                          ? "border border-[#E30613] bg-red-50 text-[#E30613]"
+                          : "border border-slate-200 bg-white text-slate-600 hover:border-red-200"
+                      }`}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="mt-3">
+              <p className="mb-1.5 text-xs font-medium text-slate-600">
+                {t("Quantity", "Idadi")}
+              </p>
+
+              <div className="flex w-fit items-center overflow-hidden rounded-md border border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                  className="h-8 w-8 text-sm text-slate-600 hover:bg-slate-50"
+                >
+                  −
+                </button>
+
+                <input
+                  type="number"
+                  min={1}
+                  value={quantity}
+                  onChange={(e) => {
+                    const value = Number(e.target.value);
+
+                    if (!e.target.value) {
+                      setQuantity(1);
+                      return;
+                    }
+
+                    setQuantity(Math.max(1, value));
+                  }}
+                  className="h-8 w-12 border-x border-slate-200 bg-white text-center text-xs outline-none focus:bg-red-50"
+                  aria-label={t("Quantity", "Idadi")}
+                />
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setQuantity((q) =>
+                      Math.min(product.stock || 1, q + 1)
+                    )
+                  }
+                  className="h-8 w-8 text-sm text-slate-600 hover:bg-slate-50"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+
             {displayDescription && (
               <div className="mt-4">
                 <h3 className="text-sm font-bold text-slate-900 sm:text-base">
@@ -1061,92 +1162,6 @@ window.dispatchEvent(new Event("cartUpdated"));
               </div>
             )}
 
-            <div className="mt-4 text-xs font-medium text-green-600 sm:text-sm">
-              ✓ {t("In Stock", "Zinapatikana")} ({product.stock})
-            </div>
-
-            {product.colors && product.colors.length > 0 && (
-              <div className="mt-3">
-                <p className="mb-1.5 text-xs font-medium text-slate-600">
-                  {t("Color", "Rangi")}
-                </p>
-
-                <div className="flex flex-wrap gap-1.5">
-                  {product.colors.map((color) => (
-                    <button
-                      key={color}
-                      type="button"
-                      onClick={() => setSelectedColor(color)}
-                      className={`rounded-md px-3 py-1.5 text-xs transition ${
-                        selectedColor === color
-                          ? "border border-[#E30613] bg-red-50 text-[#E30613]"
-                          : "border border-slate-200 bg-white text-slate-600 hover:border-red-200"
-                      }`}
-                    >
-                      {color}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {product.sizes && product.sizes.length > 0 && (
-              <div className="mt-3">
-                <p className="mb-1.5 text-xs font-medium text-slate-600">
-                  {t("Size", "Ukubwa")}
-                </p>
-
-                <div className="flex flex-wrap gap-1.5">
-                  {product.sizes.map((size) => (
-                    <button
-                      key={size}
-                      type="button"
-                      onClick={() => setSelectedSize(size)}
-                      className={`rounded-md px-3 py-1.5 text-xs transition ${
-                        selectedSize === size
-                          ? "border border-[#E30613] bg-red-50 text-[#E30613]"
-                          : "border border-slate-200 bg-white text-slate-600 hover:border-red-200"
-                      }`}
-                    >
-                      {size}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div className="mt-3">
-              <p className="mb-1.5 text-xs font-medium text-slate-600">
-                {t("Quantity", "Idadi")}
-              </p>
-
-              <div className="flex w-fit items-center overflow-hidden rounded-md border border-slate-200">
-                <button
-                  type="button"
-                  onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                  className="h-8 w-8 text-sm text-slate-600 hover:bg-slate-50"
-                >
-                  −
-                </button>
-
-                <span className="flex h-8 w-9 items-center justify-center border-x border-slate-200 text-xs">
-                  {quantity}
-                </span>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    setQuantity((q) =>
-                      Math.min(product.stock || 1, q + 1)
-                    )
-                  }
-                  className="h-8 w-8 text-sm text-slate-600 hover:bg-slate-50"
-                >
-                  +
-                </button>
-              </div>
-            </div>
-
             <div className="mt-4 flex w-full gap-2 sm:w-auto">
               <button
                 type="button"
@@ -1163,34 +1178,6 @@ window.dispatchEvent(new Event("cartUpdated"));
               >
                 ⚡ {t("Buy", "Nunua")}
               </button>
-            </div>
-
-            <div className="mt-4 w-full text-center">
-              <p className="text-sm font-semibold text-slate-800">
-                {t("Buying in bulk or selling wholesale?", "Unanunua kwa jumla au unauza kwa jumla?")}
-              </p>
-              <p className="mt-1 text-xs leading-5 text-slate-600">
-                {t(
-                  "Contact Gamora Online for wholesale prices and bulk orders. You can reach us through WhatsApp or email us at ",
-                  "Wasiliana na Gamora Online kwa bei za jumla na oda kubwa. Unaweza kuwasiliana nasi kupitia WhatsApp au barua pepe "
-                )}
-                <a
-                  href="mailto:officialgamoraonline@gmail.com"
-                  className="font-semibold italic text-[#E30613] underline hover:text-red-700"
-                >
-                  officialgamoraonline@gmail.com
-                </a>
-                {t(".", ".")}
-              </p>
-            </div>
-
-            <div className="mt-2 flex w-full justify-end pr-64">
-              <a
-                href="https://wa.me/255798555221"
-                className="inline-flex rounded-md bg-green-600 px-4 py-2 text-[11px] font-medium text-white hover:bg-green-700"
-              >
-                💬 {t("WhatsApp", "WhatsApp")}
-              </a>
             </div>
 
           </div>

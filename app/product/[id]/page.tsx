@@ -965,102 +965,99 @@ window.dispatchEvent(new Event("cartUpdated"));
               ✓ {t("In Stock", "Zinapatikana")} ({product.stock})
             </div>
 
-            {product.colors && product.colors.length > 0 && (
-              <div className="mt-3">
+            <div className="mt-3 flex flex-wrap items-end gap-4">
+              {product.colors && product.colors.length > 0 && (
+                <div>
+                  <p className="mb-1.5 text-xs font-medium text-slate-600">
+                    {t("Color", "Rangi")}
+                  </p>
+
+                  <div className="flex flex-wrap gap-1.5">
+                    {product.colors.map((color) => (
+                      <button
+                        key={color}
+                        type="button"
+                        onClick={() => setSelectedColor(color)}
+                        className={`rounded-md px-3 py-1.5 text-xs transition ${
+                          selectedColor === color
+                            ? "border border-[#E30613] bg-red-50 text-[#E30613]"
+                            : "border border-slate-200 bg-white text-slate-600 hover:border-red-200"
+                        }`}
+                      >
+                        {color}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {product.sizes && product.sizes.length > 0 && (
+                <div>
+                  <p className="mb-1.5 text-xs font-medium text-slate-600">
+                    {t("Size", "Ukubwa")}
+                  </p>
+
+                  <div className="flex flex-wrap gap-1.5">
+                    {product.sizes.map((size) => (
+                      <button
+                        key={size}
+                        type="button"
+                        onClick={() => setSelectedSize(size)}
+                        className={`rounded-md px-3 py-1.5 text-xs transition ${
+                          selectedSize === size
+                            ? "border border-[#E30613] bg-red-50 text-[#E30613]"
+                            : "border border-slate-200 bg-white text-slate-600 hover:border-red-200"
+                        }`}
+                      >
+                        {size}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div>
                 <p className="mb-1.5 text-xs font-medium text-slate-600">
-                  {t("Color", "Rangi")}
+                  {t("Quantity", "Idadi")}
                 </p>
 
-                <div className="flex flex-wrap gap-1.5">
-                  {product.colors.map((color) => (
-                    <button
-                      key={color}
-                      type="button"
-                      onClick={() => setSelectedColor(color)}
-                      className={`rounded-md px-3 py-1.5 text-xs transition ${
-                        selectedColor === color
-                          ? "border border-[#E30613] bg-red-50 text-[#E30613]"
-                          : "border border-slate-200 bg-white text-slate-600 hover:border-red-200"
-                      }`}
-                    >
-                      {color}
-                    </button>
-                  ))}
+                <div className="flex w-fit items-center overflow-hidden rounded-md border border-slate-200">
+                  <button
+                    type="button"
+                    onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                    className="h-8 w-8 text-sm text-slate-600 hover:bg-slate-50"
+                  >
+                    −
+                  </button>
+
+                  <input
+                    type="number"
+                    min={1}
+                    value={quantity}
+                    onChange={(e) => {
+                      const value = Number(e.target.value);
+
+                      if (!e.target.value) {
+                        setQuantity(1);
+                        return;
+                      }
+
+                      setQuantity(Math.max(1, value));
+                    }}
+                    className="h-8 w-12 border-x border-slate-200 bg-white text-center text-xs outline-none focus:bg-red-50"
+                    aria-label={t("Quantity", "Idadi")}
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => setQuantity((q) => q + 1)}
+                    className="h-8 w-8 text-sm text-slate-600 hover:bg-slate-50"
+                  >
+                    +
+                  </button>
                 </div>
-              </div>
-            )}
-
-            {product.sizes && product.sizes.length > 0 && (
-              <div className="mt-3">
-                <p className="mb-1.5 text-xs font-medium text-slate-600">
-                  {t("Size", "Ukubwa")}
-                </p>
-
-                <div className="flex flex-wrap gap-1.5">
-                  {product.sizes.map((size) => (
-                    <button
-                      key={size}
-                      type="button"
-                      onClick={() => setSelectedSize(size)}
-                      className={`rounded-md px-3 py-1.5 text-xs transition ${
-                        selectedSize === size
-                          ? "border border-[#E30613] bg-red-50 text-[#E30613]"
-                          : "border border-slate-200 bg-white text-slate-600 hover:border-red-200"
-                      }`}
-                    >
-                      {size}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div className="mt-3">
-              <p className="mb-1.5 text-xs font-medium text-slate-600">
-                {t("Quantity", "Idadi")}
-              </p>
-
-              <div className="flex w-fit items-center overflow-hidden rounded-md border border-slate-200">
-                <button
-                  type="button"
-                  onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                  className="h-8 w-8 text-sm text-slate-600 hover:bg-slate-50"
-                >
-                  −
-                </button>
-
-                <input
-                  type="number"
-                  min={1}
-                  value={quantity}
-                  onChange={(e) => {
-                    const value = Number(e.target.value);
-
-                    if (!e.target.value) {
-                      setQuantity(1);
-                      return;
-                    }
-
-                    setQuantity(Math.max(1, value));
-                  }}
-                  className="h-8 w-12 border-x border-slate-200 bg-white text-center text-xs outline-none focus:bg-red-50"
-                  aria-label={t("Quantity", "Idadi")}
-                />
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    setQuantity((q) =>
-                      Math.min(product.stock || 1, q + 1)
-                    )
-                  }
-                  className="h-8 w-8 text-sm text-slate-600 hover:bg-slate-50"
-                >
-                  +
-                </button>
               </div>
             </div>
-
 
             {displayDescription && (
               <div className="mt-4">

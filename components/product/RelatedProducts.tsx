@@ -86,7 +86,16 @@ product.name;
       href={`/product/${product.id}`}
       className="group block min-w-0 bg-white"
     >
-      <div className="flex h-[115px] w-full items-center justify-center overflow-hidden bg-white sm:h-[130px] lg:h-[145px]">
+      <div className="relative flex h-[115px] w-full items-center justify-center overflow-hidden bg-white sm:h-[130px] lg:h-[145px]">
+        {typeof product.oldPrice === "number" &&
+          product.oldPrice > product.price && (
+            <span className="absolute right-1 top-1 z-10 rounded-sm bg-[#E30613] px-1.5 py-0.5 text-[8px] font-bold text-white sm:text-[9px]">
+              -{Math.round(
+                ((product.oldPrice - product.price) / product.oldPrice) * 100
+              )}%
+            </span>
+          )}
+
         {image ? (
           <img
             src={image}
@@ -101,30 +110,34 @@ product.name;
         )}
       </div>
 
-      <div className="pt-1.5">
+      <div className="pt-1.5 text-center">
         <h3 className="line-clamp-2 text-[10px] font-normal leading-[14px] text-[#333] sm:text-[11px] sm:leading-[15px]">
           {displayName}
         </h3>
 
-        <div className="mt-1 flex flex-wrap items-baseline gap-1">
+        <div className="mt-1 flex flex-wrap items-baseline justify-center gap-1">
           <span className="text-[12px] font-bold text-[#E30613] sm:text-[13px]">
             TZS {Number(product.price).toLocaleString()}
           </span>
 
           {typeof product.oldPrice === "number" &&
             product.oldPrice > product.price && (
-              <span className="text-[8px] text-slate-400 line-through sm:text-[9px]">
+              <span className="text-[8px] font-bold text-[#222] line-through sm:text-[9px]">
                 TZS {product.oldPrice.toLocaleString()}
               </span>
             )}
         </div>
 
-        <div className="mt-1 flex items-center gap-2 whitespace-nowrap text-[8px] text-slate-500 sm:text-[9px]">
-          <span>❤️ {likes} Likes</span>
-          <span>🛒 {orders} Ordered</span>
+        <div className="mt-1 flex items-center justify-center gap-2 whitespace-nowrap text-[8px] text-slate-500 sm:text-[9px]">
+          <span className="font-bold text-[#333]">
+            ❤️ {likes} Likes
+          </span>
+          <span className="font-bold text-[#333]">
+            🛒 {orders} Ordered
+          </span>
         </div>
 
-        <div className="mt-1.5">
+        <div className="mt-1.5 flex justify-center">
           <span className="inline-flex rounded-md bg-[#E30613] px-3 py-1 text-[9px] font-semibold text-white">
             {language === "sw" ? "Ongeza" : "Add"}
           </span>

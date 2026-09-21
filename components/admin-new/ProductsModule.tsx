@@ -233,7 +233,7 @@ export default function ProductsModule() {
   async function analyzeProductImages(productId: number) {
     try {
       const response = await fetch(
-        `/api/admin/products/${productId}/analyze-images`,
+        `/api/admin/products/${productId}/detect-colors`,
         {
           method: "POST",
         }

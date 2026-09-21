@@ -64,6 +64,9 @@ export default function ProductsModule() {
 
   const [search, setSearch] = useState("");
 
+  const [selectedCategory, setSelectedCategory] =
+    useState("All Products");
+
   const [uploading, setUploading] = useState(false);
 
   type ColorDetection = {
@@ -516,6 +519,12 @@ export default function ProductsModule() {
         );
 
         setEditingId(productId);
+
+        window.scrollTo({
+          top: 0,
+          behavior: "smooth"
+        });
+
         return;
 
 
@@ -611,11 +620,6 @@ export default function ProductsModule() {
     setShowForm(true);
 
 
-    window.scrollTo({
-      top:0,
-      behavior:"smooth"
-    });
-
   }
 
 
@@ -642,13 +646,22 @@ export default function ProductsModule() {
 
 
   const filteredProducts =
-    products.filter((p)=>
-      p.name
-      .toLowerCase()
-      .includes(
-        search.toLowerCase()
-      )
-    );
+    products.filter((p) => {
+
+      const matchesCategory =
+        selectedCategory === "All Products" ||
+        p.category === selectedCategory;
+
+      const matchesSearch =
+        p.name
+          .toLowerCase()
+          .includes(
+            search.toLowerCase()
+          );
+
+      return matchesCategory && matchesSearch;
+
+    });
 
 
   return (
@@ -662,12 +675,6 @@ export default function ProductsModule() {
         </h1>
 
 
-        <button
-          onClick={()=>setShowForm(!showForm)}
-          className="bg-blue-600 text-white px-5 py-2 rounded"
-        >
-          Add Product
-        </button>
 
 
       </div>
@@ -678,6 +685,19 @@ export default function ProductsModule() {
           onSubmit={handleSubmit}
           className="mb-8 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-lg"
         >
+
+          <div className="border-b border-gray-100 px-5 py-4">
+            <button
+              type="button"
+              onClick={() => {
+                setShowForm(false);
+                setEditingId(null);
+              }}
+              className="rounded-lg bg-gray-800 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-900"
+            >
+              ← Back to Products
+            </button>
+          </div>
 
           <div className="bg-gradient-to-r from-blue-700 to-blue-500 px-6 py-5 text-white">
             <h2 className="text-xl font-bold">
@@ -1227,6 +1247,149 @@ export default function ProductsModule() {
       )}
 
 
+
+      <div className="mb-6">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-lg font-bold text-gray-800">
+            Product Categories
+          </h2>
+
+          <button
+            type="button"
+            onClick={() => setShowForm(!showForm)}
+            className="ml-auto rounded-lg bg-red-600 px-6 py-3 font-bold text-white shadow-md transition hover:bg-red-700"
+          >
+            + Add Product
+          </button>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10">
+          {[
+            {
+              name: "All Products",
+              image: "/home-page-sample.jpeg",
+            },
+            {
+              name: "Phones & Electronics",
+              image: "/images/phone.jpg",
+            },
+            {
+              name: "Computers & Accessories",
+              image: "/images/categories/computers.jpg",
+            },
+            {
+              name: "Men's Fashion",
+              image: "/images/mens-fashion.jpg",
+            },
+            {
+              name: "Women's Fashion",
+              image: "/images/womens-fashion.jpg",
+            },
+            {
+              name: "Kids Fashion",
+              image: "/images/categories/baby.jpg",
+            },
+            {
+              name: "Shoes",
+              image: "/images/shoes.jpg",
+            },
+            {
+              name: "Bags",
+              image: "/handbag.jpg",
+            },
+            {
+              name: "Beauty & Personal Care",
+              image: "/images/categories/beauty.jpg",
+            },
+            {
+              name: "Health & Wellness",
+              image: "/images/categories/health.jpg",
+            },
+            {
+              name: "Home & Kitchen",
+              image: "/images/home-kitchen.jpg",
+            },
+            {
+              name: "Furniture",
+              image: "/images/categories/furniture.jpg",
+            },
+            {
+              name: "Jewelry & Watches",
+              image: "/images/categories/jewelry.jpg",
+            },
+            {
+              name: "Baby Products",
+              image: "/images/categories/baby.jpg",
+            },
+            {
+              name: "Sports & Fitness",
+              image: "/images/categories/sports.jpg",
+            },
+            {
+              name: "Gaming",
+              image: "/images/categories/gaming.jpg",
+            },
+            {
+              name: "Automotive",
+              image: "/images/categories/automotive.jpg",
+            },
+            {
+              name: "Tools & Hardware",
+              image: "/images/categories/home.jpg",
+            },
+            {
+              name: "Books & Stationery",
+              image: "/images/categories/books.jpg",
+            },
+            {
+              name: "Garden & Outdoor",
+              image: "/images/categories/garden.jpg",
+            },
+            {
+              name: "Food & Beverages",
+              image: "/home-page-sample.jpeg",
+            },
+            {
+              name: "Pet Supplies",
+              image: "/home-page-sample.jpeg",
+            },
+          ].map((category) => (
+            <button
+              key={category.name}
+              type="button"
+              onClick={() => setSelectedCategory(category.name)}
+              className={`group overflow-hidden rounded-lg border bg-white text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
+                selectedCategory === category.name
+                  ? "border-blue-600 ring-2 ring-blue-100"
+                  : "border-gray-200"
+              }`}
+            >
+              <div className="h-14 w-full overflow-hidden bg-gray-100">
+                <img
+                  src={category.image}
+                  alt={category.name}
+                  className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                />
+              </div>
+
+              <div className="px-3 py-2">
+                <p className="text-xs font-semibold leading-tight text-gray-800">
+                  {category.name}
+                </p>
+
+                <p className="mt-1 text-[11px] text-gray-500">
+                  {category.name === "All Products"
+                    ? products.length
+                    : products.filter(
+                        (product) => product.category === category.name
+                      ).length}{" "}
+                  Products
+                </p>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
 
       <input
         value={search}

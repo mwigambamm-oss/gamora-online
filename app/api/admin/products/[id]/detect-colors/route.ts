@@ -12,13 +12,23 @@ type Detection = {
   coverage: number;
 };
 
+type ImageDetection = {
+  image: string;
+  detectedColor: string;
+  confidence: number;
+  coverage: number;
+  alternatives: Detection[];
+};
+
 export async function POST(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
-    const product = await getProductById(Number(id));
+    const productId = Number(id);
+
+    const product = await getProductById(productId);
 
     if (!product) {
       return NextResponse.json(
@@ -58,46 +68,82 @@ export async function POST(
       "python/color_detector/detect_color.py"
     );
 
+    const imageDetections: ImageDetection[] = [];
+
+    for (const image of [...new Set(images)]) {
+      try {
+        const { stdout } = await execFileAsync(
+          python,
+          [script, image, colors.join(",")],
+          {
+            timeout: 60000,
+            maxBuffer: 1024 * 1024,
+          }
+        );
+
+        const result = JSON.parse(stdout);
+
+        if (!result.success || !Array.isArray(result.results)) {
+          continue;
+        }
+
+        const detections = result.results as Detection[];
+
+        const validDetections = detections.filter((item) =>
+          colors.some(
+            (color) =>
+              color.toLowerCase() === item.color.toLowerCase()
+          )
+        );
+
+        const best = validDetections[0];
+
+        if (!best?.color) {
+          continue;
+        }
+
+        const matchedColor =
+          colors.find(
+            (color) =>
+              color.toLowerCase() === best.color.toLowerCase()
+          ) || best.color;
+
+        imageDetections.push({
+          image,
+          detectedColor: matchedColor,
+          confidence: best.confidence,
+          coverage: best.coverage,
+          alternatives: validDetections.slice(0, 5),
+        });
+      } catch (error) {
+        console.error(
+          "OpenCV failed for image:",
+          image,
+          error
+        );
+      }
+    }
+
     const imageColorMap: Record<
       string,
       { images: string[]; confidence: number }
     > = {};
 
-    for (const image of [...new Set(images)]) {
-      const { stdout } = await execFileAsync(
-        python,
-        [script, image, colors.join(",")],
-        {
-          timeout: 60000,
-          maxBuffer: 1024 * 1024,
-        }
-      );
+    for (const detection of imageDetections) {
+      const color = detection.detectedColor;
 
-      const result = JSON.parse(stdout);
-
-      if (!result.success || !Array.isArray(result.results)) continue;
-
-      const best = result.results[0] as Detection | undefined;
-
-      if (!best?.color) continue;
-
-      const matchedColor = colors.find(
-        (color) => color.toLowerCase() === best.color.toLowerCase()
-      );
-
-      if (!matchedColor) continue;
-
-      if (!imageColorMap[matchedColor]) {
-        imageColorMap[matchedColor] = {
+      if (!imageColorMap[color]) {
+        imageColorMap[color] = {
           images: [],
-          confidence: best.confidence,
+          confidence: detection.confidence,
         };
       }
 
-      imageColorMap[matchedColor].images.push(image);
-      imageColorMap[matchedColor].confidence = Math.max(
-        imageColorMap[matchedColor].confidence,
-        best.confidence
+      imageColorMap[color].images.push(detection.image);
+
+      imageColorMap[color].confidence = Math.max(
+        imageColorMap[color].confidence,
+        detection.confidence
       );
     }
 
@@ -107,17 +153,22 @@ export async function POST(
       ];
     }
 
-    await updateProduct(Number(id), {
+    await updateProduct(productId, {
       image_color_map: imageColorMap,
     });
 
     return NextResponse.json({
       success: true,
-      productId: Number(id),
+      productId,
       image_color_map: imageColorMap,
+      imageDetections,
+      colors,
     });
   } catch (error) {
-    console.error("OpenCV color detection failed:", error);
+    console.error(
+      "OpenCV color detection failed:",
+      error
+    );
 
     return NextResponse.json(
       {

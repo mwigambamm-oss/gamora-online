@@ -594,18 +594,23 @@ export default function HomePage() {
     };
 
     return products.filter((product) => {
-      const text = productText(product);
-
-      const matchesSearch =
-        !normalizedQuery ||
-        text.includes(normalizedQuery) ||
-        categoryMatchesAlias(product.category, product.category_sw);
-
       const matchesCategory =
         selectedCategory === "All" ||
         product.category === selectedCategory;
 
-      return matchesSearch && matchesCategory;
+      if (!matchesCategory) return false;
+
+      if (!normalizedQuery) return true;
+
+      const text = productText(product);
+
+      return (
+        text.includes(normalizedQuery) ||
+        categoryMatchesAlias(
+          product.category,
+          product.category_sw
+        )
+      );
     });
   }, [products, search, selectedCategory]);
 
@@ -621,7 +626,7 @@ export default function HomePage() {
         .sort(
           (a, b) => getDiscount(b) - getDiscount(a)
         )
-        .slice(0, 20),
+        .slice(0, 12),
     [filteredProducts]
   );
 
@@ -633,7 +638,7 @@ export default function HomePage() {
             Number(b.orders_count || 0) -
             Number(a.orders_count || 0)
         )
-        .slice(0, 20),
+        .slice(0, 12),
     [filteredProducts]
   );
 
@@ -641,7 +646,7 @@ export default function HomePage() {
     () =>
       [...filteredProducts]
         .sort((a, b) => Number(b.id) - Number(a.id))
-        .slice(0, 20),
+        .slice(0, 12),
     [filteredProducts]
   );
 
@@ -653,7 +658,7 @@ export default function HomePage() {
             Number(b.orders_count || 0) -
             Number(a.orders_count || 0)
         )
-        .slice(0, 20),
+        .slice(0, 12),
     [filteredProducts]
   );
 
@@ -1713,6 +1718,7 @@ export default function HomePage() {
           <section
             key={category}
             className="border-t border-slate-100 bg-[#f3f4f6] py-8 sm:py-12"
+            style={{ contentVisibility: "auto", containIntrinsicSize: "720px" }}
           >
             <div className="mx-auto max-w-[1440px] px-4 sm:px-5">
               <div className="flex items-end justify-between gap-4">
@@ -1745,7 +1751,9 @@ export default function HomePage() {
               </div>
 
               <div className="mt-6 grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-6">
-                {categoryItems.slice(0, categoryVisibleCounts[category] || 50).map((product) => (
+                {categoryItems
+                  .slice(0, categoryVisibleCounts[category] || 8)
+                  .map((product) => (
                   <ProductCard
                     key={product.id}
                     product={product}
@@ -1756,7 +1764,7 @@ export default function HomePage() {
                 ))}
               </div>
 
-              {(categoryVisibleCounts[category] || 50) < categoryItems.length && (
+              {(categoryVisibleCounts[category] || 8) < categoryItems.length && (
                 <div className="mt-6 flex justify-center">
                   <button
                     onClick={() =>
@@ -2237,7 +2245,6 @@ function Carousel({
     const el = carouselRef.current;
     if (!el) return;
 
-    let animationFrame = 0;
     let pausedUntil = 0;
 
     const speed = 0.7;
@@ -2250,27 +2257,23 @@ function Carousel({
     el.addEventListener("touchstart", pauseAutoScroll, { passive: true });
     el.addEventListener("wheel", pauseAutoScroll, { passive: true });
 
-    const step = () => {
-      if (Date.now() >= pausedUntil) {
-        if (el.scrollWidth > el.clientWidth) {
-          el.scrollLeft += speed;
+    const timer = window.setInterval(() => {
+      if (Date.now() < pausedUntil) return;
 
-          if (
-            el.scrollLeft + el.clientWidth >=
-            el.scrollWidth - 2
-          ) {
-            el.scrollLeft = 0;
-          }
+      if (el.scrollWidth > el.clientWidth) {
+        el.scrollLeft += speed;
+
+        if (
+          el.scrollLeft + el.clientWidth >=
+          el.scrollWidth - 2
+        ) {
+          el.scrollLeft = 0;
         }
       }
-
-      animationFrame = requestAnimationFrame(step);
-    };
-
-    animationFrame = requestAnimationFrame(step);
+    }, 50);
 
     return () => {
-      cancelAnimationFrame(animationFrame);
+      window.clearInterval(timer);
       el.removeEventListener("pointerdown", pauseAutoScroll);
       el.removeEventListener("touchstart", pauseAutoScroll);
       el.removeEventListener("wheel", pauseAutoScroll);

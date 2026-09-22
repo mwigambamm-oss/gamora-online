@@ -108,7 +108,7 @@ export async function POST(
               b.coverage - a.coverage ||
               b.confidence - a.confidence
           )
-          .slice(0, 3);
+          .slice(0, 5);
 
         if (!meaningfulDetections.length) {
           continue;
@@ -173,7 +173,11 @@ export async function POST(
     const detectedProductColors = [
       ...new Set(
         imageDetections
-          .filter((detection) => detection.coverage >= 0.18)
+          .filter(
+            (detection) =>
+              detection.coverage >= 0.08 &&
+              detection.confidence >= 0.45
+          )
           .map((detection) => detection.detectedColor)
       ),
     ];

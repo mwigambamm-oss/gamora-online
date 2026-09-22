@@ -95,6 +95,31 @@ export default async function ProductLayout({
       : `${baseUrl}${product.image.startsWith("/") ? "" : "/"}${product.image}`
     : `${baseUrl}/og-image.png`;
 
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "GAMORA ONLINE",
+        item: baseUrl,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: product.category,
+        item: `${baseUrl}/category/${encodeURIComponent(product.category)}`,
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: product.name,
+        item: productUrl,
+      },
+    ],
+  };
+
   const productSchema = {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -127,6 +152,13 @@ export default async function ProductLayout({
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(productSchema),
+        }}
+      />
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(breadcrumbSchema),
         }}
       />
 

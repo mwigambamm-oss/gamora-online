@@ -1,6 +1,7 @@
 "use client";
 
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { FaFacebookF, FaInstagram, FaTiktok } from "react-icons/fa";
 import { translations, type Language } from "@/lib/translations";
@@ -1216,10 +1217,9 @@ export default function HomePage() {
                     ];
 
                     return (
-                      <button
+                      <Link
                         key={category}
-                        type="button"
-                        onClick={() => goCategory(category)}
+                        href={`/category/${encodeURIComponent(category)}`}
                         className={`group flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left transition ${accents[index]}`}
                       >
                         <span className="relative flex h-9 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-slate-50 ring-1 ring-slate-100">
@@ -1248,7 +1248,7 @@ export default function HomePage() {
                         <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-50 text-[13px] font-bold text-slate-400 transition group-hover:bg-white group-hover:text-current">
                           →
                         </span>
-                      </button>
+                      </Link>
                     );
                   })}
                 </div>
@@ -1468,9 +1468,9 @@ export default function HomePage() {
 
           <div className="mt-6 flex gap-4 overflow-x-auto pb-3 scrollbar-hide lg:grid lg:grid-cols-9 lg:overflow-visible">
             {categories.map((category) => (
-              <button
+              <Link
                 key={category}
-                onClick={() => goCategory(category)}
+                href={`/category/${encodeURIComponent(category)}`}
                 className="group min-w-[110px] text-center"
               >
                 <div className="mx-auto h-20 w-20 overflow-hidden rounded-full border border-slate-200 bg-white shadow-sm transition group-hover:-translate-y-1 group-hover:border-blue-300 group-hover:shadow-md sm:h-24 sm:w-24">
@@ -1490,7 +1490,7 @@ export default function HomePage() {
                 <p className="mt-2 line-clamp-2 text-[10px] font-bold text-slate-700 sm:text-xs">
                   {category}
                 </p>
-              </button>
+              </Link>
             ))}
           </div>
         </div>
@@ -1740,14 +1740,14 @@ export default function HomePage() {
                   </p>
                 </div>
 
-                <button
-                  onClick={() => goCategory(category)}
+                <Link
+                  href={`/category/${encodeURIComponent(category)}`}
                   className="shrink-0 rounded-full border border-slate-300 bg-white px-4 py-2 text-[10px] font-black text-slate-700 transition hover:border-blue-400 hover:text-blue-600"
                 >
                   {language === "sw"
                     ? "ONA ZOTE →"
                     : "VIEW ALL →"}
-                </button>
+                </Link>
               </div>
 
               <div className="mt-6 grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-6">
@@ -1845,18 +1845,20 @@ export default function HomePage() {
               </div>
 
               {visibleProductsCount < filteredProducts.length && (
-                <div className="mt-7 flex justify-center">
+                <div className="mt-10 flex justify-center">
                   <button
+                    type="button"
                     onClick={() =>
                       setVisibleProductsCount(
                         (count) => count + 100
                       )
                     }
-                    className="rounded-full border border-[#E30613] bg-white px-7 py-3 text-[10px] font-black text-[#E30613] transition hover:bg-[#E30613] hover:text-white sm:px-9 sm:text-xs"
+                    className="inline-flex min-w-[170px] items-center justify-center rounded-md bg-[#E30613] px-8 py-3.5 text-xs font-black uppercase tracking-wide text-white shadow-sm transition-all duration-200 hover:bg-[#c9000b] hover:shadow-md active:scale-95 sm:min-w-[190px] sm:px-10 sm:py-4 sm:text-sm"
                   >
                     {language === "sw"
-                      ? "ONA ZAIDI →"
-                      : "VIEW MORE →"}
+                      ? "ONA ZAIDI"
+                      : "VIEW MORE"}
+                    <span className="ml-2 text-base">→</span>
                   </button>
                 </div>
               )}

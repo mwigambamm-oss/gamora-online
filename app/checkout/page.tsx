@@ -868,76 +868,397 @@ export default function CheckoutPage() {
   }
 
   if (orderPlaced) {
-    return (
-      <main className="min-h-screen bg-slate-50 p-5">
-        
-<div className="mt-6 rounded-lg border bg-white p-4 text-xs">
-<h3 className="font-medium text-slate-900">{t("Payment", "Malipo")}</h3>
-<p className="mt-2">MIX BY YAS {t("Pay", "Lipa")}: <b>433064356</b></p>
-<p>MIX BY YAS {t("Phone", "Simu")}: <b>0676285283</b></p>
-<p>VODA: <b>0798555221</b></p>
-</div>
+    const receiptAddress =
+      deliveryMethod === "pickup"
+        ? "Pickup"
+        : [address.trim(), area.trim(), landmark.trim()]
+            .filter(Boolean)
+            .join(", ");
 
-<div className="mx-auto mt-10 max-w-xl rounded-3xl bg-white p-4 text-center shadow">
-          <div className="text-6xl">
-            ✅
+    const receiptDate = new Date();
+
+    async function downloadReceipt() {
+      const { pdf, Document, Page, Text, View, Image, StyleSheet } =
+        await import("@react-pdf/renderer");
+
+      const styles = StyleSheet.create({
+        page: {
+          padding: 28,
+          backgroundColor: "#800020",
+          color: "#ffffff",
+          fontFamily: "Helvetica",
+        },
+        header: {
+          alignItems: "center",
+          marginBottom: 18,
+        },
+        logo: {
+          width: 95,
+          height: 95,
+          objectFit: "contain",
+          marginBottom: 8,
+        },
+        brand: {
+          fontSize: 20,
+          fontWeight: "bold",
+          letterSpacing: 1,
+        },
+        subtitle: {
+          marginTop: 4,
+          fontSize: 9,
+          color: "#f8dfe5",
+        },
+        receiptTitle: {
+          marginTop: 18,
+          fontSize: 16,
+          fontWeight: "bold",
+          textAlign: "center",
+        },
+        card: {
+          marginTop: 14,
+          padding: 12,
+          borderRadius: 8,
+          backgroundColor: "#ffffff",
+          color: "#222222",
+        },
+        row: {
+          flexDirection: "row",
+          justifyContent: "space-between",
+          marginBottom: 6,
+          fontSize: 9,
+        },
+        label: {
+          color: "#666666",
+        },
+        value: {
+          fontWeight: "bold",
+        },
+        divider: {
+          borderBottomWidth: 1,
+          borderBottomColor: "#dddddd",
+          marginVertical: 8,
+        },
+        item: {
+          marginBottom: 8,
+        },
+        itemName: {
+          fontSize: 9,
+          fontWeight: "bold",
+        },
+        itemLine: {
+          flexDirection: "row",
+          justifyContent: "space-between",
+          marginTop: 3,
+          fontSize: 8,
+          color: "#555555",
+        },
+        totalBox: {
+          marginTop: 10,
+          padding: 12,
+          borderRadius: 8,
+          backgroundColor: "#E30613",
+          color: "#ffffff",
+        },
+        totalLabel: {
+          fontSize: 11,
+          fontWeight: "bold",
+        },
+        totalValue: {
+          marginTop: 4,
+          fontSize: 18,
+          fontWeight: "bold",
+        },
+        footer: {
+          marginTop: 18,
+          textAlign: "center",
+          fontSize: 8,
+          color: "#f8dfe5",
+        },
+      });
+
+      const Receipt = () => (
+        <Document>
+          <Page size="A4" style={styles.page}>
+            <View style={styles.header}>
+              <Image
+                src={`${window.location.origin}/gamora-logo.png`}
+                style={styles.logo}
+              />
+              <Text style={styles.brand}>GAMORA ONLINE</Text>
+              <Text style={styles.subtitle}>
+                Your Online Marketplace
+              </Text>
+              <Text style={styles.subtitle}>
+                gamoraonline.co.tz
+              </Text>
+            </View>
+
+            <Text style={styles.receiptTitle}>
+              RECEIPT
+            </Text>
+
+            <View style={styles.card}>
+              <View style={styles.row}>
+                <Text style={styles.label}>Order Number</Text>
+                <Text style={styles.value}>{orderNumber}</Text>
+              </View>
+
+              <View style={styles.row}>
+                <Text style={styles.label}>Date</Text>
+                <Text style={styles.value}>
+                  {receiptDate.toLocaleDateString()}
+                </Text>
+              </View>
+
+              <View style={styles.row}>
+                <Text style={styles.label}>Customer</Text>
+                <Text style={styles.value}>{name.trim()}</Text>
+              </View>
+
+              <View style={styles.row}>
+                <Text style={styles.label}>Phone</Text>
+                <Text style={styles.value}>{phone.trim()}</Text>
+              </View>
+
+              <View style={styles.row}>
+                <Text style={styles.label}>Delivery</Text>
+                <Text style={styles.value}>{receiptAddress}</Text>
+              </View>
+
+              <View style={styles.row}>
+                <Text style={styles.label}>Payment</Text>
+                <Text style={styles.value}>{paymentMethod}</Text>
+              </View>
+
+              <View style={styles.row}>
+                <Text style={styles.label}>Payment Status</Text>
+                <Text style={styles.value}>PENDING</Text>
+              </View>
+
+              <View style={styles.row}>
+                <Text style={styles.label}>Order Status</Text>
+                <Text style={styles.value}>PENDING</Text>
+              </View>
+
+              <View style={styles.divider} />
+
+              {cart.map((item, index) => (
+                <View key={`${item.id}-${index}`} style={styles.item}>
+                  <Text style={styles.itemName}>
+                    {item.name}
+                  </Text>
+                  <View style={styles.itemLine}>
+                    <Text>
+                      Qty: {Number(item.quantity)}
+                    </Text>
+                    <Text>
+                      {formatCurrency(
+                        Number(item.price) *
+                          Number(item.quantity),
+                        currency
+                      )}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+
+              <View style={styles.divider} />
+
+              <View style={styles.row}>
+                <Text style={styles.label}>Subtotal</Text>
+                <Text style={styles.value}>
+                  {formatCurrency(subtotal, currency)}
+                </Text>
+              </View>
+
+              <View style={styles.row}>
+                <Text style={styles.label}>Delivery Fee</Text>
+                <Text style={styles.value}>
+                  {formatCurrency(deliveryFee, currency)}
+                </Text>
+              </View>
+
+              {distanceKm > 0 && (
+                <View style={styles.row}>
+                  <Text style={styles.label}>Distance</Text>
+                  <Text style={styles.value}>
+                    {distanceKm.toFixed(1)} KM
+                  </Text>
+                </View>
+              )}
+
+              <View style={styles.totalBox}>
+                <Text style={styles.totalLabel}>
+                  TOTAL
+                </Text>
+                <Text style={styles.totalValue}>
+                  {formatCurrency(total, currency)}
+                </Text>
+              </View>
+            </View>
+
+            <Text style={styles.footer}>
+              Thank you for shopping with GAMORA ONLINE!
+            </Text>
+          </Page>
+        </Document>
+      );
+
+      const blob = await pdf(<Receipt />).toBlob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+
+      link.href = url;
+      link.download = `Gamora-Receipt-${orderNumber}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      URL.revokeObjectURL(url);
+    }
+
+    return (
+      <main className="min-h-screen bg-[#800020] p-5">
+        <div className="mx-auto max-w-xl overflow-hidden rounded-3xl bg-[#800020] text-white shadow-2xl">
+          <div className="px-5 pb-4 pt-8 text-center">
+            <img
+              src="/gamora-logo.png"
+              alt="Gamora Online"
+              className="mx-auto h-20 w-20 object-contain"
+            />
+
+            <h1 className="mt-3 text-2xl font-black tracking-wide">
+              GAMORA ONLINE
+            </h1>
+
+            <p className="mt-1 text-sm text-pink-100">
+              {t("Order received", "Order imepokelewa")}
+            </p>
+
+            <p className="mt-3 text-xs text-pink-100">
+              {t(
+                "Your order has been submitted successfully.",
+                "Order yako imewasilishwa kikamilifu."
+              )}
+            </p>
           </div>
 
-          <h1 className="mt-3 text-lg font-medium text-slate-900">
-            {t("Order received", "Order imepokelewa")}
-          </h1>
+          <div className="mx-3 rounded-3xl bg-white p-5 text-slate-900">
+            <div className="text-center">
+              <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">
+                Receipt
+              </p>
 
-          <p className="mt-3 text-xs text-slate-500">
-            {t("Your order has been submitted", "Order yako imewasilishwa")}
-            kikamilifu.
-          </p>
-
-          <p className="mt-3 text-xs">
-            {t("Order Number", "Namba ya Order")}
-          </p>
-
-          <p className="text-base font-bold text-sky-700">
-            {orderNumber}
-          </p>
-
-          <div className="mt-6 rounded-lg bg-slate-50 p-4 text-left text-xs">
-            <div className="flex justify-between">
-              <span>{t("Product", "Bidhaa")}</span>
-              <strong>
-                {formatCurrency(subtotal, currency)}
-              </strong>
+              <p className="mt-1 text-lg font-black text-[#800020]">
+                {orderNumber}
+              </p>
             </div>
 
-            <div className="mt-2 flex justify-between">
-              <span>{t("Delivery", "Usafirishaji")}</span>
-              <strong>
-                {formatCurrency(deliveryFee, currency)}
-              </strong>
-            </div>
+            <div className="mt-5 space-y-2 rounded-xl bg-slate-50 p-4 text-xs">
+              <div className="flex justify-between gap-3">
+                <span className="text-slate-500">Customer</span>
+                <strong>{name.trim()}</strong>
+              </div>
 
-            {distanceKm > 0 && (
-              <div className="mt-2 flex justify-between">
-                <span>{t("Distance", "Umbali")}</span>
-                <strong>
-                  {distanceKm.toFixed(1)} KM
+              <div className="flex justify-between gap-3">
+                <span className="text-slate-500">Phone</span>
+                <strong>{phone.trim()}</strong>
+              </div>
+
+              <div className="flex justify-between gap-3">
+                <span className="text-slate-500">Delivery</span>
+                <strong className="max-w-[65%] text-right">
+                  {receiptAddress}
                 </strong>
               </div>
-            )}
 
-            <div className="mt-3 flex justify-between border-t pt-3 text-xs font-normal">
-              <span>{t("Total", "Jumla")}</span>
-              <span className="text-sky-700">
+              <div className="flex justify-between gap-3">
+                <span className="text-slate-500">Payment</span>
+                <strong>{paymentMethod}</strong>
+              </div>
+            </div>
+
+            <div className="mt-4 space-y-2">
+              {cart.map((item, index) => (
+                <div
+                  key={`${item.id}-${index}`}
+                  className="flex items-center justify-between gap-3 border-b pb-2 text-xs"
+                >
+                  <div>
+                    <div className="font-bold">
+                      {item.name}
+                    </div>
+                    <div className="text-slate-500">
+                      Qty: {Number(item.quantity)}
+                    </div>
+                  </div>
+
+                  <strong>
+                    {formatCurrency(
+                      Number(item.price) *
+                        Number(item.quantity),
+                      currency
+                    )}
+                  </strong>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-4 space-y-2 text-xs">
+              <div className="flex justify-between">
+                <span>Subtotal</span>
+                <strong>
+                  {formatCurrency(subtotal, currency)}
+                </strong>
+              </div>
+
+              <div className="flex justify-between">
+                <span>Delivery</span>
+                <strong>
+                  {formatCurrency(deliveryFee, currency)}
+                </strong>
+              </div>
+
+              {distanceKm > 0 && (
+                <div className="flex justify-between">
+                  <span>Distance</span>
+                  <strong>
+                    {distanceKm.toFixed(1)} KM
+                  </strong>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-4 rounded-2xl bg-[#E30613] p-4 text-white">
+              <div className="text-xs font-bold uppercase tracking-wider">
+                Total
+              </div>
+              <div className="mt-1 text-2xl font-black">
                 {formatCurrency(total, currency)}
-              </span>
+              </div>
+            </div>
+
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={downloadReceipt}
+                className="rounded-xl bg-[#800020] px-4 py-3 text-sm font-black text-white shadow-md transition hover:bg-[#650018]"
+              >
+                Download Receipt
+              </button>
+
+              <a
+                href="/"
+                className="rounded-xl border border-[#800020] px-4 py-3 text-center text-sm font-black text-[#800020] transition hover:bg-pink-50"
+              >
+                {t("Back Home", "Rudi Home")}
+              </a>
             </div>
           </div>
 
-          <a
-            href="/"
-            className="mt-4 inline-block rounded-lg bg-sky-700 px-4 py-2 font-bold text-white"
-          >
-            {t("Back Home", "Rudi Home")}
-          </a>
+          <p className="px-5 py-5 text-center text-xs text-pink-100">
+            GAMORA ONLINE · gamoraonline.co.tz
+          </p>
         </div>
       </main>
     );

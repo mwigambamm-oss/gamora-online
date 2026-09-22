@@ -167,9 +167,8 @@ export async function POST(
       ];
     }
 
-    // Build the product colour list from strong image detections.
-    // A colour must occupy at least 18% of the detected product
-    // area in at least one image to become a product colour.
+    // Keep seller-entered colours and add strong colours detected
+    // from the product images. Never remove a colour entered manually.
     const detectedProductColors = [
       ...new Set(
         imageDetections
@@ -182,12 +181,22 @@ export async function POST(
       ),
     ];
 
-    // Persist both the image-to-colour mapping and detected
-    // product colours. Seller-entered colours are replaced only
-    // after successful image detection.
+    const mergedProductColors = [
+      ...colors,
+      ...detectedProductColors.filter(
+        (detectedColor) =>
+          !colors.some(
+            (color) =>
+              color.toLowerCase() === detectedColor.toLowerCase()
+          )
+      ),
+    ];
+
+    // Persist the image-to-colour mapping and the merged product
+    // colour list. Seller-entered colours are always preserved.
     await updateProduct(productId, {
       image_color_map: imageColorMap,
-      colors: detectedProductColors,
+      colors: mergedProductColors,
     });
 
     return NextResponse.json({
@@ -195,7 +204,7 @@ export async function POST(
       productId,
       image_color_map: imageColorMap,
       imageDetections,
-      colors: detectedProductColors,
+      colors: mergedProductColors,
     });
   } catch (error) {
     console.error(

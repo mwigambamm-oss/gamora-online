@@ -911,8 +911,8 @@ export default function HomePage() {
             </button>
           </div>
 
-          <button
-            onClick={() => router.push("/account")}
+          <Link
+            href="/account"
             className="shrink-0 rounded-lg px-2 py-1 text-left transition hover:bg-red-50"
           >
             <p className="text-[10px] font-bold text-slate-500">
@@ -921,10 +921,10 @@ export default function HomePage() {
             <p className="translate-x-1 text-xs font-black text-[#E30613]">
               Account
             </p>
-          </button>
+          </Link>
 
-            <button
-              onClick={() => router.push("/cart")}
+            <Link
+              href="/cart"
               className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 border-red-100 bg-red-50 text-xl transition hover:border-[#E30613]"
               aria-label="Cart"
             >
@@ -935,7 +935,7 @@ export default function HomePage() {
                   {cartCount}
                 </span>
               )}
-            </button>
+            </Link>
           </div>
 
         </div>

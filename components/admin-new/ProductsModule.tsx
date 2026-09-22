@@ -74,10 +74,14 @@ export default function ProductsModule() {
     detectedColor: string;
     confidence: number;
     coverage: number;
+    percentage: number;
+    decision: "auto" | "review";
     alternatives: {
       color: string;
       confidence: number;
       coverage: number;
+      percentage: number;
+      decision: "auto" | "review";
     }[];
   };
 
@@ -86,6 +90,14 @@ export default function ProductsModule() {
   >([]);
 
   const [detectingColors, setDetectingColors] = useState(false);
+
+  // Product waits here until the seller reviews and confirms
+  // the detected image colours.
+  const [pendingProduct, setPendingProduct] = useState<any | null>(null);
+
+  const [pendingAction, setPendingAction] = useState<
+    "add" | "update" | null
+  >(null);
 
 
   async function loadProducts() {
@@ -253,14 +265,42 @@ export default function ProductsModule() {
 
 
 
-  async function analyzeProductImages(productId: number) {
+  async function analyzeProductImages(product: any) {
     try {
       setDetectingColors(true);
 
+      const images = Array.isArray(product?.images)
+        ? product.images.filter(
+            (url: unknown): url is string =>
+              typeof url === "string" &&
+              url.trim().length > 0
+          )
+        : [];
+
+      const colors = Array.isArray(product?.colors)
+        ? product.colors.filter(
+            (color: unknown): color is string =>
+              typeof color === "string" &&
+              color.trim().length > 0
+          )
+        : [];
+
+      if (!images.length) {
+        alert("Please add at least one product image.");
+        return false;
+      }
+
       const response = await fetch(
-        `/api/admin/products/${productId}/detect-colors`,
+        "/api/admin/products/0/detect-colors",
         {
           method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            images,
+            colors,
+          }),
         }
       );
 
@@ -268,17 +308,26 @@ export default function ProductsModule() {
 
       if (!response.ok || !result.success) {
         throw new Error(
-          result?.error || "OpenCV image color detection failed"
+          result?.error ||
+            "OpenCV image color detection failed"
         );
       }
 
-      setColorDetections(
-        Array.isArray(result.imageDetections)
-          ? result.imageDetections
-          : []
+      const detections = Array.isArray(
+        result.imageDetections
+      )
+        ? result.imageDetections
+        : [];
+
+      setColorDetections(detections);
+
+      setPendingProduct(product);
+
+      setPendingAction(
+        editingId ? "update" : "add"
       );
 
-      return result.image_color_map;
+      return true;
     } catch (error) {
       console.error(
         "OpenCV image color detection failed:",
@@ -287,7 +336,13 @@ export default function ProductsModule() {
 
       setColorDetections([]);
 
-      return null;
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Colour detection failed."
+      );
+
+      return false;
     } finally {
       setDetectingColors(false);
     }
@@ -295,7 +350,11 @@ export default function ProductsModule() {
 
 
   async function confirmColorMapping() {
-    if (!editingId || !colorDetections.length) {
+    if (
+      !pendingProduct ||
+      !colorDetections.length ||
+      !pendingAction
+    ) {
       return;
     }
 
@@ -305,39 +364,86 @@ export default function ProductsModule() {
         { images: string[]; confidence: number }
       > = {};
 
+      const confirmedColors = [
+        ...(Array.isArray(pendingProduct.colors)
+          ? pendingProduct.colors
+          : []),
+      ];
+
       for (const detection of colorDetections) {
-        const color = detection.detectedColor.trim();
+        const color =
+          detection.detectedColor.trim();
 
         if (!color) continue;
+
+        if (
+          !confirmedColors.some(
+            (existing: string) =>
+              existing.toLowerCase() ===
+              color.toLowerCase()
+          )
+        ) {
+          confirmedColors.push(color);
+        }
 
         if (!imageColorMap[color]) {
           imageColorMap[color] = {
             images: [],
-            confidence: detection.confidence,
+            confidence:
+              detection.confidence,
           };
         }
 
-        imageColorMap[color].images.push(detection.image);
-
-        imageColorMap[color].confidence = Math.max(
-          imageColorMap[color].confidence,
-          detection.confidence
+        imageColorMap[color].images.push(
+          detection.image
         );
+
+        imageColorMap[color].confidence =
+          Math.max(
+            imageColorMap[color].confidence,
+            detection.confidence
+          );
       }
 
-      for (const color of Object.keys(imageColorMap)) {
+      for (const color of Object.keys(
+        imageColorMap
+      )) {
         imageColorMap[color].images = [
-          ...new Set(imageColorMap[color].images),
+          ...new Set(
+            imageColorMap[color].images
+          ),
         ];
       }
 
-      await updateProduct(editingId, {
+      const finalProduct = {
+        ...pendingProduct,
+        colors: confirmedColors,
         image_color_map: imageColorMap,
-      });
+      };
 
-      alert("Product color mapping confirmed successfully.");
+      if (
+        pendingAction === "update" &&
+        editingId
+      ) {
+        await updateProduct(
+          editingId,
+          finalProduct
+        );
+
+        alert(
+          "Product updated successfully."
+        );
+      } else {
+        await saveProduct(finalProduct);
+
+        alert(
+          "Product added successfully."
+        );
+      }
 
       setColorDetections([]);
+      setPendingProduct(null);
+      setPendingAction(null);
       setForm(emptyForm);
       setEditingId(null);
       setShowForm(false);
@@ -345,52 +451,45 @@ export default function ProductsModule() {
       await loadProducts();
     } catch (error) {
       console.error(
-        "Failed saving confirmed color mapping:",
+        "Failed saving confirmed product:",
         error
       );
 
-      alert("Failed saving color mapping.");
+      alert(
+        "Failed to save the product."
+      );
     }
   }
 
 
   async function handleSubmit(
-    e:FormEvent
-  ){
-
+    e: FormEvent
+  ) {
     e.preventDefault();
 
-
-    if(
+    if (
       !form.name ||
       !form.price ||
       form.stock === ""
-    ){
-
+    ) {
       alert(
         "Product name, price and stock required"
       );
-
       return;
-
     }
 
-
-
-    const product:any = {
-
+    const product: any = {
       name: form.name,
 
       price: Number(form.price),
 
-      oldPrice:
-        Number(
-          form.oldPrice ||
-          form.price
-        ),
+      oldPrice: Number(
+        form.oldPrice || form.price
+      ),
 
-      cost_price:
-        Number(form.cost_price || 0),
+      cost_price: Number(
+        form.cost_price || 0
+      ),
 
       category: form.category,
 
@@ -412,15 +511,21 @@ export default function ProductsModule() {
           .map((item) => item.trim())
           .filter(Boolean)
           .map((size) => {
-            const value = form.sizePrices[size];
+            const value =
+              form.sizePrices[size];
+
             return [
               size,
-              value !== undefined && value !== ""
+              value !== undefined &&
+              value !== ""
                 ? Number(value)
                 : undefined,
             ];
           })
-          .filter(([, value]) => value !== undefined)
+          .filter(
+            ([, value]) =>
+              value !== undefined
+          )
       ),
 
       sizeQuantities: Object.fromEntries(
@@ -429,169 +534,73 @@ export default function ProductsModule() {
           .map((item) => item.trim())
           .filter(Boolean)
           .map((size) => {
-            const value = form.sizeQuantities[size];
+            const value =
+              form.sizeQuantities[size];
+
             return [
               size,
-              value !== undefined && value !== ""
+              value !== undefined &&
+              value !== ""
                 ? Number(value)
                 : undefined,
             ];
           })
-          .filter(([, value]) => value !== undefined)
+          .filter(
+            ([, value]) =>
+              value !== undefined
+          )
       ),
 
       description: form.description,
 
-      specifications: extractSpecifications(form.description),
+      specifications:
+        extractSpecifications(
+          form.description
+        ),
 
       image:
         form.images?.[0] ||
         form.image ||
         "",
 
-      images: Array.isArray(form.images)
-        ? form.images.filter(
-            (url) =>
-              typeof url === "string" &&
-              url.startsWith("http")
-          )
-        : [],
-
+      images:
+        Array.isArray(form.images)
+          ? form.images.filter(
+              (url) =>
+                typeof url === "string" &&
+                url.startsWith("http")
+            )
+          : [],
     };
 
-
-
-    try{
-
-      let productId: number | null = null;
-
-      if(editingId){
-
-        await updateProduct(
-          editingId,
-          product
-        );
-
-        productId = editingId;
-
-        try {
-          const imageColorMap =
-            await analyzeProductImages(
-              productId
-            );
-
-          if(imageColorMap) {
-            console.log(
-              "OpenCV image color mapping updated:",
-              imageColorMap
-            );
-          }
-        } catch (colorError) {
-          console.error(
-            "Colour detection failed after product update:",
-            colorError
-          );
-        }
-
-        alert(
-          "Product updated and colour detection completed."
-        );
-
-
-      }else{
-
-        const savedProduct =
-          await saveProduct(
-            product
-          );
-
-        productId = savedProduct.id;
-
-        try {
-          const imageColorMap =
-            await analyzeProductImages(
-              productId
-            );
-
-          if(imageColorMap) {
-            console.log(
-              "OpenCV image color mapping created:",
-              imageColorMap
-            );
-          }
-        } catch (colorError) {
-          console.error(
-            "Colour detection failed after product save:",
-            colorError
-          );
-        }
-
-        alert(
-          "Product saved and colour detection completed."
-        );
-
-        setEditingId(productId);
-
-
-      }
-
-
-
-      setForm(emptyForm);
-
-      setEditingId(null);
-
-      setShowForm(false);
-
-      loadProducts();
-
-
-
-    }catch(error){
-
-      console.error(error);
-
-      alert(
-        "Failed saving product"
+    // IMPORTANT:
+    // Do not save/update the database yet.
+    // First detect the colours and show the
+    // seller the review screen.
+    const detected =
+      await analyzeProductImages(
+        product
       );
 
+    if (!detected) {
+      return;
     }
-
-
   }
 
 
 
-
   function editProduct(
-    product:Product
-  ){
-
+    product: Product
+  ) {
     setForm({
-
-      name:
-        product.name,
-
-      price:
-        String(product.price),
-
-      oldPrice:
-        String(product.oldPrice || ""),
-
-      cost_price:
-        String(product.cost_price ?? ""),
-
-      category:
-        product.category,
-
-      stock:
-        String(product.stock),
-
-      colors:
-        (product.colors || []).join(", "),
-
-      sizes:
-        (product.sizes || []).join(", "),
+      name: product.name,
+      price: String(product.price),
+      oldPrice: String(product.oldPrice || ""),
+      cost_price: String(product.cost_price ?? ""),
+      category: product.category,
+      stock: String(product.stock),
+      colors: (product.colors || []).join(", "),
+      sizes: (product.sizes || []).join(", "),
 
       sizePrices: Object.fromEntries(
         Object.entries(product.sizePrices || {}).map(
@@ -605,30 +614,14 @@ export default function ProductsModule() {
         )
       ),
 
-      description:
-        product.description || "",
-
-      image:
-        product.image || "",
-
-      images:
-        product.images || [],
-
+      description: product.description || "",
+      image: product.image || "",
+      images: product.images || [],
     });
 
-
-    setEditingId(
-      product.id
-    );
-
-
+    setEditingId(product.id);
     setShowForm(true);
-
-
   }
-
-
-
 
   async function removeProduct(
     id:number
@@ -1145,14 +1138,64 @@ export default function ProductsModule() {
                         </div>
 
                         <div className="space-y-3 p-3">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-semibold text-gray-500">
-                              Detected color
-                            </span>
+                          <div className="flex items-center justify-between gap-2">
+                            <div>
+                              <p className="text-xs font-semibold text-gray-500">
+                                Detected product color
+                              </p>
+                              <p className="mt-1 text-sm font-bold text-gray-900">
+                                {detection.detectedColor}
+                              </p>
+                            </div>
 
-                            <span className="rounded-full bg-green-50 px-2.5 py-1 text-xs font-bold text-green-700">
-                              {Math.round(detection.confidence * 100)}%
+                            <span
+                              className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${
+                                detection.decision === "auto"
+                                  ? "bg-green-50 text-green-700"
+                                  : "bg-amber-50 text-amber-700"
+                              }`}
+                            >
+                              {detection.decision === "auto"
+                                ? "AUTO SELECTED"
+                                : "REVIEW REQUIRED"}
                             </span>
+                          </div>
+
+                          <div className="rounded-lg border border-gray-200 bg-white p-3">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-semibold text-gray-500">
+                                Product colour share
+                              </span>
+                              <span className="text-sm font-extrabold text-gray-900">
+                                {Math.round(detection.percentage * 100)}%
+                              </span>
+                            </div>
+
+                            <div className="mt-2 h-2 overflow-hidden rounded-full bg-gray-100">
+                              <div
+                                className={`h-full rounded-full ${
+                                  detection.decision === "auto"
+                                    ? "bg-green-500"
+                                    : "bg-amber-500"
+                                }`}
+                                style={{
+                                  width: `${Math.min(
+                                    100,
+                                    Math.round(
+                                      detection.percentage * 100
+                                    )
+                                  )}%`,
+                                }}
+                              />
+                            </div>
+
+                            <p className="mt-2 text-[11px] text-gray-400">
+                              Detection confidence:{" "}
+                              {Math.round(
+                                detection.confidence * 100
+                              )}
+                              %
+                            </p>
                           </div>
 
                           <select
@@ -1166,6 +1209,7 @@ export default function ProductsModule() {
                                     ? {
                                         ...item,
                                         detectedColor: value,
+                                        decision: "review",
                                       }
                                     : item
                                 )
@@ -1174,16 +1218,12 @@ export default function ProductsModule() {
                             className="w-full rounded-lg border border-gray-200 bg-white p-2.5 text-sm font-semibold text-gray-800 outline-none focus:border-blue-500"
                           >
                             {Array.from(
-                              new Set([
-                                ...form.colors
+                              new Set(
+                                form.colors
                                   .split(",")
                                   .map((color) => color.trim())
-                                  .filter(Boolean),
-                                ...detection.alternatives.map(
-                                  (item) => item.color
-                                ),
-                                detection.detectedColor,
-                              ])
+                                  .filter(Boolean)
+                              )
                             ).map((color) => (
                               <option key={color} value={color}>
                                 {color}
@@ -1192,13 +1232,55 @@ export default function ProductsModule() {
                           </select>
 
                           {detection.alternatives.length > 1 && (
-                            <p className="text-[11px] text-gray-400">
-                              Alternatives:{" "}
-                              {detection.alternatives
-                                .slice(1, 4)
-                                .map((item) => item.color)
-                                .join(", ")}
-                            </p>
+                            <div className="rounded-lg border border-gray-100 bg-white p-3">
+                              <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-gray-400">
+                                Colour evidence
+                              </p>
+
+                              <div className="space-y-1.5">
+                                {detection.alternatives
+                                  .slice(0, 4)
+                                  .map((item) => (
+                                    <button
+                                      key={item.color}
+                                      type="button"
+                                      onClick={() => {
+                                        setColorDetections((current) =>
+                                          current.map(
+                                            (currentItem, currentIndex) =>
+                                              currentIndex === index
+                                                ? {
+                                                    ...currentItem,
+                                                    detectedColor:
+                                                      item.color,
+                                                    percentage:
+                                                      item.percentage,
+                                                    confidence:
+                                                      item.confidence,
+                                                    decision: "review",
+                                                  }
+                                                : currentItem
+                                          )
+                                        );
+                                      }}
+                                      className={`flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-xs transition ${
+                                        item.color.toLowerCase() ===
+                                        detection.detectedColor.toLowerCase()
+                                          ? "bg-gray-100 font-bold text-gray-900"
+                                          : "text-gray-600 hover:bg-gray-50"
+                                      }`}
+                                    >
+                                      <span>{item.color}</span>
+                                      <span className="font-bold">
+                                        {Math.round(
+                                          item.percentage * 100
+                                        )}
+                                        %
+                                      </span>
+                                    </button>
+                                  ))}
+                              </div>
+                            </div>
                           )}
                         </div>
                       </div>

@@ -258,6 +258,18 @@ def hue_mask(hsv, ranges, color):
 
 
 def detect_colors(image, allowed_colors=None):
+    """
+    Detect the colour composition of the actual product area.
+
+    The detector does not blindly choose the largest colour.
+    It returns:
+      - percentage: share of meaningful detected product colours
+      - confidence: confidence that the colour really belongs to the product
+      - decision: "auto" when clearly dominant, otherwise "review"
+
+    Background pixels are excluded by the product mask.
+    """
+
     image = resize_image(image)
 
     product_mask = build_product_mask(image)
@@ -277,7 +289,6 @@ def detect_colors(image, allowed_colors=None):
         1,
     )
 
-    # Build raw masks first.
     raw_masks = {}
 
     for color in candidates:
@@ -292,7 +303,6 @@ def detect_colors(image, allowed_colors=None):
             product_mask,
         )
 
-        # Remove tiny isolated colour noise.
         raw = cv2.morphologyEx(
             raw,
             cv2.MORPH_OPEN,
@@ -302,60 +312,46 @@ def detect_colors(image, allowed_colors=None):
 
         raw_masks[color] = raw
 
-    # Make colour areas mutually exclusive.
-    #
-    # Some HSV ranges naturally overlap, especially:
-    # Black/Blue, Brown/Orange, Gray/White.
-    # A pixel is assigned to the colour whose rule fits it best.
-    #
-    # This prevents the same pixel from inflating several colours.
-    assigned = np.zeros_like(product_mask)
+    h, s, v = cv2.split(hsv)
 
     exclusive_masks = {
         color: np.zeros_like(product_mask)
         for color in candidates
     }
 
-    h, s, v = cv2.split(hsv)
-
+    # Assign every product pixel to its strongest colour candidate.
     for y in range(h.shape[0]):
-        product_row = product_mask[y] > 0
+        product_pixels = np.where(product_mask[y] > 0)[0]
 
-        for x in np.where(product_row)[0]:
+        for x in product_pixels:
             pixel_scores = []
 
+            sat = float(s[y, x]) / 255.0
+            val = float(v[y, x]) / 255.0
+
             for color in candidates:
-                ranges = COLOR_RANGES[color]
-
-                sat = float(s[y, x]) / 255.0
-                val = float(v[y, x]) / 255.0
-
                 if raw_masks[color][y, x] == 0:
                     continue
 
                 if color == "Black":
-                    # Black should be dark AND relatively unsaturated.
                     strength = (
                         (1.0 - val) *
                         (1.0 - min(sat, 0.85))
                     )
 
                 elif color == "White":
-                    # White should be bright AND very low saturation.
                     strength = (
                         val *
                         (1.0 - sat)
                     )
 
                 elif color == "Gray":
-                    # Gray should have low saturation and mid/high value.
                     strength = (
                         (1.0 - sat) *
                         (0.45 + 0.55 * val)
                     )
 
                 else:
-                    # Chromatic colours should have strong saturation.
                     strength = sat * (
                         0.35 + 0.65 * val
                     )
@@ -374,33 +370,51 @@ def detect_colors(image, allowed_colors=None):
 
             exclusive_masks[best_color][y, x] = 255
 
-    results = []
+    pixel_counts = {}
 
     for color in candidates:
         pixels = cv2.countNonZero(
             exclusive_masks[color]
         )
 
-        if pixels == 0:
+        if pixels <= 0:
             continue
 
         coverage = pixels / total_product_pixels
 
-        # Very small areas are not reliable product colours.
+        # Ignore tiny colour fragments caused by reflections,
+        # shadows, compression noise or background remnants.
         if coverage < 0.025:
             continue
 
-        # Calculate how dominant this colour is among all detected
-        # product colours.
-        competing = [
-            cv2.countNonZero(exclusive_masks[c])
-            for c in candidates
-            if c != color
+        pixel_counts[color] = pixels
+
+    if not pixel_counts:
+        return []
+
+    meaningful_pixels = max(
+        sum(pixel_counts.values()),
+        1,
+    )
+
+    ranked = []
+
+    for color, pixels in pixel_counts.items():
+        coverage = pixels / total_product_pixels
+
+        # Percentage is normalized only across meaningful detected
+        # product colours, so background does not inflate a colour.
+        percentage = pixels / meaningful_pixels
+
+        other_pixels = [
+            count
+            for other_color, count in pixel_counts.items()
+            if other_color != color
         ]
 
         strongest_competitor = (
-            max(competing)
-            if competing
+            max(other_pixels)
+            if other_pixels
             else 0
         )
 
@@ -409,43 +423,29 @@ def detect_colors(image, allowed_colors=None):
             1,
         )
 
-        # Confidence is NOT simply coverage.
-        #
-        # Coverage = how much of the product has this colour.
-        # Dominance = how clearly this colour beats its strongest
-        # competing colour.
-        #
-        # Only extremely strong evidence can reach 99%.
+        # Confidence measures how strongly this colour is supported
+        # by the product mask, not simply how large its percentage is.
         confidence = (
-            (coverage * 0.55) +
-            (dominance * 0.45)
+            (coverage * 0.40) +
+            (dominance * 0.60)
         )
 
-        # Require very strong evidence before reporting 99%.
+        # A 99% result is only possible with very strong evidence:
+        # large product coverage and very clear colour dominance.
         if (
             coverage >= 0.80 and
-            dominance >= 0.90
+            dominance >= 0.95 and
+            percentage >= 0.90
         ):
-            confidence = max(confidence, 0.99)
+            confidence = 0.99
 
-        elif (
-            coverage >= 0.65 and
-            dominance >= 0.80
-        ):
-            confidence = min(confidence, 0.95)
+        else:
+            confidence = min(
+                0.98,
+                max(0.0, confidence),
+            )
 
-        elif (
-            coverage >= 0.45 and
-            dominance >= 0.70
-        ):
-            confidence = min(confidence, 0.90)
-
-        confidence = min(
-            0.99,
-            max(0.0, confidence),
-        )
-
-        results.append({
+        ranked.append({
             "color": color,
             "confidence": round(
                 float(confidence),
@@ -455,53 +455,85 @@ def detect_colors(image, allowed_colors=None):
                 float(coverage),
                 4,
             ),
+            "percentage": round(
+                float(percentage),
+                4,
+            ),
         })
 
-    results.sort(
+    ranked.sort(
         key=lambda item: (
-            item["coverage"],
+            item["percentage"],
             item["confidence"],
         ),
         reverse=True,
     )
 
-    return results
+    # Decide whether the leading colour is safe to select automatically.
+    if ranked:
+        top = ranked[0]
+        second_percentage = (
+            ranked[1]["percentage"]
+            if len(ranked) > 1
+            else 0.0
+        )
 
+        margin = top["percentage"] - second_percentage
 
-def main():
-    if len(sys.argv) < 2:
-        print(json.dumps({
-            "success": False,
-            "error": "Image URL or path is required"
-        }))
-        sys.exit(1)
+        auto_select = (
+            top["percentage"] >= 0.75 and
+            top["confidence"] >= 0.75 and
+            margin >= 0.20
+        )
 
-    source = sys.argv[1]
+        for item in ranked:
+            item["decision"] = (
+                "auto"
+                if auto_select and item is top
+                else "review"
+            )
 
-    allowed = None
-    if len(sys.argv) >= 3 and sys.argv[2].strip():
-        allowed = [
-            item.strip()
-            for item in sys.argv[2].split(",")
-            if item.strip()
-        ]
-
-    image = load_image(source)
-
-    if image is None:
-        print(json.dumps({
-            "success": False,
-            "error": "Could not load image"
-        }))
-        sys.exit(1)
-
-    results = detect_colors(image, allowed)
-
-    print(json.dumps({
-        "success": True,
-        "results": results[:5],
-    }))
-
+    return ranked
 
 if __name__ == "__main__":
-    main()
+    try:
+        if len(sys.argv) < 2:
+            print(json.dumps({
+                "success": False,
+                "error": "Image URL or path is required"
+            }))
+            sys.exit(1)
+
+        source = sys.argv[1]
+
+        allowed_colors = [
+            color.strip()
+            for color in sys.argv[2:]
+            if color.strip()
+        ]
+
+        image = load_image(source)
+
+        if image is None:
+            print(json.dumps({
+                "success": False,
+                "error": "Unable to load image"
+            }))
+            sys.exit(1)
+
+        results = detect_colors(
+            image,
+            allowed_colors=allowed_colors or None,
+        )
+
+        print(json.dumps({
+            "success": True,
+            "results": results,
+        }))
+
+    except Exception as error:
+        print(json.dumps({
+            "success": False,
+            "error": str(error),
+        }))
+        sys.exit(1)

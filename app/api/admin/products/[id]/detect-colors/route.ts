@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { updateProduct, getProductById } from "@/lib/products";
 import { execFile } from "child_process";
 import { promisify } from "util";
 import path from "path";
@@ -10,6 +9,8 @@ type Detection = {
   color: string;
   confidence: number;
   coverage: number;
+  percentage: number;
+  decision: "auto" | "review";
 };
 
 type ImageDetection = {
@@ -17,42 +18,39 @@ type ImageDetection = {
   detectedColor: string;
   confidence: number;
   coverage: number;
+  percentage: number;
+  decision: "auto" | "review";
   alternatives: Detection[];
 };
 
-export async function POST(
-  _request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function POST(request: Request) {
   try {
-    const { id } = await params;
-    const productId = Number(id);
+    const body = await request.json();
 
-    const product = await getProductById(productId);
+    const images: string[] =
+      Array.isArray(body?.images)
+        ? body.images.filter(
+            (image: unknown): image is string =>
+              typeof image === "string" &&
+              image.trim().length > 0
+          )
+        : [];
 
-    if (!product) {
-      return NextResponse.json(
-        { success: false, error: "Product not found" },
-        { status: 404 }
-      );
-    }
+    const colors = Array.isArray(body?.colors)
+      ? body.colors
+          .filter(
+            (color: unknown): color is string =>
+              typeof color === "string"
+          )
+          .map((color: string) => color.trim())
+          .filter(Boolean)
+      : [];
 
-    const images = [
-      ...(product.images || []),
-      ...(product.image ? [product.image] : []),
-    ].filter(Boolean);
-
-    const colors = (product.colors || [])
-      .map((color) => color.trim())
-      .filter(Boolean);
-
-    if (!images.length || !colors.length) {
+    if (!images.length) {
       return NextResponse.json(
         {
           success: false,
-          error: !images.length
-            ? "Product has no images"
-            : "Product has no colors",
+          error: "Product has no images",
         },
         { status: 400 }
       );
@@ -68,67 +66,82 @@ export async function POST(
       "python/color_detector/detect_color.py"
     );
 
+    const uniqueImages: string[] = [
+      ...new Set(images),
+    ];
+
     const imageDetections: ImageDetection[] = [];
 
-    for (const image of [...new Set(images)]) {
+    for (const image of uniqueImages) {
       try {
-        const detectorArgs = colors.length
-          ? [script, image]
-          : [script, image];
+        const detectorArgs = [
+          script,
+          image,
+          ...colors,
+        ];
 
-        const { stdout } = await execFileAsync(
-          python,
-          detectorArgs,
-          {
-            timeout: 60000,
-            maxBuffer: 1024 * 1024,
-          }
-        );
+        const { stdout } =
+          await execFileAsync(
+            python,
+            detectorArgs,
+            {
+              timeout: 30000,
+              maxBuffer: 1024 * 1024,
+            }
+          );
 
         const result = JSON.parse(stdout);
 
-        if (!result.success || !Array.isArray(result.results)) {
+        if (
+          !result.success ||
+          !Array.isArray(result.results)
+        ) {
           continue;
         }
 
-        const detections = result.results as Detection[];
+        const detections =
+          result.results as Detection[];
 
-        // Keep only strong, meaningful colours.
-        // Small colour areas are usually background, reflections,
-        // shadows or image noise.
-        // Seller-entered product colours remain unchanged.
-        const meaningfulDetections = detections
-          .filter(
-            (item) =>
-              item.coverage >= 0.12 &&
-              item.confidence >= 0.45
-          )
-          .sort(
-            (a, b) =>
-              b.coverage - a.coverage ||
-              b.confidence - a.confidence
-          )
-          .slice(0, 5);
+        const meaningfulDetections =
+          detections
+            .filter(
+              (item) =>
+                item.coverage >= 0.025 &&
+                item.percentage >= 0.025
+            )
+            .sort(
+              (a, b) =>
+                b.percentage -
+                  a.percentage ||
+                b.confidence -
+                  a.confidence
+            )
+            .slice(0, 5);
 
-        if (!meaningfulDetections.length) {
+        if (
+          !meaningfulDetections.length
+        ) {
           continue;
         }
 
-        for (const detection of meaningfulDetections) {
-          const matchedColor =
-            colors.find(
-              (color) =>
-                color.toLowerCase() === detection.color.toLowerCase()
-            ) || detection.color;
+        const topDetection =
+          meaningfulDetections[0];
 
-          imageDetections.push({
-            image,
-            detectedColor: matchedColor,
-            confidence: detection.confidence,
-            coverage: detection.coverage,
-            alternatives: meaningfulDetections.slice(0, 5),
-          });
-        }
+        imageDetections.push({
+          image,
+          detectedColor:
+            topDetection.color,
+          confidence:
+            topDetection.confidence,
+          coverage:
+            topDetection.coverage,
+          percentage:
+            topDetection.percentage,
+          decision:
+            topDetection.decision,
+          alternatives:
+            meaningfulDetections,
+        });
       } catch (error) {
         console.error(
           "OpenCV failed for image:",
@@ -140,71 +153,51 @@ export async function POST(
 
     const imageColorMap: Record<
       string,
-      { images: string[]; confidence: number }
+      {
+        images: string[];
+        confidence: number;
+      }
     > = {};
 
     for (const detection of imageDetections) {
-      const color = detection.detectedColor;
+      const color =
+        detection.detectedColor;
 
       if (!imageColorMap[color]) {
         imageColorMap[color] = {
           images: [],
-          confidence: detection.confidence,
+          confidence:
+            detection.confidence,
         };
       }
 
-      imageColorMap[color].images.push(detection.image);
-
-      imageColorMap[color].confidence = Math.max(
-        imageColorMap[color].confidence,
-        detection.confidence
+      imageColorMap[color].images.push(
+        detection.image
       );
+
+      imageColorMap[color].confidence =
+        Math.max(
+          imageColorMap[color].confidence,
+          detection.confidence
+        );
     }
 
-    for (const color of Object.keys(imageColorMap)) {
+    for (const color of Object.keys(
+      imageColorMap
+    )) {
       imageColorMap[color].images = [
-        ...new Set(imageColorMap[color].images),
+        ...new Set(
+          imageColorMap[color].images
+        ),
       ];
     }
 
-    // Keep seller-entered colours and add strong colours detected
-    // from the product images. Never remove a colour entered manually.
-    const detectedProductColors = [
-      ...new Set(
-        imageDetections
-          .filter(
-            (detection) =>
-              detection.coverage >= 0.08 &&
-              detection.confidence >= 0.45
-          )
-          .map((detection) => detection.detectedColor)
-      ),
-    ];
-
-    const mergedProductColors = [
-      ...colors,
-      ...detectedProductColors.filter(
-        (detectedColor) =>
-          !colors.some(
-            (color) =>
-              color.toLowerCase() === detectedColor.toLowerCase()
-          )
-      ),
-    ];
-
-    // Persist the image-to-colour mapping and the merged product
-    // colour list. Seller-entered colours are always preserved.
-    await updateProduct(productId, {
-      image_color_map: imageColorMap,
-      colors: mergedProductColors,
-    });
-
     return NextResponse.json({
       success: true,
-      productId,
-      image_color_map: imageColorMap,
+      colors,
+      image_color_map:
+        imageColorMap,
       imageDetections,
-      colors: mergedProductColors,
     });
   } catch (error) {
     console.error(

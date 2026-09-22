@@ -170,9 +170,24 @@ def detect_colors(image, allowed_colors=None):
         if pixels == 0:
             continue
 
-        # OpenCV confidence is based on dominance within the
-        # detected product foreground, not an external AI score.
-        confidence = min(0.99, max(0.0, ratio * 3.0))
+        # Coverage is the amount of the detected product occupied
+        # by this colour. Confidence is deliberately different:
+        # it rewards strong dominance but does not automatically
+        # turn every large colour area into 99%.
+        if ratio >= 0.70:
+            confidence = 0.99
+        elif ratio >= 0.50:
+            confidence = 0.90 + ((ratio - 0.50) / 0.20) * 0.08
+        elif ratio >= 0.30:
+            confidence = 0.75 + ((ratio - 0.30) / 0.20) * 0.15
+        elif ratio >= 0.18:
+            confidence = 0.60 + ((ratio - 0.18) / 0.12) * 0.15
+        elif ratio >= 0.12:
+            confidence = 0.45 + ((ratio - 0.12) / 0.06) * 0.15
+        else:
+            confidence = ratio * 3.75
+
+        confidence = min(0.99, max(0.0, confidence))
 
         results.append({
             "color": color,
@@ -181,7 +196,7 @@ def detect_colors(image, allowed_colors=None):
         })
 
     results.sort(
-        key=lambda item: (item["confidence"], item["coverage"]),
+        key=lambda item: (item["coverage"], item["confidence"]),
         reverse=True,
     )
 

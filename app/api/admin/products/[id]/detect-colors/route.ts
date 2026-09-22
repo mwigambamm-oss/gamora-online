@@ -72,9 +72,13 @@ export async function POST(
 
     for (const image of [...new Set(images)]) {
       try {
+        const detectorArgs = colors.length
+          ? [script, image]
+          : [script, image];
+
         const { stdout } = await execFileAsync(
           python,
-          [script, image, colors.join(",")],
+          detectorArgs,
           {
             timeout: 60000,
             maxBuffer: 1024 * 1024,
@@ -89,32 +93,42 @@ export async function POST(
 
         const detections = result.results as Detection[];
 
-        const validDetections = detections.filter((item) =>
-          colors.some(
-            (color) =>
-              color.toLowerCase() === item.color.toLowerCase()
+        // Keep only strong, meaningful colours.
+        // Small colour areas are usually background, reflections,
+        // shadows or image noise.
+        // Seller-entered product colours remain unchanged.
+        const meaningfulDetections = detections
+          .filter(
+            (item) =>
+              item.coverage >= 0.12 &&
+              item.confidence >= 0.45
           )
-        );
+          .sort(
+            (a, b) =>
+              b.coverage - a.coverage ||
+              b.confidence - a.confidence
+          )
+          .slice(0, 3);
 
-        const best = validDetections[0];
-
-        if (!best?.color) {
+        if (!meaningfulDetections.length) {
           continue;
         }
 
-        const matchedColor =
-          colors.find(
-            (color) =>
-              color.toLowerCase() === best.color.toLowerCase()
-          ) || best.color;
+        for (const detection of meaningfulDetections) {
+          const matchedColor =
+            colors.find(
+              (color) =>
+                color.toLowerCase() === detection.color.toLowerCase()
+            ) || detection.color;
 
-        imageDetections.push({
-          image,
-          detectedColor: matchedColor,
-          confidence: best.confidence,
-          coverage: best.coverage,
-          alternatives: validDetections.slice(0, 5),
-        });
+          imageDetections.push({
+            image,
+            detectedColor: matchedColor,
+            confidence: detection.confidence,
+            coverage: detection.coverage,
+            alternatives: meaningfulDetections.slice(0, 5),
+          });
+        }
       } catch (error) {
         console.error(
           "OpenCV failed for image:",
@@ -153,12 +167,31 @@ export async function POST(
       ];
     }
 
+    // Build the product colour list from strong image detections.
+    // A colour must occupy at least 18% of the detected product
+    // area in at least one image to become a product colour.
+    const detectedProductColors = [
+      ...new Set(
+        imageDetections
+          .filter((detection) => detection.coverage >= 0.18)
+          .map((detection) => detection.detectedColor)
+      ),
+    ];
+
+    // Persist both the image-to-colour mapping and detected
+    // product colours. Seller-entered colours are replaced only
+    // after successful image detection.
+    await updateProduct(productId, {
+      image_color_map: imageColorMap,
+      colors: detectedProductColors,
+    });
+
     return NextResponse.json({
       success: true,
       productId,
       image_color_map: imageColorMap,
       imageDetections,
-      colors,
+      colors: detectedProductColors,
     });
   } catch (error) {
     console.error(

@@ -364,7 +364,7 @@ export default function ProductsModule() {
     if(
       !form.name ||
       !form.price ||
-      !form.stock
+      form.stock === ""
     ){
 
       alert(
@@ -474,23 +474,28 @@ export default function ProductsModule() {
 
         productId = editingId;
 
-        const imageColorMap =
-          await analyzeProductImages(
-            productId
-          );
+        try {
+          const imageColorMap =
+            await analyzeProductImages(
+              productId
+            );
 
-        if(imageColorMap) {
-          console.log(
-            "OpenCV image color mapping updated:",
-            imageColorMap
+          if(imageColorMap) {
+            console.log(
+              "OpenCV image color mapping updated:",
+              imageColorMap
+            );
+          }
+        } catch (colorError) {
+          console.error(
+            "Colour detection failed after product update:",
+            colorError
           );
         }
 
         alert(
-          "Product updated. Review the detected colors before closing."
+          "Product updated and colour detection completed."
         );
-
-        return;
 
 
       }else{
@@ -502,30 +507,30 @@ export default function ProductsModule() {
 
         productId = savedProduct.id;
 
-        const imageColorMap =
-          await analyzeProductImages(
-            productId
-          );
+        try {
+          const imageColorMap =
+            await analyzeProductImages(
+              productId
+            );
 
-        if(imageColorMap) {
-          console.log(
-            "OpenCV image color mapping created:",
-            imageColorMap
+          if(imageColorMap) {
+            console.log(
+              "OpenCV image color mapping created:",
+              imageColorMap
+            );
+          }
+        } catch (colorError) {
+          console.error(
+            "Colour detection failed after product save:",
+            colorError
           );
         }
 
         alert(
-          "Product saved. Review the detected colors before closing."
+          "Product saved and colour detection completed."
         );
 
         setEditingId(productId);
-
-        window.scrollTo({
-          top: 0,
-          behavior: "smooth"
-        });
-
-        return;
 
 
       }

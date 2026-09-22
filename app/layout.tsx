@@ -13,6 +13,12 @@ const inter = Inter({
 export const metadata: Metadata = {
   metadataBase: new URL("https://gamoraonline.co.tz"),
 
+  icons: {
+    icon: "/favicon.png",
+    shortcut: "/favicon.png",
+    apple: "/favicon.png",
+  },
+
   title: {
     default: "Gamora Online | Online Shopping Tanzania",
     template: "%s",

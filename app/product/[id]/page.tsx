@@ -1116,7 +1116,9 @@ window.dispatchEvent(new Event("cartUpdated"));
                           disabled={unavailable}
                           onClick={() => {
                             if (!unavailable) {
-                              setSelectedColor(color);
+                              setSelectedColor(
+                                selectedColor === color ? "" : color
+                              );
                             }
                           }}
                           title={

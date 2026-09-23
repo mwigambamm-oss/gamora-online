@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, ChangeEvent, FormEvent } from "react";
+import { useEffect, useState, useRef, ChangeEvent, FormEvent } from "react";
 import {
   Product,
   getProducts,
@@ -59,6 +59,7 @@ export default function ProductsModule() {
   const [newCategory, setNewCategory] = useState("");
 
   const [editingId, setEditingId] = useState<number | null>(null);
+  const restoreProductIdRef = useRef<number | null>(null);
 
   const [showForm, setShowForm] = useState(false);
 
@@ -116,6 +117,37 @@ export default function ProductsModule() {
         ])
       )
     );
+
+    const restoreId = restoreProductIdRef.current;
+
+    if (restoreId !== null) {
+      restoreProductIdRef.current = null;
+
+      requestAnimationFrame(() => {
+        const element = document.getElementById(
+          `admin-product-${restoreId}`
+        );
+
+        if (element) {
+          element.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
+
+          element.classList.add(
+            "ring-2",
+            "ring-blue-500"
+          );
+
+          window.setTimeout(() => {
+            element.classList.remove(
+              "ring-2",
+              "ring-blue-500"
+            );
+          }, 2000);
+        }
+      });
+    }
   }
 
 
@@ -575,6 +607,7 @@ export default function ProductsModule() {
       setDetectingColors(true);
 
       if (editingId) {
+        restoreProductIdRef.current = editingId;
         await updateProduct(editingId, product);
         alert("Product updated successfully.");
       } else {
@@ -1497,8 +1530,9 @@ export default function ProductsModule() {
       {filteredProducts.map((product)=>(
 
         <div
+          id={`admin-product-${product.id}`}
           key={product.id}
-          className="bg-white p-4 rounded shadow flex justify-between"
+          className="bg-white p-4 rounded shadow flex justify-between transition-all duration-300"
         >
 
           <div>

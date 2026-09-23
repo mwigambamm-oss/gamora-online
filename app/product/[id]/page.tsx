@@ -363,6 +363,49 @@ setProduct(item);
       : [];
   })();
 
+  function getColorImages(color: string): string[] {
+    const map = product?.image_color_map || {};
+
+    const matchedKey = Object.keys(map).find(
+      (key) =>
+        key.trim().toLowerCase() ===
+        color.trim().toLowerCase()
+    );
+
+    return matchedKey
+      ? map[matchedKey]?.images || []
+      : [];
+  }
+
+  function getColorHasStock(color: string): boolean {
+    const normalizedColor = color.trim().toLowerCase();
+
+    if (availableVariants.length > 0) {
+      return availableVariants.some(
+        (variant) =>
+          (variant.color || "").trim().toLowerCase() ===
+            normalizedColor &&
+          Number(variant.stock) > 0
+      );
+    }
+
+    return Number(product?.stock) > 0;
+  }
+
+  function getColorStatus(color: string): "available" | "no-image" | "out-of-stock" {
+    const hasImages = getColorImages(color).length > 0;
+
+    if (!hasImages) {
+      return "no-image";
+    }
+
+    if (!getColorHasStock(color)) {
+      return "out-of-stock";
+    }
+
+    return "available";
+  }
+
   const colorOutOfStock =
     !!selectedVariant &&
     displayStock <= 0;
@@ -1061,20 +1104,54 @@ window.dispatchEvent(new Event("cartUpdated"));
                   </p>
 
                   <div className="flex flex-wrap gap-1.5">
-                    {product.colors.map((color) => (
-                      <button
-                        key={color}
-                        type="button"
-                        onClick={() => setSelectedColor(color)}
-                        className={`rounded-md px-3 py-1.5 text-xs transition ${
-                          selectedColor === color
-                            ? "border border-[#E30613] bg-red-50 text-[#E30613]"
-                            : "border border-slate-200 bg-white text-slate-600 hover:border-red-200"
-                        }`}
-                      >
-                        {color}
-                      </button>
-                    ))}
+                    {product.colors.map((color) => {
+                      const colorStatus = getColorStatus(color);
+                      const unavailable =
+                        colorStatus !== "available";
+
+                      return (
+                        <button
+                          key={color}
+                          type="button"
+                          disabled={unavailable}
+                          onClick={() => {
+                            if (!unavailable) {
+                              setSelectedColor(color);
+                            }
+                          }}
+                          title={
+                            colorStatus === "no-image"
+                              ? `${color} unavailable`
+                              : colorStatus === "out-of-stock"
+                              ? `${color} out of stock`
+                              : color
+                          }
+                          className={`rounded-md px-3 py-1.5 text-xs transition ${
+                            unavailable
+                              ? "cursor-not-allowed border border-slate-200 bg-slate-100 text-slate-400"
+                              : selectedColor === color
+                              ? "border border-[#E30613] bg-red-50 text-[#E30613]"
+                              : "border border-slate-200 bg-white text-slate-600 hover:border-red-200"
+                          }`}
+                        >
+                          <span className="flex items-center gap-1.5">
+                            <span>{color}</span>
+
+                            {colorStatus === "no-image" && (
+                              <span className="text-[10px] font-medium text-slate-400">
+                                Unavailable
+                              </span>
+                            )}
+
+                            {colorStatus === "out-of-stock" && (
+                              <span className="text-[10px] font-medium text-[#E30613]">
+                                Out of stock
+                              </span>
+                            )}
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}

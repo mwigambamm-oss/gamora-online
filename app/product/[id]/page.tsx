@@ -609,7 +609,7 @@ setProduct(item);
 
 window.dispatchEvent(new Event("cartUpdated"));
 
-      alert("Product added to cart.");
+
     } catch (error) {
       console.error("Cart error:", error);
     }

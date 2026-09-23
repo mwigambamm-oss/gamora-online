@@ -675,7 +675,7 @@ window.dispatchEvent(new Event("cartUpdated"));
   /*
    * ONLY SHOW 6 THUMBNAILS
    */
-  const visibleThumbnails = images.slice(0, 6);
+  const visibleThumbnails = images;
 
   /*
    * DISCOUNT

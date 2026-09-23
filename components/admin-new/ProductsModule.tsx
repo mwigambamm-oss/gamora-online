@@ -69,36 +69,35 @@ export default function ProductsModule() {
 
   const [uploading, setUploading] = useState(false);
 
-  type ColorDetection = {
-    image: string;
-    detectedColor: string;
-    confidence: number;
-    coverage: number;
-    percentage: number;
-    decision: "auto" | "review";
-    alternatives: {
-      color: string;
-      confidence: number;
-      coverage: number;
-      percentage: number;
-      decision: "auto" | "review";
-    }[];
-  };
-
-  const [colorDetections, setColorDetections] = useState<
-    ColorDetection[]
-  >([]);
-
   const [detectingColors, setDetectingColors] = useState(false);
 
-  // Product waits here until the seller reviews and confirms
-  // the detected image colours.
+  const [detectedColorReview, setDetectedColorReview] = useState<
+    { name: string; confidence: number }[]
+  >([]);
   const [pendingProduct, setPendingProduct] = useState<any | null>(null);
 
-  const [pendingAction, setPendingAction] = useState<
-    "add" | "update" | null
-  >(null);
+  // Manual colour assigned to each uploaded product image.
+  const [imageColors, setImageColors] = useState<Record<string, string>>({});
 
+  const IMAGE_COLOUR_OPTIONS = [
+    "Black",
+    "White",
+    "Gray",
+    "Silver",
+    "Red",
+    "Blue",
+    "Green",
+    "Yellow",
+    "Orange",
+    "Pink",
+    "Purple",
+    "Brown",
+    "Beige",
+    "Navy Blue",
+    "Gold",
+    "Multicolour",
+    "Other",
+  ];
 
   async function loadProducts() {
     const data = await getProducts();
@@ -210,6 +209,110 @@ export default function ProductsModule() {
 
   }
 
+  async function detectColoursForImages(
+    images: string[],
+    overwrite: boolean
+  ) {
+    if (!images.length) return;
+
+    try {
+      setDetectingColors(true);
+
+      const response = await fetch(
+        "/api/products/detect-colors",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ images }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (
+        !response.ok ||
+        !result.success ||
+        !Array.isArray(result.colors) ||
+        !result.colors.length
+      ) {
+        return;
+      }
+
+      const detectedColors = result.colors
+        .map(
+          (item: {
+            name?: unknown;
+            confidence?: unknown;
+          }) => {
+            const name =
+              typeof item?.name === "string"
+                ? item.name.trim()
+                : "";
+
+            const confidence =
+              typeof item?.confidence === "number"
+                ? Math.max(
+                    0,
+                    Math.min(1, item.confidence)
+                  )
+                : null;
+
+            if (!name || confidence === null) {
+              return null;
+            }
+
+            return {
+              name,
+              confidence,
+            };
+          }
+        )
+        .filter(
+          (
+            item: {
+              name: string;
+              confidence: number;
+            } | null
+          ): item is {
+            name: string;
+            confidence: number;
+          } => item !== null
+        );
+
+      if (!detectedColors.length) return;
+
+      setDetectedColorReview(detectedColors);
+
+      setForm((current) => {
+        if (!overwrite && current.colors.trim()) {
+          return current;
+        }
+
+        return {
+          ...current,
+          colors: detectedColors
+            .map(
+              (item: {
+                name: string;
+                confidence: number;
+              }) => item.name
+            )
+            .join(", "),
+        };
+      });
+    } catch (error) {
+      console.error(
+        "Automatic product colour detection failed:",
+        error
+      );
+    } finally {
+      setDetectingColors(false);
+    }
+  }
+
+
   function setMainImage(url:string){
     setForm({
       ...form,
@@ -233,6 +336,12 @@ export default function ProductsModule() {
         form.image === url
           ? updated[0] || ""
           : form.image,
+    });
+
+    setImageColors((current) => {
+      const next = { ...current };
+      delete next[url];
+      return next;
     });
 
   }
@@ -265,329 +374,53 @@ export default function ProductsModule() {
 
 
 
-  async function analyzeProductImages(product: any) {
-    try {
-      setDetectingColors(true);
-
-      const images = Array.isArray(product?.images)
-        ? product.images.filter(
-            (url: unknown): url is string =>
-              typeof url === "string" &&
-              url.trim().length > 0
-          )
-        : [];
-
-      const colors = Array.isArray(product?.colors)
-        ? product.colors.filter(
-            (color: unknown): color is string =>
-              typeof color === "string" &&
-              color.trim().length > 0
-          )
-        : [];
-
-      if (!images.length) {
-        alert("Please add at least one product image.");
-        return false;
-      }
-
-      const response = await fetch(
-        "/api/admin/products/0/detect-colors",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            images,
-            colors,
-          }),
-        }
-      );
-
-      const result = await response.json();
-
-      if (!response.ok || !result.success) {
-        throw new Error(
-          result?.error ||
-            "OpenCV image color detection failed"
-        );
-      }
-
-      const detections = Array.isArray(
-        result.imageDetections
-      )
-        ? result.imageDetections
-        : [];
-
-      setColorDetections(detections);
-
-      setPendingProduct(product);
-
-      setPendingAction(
-        editingId ? "update" : "add"
-      );
-
-      return true;
-    } catch (error) {
-      console.error(
-        "OpenCV image color detection failed:",
-        error
-      );
-
-      setColorDetections([]);
-
-      alert(
-        error instanceof Error
-          ? error.message
-          : "Colour detection failed."
-      );
-
-      return false;
-    } finally {
-      setDetectingColors(false);
-    }
-  }
-
-
-  async function confirmColorMapping() {
-    if (
-      !pendingProduct ||
-      !colorDetections.length ||
-      !pendingAction
-    ) {
-      return;
-    }
-
-    try {
-      const imageColorMap: Record<
-        string,
-        { images: string[]; confidence: number }
-      > = {};
-
-      const confirmedColors = [
-        ...(Array.isArray(pendingProduct.colors)
-          ? pendingProduct.colors
-          : []),
-      ];
-
-      for (const detection of colorDetections) {
-        const color =
-          detection.detectedColor.trim();
-
-        if (!color) continue;
-
-        if (
-          !confirmedColors.some(
-            (existing: string) =>
-              existing.toLowerCase() ===
-              color.toLowerCase()
-          )
-        ) {
-          confirmedColors.push(color);
-        }
-
-        if (!imageColorMap[color]) {
-          imageColorMap[color] = {
-            images: [],
-            confidence:
-              detection.confidence,
-          };
-        }
-
-        imageColorMap[color].images.push(
-          detection.image
-        );
-
-        imageColorMap[color].confidence =
-          Math.max(
-            imageColorMap[color].confidence,
-            detection.confidence
-          );
-      }
-
-      for (const color of Object.keys(
-        imageColorMap
-      )) {
-        imageColorMap[color].images = [
-          ...new Set(
-            imageColorMap[color].images
-          ),
-        ];
-      }
-
-      const finalProduct = {
-        ...pendingProduct,
-        colors: confirmedColors,
-        image_color_map: imageColorMap,
-      };
-
-      if (
-        pendingAction === "update" &&
-        editingId
-      ) {
-        await updateProduct(
-          editingId,
-          finalProduct
-        );
-
-        alert(
-          "Product updated successfully."
-        );
-      } else {
-        await saveProduct(finalProduct);
-
-        alert(
-          "Product added successfully."
-        );
-      }
-
-      setColorDetections([]);
-      setPendingProduct(null);
-      setPendingAction(null);
-      setForm(emptyForm);
-      setEditingId(null);
-      setShowForm(false);
-
-      await loadProducts();
-    } catch (error) {
-      console.error(
-        "Failed saving confirmed product:",
-        error
-      );
-
-      alert(
-        "Failed to save the product."
-      );
-    }
-  }
-
-
-  async function handleSubmit(
-    e: FormEvent
+  function buildImageColourMap(
+    images: string[] = [],
+    assignments: Record<string, string> = imageColors
   ) {
-    e.preventDefault();
+    const map: Record<
+      string,
+      { images: string[]; confidence: number }
+    > = {};
 
-    if (
-      !form.name ||
-      !form.price ||
-      form.stock === ""
-    ) {
-      alert(
-        "Product name, price and stock required"
-      );
-      return;
+    for (const image of images) {
+      const colour = (assignments[image] || "").trim();
+
+      if (!colour) continue;
+
+      if (!map[colour]) {
+        map[colour] = {
+          images: [],
+          confidence: 1,
+        };
+      }
+
+      if (!map[colour].images.includes(image)) {
+        map[colour].images.push(image);
+      }
     }
 
-    const product: any = {
-      name: form.name,
-
-      price: Number(form.price),
-
-      oldPrice: Number(
-        form.oldPrice || form.price
-      ),
-
-      cost_price: Number(
-        form.cost_price || 0
-      ),
-
-      category: form.category,
-
-      stock: Number(form.stock),
-
-      colors: form.colors
-        .split(",")
-        .map((item) => item.trim())
-        .filter(Boolean),
-
-      sizes: form.sizes
-        .split(",")
-        .map((item) => item.trim())
-        .filter(Boolean),
-
-      sizePrices: Object.fromEntries(
-        form.sizes
-          .split(",")
-          .map((item) => item.trim())
-          .filter(Boolean)
-          .map((size) => {
-            const value =
-              form.sizePrices[size];
-
-            return [
-              size,
-              value !== undefined &&
-              value !== ""
-                ? Number(value)
-                : undefined,
-            ];
-          })
-          .filter(
-            ([, value]) =>
-              value !== undefined
-          )
-      ),
-
-      sizeQuantities: Object.fromEntries(
-        form.sizes
-          .split(",")
-          .map((item) => item.trim())
-          .filter(Boolean)
-          .map((size) => {
-            const value =
-              form.sizeQuantities[size];
-
-            return [
-              size,
-              value !== undefined &&
-              value !== ""
-                ? Number(value)
-                : undefined,
-            ];
-          })
-          .filter(
-            ([, value]) =>
-              value !== undefined
-          )
-      ),
-
-      description: form.description,
-
-      specifications:
-        extractSpecifications(
-          form.description
-        ),
-
-      image:
-        form.images?.[0] ||
-        form.image ||
-        "",
-
-      images:
-        Array.isArray(form.images)
-          ? form.images.filter(
-              (url) =>
-                typeof url === "string" &&
-                url.startsWith("http")
-            )
-          : [],
-    };
-
-    // IMPORTANT:
-    // Do not save/update the database yet.
-    // First detect the colours and show the
-    // seller the review screen.
-    const detected =
-      await analyzeProductImages(
-        product
-      );
-
-    if (!detected) {
-      return;
-    }
+    return map;
   }
 
+  function loadImageColourAssignments(
+    images: string[] = [],
+    colourMap?: Product["image_color_map"]
+  ) {
+    const assignments: Record<string, string> = {};
 
+    for (const image of images) {
+      const match = Object.entries(colourMap || {}).find(
+        ([, value]) =>
+          Array.isArray(value?.images) &&
+          value.images.includes(image)
+      );
+
+      assignments[image] = match ? match[0] : "";
+    }
+
+    return assignments;
+  }
 
   function editProduct(
     product: Product
@@ -619,8 +452,276 @@ export default function ProductsModule() {
       images: product.images || [],
     });
 
+    setImageColors(
+      loadImageColourAssignments(
+        product.images || [],
+        product.image_color_map
+      )
+    );
+
+    setPendingProduct(null);
+    setDetectedColorReview([]);
+
     setEditingId(product.id);
     setShowForm(true);
+  }
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+
+    if (!form.name || !form.price || form.stock === "") {
+      alert("Product name, price and stock required");
+      return;
+    }
+
+    const images = Array.isArray(form.images)
+      ? form.images.filter(
+          (url): url is string =>
+            typeof url === "string" &&
+            url.startsWith("http")
+        )
+      : [];
+
+    if (!images.length && !form.image) {
+      alert("Please add at least one product image before saving.");
+      return;
+    }
+
+    // Manual image-colour mapping is the final authority.
+    const imageColorMap = buildImageColourMap(
+      images,
+      imageColors
+    );
+
+    const manuallyEnteredColours = form.colors
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+    const mappedColours = Object.keys(imageColorMap);
+
+    const mergedColours = [
+      ...manuallyEnteredColours,
+      ...mappedColours,
+    ].filter(
+      (colour, index, list) =>
+        list.findIndex(
+          (item) =>
+            item.toLowerCase() === colour.toLowerCase()
+        ) === index
+    );
+
+    const product: any = {
+      name: form.name,
+      price: Number(form.price),
+      oldPrice: Number(form.oldPrice || form.price),
+      cost_price: Number(form.cost_price || 0),
+      category: form.category,
+      stock: Number(form.stock),
+
+      colors: mergedColours,
+
+      sizes: form.sizes
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean),
+
+      sizePrices: Object.fromEntries(
+        form.sizes
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean)
+          .map((size) => {
+            const value = form.sizePrices[size];
+
+            return [
+              size,
+              value !== undefined && value !== ""
+                ? Number(value)
+                : undefined,
+            ];
+          })
+          .filter(([, value]) => value !== undefined)
+      ),
+
+      sizeQuantities: Object.fromEntries(
+        form.sizes
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean)
+          .map((size) => {
+            const value = form.sizeQuantities[size];
+
+            return [
+              size,
+              value !== undefined && value !== ""
+                ? Number(value)
+                : undefined,
+            ];
+          })
+          .filter(([, value]) => value !== undefined)
+      ),
+
+      description: form.description,
+      specifications: extractSpecifications(form.description),
+
+      image: images[0] || form.image || "",
+      images,
+
+      image_color_map: imageColorMap,
+    };
+
+    try {
+      setDetectingColors(true);
+
+      if (editingId) {
+        await updateProduct(editingId, product);
+        alert("Product updated successfully.");
+      } else {
+        await saveProduct(product);
+        alert("Product added successfully.");
+      }
+
+      setPendingProduct(null);
+      setDetectedColorReview([]);
+      setImageColors({});
+
+      setForm(emptyForm);
+      setImageColors({});
+      setEditingId(null);
+      setShowForm(false);
+
+      await loadProducts();
+    } catch (error) {
+      console.error("Failed saving product:", error);
+      alert("Failed to save the product.");
+    } finally {
+      setDetectingColors(false);
+    }
+  }
+
+  async function confirmPendingProduct() {
+    if (!pendingProduct) return;
+
+    const colors = detectedColorReview
+      .map((item) => item.name.trim())
+      .filter(Boolean);
+
+    if (!colors.length) {
+      alert("Add at least one product colour before saving.");
+      return;
+    }
+
+    const confirmedProduct = {
+      ...pendingProduct,
+      colors,
+    };
+
+    try {
+      setDetectingColors(true);
+
+      if (editingId) {
+        await updateProduct(editingId, confirmedProduct);
+        alert("Product updated successfully.");
+      } else {
+        await saveProduct(confirmedProduct);
+        alert("Product added successfully.");
+      }
+
+      setPendingProduct(null);
+      setDetectedColorReview([]);
+      setForm(emptyForm);
+      setImageColors({});
+      setEditingId(null);
+      setShowForm(false);
+
+      await loadProducts();
+    } catch (error) {
+      console.error(
+        "Failed saving confirmed product:",
+        error
+      );
+
+      alert("Failed to save the product.");
+    } finally {
+      setDetectingColors(false);
+    }
+  }
+
+  async function redetectProductColours() {
+    const images = Array.isArray(form.images)
+      ? form.images.filter(
+          (url): url is string =>
+            typeof url === "string" &&
+            url.trim().length > 0
+        )
+      : [];
+
+    if (!images.length) {
+      alert("Please add at least one product image.");
+      return;
+    }
+
+    try {
+      setDetectingColors(true);
+
+      const response = await fetch(
+        "/api/products/detect-colors",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            images,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (
+        !response.ok ||
+        !result.success ||
+        !Array.isArray(result.colors) ||
+        !result.colors.length
+      ) {
+        throw new Error(
+          "Unable to detect product colours. Please enter the colours manually or try again."
+        );
+      }
+
+      const detectedColors = result.colors
+        .map(
+          (item: { name?: unknown }) =>
+            typeof item?.name === "string"
+              ? item.name.trim()
+              : ""
+        )
+        .filter(Boolean);
+
+      if (!detectedColors.length) {
+        throw new Error(
+          "Unable to detect product colours. Please enter the colours manually or try again."
+        );
+      }
+
+      setForm((current) => ({
+        ...current,
+        colors: detectedColors.join(", "),
+      }));
+    } catch (error) {
+      console.error(
+        "Product colour detection failed:",
+        error
+      );
+
+      alert(
+        "Unable to detect product colours. Please enter the colours manually or try again."
+      );
+    } finally {
+      setDetectingColors(false);
+    }
   }
 
   async function removeProduct(
@@ -801,15 +902,29 @@ export default function ProductsModule() {
                   <label className="mb-1.5 block text-sm font-semibold text-gray-700">
                     Colors
                   </label>
-                  <input
-                    name="colors"
-                    value={form.colors}
-                    onChange={handleChange}
-                    placeholder="Black, Red, Blue"
-                    className="w-full rounded-xl border border-gray-200 bg-gray-50 p-3.5 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
-                  />
+                  <div className="flex gap-2">
+                    <input
+                      name="colors"
+                      value={form.colors}
+                      onChange={handleChange}
+                      placeholder="Black, Red, Blue"
+                      className="min-w-0 flex-1 rounded-xl border border-gray-200 bg-gray-50 p-3.5 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
+                    />
+
+                    <button
+                      type="button"
+                      onClick={redetectProductColours}
+                      disabled={detectingColors}
+                      className="shrink-0 rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {detectingColors
+                        ? "Detecting..."
+                        : "Re-detect Colours"}
+                    </button>
+                  </div>
+
                   <p className="mt-1 text-xs text-gray-400">
-                    Separate colors with commas.
+                    Enter colours manually or use Re-detect Colours to analyse the product images.
                   </p>
                 </div>
 
@@ -1083,22 +1198,134 @@ export default function ProductsModule() {
       return;
     }
 
+    const currentImages = form.images || [];
+    const allImages = [
+      ...currentImages,
+      ...uploaded,
+    ];
+
     setForm((current) => ({
       ...current,
-      images: [
-        ...current.images,
-        ...uploaded,
-      ],
+      images: allImages,
       image:
         current.image ||
         uploaded[0] ||
         "",
     }));
 
+    setImageColors((current) => {
+      const next = { ...current };
+
+      for (const url of uploaded) {
+        if (!(url in next)) {
+          next[url] = "";
+        }
+      }
+
+      return next;
+    });
+
     setUploading(false);
+
+
   }}
 />
 
+              {form.images?.length > 0 && (
+                <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50 p-4">
+                  <div className="mb-4">
+                    <h4 className="text-base font-black text-gray-900">
+                      Assign Colour to Each Image
+                    </h4>
+
+                    <p className="mt-1 text-xs text-gray-600">
+                      Choose the exact colour for every image. Multiple images
+                      can use the same colour. Your selection is saved with the product.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                    {form.images.map((url, index) => (
+                      <div
+                        key={`${url}-${index}`}
+                        className="overflow-hidden rounded-xl border border-gray-200 bg-white"
+                      >
+                        <div className="relative aspect-square bg-gray-50">
+                          <img
+                            src={url}
+                            alt={`${form.name || "Product"} image ${index + 1}`}
+                            className="h-full w-full object-contain"
+                          />
+
+                          {form.image === url && (
+                            <span className="absolute left-2 top-2 rounded-full bg-blue-600 px-2 py-1 text-[10px] font-black text-white">
+                              MAIN
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="p-3">
+                          <label className="mb-1 block text-xs font-bold text-gray-600">
+                            Image {index + 1} Colour
+                          </label>
+
+                          <select
+                            value={imageColors[url] || ""}
+                            onChange={(e) => {
+                              const colour = e.target.value;
+
+                              setImageColors((current) => ({
+                                ...current,
+                                [url]: colour,
+                              }));
+                            }}
+                            className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                          >
+                            <option value="">
+                              Default / No Colour
+                            </option>
+
+                            {IMAGE_COLOUR_OPTIONS.map((colour) => (
+                              <option
+                                key={colour}
+                                value={colour}
+                              >
+                                {colour}
+                              </option>
+                            ))}
+                          </select>
+
+                          <button
+                            type="button"
+                            onClick={() => setMainImage(url)}
+                            className="mt-2 w-full rounded-lg bg-gray-100 px-3 py-2 text-xs font-bold text-gray-700 transition hover:bg-gray-200"
+                          >
+                            {form.image === url
+                              ? "✓ Main Image"
+                              : "Set as Main"}
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => removeImage(url)}
+                            className="mt-2 w-full rounded-lg bg-red-50 px-3 py-2 text-xs font-bold text-red-600 transition hover:bg-red-100"
+                          >
+                            Remove Image
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-4 rounded-lg bg-white px-3 py-3 text-xs text-gray-600 ring-1 ring-inset ring-gray-200">
+                    <span className="font-bold text-gray-900">
+                      How it works:
+                    </span>{" "}
+                    Black images are shown when the customer selects Black,
+                    White images when White is selected, and so on.
+                  </div>
+                </div>
+              )}
 
               {uploading && (
                 <div className="mt-3 rounded-xl bg-blue-50 px-4 py-3 text-sm font-medium text-blue-700">
@@ -1106,207 +1333,6 @@ export default function ProductsModule() {
                 </div>
               )}
 
-              {detectingColors && (
-                <div className="mt-4 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm font-medium text-blue-700">
-                  OpenCV is detecting product colors...
-                </div>
-              )}
-
-              {colorDetections.length > 0 && (
-                <div className="mt-5 rounded-2xl border border-gray-200 bg-white p-4">
-                  <div className="mb-4">
-                    <h4 className="text-sm font-bold text-gray-800">
-                      OpenCV Color Detection
-                    </h4>
-                    <p className="mt-1 text-xs text-gray-500">
-                      Review each image and correct the detected color if necessary.
-                    </p>
-                  </div>
-
-                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {colorDetections.map((detection, index) => (
-                      <div
-                        key={`${detection.image}-${index}`}
-                        className="overflow-hidden rounded-xl border border-gray-200 bg-gray-50"
-                      >
-                        <div className="aspect-square bg-white">
-                          <img
-                            src={detection.image}
-                            alt={`Product image ${index + 1}`}
-                            className="h-full w-full object-contain"
-                          />
-                        </div>
-
-                        <div className="space-y-3 p-3">
-                          <div className="flex items-center justify-between gap-2">
-                            <div>
-                              <p className="text-xs font-semibold text-gray-500">
-                                Detected product color
-                              </p>
-                              <p className="mt-1 text-sm font-bold text-gray-900">
-                                {detection.detectedColor}
-                              </p>
-                            </div>
-
-                            <span
-                              className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${
-                                detection.decision === "auto"
-                                  ? "bg-green-50 text-green-700"
-                                  : "bg-amber-50 text-amber-700"
-                              }`}
-                            >
-                              {detection.decision === "auto"
-                                ? "AUTO SELECTED"
-                                : "REVIEW REQUIRED"}
-                            </span>
-                          </div>
-
-                          <div className="rounded-lg border border-gray-200 bg-white p-3">
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs font-semibold text-gray-500">
-                                Product colour share
-                              </span>
-                              <span className="text-sm font-extrabold text-gray-900">
-                                {Math.round(detection.percentage * 100)}%
-                              </span>
-                            </div>
-
-                            <div className="mt-2 h-2 overflow-hidden rounded-full bg-gray-100">
-                              <div
-                                className={`h-full rounded-full ${
-                                  detection.decision === "auto"
-                                    ? "bg-green-500"
-                                    : "bg-amber-500"
-                                }`}
-                                style={{
-                                  width: `${Math.min(
-                                    100,
-                                    Math.round(
-                                      detection.percentage * 100
-                                    )
-                                  )}%`,
-                                }}
-                              />
-                            </div>
-
-                            <p className="mt-2 text-[11px] text-gray-400">
-                              Detection confidence:{" "}
-                              {Math.round(
-                                detection.confidence * 100
-                              )}
-                              %
-                            </p>
-                          </div>
-
-                          <select
-                            value={detection.detectedColor}
-                            onChange={(e) => {
-                              const value = e.target.value;
-
-                              setColorDetections((current) =>
-                                current.map((item, itemIndex) =>
-                                  itemIndex === index
-                                    ? {
-                                        ...item,
-                                        detectedColor: value,
-                                        decision: "review",
-                                      }
-                                    : item
-                                )
-                              );
-                            }}
-                            className="w-full rounded-lg border border-gray-200 bg-white p-2.5 text-sm font-semibold text-gray-800 outline-none focus:border-blue-500"
-                          >
-                            {Array.from(
-                              new Set(
-                                form.colors
-                                  .split(",")
-                                  .map((color) => color.trim())
-                                  .filter(Boolean)
-                              )
-                            ).map((color) => (
-                              <option key={color} value={color}>
-                                {color}
-                              </option>
-                            ))}
-                          </select>
-
-                          {detection.alternatives.length > 1 && (
-                            <div className="rounded-lg border border-gray-100 bg-white p-3">
-                              <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-gray-400">
-                                Colour evidence
-                              </p>
-
-                              <div className="space-y-1.5">
-                                {detection.alternatives
-                                  .slice(0, 4)
-                                  .map((item) => (
-                                    <button
-                                      key={item.color}
-                                      type="button"
-                                      onClick={() => {
-                                        setColorDetections((current) =>
-                                          current.map(
-                                            (currentItem, currentIndex) =>
-                                              currentIndex === index
-                                                ? {
-                                                    ...currentItem,
-                                                    detectedColor:
-                                                      item.color,
-                                                    percentage:
-                                                      item.percentage,
-                                                    confidence:
-                                                      item.confidence,
-                                                    decision: "review",
-                                                  }
-                                                : currentItem
-                                          )
-                                        );
-                                      }}
-                                      className={`flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-xs transition ${
-                                        item.color.toLowerCase() ===
-                                        detection.detectedColor.toLowerCase()
-                                          ? "bg-gray-100 font-bold text-gray-900"
-                                          : "text-gray-600 hover:bg-gray-50"
-                                      }`}
-                                    >
-                                      <span>{item.color}</span>
-                                      <span className="font-bold">
-                                        {Math.round(
-                                          item.percentage * 100
-                                        )}
-                                        %
-                                      </span>
-                                    </button>
-                                  ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="mt-5 flex flex-col gap-3 border-t border-gray-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                      <p className="text-sm font-semibold text-gray-700">
-                        Review complete?
-                      </p>
-                      <p className="text-xs text-gray-400">
-                        Confirm the colors to save the image-to-color mapping.
-                      </p>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={confirmColorMapping}
-                      className="rounded-xl bg-green-600 px-6 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-green-700"
-                    >
-                      Confirm Colors
-                    </button>
-                  </div>
-                </div>
-              )}
             </section>
 
             <div className="flex flex-col gap-3 border-t border-gray-100 pt-5 sm:flex-row sm:items-center sm:justify-between">

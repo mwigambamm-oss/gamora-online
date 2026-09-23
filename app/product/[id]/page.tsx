@@ -345,11 +345,23 @@ setProduct(item);
     !!product?.image_color_map &&
     Object.keys(product.image_color_map).length > 0;
 
-  const selectedColorImages =
-    selectedColor &&
-    product?.image_color_map?.[selectedColor]?.images
-      ? product.image_color_map[selectedColor].images
+  const selectedColorImages = (() => {
+    if (!selectedColor || !product?.image_color_map) {
+      return [];
+    }
+
+    const map = product.image_color_map;
+
+    const matchedKey = Object.keys(map).find(
+      (key) =>
+        key.trim().toLowerCase() ===
+        selectedColor.trim().toLowerCase()
+    );
+
+    return matchedKey
+      ? map[matchedKey]?.images || []
       : [];
+  })();
 
   const colorOutOfStock =
     !!selectedVariant &&

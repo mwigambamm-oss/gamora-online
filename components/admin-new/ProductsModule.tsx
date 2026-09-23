@@ -435,6 +435,29 @@ export default function ProductsModule() {
     return map;
   }
 
+  function getUniqueImageColours(
+    images: string[] = [],
+    assignments: Record<string, string> = imageColors
+  ) {
+    const colours: string[] = [];
+    const seen = new Set<string>();
+
+    for (const image of images) {
+      const colour = (assignments[image] || "").trim();
+
+      if (!colour) continue;
+
+      const key = colour.toLowerCase();
+
+      if (seen.has(key)) continue;
+
+      seen.add(key);
+      colours.push(colour);
+    }
+
+    return colours;
+  }
+
   function loadImageColourAssignments(
     images: string[] = [],
     colourMap?: Product["image_color_map"]
@@ -525,22 +548,11 @@ export default function ProductsModule() {
       imageColors
     );
 
-    const manuallyEnteredColours = form.colors
-      .split(",")
-      .map((item) => item.trim())
-      .filter(Boolean);
-
-    const mappedColours = Object.keys(imageColorMap);
-
-    const mergedColours = [
-      ...manuallyEnteredColours,
-      ...mappedColours,
-    ].filter(
-      (colour, index, list) =>
-        list.findIndex(
-          (item) =>
-            item.toLowerCase() === colour.toLowerCase()
-        ) === index
+    // Product colours are generated automatically from
+    // the colours assigned to the product images.
+    const mergedColours = getUniqueImageColours(
+      images,
+      imageColors
     );
 
     const product: any = {
@@ -935,29 +947,20 @@ export default function ProductsModule() {
                   <label className="mb-1.5 block text-sm font-semibold text-gray-700">
                     Colors
                   </label>
-                  <div className="flex gap-2">
-                    <input
-                      name="colors"
-                      value={form.colors}
-                      onChange={handleChange}
-                      placeholder="Black, Red, Blue"
-                      className="min-w-0 flex-1 rounded-xl border border-gray-200 bg-gray-50 p-3.5 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
-                    />
 
-                    <button
-                      type="button"
-                      onClick={redetectProductColours}
-                      disabled={detectingColors}
-                      className="shrink-0 rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      {detectingColors
-                        ? "Detecting..."
-                        : "Re-detect Colours"}
-                    </button>
-                  </div>
+                  <input
+                    name="colors"
+                    value={getUniqueImageColours(
+                      form.images,
+                      imageColors
+                    ).join(", ")}
+                    readOnly
+                    placeholder="Assign a colour to each product image"
+                    className="w-full rounded-xl border border-gray-200 bg-gray-100 p-3.5 font-semibold text-gray-900 outline-none"
+                  />
 
                   <p className="mt-1 text-xs text-gray-400">
-                    Enter colours manually or use Re-detect Colours to analyse the product images.
+                    Automatically generated from the colour assigned to each product image.
                   </p>
                 </div>
 

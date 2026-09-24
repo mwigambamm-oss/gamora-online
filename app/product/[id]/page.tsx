@@ -220,9 +220,10 @@ setProduct(item);
         );
       }
 
-      if (item.colors && item.colors.length > 0) {
-        setSelectedColor(item.colors[0]);
-      }
+      // Do not auto-select the first colour.
+      // The gallery should show all product images until the customer
+      // explicitly selects a colour.
+      setSelectedColor("");
 
       if (item.sizes && item.sizes.length > 0) {
         setSelectedSize(item.sizes[0]);

@@ -493,14 +493,8 @@ setProduct(item);
   const variantImages =
     selectedVariant?.images && selectedVariant.images.length > 0
       ? selectedVariant.images
-      : hasColorImageMap
-      ? selectedColor && selectedColorImages.length > 0
-        ? selectedColorImages
-        : product?.images && product.images.length > 0
-        ? product.images
-        : product?.image
-        ? [product.image]
-        : []
+      : selectedColor && selectedColorImages.length > 0
+      ? selectedColorImages
       : product?.images && product.images.length > 0
       ? product.images
       : product?.image

@@ -234,23 +234,34 @@ export default function ProductsModule() {
     }
 
 
+    const allImages = [
+      ...form.images,
+      ...uploaded,
+    ];
+
     setForm((current) => {
-      const allImages = [
+      const currentImages = [
         ...current.images,
         ...uploaded,
       ];
 
       return {
         ...current,
-        images: allImages,
+        images: currentImages,
         image:
           uploaded[0] ||
           current.image ||
-          allImages[0] ||
+          currentImages[0] ||
           "",
       };
     });
 
+    if (allImages.length) {
+      await detectColoursForImages(
+        allImages,
+        true
+      );
+    }
 
     setUploading(false);
 
@@ -258,7 +269,7 @@ export default function ProductsModule() {
 
   async function detectColoursForImages(
     images: string[],
-    overwrite: boolean
+    overwrite: boolean = true
   ) {
     if (!images.length) return;
 
@@ -281,74 +292,119 @@ export default function ProductsModule() {
       if (
         !response.ok ||
         !result.success ||
-        !Array.isArray(result.colors) ||
-        !result.colors.length
+        !Array.isArray(result.image_detections)
       ) {
+        console.error(
+          "Automatic colour detection failed:",
+          result
+        );
         return;
       }
 
-      const detectedColors = result.colors
-        .map(
-          (item: {
-            name?: unknown;
-            confidence?: unknown;
-          }) => {
-            const name =
-              typeof item?.name === "string"
-                ? item.name.trim()
-                : "";
+      const detections = result.image_detections.filter(
+        (item: any) =>
+          typeof item?.image === "string" &&
+          typeof item?.detectedColor === "string" &&
+          item.detectedColor.trim()
+      );
 
-            const confidence =
-              typeof item?.confidence === "number"
-                ? Math.max(
-                    0,
-                    Math.min(1, item.confidence)
-                  )
-                : null;
+      if (!detections.length) {
+        console.warn("No colours detected for uploaded images.");
+        return;
+      }
 
-            if (!name || confidence === null) {
-              return null;
+      /*
+       * Build the complete image -> detected colour map FIRST.
+       * This is important because React state updates are asynchronous.
+       */
+      const detectedImageColors: Record<string, string> = {};
+
+      for (const item of detections) {
+        const detectedImage = item.image.trim();
+        const colour = item.detectedColor.trim();
+
+        if (!detectedImage || !colour) continue;
+
+        const matchedImage =
+          images.find((url) => {
+            const a = url.trim();
+            const b = detectedImage;
+
+            try {
+              return (
+                a === b ||
+                decodeURIComponent(a) === decodeURIComponent(b) ||
+                a.split("?")[0] === b.split("?")[0]
+              );
+            } catch {
+              return (
+                a === b ||
+                a.split("?")[0] === b.split("?")[0]
+              );
             }
+          }) || detectedImage;
 
-            return {
-              name,
-              confidence,
-            };
+        detectedImageColors[matchedImage] = colour;
+      }
+
+      /*
+       * Automatically assign colours to every image.
+       * Manual editing remains possible afterwards through the dropdown.
+       */
+      setImageColors((current) => {
+        const next = { ...current };
+
+        for (const image of images) {
+          const detected = detectedImageColors[image];
+
+          if (
+            detected &&
+            (overwrite || !next[image])
+          ) {
+            next[image] = detected;
           }
-        )
-        .filter(
-          (
-            item: {
-              name: string;
-              confidence: number;
-            } | null
-          ): item is {
-            name: string;
-            confidence: number;
-          } => item !== null
-        );
-
-      if (!detectedColors.length) return;
-
-      setDetectedColorReview(detectedColors);
-
-      setForm((current) => {
-        if (!overwrite && current.colors.trim()) {
-          return current;
         }
 
-        return {
-          ...current,
-          colors: detectedColors
-            .map(
-              (item: {
-                name: string;
-                confidence: number;
-              }) => item.name
-            )
-            .join(", "),
-        };
+        return next;
       });
+
+      /*
+       * Automatically build Product Colors from the detected
+       * colours, without requiring any manual selection.
+       */
+      const detectedNames: string[] = [];
+      const seen = new Set<string>();
+
+      for (const image of images) {
+        const colour = detectedImageColors[image]?.trim();
+
+        if (!colour) continue;
+
+        const key = colour.toLowerCase();
+
+        if (seen.has(key)) continue;
+
+        seen.add(key);
+        detectedNames.push(colour);
+      }
+
+      setDetectedColorReview(
+        detectedNames.map((name) => ({
+          name,
+          confidence: 1,
+        }))
+      );
+
+      setForm((current) => ({
+        ...current,
+        colors: detectedNames.join(", "),
+      }));
+
+      console.log(
+        "GAMORA AUTOMATIC COLOURS:",
+        detectedImageColors,
+        detectedNames
+      );
     } catch (error) {
       console.error(
         "Automatic product colour detection failed:",
@@ -366,7 +422,6 @@ export default function ProductsModule() {
       image:url,
     });
   }
-
 
   function removeImage(url:string){
 
@@ -393,8 +448,6 @@ export default function ProductsModule() {
 
   }
 
-
-
   function addCategory(){
 
     const name =
@@ -418,8 +471,6 @@ export default function ProductsModule() {
     setNewCategory("");
 
   }
-
-
 
   function buildImageColourMap(
     images: string[] = [],
@@ -473,25 +524,6 @@ export default function ProductsModule() {
     return colours;
   }
 
-  function loadImageColourAssignments(
-    images: string[] = [],
-    colourMap?: Product["image_color_map"]
-  ) {
-    const assignments: Record<string, string> = {};
-
-    for (const image of images) {
-      const match = Object.entries(colourMap || {}).find(
-        ([, value]) =>
-          Array.isArray(value?.images) &&
-          value.images.includes(image)
-      );
-
-      assignments[image] = match ? match[0] : "";
-    }
-
-    return assignments;
-  }
-
   function editProduct(
     product: Product
   ) {
@@ -536,6 +568,24 @@ export default function ProductsModule() {
     setShowForm(true);
   }
 
+  function loadImageColourAssignments(
+    images: string[] = [],
+    colourMap?: Product["image_color_map"]
+  ) {
+    const assignments: Record<string, string> = {};
+
+    for (const image of images) {
+      const match = Object.entries(colourMap || {}).find(
+        ([, value]) =>
+          Array.isArray(value?.images) &&
+          value.images.includes(image)
+      );
+
+      assignments[image] = match ? match[0] : "";
+    }
+
+    return assignments;
+  }
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
 
@@ -718,70 +768,16 @@ export default function ProductsModule() {
       : [];
 
     if (!images.length) {
-      alert("Please add at least one product image.");
+      alert(
+        "Please add at least one product image."
+      );
       return;
     }
 
-    try {
-      setDetectingColors(true);
-
-      const response = await fetch(
-        "/api/products/detect-colors",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            images,
-          }),
-        }
-      );
-
-      const result = await response.json();
-
-      if (
-        !response.ok ||
-        !result.success ||
-        !Array.isArray(result.colors) ||
-        !result.colors.length
-      ) {
-        throw new Error(
-          "Unable to detect product colours. Please enter the colours manually or try again."
-        );
-      }
-
-      const detectedColors = result.colors
-        .map(
-          (item: { name?: unknown }) =>
-            typeof item?.name === "string"
-              ? item.name.trim()
-              : ""
-        )
-        .filter(Boolean);
-
-      if (!detectedColors.length) {
-        throw new Error(
-          "Unable to detect product colours. Please enter the colours manually or try again."
-        );
-      }
-
-      setForm((current) => ({
-        ...current,
-        colors: detectedColors.join(", "),
-      }));
-    } catch (error) {
-      console.error(
-        "Product colour detection failed:",
-        error
-      );
-
-      alert(
-        "Unable to detect product colours. Please enter the colours manually or try again."
-      );
-    } finally {
-      setDetectingColors(false);
-    }
+    await detectColoursForImages(
+      images,
+      true
+    );
   }
 
   async function removeProduct(
@@ -1284,15 +1280,28 @@ export default function ProductsModule() {
 
               {form.images?.length > 0 && (
                 <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50 p-4">
-                  <div className="mb-4">
-                    <h4 className="text-base font-black text-gray-900">
-                      Assign Colour to Each Image
-                    </h4>
+                  <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <h4 className="text-base font-black text-gray-900">
+                        Assign Colour to Each Image
+                      </h4>
 
-                    <p className="mt-1 text-xs text-gray-600">
-                      Choose the exact colour for every image. Multiple images
-                      can use the same colour. Your selection is saved with the product.
-                    </p>
+                      <p className="mt-1 text-xs text-gray-600">
+                        Detect the product colour automatically for every image.
+                        You can still correct any image manually below.
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={redetectProductColours}
+                      disabled={detectingColors || uploading}
+                      className="shrink-0 rounded-lg bg-blue-600 px-4 py-2.5 text-xs font-black text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {detectingColors
+                        ? "Detecting Colours..."
+                        : "Detect Colours"}
+                    </button>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">

@@ -1,0 +1,9 @@
+export const COLOR_DETECTION_THRESHOLD = 0.70;
+
+export const MAX_DETECTED_COLORS = 5;
+
+export const MIN_MEANINGFUL_COLOR_SHARE = 0.06;
+
+export const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
+
+export const DETECTION_TIMEOUT_MS = 90_000;

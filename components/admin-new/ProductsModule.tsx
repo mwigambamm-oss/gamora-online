@@ -81,37 +81,132 @@ export default function ProductsModule() {
   const [imageColors, setImageColors] = useState<Record<string, string>>({});
 
   const IMAGE_COLOUR_OPTIONS = [
+    // Basic
     "Black",
     "White",
     "Gray",
+    "Grey",
     "Silver",
     "Cream",
     "Beige",
-    "Brown",
+    "Ivory",
+    "Off White",
+
+    // Nude / Skin / Neutral
+    "Nude",
+    "Light Nude",
+    "Medium Nude",
+    "Dark Nude",
+    "Deep Nude",
+    "Sand",
     "Tan",
+    "Camel",
+    "Caramel",
+    "Coffee",
+    "Mocha",
+    "Chocolate",
+    "Taupe",
     "Khaki",
+    "Champagne",
+
+    // Brown
+    "Light Brown",
+    "Brown",
+    "Dark Brown",
+    "Walnut",
+    "Chestnut",
+    "Rust",
+    "Copper",
+    "Bronze",
+
+    // Red
     "Red",
+    "Light Red",
+    "Dark Red",
     "Maroon",
     "Burgundy",
+    "Wine",
+    "Cherry Red",
+    "Crimson",
+    "Terracotta",
+
+    // Pink
     "Pink",
+    "Light Pink",
+    "Baby Pink",
     "Rose",
+    "Rose Pink",
+    "Dusty Pink",
+    "Hot Pink",
+    "Fuchsia",
+    "Coral",
+
+    // Orange / Yellow
     "Orange",
+    "Light Orange",
+    "Burnt Orange",
+    "Peach",
     "Yellow",
+    "Light Yellow",
+    "Mustard",
+    "Lemon",
+    "Golden Yellow",
+
+    // Gold / Metallic
     "Gold",
+    "Rose Gold",
+    "Silver",
+    "Metallic Gray",
+    "Bronze",
+    "Copper",
+
+    // Green
     "Green",
-    "Olive",
+    "Light Green",
+    "Dark Green",
     "Mint",
+    "Mint Green",
+    "Olive",
+    "Olive Green",
+    "Army Green",
+    "Sage Green",
+    "Forest Green",
+    "Emerald Green",
+    "Lime Green",
+
+    // Blue
     "Blue",
-    "Navy Blue",
+    "Light Blue",
+    "Dark Blue",
     "Sky Blue",
+    "Baby Blue",
+    "Navy Blue",
     "Royal Blue",
+    "Cobalt Blue",
+    "Turquoise",
+    "Teal",
+    "Aqua",
+
+    // Purple
     "Purple",
+    "Light Purple",
+    "Dark Purple",
     "Lavender",
+    "Lilac",
     "Violet",
+    "Mauve",
+    "Plum",
+
+    // Special
     "Clear",
     "Transparent",
     "Multicolour",
     "Assorted",
+    "Rainbow",
+    "Printed",
+    "Floral",
+    "Camouflage",
+    "Animal Print",
     "Other",
   ];
 

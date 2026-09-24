@@ -115,7 +115,11 @@ const [cartCount, setCartCount] = useState(0);
   const [reviewLoading, setReviewLoading] = useState(false);
 
   const [selectedColor, setSelectedColor] = useState("");
+  const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [selectedSize, setSelectedSize] = useState("");
+  const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
+  const [sizeQuantitiesSelected, setSizeQuantitiesSelected] =
+    useState<Record<string, number>>({});
   const [selectedModel, setSelectedModel] = useState("");
   const [activeTab, setActiveTab] = useState("description");
   const [likes, setLikes] = useState(200);
@@ -222,6 +226,7 @@ setProduct(item);
 
       if (item.sizes && item.sizes.length > 0) {
         setSelectedSize(item.sizes[0]);
+        setSelectedSizes([]);
       }
 
       const all = await getProducts();
@@ -337,6 +342,81 @@ setProduct(item);
 
   const displaySku =
     selectedVariant?.sku || "";
+
+  const selectedColorList =
+    selectedColors.length > 0
+      ? selectedColors
+      : selectedColor
+      ? [selectedColor]
+      : [];
+
+  const selectedColorSizeLines = selectedColorList.flatMap((color) =>
+    selectedSizes.map((size) => {
+      const normalizedColor = color.trim().toLowerCase();
+      const normalizedSize = size.trim().toLowerCase();
+
+      const matchingVariant = availableVariants.find(
+        (item) =>
+          (item.color || "").trim().toLowerCase() === normalizedColor &&
+          (item.size || "").trim().toLowerCase() === normalizedSize &&
+          (!selectedModel ||
+            (item.model || "").trim().toLowerCase() ===
+              selectedModel.trim().toLowerCase())
+      );
+
+      const priceValue =
+        matchingVariant?.price !== undefined
+          ? Number(matchingVariant.price)
+          : product?.sizePrices?.[size] !== undefined
+          ? Number(product.sizePrices[size])
+          : Number(product?.price) || 0;
+
+      const stockValue =
+        matchingVariant?.stock !== undefined
+          ? Number(matchingVariant.stock) || 0
+          : product?.sizeQuantities?.[size] !== undefined
+          ? Number(product.sizeQuantities[size])
+          : Number(product?.stock) || 0;
+
+      const quantityKey = `${color}::${size}`;
+      const rawQuantity =
+        Number(sizeQuantitiesSelected[quantityKey]) || 1;
+
+      const itemQuantity =
+        stockValue > 0
+          ? Math.min(
+              Math.max(Math.floor(rawQuantity), 1),
+              stockValue
+            )
+          : Math.max(Math.floor(rawQuantity), 1);
+
+      return {
+        color,
+        size,
+        price: priceValue,
+        stock: stockValue,
+        quantityKey,
+        quantity: itemQuantity,
+        subtotal: priceValue * itemQuantity,
+        variantId: matchingVariant?.id || null,
+        sku: matchingVariant?.sku || "",
+        oldPrice:
+          matchingVariant?.old_price !== undefined
+            ? Number(matchingVariant.old_price)
+            : Number(product?.oldPrice) || 0,
+        images:
+          matchingVariant?.images &&
+          matchingVariant.images.length > 0
+            ? matchingVariant.images
+            : getColorImages(color),
+      };
+    })
+  );
+
+  const selectedSizesTotal = selectedColorSizeLines.reduce(
+    (sum, item) => sum + item.subtotal,
+    0
+  );
 
   /*
    * PRODUCT IMAGES
@@ -562,6 +642,82 @@ setProduct(item);
       product.image ||
       "";
 
+    /*
+     * MULTI-COLOR / MULTI-SIZE CART
+     * One cart line is created for each selected color + size.
+     */
+    if (
+      selectedColorList.length > 0 &&
+      selectedSizes.length > 0
+    ) {
+      const multiSelectionItems = selectedColorSizeLines.map((item) => ({
+        id: product.id,
+        variantId: item.variantId,
+        sku: item.sku,
+        name: product.name,
+        price: item.price,
+        oldPrice:
+          item.oldPrice || displayOldPrice || undefined,
+        stock: item.stock,
+        image:
+          item.images?.[0] ||
+          cartImage,
+        quantity: item.quantity,
+        selectedColor: item.color,
+        selectedSize: item.size,
+        selectedModel: selectedModel,
+      }));
+
+      try {
+        const existing = localStorage.getItem("gamora_cart");
+        const cart = existing ? JSON.parse(existing) : [];
+
+        for (const cartItem of multiSelectionItems) {
+          const existingIndex = cart.findIndex(
+            (item: {
+              id: number;
+              variantId?: number | null;
+              selectedColor?: string;
+              selectedSize?: string;
+              selectedModel?: string;
+            }) =>
+              item.id === product.id &&
+              (item.variantId || null) ===
+                (cartItem.variantId || null) &&
+              item.selectedColor ===
+                cartItem.selectedColor &&
+              item.selectedSize ===
+                cartItem.selectedSize &&
+              item.selectedModel ===
+                cartItem.selectedModel
+          );
+
+          if (existingIndex >= 0) {
+            cart[existingIndex].quantity +=
+              cartItem.quantity;
+          } else {
+            cart.push(cartItem);
+          }
+        }
+
+        localStorage.setItem(
+          "gamora_cart",
+          JSON.stringify(cart)
+        );
+
+        window.dispatchEvent(
+          new Event("cartUpdated")
+        );
+      } catch (error) {
+        console.error("Cart error:", error);
+      }
+
+      return;
+    }
+
+    /*
+     * EXISTING SINGLE-SIZE / NORMAL PRODUCT CART
+     */
     const cartItem = {
       id: product.id,
       variantId: selectedVariant?.id || null,
@@ -590,14 +746,15 @@ setProduct(item);
           selectedModel?: string;
         }) =>
           item.id === product.id &&
-          (item.variantId || null) === (selectedVariant?.id || null) &&
+          (item.variantId || null) ===
+            (selectedVariant?.id || null) &&
           item.selectedColor === selectedColor &&
           item.selectedSize === selectedSize &&
           item.selectedModel === selectedModel
       );
 
       if (existingIndex >= 0) {
-        cart[existingIndex].quantity += 1;
+        cart[existingIndex].quantity += quantity;
       } else {
         cart.push(cartItem);
       }
@@ -607,9 +764,7 @@ setProduct(item);
         JSON.stringify(cart)
       );
 
-window.dispatchEvent(new Event("cartUpdated"));
-
-
+      window.dispatchEvent(new Event("cartUpdated"));
     } catch (error) {
       console.error("Cart error:", error);
     }
@@ -628,6 +783,55 @@ window.dispatchEvent(new Event("cartUpdated"));
       product.image ||
       "";
 
+    /*
+     * MULTI-COLOR / MULTI-SIZE BUY NOW
+     * Send every selected color + size + quantity to checkout.
+     */
+    if (
+      selectedColorList.length > 0 &&
+      selectedSizes.length > 0
+    ) {
+      const multiSelectionItems = selectedColorSizeLines.map(
+        (item) => ({
+          id: product.id,
+          variantId: item.variantId,
+          sku: item.sku,
+          name: product.name,
+          price: item.price,
+          oldPrice:
+            item.oldPrice || displayOldPrice || undefined,
+          stock: item.stock,
+          image:
+            item.images?.[0] ||
+            cartImage,
+          quantity: item.quantity,
+          selectedColor: item.color,
+          selectedSize: item.size,
+          selectedModel: selectedModel,
+        })
+      );
+
+      try {
+        localStorage.setItem(
+          "gamora_cart",
+          JSON.stringify(multiSelectionItems)
+        );
+
+        window.dispatchEvent(
+          new Event("cartUpdated")
+        );
+
+        router.push("/checkout");
+      } catch (error) {
+        console.error("Buy now error:", error);
+      }
+
+      return;
+    }
+
+    /*
+     * EXISTING SINGLE-SIZE / NORMAL PRODUCT BUY NOW
+     */
     const cartItem = {
       id: product.id,
       variantId: selectedVariant?.id || null,
@@ -652,12 +856,10 @@ window.dispatchEvent(new Event("cartUpdated"));
       window.dispatchEvent(new Event("cartUpdated"));
 
       router.push("/checkout");
-
     } catch (error) {
       console.error("Buy now error:", error);
     }
   }
-
 
   /*
    * LOADING
@@ -1116,9 +1318,34 @@ window.dispatchEvent(new Event("cartUpdated"));
                           disabled={unavailable}
                           onClick={() => {
                             if (!unavailable) {
-                              setSelectedColor(
-                                selectedColor === color ? "" : color
-                              );
+                              setSelectedColors((current) => {
+                                const alreadySelected =
+                                  current.some(
+                                    (item) =>
+                                      item.trim().toLowerCase() ===
+                                      color.trim().toLowerCase()
+                                  );
+
+                                if (alreadySelected) {
+                                  const next = current.filter(
+                                    (item) =>
+                                      item.trim().toLowerCase() !==
+                                      color.trim().toLowerCase()
+                                  );
+
+                                  setSelectedColor(
+                                    selectedColor.trim().toLowerCase() ===
+                                      color.trim().toLowerCase()
+                                      ? next[0] || ""
+                                      : selectedColor
+                                  );
+
+                                  return next;
+                                }
+
+                                setSelectedColor(color);
+                                return [...current, color];
+                              });
                             }
                           }}
                           title={
@@ -1131,7 +1358,11 @@ window.dispatchEvent(new Event("cartUpdated"));
                           className={`rounded-md px-3 py-1.5 text-xs transition ${
                             unavailable
                               ? "cursor-not-allowed border border-slate-200 bg-slate-100 text-slate-400"
-                              : selectedColor === color
+                              : selectedColors.some(
+                                  (item) =>
+                                    item.trim().toLowerCase() ===
+                                    color.trim().toLowerCase()
+                                )
                               ? "border border-[#E30613] bg-red-50 text-[#E30613]"
                               : "border border-slate-200 bg-white text-slate-600 hover:border-red-200"
                           }`}
@@ -1158,27 +1389,211 @@ window.dispatchEvent(new Event("cartUpdated"));
                 </div>
               )}
 
+              {selectedColorSizeLines.length > 0 && (
+                <div className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
+                  <p className="mb-1.5 text-xs font-medium text-slate-600">
+                    {t("Selected", "Umechagua")}
+                  </p>
+
+                  <div className="space-y-1.5">
+                    {selectedColorSizeLines.map((item) => (
+                      <div
+                        key={`${item.color}::${item.size}`}
+                        className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-700"
+                      >
+                        <span>
+                          {item.color} — Size {item.size} ×{" "}
+                          <strong>{item.quantity}</strong> @{" "}
+                          {formatCurrency(item.price, currency)} ={" "}
+                          <strong>
+                            {formatCurrency(item.subtotal, currency)}
+                          </strong>
+                        </span>
+
+                        <div className="flex items-center rounded-md border border-slate-300 bg-white">
+                          <button
+                            type="button"
+                            aria-label={`Decrease quantity for ${item.color} size ${item.size}`}
+                            onClick={() => {
+                              setSizeQuantitiesSelected((current) => ({
+                                ...current,
+                                [item.quantityKey]: Math.max(
+                                  1,
+                                  (Number(current[item.quantityKey]) || 1) - 1
+                                ),
+                              }));
+                            }}
+                            className="flex h-9 w-9 cursor-pointer items-center justify-center text-lg font-bold text-slate-800 hover:bg-slate-100 active:bg-slate-200"
+                          >
+                            −
+                          </button>
+
+                          <input
+                            type="number"
+                            inputMode="numeric"
+                            min={1}
+                            max={
+                              item.stock > 0
+                                ? item.stock
+                                : undefined
+                            }
+                            value={
+                              Number(
+                                sizeQuantitiesSelected[
+                                  item.quantityKey
+                                ]
+                              ) || 1
+                            }
+                            aria-label={`Quantity for ${item.color} size ${item.size}`}
+                            onChange={(event) => {
+                              const value = event.target.value;
+
+                              if (value === "") {
+                                return;
+                              }
+
+                              const parsed = Math.floor(
+                                Number(value)
+                              );
+
+                              if (!Number.isFinite(parsed)) {
+                                return;
+                              }
+
+                              const maximum =
+                                item.stock > 0
+                                  ? item.stock
+                                  : Infinity;
+
+                              setSizeQuantitiesSelected((current) => ({
+                                ...current,
+                                [item.quantityKey]: Math.min(
+                                  maximum,
+                                  Math.max(1, parsed)
+                                ),
+                              }));
+                            }}
+                            className="h-9 w-14 border-x border-slate-300 bg-white px-1 text-center text-sm font-bold text-slate-900 outline-none"
+                          />
+
+                          <button
+                            type="button"
+                            aria-label={`Increase quantity for ${item.color} size ${item.size}`}
+                            disabled={
+                              item.stock > 0 &&
+                              (Number(
+                                sizeQuantitiesSelected[
+                                  item.quantityKey
+                                ]
+                              ) || 1) >= item.stock
+                            }
+                            onClick={() => {
+                              setSizeQuantitiesSelected((current) => {
+                                const currentQuantity =
+                                  Number(
+                                    current[item.quantityKey]
+                                  ) || 1;
+
+                                const maximum =
+                                  item.stock > 0
+                                    ? item.stock
+                                    : Infinity;
+
+                                return {
+                                  ...current,
+                                  [item.quantityKey]: Math.min(
+                                    maximum,
+                                    currentQuantity + 1
+                                  ),
+                                };
+                              });
+                            }}
+                            className="flex h-9 w-9 cursor-pointer items-center justify-center text-lg font-bold text-slate-800 hover:bg-slate-100 active:bg-slate-200 disabled:cursor-not-allowed disabled:text-slate-300"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+
+                    <div className="mt-2 border-t border-slate-200 pt-2 text-right text-sm font-bold text-slate-900">
+                      {t("Total", "Jumla")}:{" "}
+                      {formatCurrency(
+                        selectedSizesTotal,
+                        currency
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {product.sizes && product.sizes.length > 0 && (
-                <div>
+                <div className="w-full">
                   <p className="mb-1.5 text-xs font-medium text-slate-600">
                     {t("Size", "Ukubwa")}
                   </p>
 
                   <div className="flex flex-wrap gap-1.5">
-                    {product.sizes.map((size) => (
-                      <button
-                        key={size}
-                        type="button"
-                        onClick={() => setSelectedSize(size)}
-                        className={`rounded-md px-3 py-1.5 text-xs transition ${
-                          selectedSize === size
-                            ? "border border-[#E30613] bg-red-50 text-[#E30613]"
-                            : "border border-slate-200 bg-white text-slate-600 hover:border-red-200"
-                        }`}
-                      >
-                        {size}
-                      </button>
-                    ))}
+                    {product.sizes.map((size) => {
+                      const isSelected = selectedSizes.includes(size);
+
+                      const sizeStock =
+                        product.sizeQuantities &&
+                        product.sizeQuantities[size] !== undefined
+                          ? Number(product.sizeQuantities[size])
+                          : null;
+
+                      const unavailable =
+                        sizeStock !== null && sizeStock <= 0;
+
+                      return (
+                        <button
+                          key={size}
+                          type="button"
+                          disabled={unavailable}
+                          onClick={() => {
+                            if (unavailable) return;
+
+                            setSelectedSizes((current) => {
+                              const isAlreadySelected = current.includes(size);
+
+                              if (isAlreadySelected) {
+                                setSizeQuantitiesSelected((quantities) => {
+                                  const next = { ...quantities };
+                                  delete next[size];
+                                  return next;
+                                });
+
+                                const next = current.filter(
+                                  (item) => item !== size
+                                );
+                                setSelectedSize(next[0] || "");
+                                return next;
+                              }
+
+                              setSizeQuantitiesSelected((quantities) => ({
+                                ...quantities,
+                                [size]: 1,
+                              }));
+
+                              const next = [...current, size];
+                              setSelectedSize(next[0] || "");
+                              return next;
+                            });
+                          }}
+                          className={`rounded-md px-3 py-1.5 text-xs transition ${
+                            unavailable
+                              ? "cursor-not-allowed border border-slate-200 bg-slate-100 text-slate-400"
+                              : isSelected
+                              ? "border border-[#E30613] bg-red-50 text-[#E30613]"
+                              : "border border-slate-200 bg-white text-slate-600 hover:border-red-200"
+                          }`}
+                        >
+                          {size}
+                          {isSelected && " ✓"}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -1222,6 +1637,7 @@ window.dispatchEvent(new Event("cartUpdated"));
                 </div>
               )}
 
+              {selectedSizes.length === 0 && (
               <div>
                 <p className="mb-1.5 text-xs font-medium text-slate-600">
                   {t("Quantity", "Idadi")}
@@ -1263,6 +1679,7 @@ window.dispatchEvent(new Event("cartUpdated"));
                   </button>
                 </div>
               </div>
+              )}
             </div>
 
             {displayDescription && (

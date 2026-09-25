@@ -1476,7 +1476,7 @@ export default function ProductsModule() {
                               Default / No Colour
                             </option>
 
-                            {IMAGE_COLOUR_OPTIONS.map((colour) => (
+                            {Array.from(new Set(IMAGE_COLOUR_OPTIONS)).map((colour) => (
                               <option
                                 key={colour}
                                 value={colour}

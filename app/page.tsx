@@ -164,7 +164,7 @@ export default function HomePage() {
     return () => window.clearInterval(interval);
   }, [language]);
   const [selectedCategory, setSelectedCategory] = useState("All");
-  const [visibleProductsCount, setVisibleProductsCount] = useState(100);
+  const [visibleProductsCount, setVisibleProductsCount] = useState(12);
   const [categoryVisibleCounts, setCategoryVisibleCounts] = useState<Record<string, number>>({});
   const [cartCount, setCartCount] = useState(0);
   const [heroIndex, setHeroIndex] = useState(0);
@@ -1856,7 +1856,7 @@ export default function HomePage() {
                     type="button"
                     onClick={() =>
                       setVisibleProductsCount(
-                        (count) => count + 100
+                        (count) => count + 12
                       )
                     }
                     className="inline-flex min-w-[170px] items-center justify-center rounded-md bg-[#E30613] px-8 py-3.5 text-xs font-black uppercase tracking-wide text-white shadow-sm transition-all duration-200 hover:bg-[#c9000b] hover:shadow-md active:scale-95 sm:min-w-[190px] sm:px-10 sm:py-4 sm:text-sm"

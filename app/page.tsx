@@ -243,7 +243,7 @@ export default function HomePage() {
 
     async function loadProducts() {
       try {
-        const data = await getSupabaseProducts({ limit: 30 });
+        const data = await getSupabaseProducts();
 
         if (active) {
           setProducts(shuffleProducts(data));

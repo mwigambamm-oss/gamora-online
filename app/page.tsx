@@ -106,6 +106,7 @@ export default function HomePage() {
   const [currency, setCurrency] = useState<Currency>("TZS");
 
   const [products, setProducts] = useState<Product[]>([]);
+  const [productsLoading, setProductsLoading] = useState(true);
   const [search, setSearch] = useState("");
 
   const rotatingCategories =
@@ -246,17 +247,22 @@ export default function HomePage() {
 
         if (active) {
           setProducts(shuffleProducts(data));
+          setProductsLoading(false);
         }
       } catch (error) {
         console.error("Failed to load products:", error);
 
         if (active) {
           setProducts([]);
+          setProductsLoading(false);
         }
       }
     }
 
-    loadProducts();
+    if (typeof window !== "undefined") {
+      window.setTimeout(loadProducts, 0);
+    }
+
     updateCartCount();
 
     const update = () => updateCartCount();

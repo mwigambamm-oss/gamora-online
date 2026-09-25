@@ -230,14 +230,15 @@ setProduct(item);
         setSelectedSizes([]);
       }
 
-      const all = await getProducts();
+      const relatedProducts = await getProducts({
+        category: item.category,
+        limit: 13,
+      });
 
       setRelated(
         shuffleProducts(
-          all.filter(
-            (p) =>
-              p.id !== productId &&
-              p.category === item.category
+          relatedProducts.filter(
+            (p) => p.id !== productId
           )
         )
       );

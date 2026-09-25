@@ -7,6 +7,7 @@ import { useLanguage } from "@/components/providers/LanguageProvider";
 
 type CartItem = {
   id: number;
+  variantId?: number | null;
   name: string;
   name_sw?: string;
   price: number;
@@ -761,6 +762,12 @@ export default function CheckoutPage() {
 
       items: cart.map((item) => ({
         ...item,
+        id: Number(item.id),
+        variantId:
+          item.variantId !== undefined &&
+          item.variantId !== null
+            ? Number(item.variantId)
+            : null,
         image: item.image || "",
       })),
 

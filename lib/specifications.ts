@@ -296,14 +296,31 @@ function parseSpecificationLines(
      * Model → TGT612131
      * Model TGT612131
      */
-    const structured = parseStructuredSpecificationLine(text);
+    const structuredItems = text
+      .split(/,(?=\s*[A-Za-z][A-Za-z0-9 /&()'_.]{0,59}\s*[:：])/)
+      .map((item) => item.trim())
+      .filter(Boolean);
 
-    if (structured) {
+    let hadStructured = false;
+
+    for (const structuredItem of structuredItems) {
+      const structured =
+        parseStructuredSpecificationLine(structuredItem);
+
+      if (!structured) {
+        continue;
+      }
+
+      hadStructured = true;
+
       addSpecification(
         specifications,
         structured.key,
         structured.value
       );
+    }
+
+    if (hadStructured) {
       continue;
     }
 
@@ -425,7 +442,7 @@ export function normalizeProductDescription(
     /(?:^|\n)\s*(?:[#*_\-–—•·✓⚙️]+\s*)*(?:key\s+)?features?\s*[:：]?\s*(?=\n|$)/i;
 
   const specificationsRegex =
-    /(?:^|\n)\s*(?:[#*_\-–—•·✓⚙️]+\s*)*specifications?\s*[:：]?\s*(?=\n|$)/i;
+    /(?:^|\n)\s*(?:[#*_\-–—•·✓⚙️]+\s*)*specifications?\s*(?:[:：]\s*)?(?=\S|$)/im;
 
   const keyMatch = original.match(keyFeaturesRegex);
   const specificationMatch = original.match(specificationsRegex);

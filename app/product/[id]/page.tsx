@@ -252,13 +252,9 @@ setProduct(item);
       const existing = localStorage.getItem("gamora_cart");
       const cart = existing ? JSON.parse(existing) : [];
 
-      const count = cart.reduce(
-        (total: number, item: { quantity?: number }) =>
-          total + Number(item.quantity || 0),
-        0
-      );
-
-      setCartCount(count);
+      // Cart badge counts products/line items, not quantities.
+      // Example: quantity 10 of one product = badge 1.
+      setCartCount(Array.isArray(cart) ? cart.length : 0);
     } catch (error) {
       console.error("Cart count error:", error);
       setCartCount(0);

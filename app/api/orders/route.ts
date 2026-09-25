@@ -41,6 +41,7 @@ type OrderBody = {
 type ChangedStock = {
   productId: number;
   variantId: number | null;
+  selectedSize: string | null;
   quantity: number;
 };
 
@@ -101,17 +102,28 @@ async function resolveVariantId(item: OrderItem): Promise<number | null> {
 
     if (error) throw error;
 
-    const normalizedColor = color.toLowerCase();
-    const normalizedSize = size.toLowerCase();
+    const normalizeVariantValue = (value: unknown) =>
+      String(value || "")
+        .trim()
+        .toLowerCase()
+        .replace(/\\s+/g, "")
+        .replace(/[-_]/g, "");
+
+    const normalizeColor = (value: unknown) => {
+      const normalized = normalizeVariantValue(value);
+
+      // Handle common colour spelling typo without changing stored DB data.
+      if (normalized === "turquiose") return "turquoise";
+
+      return normalized;
+    };
+
+    const normalizedColor = normalizeColor(color);
+    const normalizedSize = normalizeVariantValue(size);
 
     const exact = (data || []).find((variant) => {
-      const variantColor = String(variant.color || "")
-        .trim()
-        .toLowerCase();
-
-      const variantSize = String(variant.size || "")
-        .trim()
-        .toLowerCase();
+      const variantColor = normalizeColor(variant.color);
+      const variantSize = normalizeVariantValue(variant.size);
 
       return (
         (!normalizedColor || variantColor === normalizedColor) &&
@@ -180,6 +192,7 @@ async function changeStock(items: OrderItem[]): Promise<ChangedStock[]> {
       changed.push({
         productId,
         variantId,
+        selectedSize: item.selectedSize?.trim() || null,
         quantity,
       });
 
@@ -187,12 +200,12 @@ async function changeStock(items: OrderItem[]): Promise<ChangedStock[]> {
     }
 
     /*
-     * Legacy/non-variant product.
-     * Keep the existing products.stock flow intact.
+     * Size-specific stock for products without a variant.
+     * If a size is selected, reduce only that size quantity.
      */
     const { data: product, error } = await supabase
       .from("products")
-      .select("id,name,price,cost_price,stock")
+      .select("id,name,price,cost_price,stock,size_quantities")
       .eq("id", productId)
       .maybeSingle();
 
@@ -202,6 +215,55 @@ async function changeStock(items: OrderItem[]): Promise<ChangedStock[]> {
       throw new Error(`Product not found: ${item.name}`);
     }
 
+    const selectedSize = item.selectedSize?.trim() || null;
+
+    if (selectedSize && product.size_quantities) {
+      const quantities =
+        typeof product.size_quantities === "string"
+          ? JSON.parse(product.size_quantities)
+          : { ...product.size_quantities };
+
+      const sizeKey = Object.keys(quantities).find(
+        (key) => key.toLowerCase() === selectedSize.toLowerCase()
+      );
+
+      if (!sizeKey) {
+        throw new Error(
+          `Size ${selectedSize} is not available for ${product.name}`
+        );
+      }
+
+      const sizeStock = Number(quantities[sizeKey] || 0);
+
+      if (sizeStock < quantity) {
+        throw new Error(
+          `Not enough stock for ${product.name}, size ${sizeKey}. Available: ${sizeStock}, requested: ${quantity}`
+        );
+      }
+
+      quantities[sizeKey] = sizeStock - quantity;
+
+      const { error: updateError } = await supabase
+        .from("products")
+        .update({ size_quantities: quantities })
+        .eq("id", productId);
+
+      if (updateError) throw updateError;
+
+      changed.push({
+        productId,
+        variantId: null,
+        selectedSize: sizeKey,
+        quantity,
+      });
+
+      continue;
+    }
+
+    /*
+     * Legacy/non-size product.
+     * Keep the existing products.stock flow intact.
+     */
     const stock = Number(product.stock || 0);
 
     if (stock < quantity) {
@@ -220,6 +282,7 @@ async function changeStock(items: OrderItem[]): Promise<ChangedStock[]> {
     changed.push({
       productId,
       variantId: null,
+      selectedSize: null,
       quantity,
     });
   }

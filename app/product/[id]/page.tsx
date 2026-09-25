@@ -154,20 +154,52 @@ if (!item) {
 
 setProduct(item);
 
-      // LOAD PRODUCT VARIANTS
-      const productVariants = await getProductVariants(productId);
+      // Start independent product requests in parallel.
+      const variantsPromise = getProductVariants(productId);
+
+      const likesPromise = fetch(
+        `/api/products/${productId}/like`,
+        {
+          method: "GET",
+          cache: "no-store",
+        }
+      );
+
+      const relatedPromise = getProducts({
+        category: item.category,
+        limit: 13,
+      });
+
+      const reviewsPromise = supabase
+        .from("product_reviews")
+        .select("*")
+        .eq("product_id", productId)
+        .order("created_at", {
+          ascending: false,
+        });
+
+      // Do not auto-select the first colour.
+      // The gallery should show all product images until the customer
+      // explicitly selects a colour.
+      setSelectedColor("");
+
+      if (item.sizes && item.sizes.length > 0) {
+        setSelectedSize(item.sizes[0]);
+        setSelectedSizes([]);
+      }
+
+      const [productVariants, likeResponse, relatedProducts, reviewsResult] =
+        await Promise.all([
+          variantsPromise,
+          likesPromise,
+          relatedPromise,
+          reviewsPromise,
+        ]);
+
       setVariants(productVariants);
 
       // LOAD PERSISTENT LIKES + ORDERS
       try {
-        const likeResponse = await fetch(
-          `/api/products/${productId}/like`,
-          {
-            method: "GET",
-            cache: "no-store",
-          }
-        );
-
         if (likeResponse.ok) {
           const likeData = await likeResponse.json();
 
@@ -220,21 +252,6 @@ setProduct(item);
         );
       }
 
-      // Do not auto-select the first colour.
-      // The gallery should show all product images until the customer
-      // explicitly selects a colour.
-      setSelectedColor("");
-
-      if (item.sizes && item.sizes.length > 0) {
-        setSelectedSize(item.sizes[0]);
-        setSelectedSizes([]);
-      }
-
-      const relatedProducts = await getProducts({
-        category: item.category,
-        limit: 13,
-      });
-
       setRelated(
         shuffleProducts(
           relatedProducts.filter(
@@ -246,14 +263,7 @@ setProduct(item);
       /*
        * LOAD REAL REVIEWS FROM SUPABASE
        */
-      const { data: reviewData, error: reviewError } =
-        await supabase
-          .from("product_reviews")
-          .select("*")
-          .eq("product_id", productId)
-          .order("created_at", {
-            ascending: false,
-          });
+      const { data: reviewData } = reviewsResult;
 
       setReviews(reviewData || []);
     }

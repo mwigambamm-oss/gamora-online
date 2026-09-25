@@ -81,178 +81,42 @@ export default function ProductsModule() {
   const [imageColors, setImageColors] = useState<Record<string, string>>({});
 
   const IMAGE_COLOUR_OPTIONS = [
-    // Basic
     "Black",
     "White",
     "Gray",
-    "Grey",
     "Silver",
     "Cream",
     "Beige",
-    "Ivory",
-    "Off White",
-
-    // Nude / Skin / Neutral
-    "Nude",
-    "Light Nude",
-    "Medium Nude",
-    "Dark Nude",
-    "Deep Nude",
-    "Sand",
-    "Tan",
-    "Camel",
-    "Caramel",
-    "Coffee",
-    "Mocha",
-    "Chocolate",
-    "Taupe",
-    "Khaki",
-    "Champagne",
-
-    // Brown
-    "Light Brown",
     "Brown",
-    "Dark Brown",
-    "Walnut",
-    "Chestnut",
-    "Rust",
-    "Copper",
-    "Bronze",
-
-    // Red
+    "Tan",
+    "Khaki",
     "Red",
-    "Light Red",
-    "Dark Red",
     "Maroon",
     "Burgundy",
-    "Wine",
-    "Cherry Red",
-    "Crimson",
-    "Terracotta",
-
-    // Pink
     "Pink",
-    "Light Pink",
-    "Baby Pink",
     "Rose",
-    "Rose Pink",
-    "Dusty Pink",
-    "Hot Pink",
-    "Fuchsia",
-    "Coral",
-
-    // Orange / Yellow
     "Orange",
-    "Light Orange",
-    "Burnt Orange",
-    "Peach",
     "Yellow",
-    "Light Yellow",
-    "Mustard",
-    "Lemon",
-    "Golden Yellow",
-
-    // Gold / Metallic
     "Gold",
-    "Rose Gold",
-    "Silver",
-    "Metallic Gray",
-    "Bronze",
-    "Copper",
-
-    // Green
     "Green",
-    "Light Green",
-    "Dark Green",
-    "Mint",
-    "Mint Green",
     "Olive",
-    "Olive Green",
-    "Army Green",
-    "Sage Green",
-    "Forest Green",
-    "Emerald Green",
-    "Lime Green",
-
-    // Blue
+    "Mint",
     "Blue",
-    "Light Blue",
-    "Dark Blue",
-    "Sky Blue",
-    "Baby Blue",
     "Navy Blue",
+    "Sky Blue",
     "Royal Blue",
-    "Cobalt Blue",
-    "Turquoise",
-    "Teal",
-    "Aqua",
-
-    // Purple
     "Purple",
-    "Light Purple",
-    "Dark Purple",
     "Lavender",
-    "Lilac",
     "Violet",
-    "Mauve",
-    "Plum",
-
-    // Special
     "Clear",
     "Transparent",
     "Multicolour",
     "Assorted",
-    "Rainbow",
-    "Printed",
-    "Floral",
-    "Camouflage",
-    "Animal Print",
     "Other",
   ];
 
   async function loadProducts() {
-    const loadedProducts = await getProducts();
-
-    // Read the existing Supabase size/quantity data exactly as mapped
-    // from products.size_quantities and products.size_prices.
-    const data = loadedProducts.map((product) => {
-      const existingQuantities = {
-        ...(product.sizeQuantities || {}),
-      };
-
-      const existingPrices = {
-        ...(product.sizePrices || {}),
-      };
-
-      const existingSizes =
-        product.sizes && product.sizes.length > 0
-          ? product.sizes
-          : Object.keys(existingQuantities).length > 0
-            ? Object.keys(existingQuantities)
-            : Object.keys(existingPrices);
-
-      return {
-        ...product,
-        sizes: existingSizes,
-        sizeQuantities: existingQuantities,
-        sizePrices: existingPrices,
-      };
-    });
-
-    console.log(
-      "ADMIN EXISTING SIZE DATA:",
-      data
-        .filter((p) => Object.keys(p.sizeQuantities || {}).length > 0)
-        .slice(0, 10)
-        .map((p) => ({
-          id: p.id,
-          name: p.name,
-          stock: p.stock,
-          sizes: p.sizes,
-          sizeQuantities: p.sizeQuantities,
-          sizePrices: p.sizePrices,
-        }))
-    );
+    const data = await getProducts();
 
     setProducts(data);
 
@@ -671,11 +535,7 @@ export default function ProductsModule() {
       category: product.category,
       stock: String(product.stock),
       colors: (product.colors || []).join(", "),
-      sizes: (
-        product.sizes?.length
-          ? product.sizes
-          : Object.keys(product.sizeQuantities || {})
-      ).join(", "),
+      sizes: (product.sizes || []).join(", "),
 
       sizePrices: Object.fromEntries(
         Object.entries(product.sizePrices || {}).map(
@@ -794,12 +654,21 @@ export default function ProductsModule() {
       ),
 
       sizeQuantities: Object.fromEntries(
-        Object.entries(form.sizeQuantities || {})
-          .filter(([size, value]) => size.trim() && value !== "")
-          .map(([size, value]) => [
-            size.trim(),
-            Number(value),
-          ])
+        form.sizes
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean)
+          .map((size) => {
+            const value = form.sizeQuantities[size];
+
+            return [
+              size,
+              value !== undefined && value !== ""
+                ? Number(value)
+                : undefined,
+            ];
+          })
+          .filter(([, value]) => value !== undefined)
       ),
 
       description: form.description,
@@ -1476,7 +1345,7 @@ export default function ProductsModule() {
                               Default / No Colour
                             </option>
 
-                            {Array.from(new Set(IMAGE_COLOUR_OPTIONS)).map((colour) => (
+                            {IMAGE_COLOUR_OPTIONS.map((colour) => (
                               <option
                                 key={colour}
                                 value={colour}

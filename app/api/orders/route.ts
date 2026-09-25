@@ -5,7 +5,6 @@ const processingOrders = new Set<string>();
 
 type OrderItem = {
   id: number;
-  variantId?: number | string | null;
   name: string;
   price: number;
   quantity: number;
@@ -38,118 +37,8 @@ type OrderBody = {
   createdAt?: string;
 };
 
-type ChangedStock = {
-  productId: number;
-  variantId: number | null;
-  selectedSize: string | null;
-  quantity: number;
-};
-
-async function resolveVariantId(item: OrderItem): Promise<number | null> {
-  const explicitVariantId = Number(item.variantId || 0);
-
-  if (explicitVariantId > 0) {
-    const { data, error } = await supabase
-      .from("product_variants")
-      .select("id,product_id,color,size,model,stock,is_active")
-      .eq("id", explicitVariantId)
-      .maybeSingle();
-
-    if (error) throw error;
-
-    if (!data) {
-      throw new Error(
-        `Variant not found for ${item.name} (variant ${explicitVariantId})`
-      );
-    }
-
-    if (Number(data.product_id) !== Number(item.id)) {
-      throw new Error(
-        `Variant ${explicitVariantId} does not belong to product ${item.id}`
-      );
-    }
-
-    if (data.is_active === false) {
-      throw new Error(`Selected variant is inactive for ${item.name}`);
-    }
-
-    return Number(data.id);
-  }
-
-  const color = String(item.selectedColor || "").trim();
-  const size = String(item.selectedSize || "").trim();
-
-  /*
-   * If the cart has colour/size but no variantId, resolve the variant
-   * server-side so old cart data remains compatible.
-   */
-  if (color || size) {
-    let query = supabase
-      .from("product_variants")
-      .select("id,product_id,color,size,model,stock,is_active")
-      .eq("product_id", Number(item.id))
-      .eq("is_active", true);
-
-    if (color) {
-      query = query.ilike("color", color);
-    }
-
-    if (size) {
-      query = query.ilike("size", size);
-    }
-
-    const { data, error } = await query.limit(10);
-
-    if (error) throw error;
-
-    const normalizeVariantValue = (value: unknown) =>
-      String(value || "")
-        .trim()
-        .toLowerCase()
-        .replace(/\\s+/g, "")
-        .replace(/[-_]/g, "");
-
-    const normalizeColor = (value: unknown) => {
-      const normalized = normalizeVariantValue(value);
-
-      // Handle common colour spelling typo without changing stored DB data.
-      if (normalized === "turquiose") return "turquoise";
-
-      return normalized;
-    };
-
-    const normalizedColor = normalizeColor(color);
-    const normalizedSize = normalizeVariantValue(size);
-
-    const exact = (data || []).find((variant) => {
-      const variantColor = normalizeColor(variant.color);
-      const variantSize = normalizeVariantValue(variant.size);
-
-      return (
-        (!normalizedColor || variantColor === normalizedColor) &&
-        (!normalizedSize || variantSize === normalizedSize)
-      );
-    });
-
-    if (exact) {
-      return Number(exact.id);
-    }
-
-    throw new Error(
-      `Selected variant not found for ${item.name} (${[
-        color && `Color: ${color}`,
-        size && `Size: ${size}`,
-      ]
-        .filter(Boolean)
-        .join(", ")})`
-    );
-  }
-
-  return null;
-}
-
-async function changeStock(items: OrderItem[]): Promise<ChangedStock[]> {
-  const changed: ChangedStock[] = [];
+async function changeStock(items: OrderItem[]) {
+  const changed: { id: number; quantity: number }[] = [];
 
   for (const item of items) {
     const productId = Number(item.id);
@@ -159,53 +48,9 @@ async function changeStock(items: OrderItem[]): Promise<ChangedStock[]> {
       throw new Error(`Invalid product or quantity for ${item.name}`);
     }
 
-    const variantId = await resolveVariantId(item);
-
-    if (variantId) {
-      const { data: variant, error } = await supabase
-        .from("product_variants")
-        .select("id,product_id,stock,color,size,model,is_active")
-        .eq("id", variantId)
-        .maybeSingle();
-
-      if (error) throw error;
-
-      if (!variant) {
-        throw new Error(`Variant not found for ${item.name}`);
-      }
-
-      const stock = Number(variant.stock || 0);
-
-      if (stock < quantity) {
-        throw new Error(
-          `Not enough variant stock for ${item.name}. Available: ${stock}, requested: ${quantity}`
-        );
-      }
-
-      const { error: updateError } = await supabase
-        .from("product_variants")
-        .update({ stock: stock - quantity })
-        .eq("id", variantId);
-
-      if (updateError) throw updateError;
-
-      changed.push({
-        productId,
-        variantId,
-        selectedSize: item.selectedSize?.trim() || null,
-        quantity,
-      });
-
-      continue;
-    }
-
-    /*
-     * Size-specific stock for products without a variant.
-     * If a size is selected, reduce only that size quantity.
-     */
     const { data: product, error } = await supabase
       .from("products")
-      .select("id,name,price,cost_price,stock,size_quantities")
+      .select("id,name,price,cost_price,stock")
       .eq("id", productId)
       .maybeSingle();
 
@@ -215,55 +60,6 @@ async function changeStock(items: OrderItem[]): Promise<ChangedStock[]> {
       throw new Error(`Product not found: ${item.name}`);
     }
 
-    const selectedSize = item.selectedSize?.trim() || null;
-
-    if (selectedSize && product.size_quantities) {
-      const quantities =
-        typeof product.size_quantities === "string"
-          ? JSON.parse(product.size_quantities)
-          : { ...product.size_quantities };
-
-      const sizeKey = Object.keys(quantities).find(
-        (key) => key.toLowerCase() === selectedSize.toLowerCase()
-      );
-
-      if (!sizeKey) {
-        throw new Error(
-          `Size ${selectedSize} is not available for ${product.name}`
-        );
-      }
-
-      const sizeStock = Number(quantities[sizeKey] || 0);
-
-      if (sizeStock < quantity) {
-        throw new Error(
-          `Not enough stock for ${product.name}, size ${sizeKey}. Available: ${sizeStock}, requested: ${quantity}`
-        );
-      }
-
-      quantities[sizeKey] = sizeStock - quantity;
-
-      const { error: updateError } = await supabase
-        .from("products")
-        .update({ size_quantities: quantities })
-        .eq("id", productId);
-
-      if (updateError) throw updateError;
-
-      changed.push({
-        productId,
-        variantId: null,
-        selectedSize: sizeKey,
-        quantity,
-      });
-
-      continue;
-    }
-
-    /*
-     * Legacy/non-size product.
-     * Keep the existing products.stock flow intact.
-     */
     const stock = Number(product.stock || 0);
 
     if (stock < quantity) {
@@ -280,9 +76,7 @@ async function changeStock(items: OrderItem[]): Promise<ChangedStock[]> {
     if (updateError) throw updateError;
 
     changed.push({
-      productId,
-      variantId: null,
-      selectedSize: null,
+      id: productId,
       quantity,
     });
   }
@@ -290,33 +84,14 @@ async function changeStock(items: OrderItem[]): Promise<ChangedStock[]> {
   return changed;
 }
 
-async function rollbackStock(items: ChangedStock[]) {
+async function rollbackStock(
+  items: { id: number; quantity: number }[]
+) {
   for (const item of items) {
-    if (item.variantId) {
-      const { data: variant } = await supabase
-        .from("product_variants")
-        .select("stock")
-        .eq("id", item.variantId)
-        .maybeSingle();
-
-      if (!variant) continue;
-
-      await supabase
-        .from("product_variants")
-        .update({
-          stock:
-            Number(variant.stock || 0) +
-            Number(item.quantity),
-        })
-        .eq("id", item.variantId);
-
-      continue;
-    }
-
     const { data: product } = await supabase
       .from("products")
       .select("stock")
-      .eq("id", item.productId)
+      .eq("id", item.id)
       .maybeSingle();
 
     if (!product) continue;
@@ -328,7 +103,7 @@ async function rollbackStock(items: ChangedStock[]) {
           Number(product.stock || 0) +
           Number(item.quantity),
       })
-      .eq("id", item.productId);
+      .eq("id", item.id);
   }
 }
 
@@ -346,7 +121,7 @@ function isInsideDarEsSalaam(
 
 export async function POST(request: Request) {
   let orderLockId = "";
-  let changedStock: ChangedStock[] = [];
+  let changedStock: { id: number; quantity: number }[] = [];
 
   try {
     const body = (await request.json()) as OrderBody;
@@ -640,18 +415,6 @@ for (const cost of productCosts || []) {
         product_id: productId,
         product_name: item.name,
 
-        variant_id:
-          item.variantId !== undefined &&
-          item.variantId !== null
-            ? Number(item.variantId)
-            : null,
-
-        selected_color:
-          item.selectedColor || null,
-
-        selected_size:
-          item.selectedSize || null,
-
         price,
         quantity,
         total: subtotal,
@@ -862,117 +625,9 @@ export async function DELETE(request: Request) {
       for (const item of items) {
         const productId = Number(item?.id);
         const quantity = Number(item?.quantity || 0);
-        const explicitVariantId = Number(item?.variantId || 0);
 
         if (!productId || quantity <= 0) continue;
 
-        let variantId = explicitVariantId > 0
-          ? explicitVariantId
-          : null;
-
-        /*
-         * Old orders may not have variantId in their JSON.
-         * Resolve by product + selected colour + selected size.
-         */
-        if (!variantId && (item?.selectedColor || item?.selectedSize)) {
-          let variantQuery = supabase
-            .from("product_variants")
-            .select("id,stock,color,size")
-            .eq("product_id", productId);
-
-          if (item?.selectedColor) {
-            variantQuery = variantQuery.ilike(
-              "color",
-              String(item.selectedColor)
-            );
-          }
-
-          if (item?.selectedSize) {
-            variantQuery = variantQuery.ilike(
-              "size",
-              String(item.selectedSize)
-            );
-          }
-
-          const { data: variants } =
-            await variantQuery.limit(10);
-
-          const normalizedColor = String(
-            item?.selectedColor || ""
-          )
-            .trim()
-            .toLowerCase();
-
-          const normalizedSize = String(
-            item?.selectedSize || ""
-          )
-            .trim()
-            .toLowerCase();
-
-          const matchedVariant = (variants || []).find(
-            (variant) => {
-              const color = String(variant.color || "")
-                .trim()
-                .toLowerCase();
-
-              const size = String(variant.size || "")
-                .trim()
-                .toLowerCase();
-
-              return (
-                (!normalizedColor || color === normalizedColor) &&
-                (!normalizedSize || size === normalizedSize)
-              );
-            }
-          );
-
-          if (matchedVariant) {
-            variantId = Number(matchedVariant.id);
-          }
-        }
-
-        if (variantId) {
-          const { data: variant } =
-            await supabase
-              .from("product_variants")
-              .select("stock")
-              .eq("id", variantId)
-              .maybeSingle();
-
-          if (!variant) continue;
-
-          const { error: stockError } =
-            await supabase
-              .from("product_variants")
-              .update({
-                stock:
-                  Number(variant.stock || 0) +
-                  quantity,
-              })
-              .eq("id", variantId);
-
-          if (stockError) {
-            console.error(
-              "Failed to restore variant stock:",
-              stockError
-            );
-
-            return NextResponse.json(
-              {
-                error:
-                  stockError.message ||
-                  "Failed to restore variant stock.",
-              },
-              { status: 500 }
-            );
-          }
-
-          continue;
-        }
-
-        /*
-         * Legacy/non-variant product.
-         */
         const { data: product } =
           await supabase
             .from("products")

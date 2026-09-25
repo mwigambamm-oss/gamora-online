@@ -7,7 +7,6 @@ import { formatCurrency, type Currency } from "@/lib/currency";
 
 type CartItem = {
   id: number;
-  variantId?: number | null;
   name: string;
   price: number;
   oldPrice?: number;
@@ -56,12 +55,10 @@ export default function CartPage() {
     item: CartItem,
     id: number,
     selectedColor?: string,
-    selectedSize?: string,
-    variantId?: number | null
+    selectedSize?: string
   ) {
     return (
       item.id === id &&
-      Number(item.variantId || 0) === Number(variantId || 0) &&
       (item.selectedColor || "") === (selectedColor || "") &&
       (item.selectedSize || "") === (selectedSize || "")
     );
@@ -70,11 +67,10 @@ export default function CartPage() {
   function increase(
     id: number,
     selectedColor?: string,
-    selectedSize?: string,
-    variantId?: number | null
+    selectedSize?: string
   ) {
     const updated = cart.map((item) => {
-      if (!isSameCartItem(item, id, selectedColor, selectedSize, variantId)) {
+      if (!isSameCartItem(item, id, selectedColor, selectedSize)) {
         return item;
       }
 
@@ -96,11 +92,10 @@ export default function CartPage() {
   function decrease(
     id: number,
     selectedColor?: string,
-    selectedSize?: string,
-    variantId?: number | null
+    selectedSize?: string
   ) {
     const updated = cart.map((item) =>
-      isSameCartItem(item, id, selectedColor, selectedSize, variantId)
+      isSameCartItem(item, id, selectedColor, selectedSize)
         ? {
             ...item,
             quantity: Math.max(1, Number(item.quantity || 0) - 1),
@@ -114,12 +109,11 @@ export default function CartPage() {
   function removeItem(
     id: number,
     selectedColor?: string,
-    selectedSize?: string,
-    variantId?: number | null
+    selectedSize?: string
   ) {
     const updated = cart.filter(
       (item) =>
-        !isSameCartItem(item, id, selectedColor, selectedSize, variantId)
+        !isSameCartItem(item, id, selectedColor, selectedSize)
     );
 
     saveCart(updated);
@@ -307,7 +301,7 @@ const total =
               {cart.map((item) => (
 
                 <div
-                  key={`${item.id}-${item.variantId || 0}-${item.selectedColor || ""}-${item.selectedSize || ""}`}
+                  key={`${item.id}-${item.selectedColor || ""}-${item.selectedSize || ""}`}
                   className="rounded-2xl bg-white p-5 shadow-sm"
                 >
 
@@ -370,7 +364,7 @@ const total =
                       <div className="mt-2 flex items-center gap-3">
 
                         <button
-                          onClick={() => decrease(item.id, item.selectedColor, item.selectedSize, item.variantId)}
+                          onClick={() => decrease(item.id, item.selectedColor, item.selectedSize)}
                           className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-xs font-medium hover:bg-slate-200"
                         >
                           −
@@ -381,7 +375,7 @@ const total =
                         </span>
 
                         <button
-                          onClick={() => increase(item.id, item.selectedColor, item.selectedSize, item.variantId)}
+                          onClick={() => increase(item.id, item.selectedColor, item.selectedSize)}
                           className="flex h-9 w-9 items-center justify-center rounded-lg bg-sky-700 text-xs font-medium text-white hover:bg-sky-800"
                         >
                           +
@@ -393,7 +387,7 @@ const total =
 
                     {/* REMOVE */}
                     <button
-                      onClick={() => removeItem(item.id, item.selectedColor, item.selectedSize, item.variantId)}
+                      onClick={() => removeItem(item.id, item.selectedColor, item.selectedSize)}
                       className="self-start text-xs font-normal text-red-500 hover:text-red-700"
                     >
                       🗑️ {t.remove}

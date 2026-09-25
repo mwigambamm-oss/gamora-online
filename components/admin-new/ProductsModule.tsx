@@ -211,7 +211,48 @@ export default function ProductsModule() {
   ];
 
   async function loadProducts() {
-    const data = await getProducts();
+    const loadedProducts = await getProducts();
+
+    // Read the existing Supabase size/quantity data exactly as mapped
+    // from products.size_quantities and products.size_prices.
+    const data = loadedProducts.map((product) => {
+      const existingQuantities = {
+        ...(product.sizeQuantities || {}),
+      };
+
+      const existingPrices = {
+        ...(product.sizePrices || {}),
+      };
+
+      const existingSizes =
+        product.sizes && product.sizes.length > 0
+          ? product.sizes
+          : Object.keys(existingQuantities).length > 0
+            ? Object.keys(existingQuantities)
+            : Object.keys(existingPrices);
+
+      return {
+        ...product,
+        sizes: existingSizes,
+        sizeQuantities: existingQuantities,
+        sizePrices: existingPrices,
+      };
+    });
+
+    console.log(
+      "ADMIN EXISTING SIZE DATA:",
+      data
+        .filter((p) => Object.keys(p.sizeQuantities || {}).length > 0)
+        .slice(0, 10)
+        .map((p) => ({
+          id: p.id,
+          name: p.name,
+          stock: p.stock,
+          sizes: p.sizes,
+          sizeQuantities: p.sizeQuantities,
+          sizePrices: p.sizePrices,
+        }))
+    );
 
     setProducts(data);
 
@@ -630,7 +671,11 @@ export default function ProductsModule() {
       category: product.category,
       stock: String(product.stock),
       colors: (product.colors || []).join(", "),
-      sizes: (product.sizes || []).join(", "),
+      sizes: (
+        product.sizes?.length
+          ? product.sizes
+          : Object.keys(product.sizeQuantities || {})
+      ).join(", "),
 
       sizePrices: Object.fromEntries(
         Object.entries(product.sizePrices || {}).map(
@@ -749,21 +794,12 @@ export default function ProductsModule() {
       ),
 
       sizeQuantities: Object.fromEntries(
-        form.sizes
-          .split(",")
-          .map((item) => item.trim())
-          .filter(Boolean)
-          .map((size) => {
-            const value = form.sizeQuantities[size];
-
-            return [
-              size,
-              value !== undefined && value !== ""
-                ? Number(value)
-                : undefined,
-            ];
-          })
-          .filter(([, value]) => value !== undefined)
+        Object.entries(form.sizeQuantities || {})
+          .filter(([size, value]) => size.trim() && value !== "")
+          .map(([size, value]) => [
+            size.trim(),
+            Number(value),
+          ])
       ),
 
       description: form.description,

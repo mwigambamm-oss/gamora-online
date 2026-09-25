@@ -118,7 +118,9 @@ if (period === "Custom Range" && customFrom && customTo) {
             .in("order_id", orderIds)
         : Promise.resolve({ data: [], error: null }),
 
-      Promise.resolve({ data: [], error: null }),
+      supabase
+        .from("payments")
+        .select("id,order_number,amount,payment_method,payment_status,created_at"),
 
       supabase
         .from("products")
@@ -154,23 +156,31 @@ if (period === "Custom Range" && customFrom && customTo) {
       ])
     );
 
-    const revenue = orders
-      .filter((order) => order.status !== "Cancelled")
-      .reduce(
-        (sum, order) => sum + Number(order.total || 0),
-        0
-      );
+    const validOrders = orders.filter(
+      (order) => order.status !== "Cancelled"
+    );
 
-const cogs = orderItems.reduce((sum, item) => {
-  const costPrice =
-    Number(item.cost_price_at_sale || 0) ||
-    Number(productCostMap.get(Number(item.product_id)) || 0);
+    const validOrderIds = new Set(
+      validOrders.map((order) => Number(order.id))
+    );
 
-  return (
-    sum +
-    costPrice * Number(item.quantity || 0)
-  );
-}, 0);
+    const revenue = validOrders.reduce(
+      (sum, order) => sum + Number(order.total || 0),
+      0
+    );
+
+    const validOrderItems = orderItems.filter((item) =>
+      validOrderIds.has(Number(item.order_id))
+    );
+
+    const cogs = validOrderItems.reduce((sum, item) => {
+      const costPrice =
+        Number(item.cost_price_at_sale || 0) ||
+        Number(productCostMap.get(Number(item.product_id)) || 0);
+
+      return sum + costPrice * Number(item.quantity || 0);
+    }, 0);
+
     const grossProfit = revenue - cogs;
 
     const totalExpenses = expenses.reduce((sum, expense) => {
@@ -182,13 +192,24 @@ const cogs = orderItems.reduce((sum, item) => {
     const pendingOrders = orders.filter(
       (order) =>
         order.status === "Pending" ||
-        order.status === "Processing"
+        order.status === "Confirmed" ||
+        order.status === "Processing" ||
+        order.status === "Out for Delivery"
     ).length;
 
     const pendingPayments = payments.filter(
-      (payment: any) =>
-        payment.payment_status === "Pending" ||
-        payment.payment_status === "Processing"
+      (payment: any) => {
+        const status = String(
+          payment.payment_status || ""
+        ).trim().toLowerCase();
+
+        return (
+          status === "pending" ||
+          status === "processing" ||
+          status === "unpaid" ||
+          status === "awaiting payment"
+        );
+      }
     ).length;
 
     const lowStock = products.filter(

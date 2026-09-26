@@ -1,3 +1,5 @@
+import { supabase } from "@/lib/supabase";
+
 type OrderItem = {
   id?: number;
   name: string;
@@ -166,6 +168,21 @@ export async function orderRobotNotification(
     );
   }
 
+  await supabase
+    .from("telegram_order_messages")
+    .upsert(
+      {
+        order_number: order.order_number,
+        chat_id: String(chatId),
+        message_id: Number(messageResult.result.message_id),
+        message_text: message,
+        updated_at: new Date().toISOString(),
+      },
+      {
+        onConflict: "order_number",
+      }
+    );
+
   for (const item of items) {
     let image =
       typeof item.image === "string"
@@ -250,4 +267,185 @@ export async function orderRobotNotification(
   );
 
   return messageResult;
+}
+
+export async function syncTelegramOrderStatus(
+  orderNumber: string,
+  status: string
+) {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+
+  if (!token) {
+    throw new Error("Telegram bot token is missing");
+  }
+
+  const { data: telegramMessage, error: lookupError } =
+    await supabase
+      .from("telegram_order_messages")
+      .select(
+        "chat_id,message_id,message_text"
+      )
+      .eq("order_number", orderNumber)
+      .maybeSingle();
+
+  if (lookupError) {
+    throw new Error(
+      `Telegram message lookup failed: ${lookupError.message}`
+    );
+  }
+
+  if (!telegramMessage) {
+    console.log(
+      `⚠️ No Telegram message saved for ${orderNumber}`
+    );
+    return;
+  }
+
+  const statusEmoji: Record<string, string> = {
+    Pending: "⏳",
+    Confirmed: "✅",
+    Processing: "⚙️",
+    "Out for Delivery": "🚚",
+    Delivered: "📦",
+    Cancelled: "❌",
+  };
+
+  const baseMessage = String(
+    telegramMessage.message_text || ""
+  )
+    .replace(
+      /\n\n📌 Status:[\s\S]*$/,
+      ""
+    )
+    .trim();
+
+  const messageText =
+    `${baseMessage}\n\n📌 Status: ${
+      statusEmoji[status] || "📌"
+    } ${status}`;
+
+  let keyboard: Array<Array<{
+    text: string;
+    callback_data: string;
+  }>> = [];
+
+  if (status === "Pending") {
+    keyboard = [
+      [
+        {
+          text: "✅ CONFIRM",
+          callback_data: `confirm:${orderNumber}`,
+        },
+        {
+          text: "❌ CANCEL",
+          callback_data: `cancel:${orderNumber}`,
+        },
+      ],
+    ];
+  } else if (status === "Confirmed") {
+    keyboard = [
+      [
+        {
+          text: "🚚 OUT FOR DELIVERY",
+          callback_data: `delivery:${orderNumber}`,
+        },
+        {
+          text: "❌ CANCEL",
+          callback_data: `cancel:${orderNumber}`,
+        },
+      ],
+      [
+        {
+          text: "↩️ PENDING",
+          callback_data: `pending:${orderNumber}`,
+        },
+      ],
+    ];
+  } else if (status === "Processing") {
+    keyboard = [
+      [
+        {
+          text: "🚚 OUT FOR DELIVERY",
+          callback_data: `delivery:${orderNumber}`,
+        },
+      ],
+      [
+        {
+          text: "↩️ PENDING",
+          callback_data: `pending:${orderNumber}`,
+        },
+      ],
+    ];
+  } else if (status === "Out for Delivery") {
+    keyboard = [
+      [
+        {
+          text: "📦 DELIVERED",
+          callback_data: `delivered:${orderNumber}`,
+        },
+        {
+          text: "❌ CANCEL",
+          callback_data: `cancel:${orderNumber}`,
+        },
+      ],
+      [
+        {
+          text: "↩️ PENDING",
+          callback_data: `pending:${orderNumber}`,
+        },
+      ],
+    ];
+  } else if (
+    status === "Cancelled" ||
+    status === "Delivered"
+  ) {
+    keyboard = [
+      [
+        {
+          text: "↩️ PENDING",
+          callback_data: `pending:${orderNumber}`,
+        },
+      ],
+    ];
+  }
+
+  const response = await fetch(
+    `https://api.telegram.org/bot${token}/editMessageText`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        chat_id: telegramMessage.chat_id,
+        message_id: telegramMessage.message_id,
+        text: messageText,
+        reply_markup: {
+          inline_keyboard: keyboard,
+        },
+      }),
+      signal: AbortSignal.timeout(60000),
+    }
+  );
+
+  const result = await response.json();
+
+  if (!response.ok || !result.ok) {
+    throw new Error(
+      result?.description ||
+        "Failed to update Telegram order message"
+    );
+  }
+
+  await supabase
+    .from("telegram_order_messages")
+    .update({
+      message_text: messageText,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("order_number", orderNumber);
+
+  console.log(
+    `✏️ Telegram synced: ${orderNumber} → ${status}`
+  );
 }

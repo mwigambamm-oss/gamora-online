@@ -1559,10 +1559,27 @@ export default function ProductsModule() {
         <div
           id={`admin-product-${product.id}`}
           key={product.id}
-          className="bg-white p-4 rounded shadow flex justify-between transition-all duration-300"
+          className="bg-white p-4 rounded shadow flex justify-between gap-4 transition-all duration-300"
         >
 
-          <div>
+          <div className="flex min-w-0 flex-1 gap-4">
+
+            <div className="h-24 w-24 shrink-0 overflow-hidden rounded-lg border bg-gray-50">
+              {product.images?.[0] || product.image ? (
+                <img
+                  src={product.images?.[0] || product.image || ""}
+                  alt={product.name}
+                  className="h-full w-full object-cover"
+                  loading="lazy"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-xs text-gray-400">
+                  No image
+                </div>
+              )}
+            </div>
+
+            <div className="min-w-0">
 
             <h2 className="font-bold">
               {product.name}
@@ -1618,6 +1635,8 @@ export default function ProductsModule() {
                 ))}
               </div>
             ) : null}
+
+            </div>
 
           </div>
 

@@ -285,6 +285,7 @@ export default function OrdersModule() {
                       />
                     </th>
                     <th className="px-6 py-4">Order</th>
+                    <th className="px-6 py-4">Product Image</th>
                     <th className="px-6 py-4">Customer</th>
                     <th className="px-6 py-4">Items</th>
                     <th className="px-6 py-4">Amount</th>
@@ -326,6 +327,22 @@ export default function OrdersModule() {
                               ).toLocaleString()
                             : "-"}
                         </p>
+                      </td>
+
+                      <td className="px-6 py-4">
+                        {order.items?.[0]?.image ? (
+                          <div className="h-16 w-16 overflow-hidden rounded-xl border bg-gray-100">
+                            <img
+                              src={order.items[0].image}
+                              alt={order.items[0].name || "Product"}
+                              className="h-full w-full object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <div className="flex h-16 w-16 items-center justify-center rounded-xl border bg-gray-100 text-[10px] text-gray-400">
+                            No image
+                          </div>
+                        )}
                       </td>
 
                       <td className="px-6 py-4">

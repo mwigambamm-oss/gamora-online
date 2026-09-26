@@ -597,19 +597,35 @@ export default function OrdersModule() {
                     (item) => (
                       <div
                         key={item.id}
-                        className="flex items-center justify-between p-4"
+                        className="flex items-center justify-between gap-4 p-4"
                       >
-                        <div>
-                          <p className="font-bold">
-                            {item.name}
-                          </p>
+                        <div className="flex min-w-0 items-center gap-4">
+                          <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl border bg-gray-100">
+                            {item.image ? (
+                              <img
+                                src={item.image}
+                                alt={item.name || "Product"}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <div className="flex h-full w-full items-center justify-center text-xs text-gray-400">
+                                No image
+                              </div>
+                            )}
+                          </div>
 
-                          <p className="text-sm text-gray-500">
-                            Qty: {item.quantity}
-                          </p>
+                          <div className="min-w-0">
+                            <p className="truncate font-bold">
+                              {item.name}
+                            </p>
+
+                            <p className="text-sm text-gray-500">
+                              Qty: {item.quantity}
+                            </p>
+                          </div>
                         </div>
 
-                        <p className="font-bold">
+                        <p className="shrink-0 font-bold">
                           TZS{" "}
                           {(
                             Number(item.price || 0) *

@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { calculateAccounting } from "@/lib/accounting/calculations";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
+
   const period = searchParams.get("period") || "Today";
-const customFrom = searchParams.get("from");
-const customTo = searchParams.get("to");
+  const customFrom = searchParams.get("from");
+  const customTo = searchParams.get("to");
 
   const now = new Date();
 
@@ -80,15 +82,15 @@ const customTo = searchParams.get("to");
     toDate = now;
   }
 
-if (period === "Custom Range" && customFrom && customTo) {
-  fromDate = new Date(customFrom);
-  toDate = new Date(`${customTo}T23:59:59`);
-}
+  if (period === "Custom Range" && customFrom && customTo) {
+    fromDate = new Date(customFrom);
+    toDate = new Date(`${customTo}T23:59:59`);
+  }
 
   try {
     const ordersResult = await supabase
       .from("orders")
-      .select("id,order_number,status,total,created_at")
+      .select("*")
       .gte(
         "created_at",
         (fromDate || new Date(0)).toISOString()
@@ -98,14 +100,20 @@ if (period === "Custom Range" && customFrom && customTo) {
         (toDate || new Date()).toISOString()
       );
 
-    if (ordersResult.error) throw ordersResult.error;
+    if (ordersResult.error) {
+      throw ordersResult.error;
+    }
 
     const orders = ordersResult.data || [];
-    const orderIds = orders.map((order) => Number(order.id));
+
+    const orderIds = orders.map((order) =>
+      Number(order.id)
+    );
 
     const [
       orderItemsResult,
       paymentsResult,
+      orderPaymentsResult,
       productsResult,
       expensesResult,
     ] = await Promise.all([
@@ -113,140 +121,140 @@ if (period === "Custom Range" && customFrom && customTo) {
         ? supabase
             .from("order_items")
             .select(
-              "order_id,product_id,product_name,quantity,cost_price_at_sale"
+              "order_id,product_id,product_name,quantity,cost_price_at_sale,price"
             )
             .in("order_id", orderIds)
-        : Promise.resolve({ data: [], error: null }),
+        : Promise.resolve({
+            data: [],
+            error: null,
+          }),
 
       supabase
         .from("payments")
-        .select("id,order_number,amount,payment_method,payment_status,created_at"),
+        .select("*")
+        .gte(
+          "created_at",
+          (fromDate || new Date(0)).toISOString()
+        )
+        .lte(
+          "created_at",
+          (toDate || new Date()).toISOString()
+        )
+        .order("created_at", {
+          ascending: false,
+        }),
+
+      (() => {
+        const orderNumbers = (ordersResult.data || [])
+          .map((order: any) => order.order_number)
+          .filter(Boolean);
+
+        return orderNumbers.length > 0
+          ? supabase
+              .from("payments")
+              .select("*")
+              .in("order_number", orderNumbers)
+              .order("created_at", {
+                ascending: false,
+              })
+          : Promise.resolve({
+              data: [],
+              error: null,
+            });
+      })(),
 
       supabase
         .from("products")
-        .select("id,name,stock,cost_price"),
+        .select(
+          "id,name,stock,price,cost_price"
+        ),
 
       supabase
         .from("expenses")
-        .select("amount")
+        .select("*")
         .gte(
           "expense_date",
-          fromDate!.toISOString().slice(0, 10)
+          (fromDate || new Date(0))
+            .toISOString()
+            .slice(0, 10)
         )
         .lte(
           "expense_date",
-          toDate!.toISOString().slice(0, 10)
+          (toDate || new Date())
+            .toISOString()
+            .slice(0, 10)
         ),
     ]);
 
-    if (orderItemsResult.error) throw orderItemsResult.error;
-    if (paymentsResult.error) throw paymentsResult.error;
-    if (productsResult.error) throw productsResult.error;
-    if (expensesResult.error) throw expensesResult.error;
+    if (orderItemsResult.error) {
+      throw orderItemsResult.error;
+    }
 
-    const orderItems = orderItemsResult.data || [];
-    const payments = paymentsResult.data || [];
-    const products = productsResult.data || [];
-    const expenses = expensesResult.data || [];
+    if (paymentsResult.error) {
+      throw paymentsResult.error;
+    }
 
-    const productCostMap = new Map(
-      products.map((product) => [
-        Number(product.id),
-        Number(product.cost_price || 0),
-      ])
-    );
+    if (orderPaymentsResult.error) {
+      throw orderPaymentsResult.error;
+    }
 
-    const validOrders = orders.filter(
-      (order) => order.status !== "Cancelled"
-    );
+    if (productsResult.error) {
+      throw productsResult.error;
+    }
 
-    const validOrderIds = new Set(
-      validOrders.map((order) => Number(order.id))
-    );
+    if (expensesResult.error) {
+      throw expensesResult.error;
+    }
 
-    const revenue = validOrders.reduce(
-      (sum, order) => sum + Number(order.total || 0),
-      0
-    );
+    const orderItems =
+      orderItemsResult.data || [];
 
-    const validOrderItems = orderItems.filter((item) =>
-      validOrderIds.has(Number(item.order_id))
-    );
+    const payments =
+      paymentsResult.data || [];
 
-    const cogs = validOrderItems.reduce((sum, item) => {
-      const costPrice =
-        Number(item.cost_price_at_sale || 0) ||
-        Number(productCostMap.get(Number(item.product_id)) || 0);
+    const orderPayments =
+      orderPaymentsResult.data || [];
 
-      return sum + costPrice * Number(item.quantity || 0);
-    }, 0);
+    const products =
+      productsResult.data || [];
 
-    const grossProfit = revenue - cogs;
+    const expenses =
+      expensesResult.data || [];
 
-    const totalExpenses = expenses.reduce((sum, expense) => {
-      return sum + Number(expense.amount || 0);
-    }, 0);
-
-    const netProfit = grossProfit - totalExpenses;
-
-    const pendingOrders = orders.filter(
-      (order) =>
-        order.status === "Pending" ||
-        order.status === "Confirmed" ||
-        order.status === "Processing" ||
-        order.status === "Out for Delivery"
-    ).length;
-
-    const pendingPayments = payments.filter(
-      (payment: any) => {
-        const status = String(
-          payment.payment_status || ""
-        ).trim().toLowerCase();
-
-        return (
-          status === "pending" ||
-          status === "processing" ||
-          status === "unpaid" ||
-          status === "awaiting payment"
-        );
-      }
-    ).length;
-
-    const lowStock = products.filter(
-      (product) =>
-        Number(product.stock || 0) > 0 &&
-        Number(product.stock || 0) <= 5
-    ).length;
-
-    const outOfStock = products.filter(
-      (product) => Number(product.stock || 0) <= 0
-    ).length;
+    /*
+     * SINGLE ACCOUNTING ENGINE
+     */
+    const accounting = calculateAccounting({
+      orders,
+      orderItems,
+      products,
+      payments,
+      orderPayments,
+      expenses,
+    });
 
     return NextResponse.json({
       success: true,
 
-      summary: {
-        orders: orders.length,
-        revenue,
-        cogs,
-        grossProfit,
-        expenses: totalExpenses,
-        netProfit,
-        pendingOrders,
-        pendingPayments,
-        lowStock,
-        outOfStock,
-        products: products.length,
-      },
+      summary: accounting,
 
       orders,
       orderItems,
       products,
       payments,
       expenses,
+
+      period: {
+        name: period,
+        from: fromDate?.toISOString() || null,
+        to: toDate?.toISOString() || null,
+      },
     });
   } catch (error) {
-    console.error("Admin dashboard error:", error);
+    console.error(
+      "Admin dashboard error:",
+      error
+    );
 
     return NextResponse.json(
       {
@@ -256,7 +264,9 @@ if (period === "Custom Range" && customFrom && customTo) {
             ? error.message
             : JSON.stringify(error),
       },
-      { status: 500 }
+      {
+        status: 500,
+      }
     );
   }
 }

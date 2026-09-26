@@ -340,13 +340,6 @@ export default function HomePage() {
 
     window.dispatchEvent(new Event("gamora-cart-updated"));
 
-    setNotice(
-      language === "sw"
-        ? `${product.name} imeongezwa kwenye kikapu.`
-        : `${product.name} has been added to your cart.`
-    );
-
-    window.setTimeout(() => setNotice(""), 2200);
   }
 
   function scrollCarousel(

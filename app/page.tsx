@@ -106,7 +106,6 @@ export default function HomePage() {
   const [currency, setCurrency] = useState<Currency>("TZS");
 
   const [products, setProducts] = useState<Product[]>([]);
-  const [productsLoading, setProductsLoading] = useState(true);
   const [search, setSearch] = useState("");
 
   const rotatingCategories =
@@ -164,7 +163,7 @@ export default function HomePage() {
     return () => window.clearInterval(interval);
   }, [language]);
   const [selectedCategory, setSelectedCategory] = useState("All");
-  const [visibleProductsCount, setVisibleProductsCount] = useState(12);
+  const [visibleProductsCount, setVisibleProductsCount] = useState(100);
   const [categoryVisibleCounts, setCategoryVisibleCounts] = useState<Record<string, number>>({});
   const [cartCount, setCartCount] = useState(0);
   const [heroIndex, setHeroIndex] = useState(0);
@@ -243,26 +242,21 @@ export default function HomePage() {
 
     async function loadProducts() {
       try {
-        const data = await getSupabaseProducts();
+        const data = await getSupabaseProducts({ limit: 40 });
 
         if (active) {
           setProducts(shuffleProducts(data));
-          setProductsLoading(false);
         }
       } catch (error) {
         console.error("Failed to load products:", error);
 
         if (active) {
           setProducts([]);
-          setProductsLoading(false);
         }
       }
     }
 
-    if (typeof window !== "undefined") {
-      window.setTimeout(loadProducts, 0);
-    }
-
+    loadProducts();
     updateCartCount();
 
     const update = () => updateCartCount();
@@ -1776,7 +1770,7 @@ export default function HomePage() {
                     onClick={() =>
                       setCategoryVisibleCounts((prev) => ({
                         ...prev,
-                        [category]: (prev[category] || 50) + 50,
+                        [category]: (prev[category] || 8) + 50,
                       }))
                     }
                     className="rounded-full border border-[#E30613] bg-white px-6 py-2.5 text-[10px] font-black text-[#E30613] transition hover:bg-[#E30613] hover:text-white sm:px-8 sm:py-3 sm:text-xs"
@@ -1856,7 +1850,7 @@ export default function HomePage() {
                     type="button"
                     onClick={() =>
                       setVisibleProductsCount(
-                        (count) => count + 12
+                        (count) => count + 100
                       )
                     }
                     className="inline-flex min-w-[170px] items-center justify-center rounded-md bg-[#E30613] px-8 py-3.5 text-xs font-black uppercase tracking-wide text-white shadow-sm transition-all duration-200 hover:bg-[#c9000b] hover:shadow-md active:scale-95 sm:min-w-[190px] sm:px-10 sm:py-4 sm:text-sm"

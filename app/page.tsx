@@ -163,6 +163,7 @@ export default function HomePage() {
     return () => window.clearInterval(interval);
   }, [language]);
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedSubcategories, setSelectedSubcategories] = useState<Record<string, string>>({});
   const [visibleProductsCount, setVisibleProductsCount] = useState(100);
   const [categoryVisibleCounts, setCategoryVisibleCounts] = useState<Record<string, number>>({});
   const [cartCount, setCartCount] = useState(0);
@@ -656,15 +657,115 @@ export default function HomePage() {
     [filteredProducts]
   );
 
+  const subcategoryRules: Record<string, Record<string, string[]>> = {
+    Shoes: {
+      Heels: ["heel", "heels", "high heel", "pump", "stiletto"],
+      Sneakers: ["sneaker", "sneakers", "trainer", "trainers", "sports shoe"],
+      Sandals: ["sandal", "sandals", "slides", "open shoe"],
+      Flats: ["flat shoe", "flats", "ballet flat"],
+      Boots: ["boot", "boots", "ankle boot", "combat boot"],
+      Loafers: ["loafer", "loafers", "moccasin", "moccasins"],
+      Slippers: ["slipper", "slippers", "flip flop", "flip-flop"],
+      "Formal Shoes": ["formal shoe", "office shoe", "dress shoe", "leather shoe"],
+    },
+
+    "Women's Fashion": {
+      Dresses: ["dress", "dresses", "gown"],
+      Tops: ["top", "tops", "blouse", "blouses"],
+      Shirts: ["shirt", "shirts", "t-shirt", "tshirt"],
+      Jeans: ["jean", "jeans"],
+      Trousers: ["trouser", "trousers", "pants", "suruali"],
+      Skirts: ["skirt", "skirts"],
+      Jumpsuits: ["jumpsuit", "jumpsuits"],
+      Hijabs: ["hijab", "hijabs", "headscarf"],
+    },
+
+    "Men's Fashion": {
+      Shirts: ["shirt", "shirts", "polo"],
+      "T-Shirts": ["t-shirt", "tshirt", "tee"],
+      Jeans: ["jean", "jeans"],
+      Trousers: ["trouser", "trousers", "pants"],
+      Suits: ["suit", "suits", "blazer"],
+      Jackets: ["jacket", "jackets", "coat"],
+    },
+
+    "Phones & Electronics": {
+      Smartphones: ["smartphone", "iphone", "android", "galaxy", "phone"],
+      Earphones: ["earphone", "earphones", "earbud", "airpod", "airpods"],
+      Headphones: ["headphone", "headphones", "headset"],
+      Chargers: ["charger", "charging"],
+      "Power Banks": ["power bank", "powerbank"],
+      Speakers: ["speaker", "speakers"],
+      "Smart Watches": ["smart watch", "smartwatch"],
+      Cables: ["cable", "usb cable", "type c"],
+    },
+
+    "Home & Kitchen": {
+      Cookware: ["cookware", "pot", "pan", "frying pan"],
+      "Pressure Cookers": ["pressure cooker"],
+      "Kitchen Tools": ["kitchen", "utensil", "spatula", "knife"],
+      Storage: ["storage", "container", "organizer"],
+      Cleaning: ["cleaning", "mop", "broom"],
+      Tableware: ["plate", "cup", "glass", "cutlery"],
+    },
+
+    "Beauty & Personal Care": {
+      Makeup: ["makeup", "lipstick", "foundation", "mascara", "eyeliner"],
+      Perfumes: ["perfume", "parfum", "fragrance"],
+      Skincare: ["skincare", "skin care", "serum", "moisturizer"],
+      "Hair Care": ["hair", "shampoo", "conditioner", "wig", "weave"],
+      "Body Care": ["body lotion", "body wash", "soap"],
+    },
+
+    "Jewelry & Watches": {
+      Watches: ["watch", "watches", "wristwatch"],
+      Rings: ["ring", "rings"],
+      Necklaces: ["necklace", "necklaces", "chain"],
+      Bracelets: ["bracelet", "bracelets"],
+      Earrings: ["earring", "earrings"],
+    },
+  };
+
+  const getAutomaticSubcategory = (product: Product, category: string) => {
+    const rules = subcategoryRules[category];
+    if (!rules) return "Other";
+
+    const specs = Object.entries(product.specifications || {})
+      .map(([key, value]) => `${key} ${value}`)
+      .join(" ");
+
+    const specsSw = Object.entries(product.specifications_sw || {})
+      .map(([key, value]) => `${key} ${value}`)
+      .join(" ");
+
+    const text = [
+      product.name,
+      product.name_sw,
+      product.description,
+      product.description_sw,
+      specs,
+      specsSw,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    for (const [subcategory, keywords] of Object.entries(rules)) {
+      if (keywords.some((keyword) => text.includes(keyword.toLowerCase()))) {
+        return subcategory;
+      }
+    }
+
+    return "Other";
+  };
+
   const categoryProducts = useMemo(() => {
     const result: Record<string, Product[]> = {};
 
     ALL_CATEGORIES.forEach((category) => {
-      result[category] = products
-        .filter(
-          (product) => product.category === category
-        )
-        .slice(0, 12);
+      result[category] = products.filter(
+        (product) => product.category === category
+      );
     });
 
     return result;
@@ -1712,8 +1813,27 @@ export default function HomePage() {
 
       {/* CATEGORY SECTIONS */}
       {ALL_CATEGORIES.map((category) => {
-        const categoryItems =
-          categoryProducts[category] || [];
+        const categoryItems = categoryProducts[category] || [];
+
+        const subcategories = Array.from(
+          new Set(
+            categoryItems.map((product) =>
+              getAutomaticSubcategory(product, category)
+            )
+          )
+        ).filter((name) => name !== "Other");
+
+        const activeSubcategory =
+          selectedSubcategories[category] || "All";
+
+        const visibleCategoryItems =
+          activeSubcategory === "All"
+            ? categoryItems
+            : categoryItems.filter(
+                (product) =>
+                  getAutomaticSubcategory(product, category) ===
+                  activeSubcategory
+              );
 
         if (categoryItems.length === 0) {
           return null;
@@ -1755,8 +1875,37 @@ export default function HomePage() {
                 </Link>
               </div>
 
+              {subcategories.length > 0 && (
+                <div className="mt-5 flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                  {["All", ...subcategories].map((subcategory) => (
+                    <button
+                      key={subcategory}
+                      type="button"
+                      onClick={() => {
+                        setSelectedSubcategories((prev) => ({
+                          ...prev,
+                          [category]: subcategory,
+                        }));
+
+                        setCategoryVisibleCounts((prev) => ({
+                          ...prev,
+                          [category]: 8,
+                        }));
+                      }}
+                      className={`shrink-0 rounded-full border px-4 py-2 text-[10px] font-black transition sm:text-xs ${
+                        activeSubcategory === subcategory
+                          ? "border-[#E30613] bg-[#E30613] text-white"
+                          : "border-slate-300 bg-white text-slate-700 hover:border-[#E30613] hover:text-[#E30613]"
+                      }`}
+                    >
+                      {subcategory}
+                    </button>
+                  ))}
+                </div>
+              )}
+
               <div className="mt-6 grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-6">
-                {categoryItems
+                {visibleCategoryItems
                   .slice(0, categoryVisibleCounts[category] || 8)
                   .map((product) => (
                   <ProductCard
@@ -1769,7 +1918,7 @@ export default function HomePage() {
                 ))}
               </div>
 
-              {(categoryVisibleCounts[category] || 8) < categoryItems.length && (
+              {(categoryVisibleCounts[category] || 8) < visibleCategoryItems.length && (
                 <div className="mt-6 flex justify-center">
                   <button
                     onClick={() =>

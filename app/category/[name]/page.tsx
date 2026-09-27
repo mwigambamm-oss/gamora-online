@@ -249,8 +249,8 @@ export default function CategoryPage() {
     <main className="min-h-screen bg-[#f8fafc] px-4 py-6">
       <section className="mx-auto max-w-[1440px]">
 
-        <div className="mb-6 flex items-center justify-between gap-4 rounded-2xl bg-white p-4 shadow-sm">
-          <div className="flex min-w-0 items-center gap-4">
+        <div className="mb-6 rounded-2xl bg-white p-3 shadow-sm sm:p-4">
+          <div className="flex min-w-0 items-center gap-3 sm:gap-4">
             {CATEGORY_IMAGES[name] && (
               <img
                 src={CATEGORY_IMAGES[name]}
@@ -277,8 +277,8 @@ export default function CategoryPage() {
           </div>
 
           {Object.keys(SUBCATEGORY_RULES[name] || {}).length > 0 && (
-            <div className="mb-6 overflow-x-auto scrollbar-hide">
-              <div className="flex min-w-max gap-1 rounded-xl bg-white p-1.5 shadow-sm sm:gap-2 sm:p-2">
+            <div className="mt-3 w-full overflow-x-auto scrollbar-hide">
+              <div className="flex min-w-max gap-1.5 rounded-xl bg-slate-50 p-1.5 sm:gap-2 sm:p-2">
                 <button
                   type="button"
                   onClick={() => {
@@ -287,7 +287,7 @@ export default function CategoryPage() {
                   className={`rounded-full px-2.5 py-1.5 text-[10px] font-black transition sm:px-4 sm:py-2 sm:text-[11px] ${
                     !subcategory
                       ? "bg-[#E30613] text-white"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      : "bg-white text-slate-600 hover:bg-slate-200"
                   }`}
                 >
                   All
@@ -305,7 +305,7 @@ export default function CategoryPage() {
                     className={`rounded-full px-2.5 py-1.5 text-[10px] font-black transition sm:px-4 sm:py-2 sm:text-[11px] ${
                       subcategory === item
                         ? "bg-[#E30613] text-white"
-                        : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                        : "bg-white text-slate-600 hover:bg-slate-200"
                     }`}
                   >
                     {item}
@@ -314,7 +314,6 @@ export default function CategoryPage() {
               </div>
             </div>
           )}
-
         </div>
 
         {loading ? (

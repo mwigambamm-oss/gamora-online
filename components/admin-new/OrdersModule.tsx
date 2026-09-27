@@ -136,8 +136,8 @@ export default function OrdersModule() {
     );
 
   return (
-    <main className="min-h-screen bg-gray-100">
-      <header className="border-b bg-white px-6 py-5 shadow-sm">
+    <main className="min-h-screen bg-[#EEF3F0]">
+      <header className="border-b border-[#CBD5E1] bg-[#E2E8F0] px-6 py-5 shadow-sm">
         <div className="mx-auto max-w-7xl">
           <div className="mt-3 flex flex-col justify-between gap-4 md:flex-row md:items-end">
             <div>
@@ -145,17 +145,17 @@ export default function OrdersModule() {
                 Orders Management
               </h1>
 
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-[#64748B]">
                 Manage and track all customer orders
               </p>
             </div>
 
-            <div className="rounded-lg bg-orange-50 px-4 py-3">
-              <p className="text-xs font-semibold text-gray-500">
+            <div className="rounded-lg border border-[#FED7AA] bg-[#FFF7ED] px-4 py-3">
+              <p className="text-xs font-semibold text-[#64748B]">
                 TOTAL REVENUE
               </p>
 
-              <p className="text-lg font-black text-orange-600">
+              <p className="text-lg font-black text-[#F59E0B]">
                 TZS {totalRevenue.toLocaleString()}
               </p>
             </div>
@@ -165,36 +165,36 @@ export default function OrdersModule() {
 
       <div className="mx-auto max-w-7xl p-6">
         <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-xl bg-white p-5 shadow-sm">
-            <p className="text-sm text-gray-500">Total Orders</p>
+          <div className="rounded-xl bg-[#E2E8F0] border border-[#CBD5E1] p-5 shadow-sm">
+            <p className="text-sm text-[#64748B]">Total Orders</p>
             <p className="mt-2 text-3xl font-black">
               {orders.length}
             </p>
           </div>
 
-          <div className="rounded-xl bg-white p-5 shadow-sm">
-            <p className="text-sm text-gray-500">Pending</p>
-            <p className="mt-2 text-3xl font-black text-yellow-600">
+          <div className="rounded-xl bg-[#E2E8F0] border border-[#CBD5E1] p-5 shadow-sm">
+            <p className="text-sm text-[#64748B]">Pending</p>
+            <p className="mt-2 text-3xl font-black text-[#F59E0B]">
               {orders.filter((o) => o.status === "Pending").length}
             </p>
           </div>
 
-          <div className="rounded-xl bg-white p-5 shadow-sm">
-            <p className="text-sm text-gray-500">Processing</p>
-            <p className="mt-2 text-3xl font-black text-blue-600">
+          <div className="rounded-xl bg-[#E2E8F0] border border-[#CBD5E1] p-5 shadow-sm">
+            <p className="text-sm text-[#64748B]">Processing</p>
+            <p className="mt-2 text-3xl font-black text-[#172554]">
               {orders.filter((o) => o.status === "Processing").length}
             </p>
           </div>
 
-          <div className="rounded-xl bg-white p-5 shadow-sm">
-            <p className="text-sm text-gray-500">Delivered</p>
-            <p className="mt-2 text-3xl font-black text-green-600">
+          <div className="rounded-xl bg-[#E2E8F0] border border-[#CBD5E1] p-5 shadow-sm">
+            <p className="text-sm text-[#64748B]">Delivered</p>
+            <p className="mt-2 text-3xl font-black text-[#172554]">
               {orders.filter((o) => o.status === "Delivered").length}
             </p>
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-xl bg-white shadow-sm">
+        <div className="overflow-hidden rounded-xl bg-[#E2E8F0] border border-[#CBD5E1] shadow-sm">
           <div className="flex flex-col justify-between gap-4 border-b p-6 md:flex-row md:items-center">
             <div>
               <div className="flex items-center gap-3">
@@ -205,14 +205,14 @@ export default function OrdersModule() {
                 {selectedOrders.length > 0 && (
                   <button
                     onClick={handleBulkDelete}
-                    className="rounded bg-red-600 px-3 py-1 text-sm font-bold text-white"
+                    className="rounded bg-[#172554] px-3 py-1 text-sm font-bold text-white hover:bg-[#0F766E]"
                   >
                     Delete Selected ({selectedOrders.length})
                   </button>
                 )}
               </div>
 
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-[#64748B]">
                 {filteredOrders.length} order(s) displayed
               </p>
             </div>
@@ -224,7 +224,7 @@ export default function OrdersModule() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search order, customer or phone..."
-                className="rounded-lg border px-4 py-2 text-sm outline-none focus:border-orange-500"
+                className="rounded-lg border px-4 py-2 text-sm outline-none focus:border-[#0F766E]"
               />
 
               <select
@@ -247,7 +247,7 @@ export default function OrdersModule() {
           {loading ? (
             <div className="p-12 text-center">
               <div className="text-4xl">⏳</div>
-              <p className="mt-3 text-sm text-gray-500">
+              <p className="mt-3 text-sm text-[#64748B]">
                 Loading orders...
               </p>
             </div>
@@ -259,7 +259,7 @@ export default function OrdersModule() {
                 No orders found
               </h3>
 
-              <p className="mt-2 text-sm text-gray-500">
+              <p className="mt-2 text-sm text-[#64748B]">
                 Customer orders will appear here.
               </p>
             </div>
@@ -267,7 +267,7 @@ export default function OrdersModule() {
             <div className="overflow-x-auto">
               <table className="w-full min-w-[850px]">
                 <thead>
-                  <tr className="border-b bg-gray-50 text-left text-sm">
+                  <tr className="border-b bg-[#F8FAF9] text-left text-sm">
                     <th className="px-6 py-4">
                       <input
                         type="checkbox"
@@ -299,7 +299,7 @@ export default function OrdersModule() {
                   {filteredOrders.map((order) => (
                     <tr
                       key={order.id}
-                      className="border-b hover:bg-gray-50"
+                      className="border-b hover:bg-[#F8FAF9]"
                     >
                       <td className="px-6 py-4">
                         <input
@@ -320,7 +320,7 @@ export default function OrdersModule() {
                           {order.id}
                         </p>
 
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-[#64748B]">
                           {order.createdAt
                             ? new Date(
                                 order.createdAt
@@ -331,7 +331,7 @@ export default function OrdersModule() {
 
                       <td className="px-6 py-4">
                         {order.items?.[0]?.image ? (
-                          <div className="h-16 w-16 overflow-hidden rounded-xl border bg-gray-100">
+                          <div className="h-16 w-16 overflow-hidden rounded-xl border bg-[#EEF3F0]">
                             <img
                               src={order.items[0].image}
                               alt={order.items[0].name || "Product"}
@@ -339,7 +339,7 @@ export default function OrdersModule() {
                             />
                           </div>
                         ) : (
-                          <div className="flex h-16 w-16 items-center justify-center rounded-xl border bg-gray-100 text-[10px] text-gray-400">
+                          <div className="flex h-16 w-16 items-center justify-center rounded-xl border bg-[#EEF3F0] text-[10px] text-[#94A3B8]">
                             No image
                           </div>
                         )}
@@ -350,7 +350,7 @@ export default function OrdersModule() {
                           {order.customer?.name || "Unknown"}
                         </p>
 
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-[#64748B]">
                           {order.customer?.phone || "-"}
                         </p>
                       </td>
@@ -368,11 +368,11 @@ export default function OrdersModule() {
 
                       <td className="px-6 py-4">
                         {order.deliveryMethod === "pickup" ? (
-                          <span className="inline-flex rounded-full bg-purple-100 px-3 py-1 text-xs font-bold text-purple-700">
+                          <span className="inline-flex rounded-full bg-[#F3E8FF] px-3 py-1 text-xs font-bold text-[#7C3AED]">
                             🏪 Pickup
                           </span>
                         ) : (
-                          <span className="inline-flex rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-700">
+                          <span className="inline-flex rounded-full bg-[#ECFEFF] px-3 py-1 text-xs font-bold text-[#0F766E]">
                             🚚 Delivery
                           </span>
                         )}
@@ -415,7 +415,7 @@ export default function OrdersModule() {
                             onClick={() =>
                               setSelectedOrder(order)
                             }
-                            className="rounded-lg bg-gray-900 px-3 py-2 text-xs font-bold text-white"
+                            className="rounded-lg bg-[#172554] px-3 py-2 text-xs font-bold text-white hover:bg-[#0F766E]"
                           >
                             View
                           </button>
@@ -424,7 +424,7 @@ export default function OrdersModule() {
                             onClick={() =>
                               handleDeleteOrder(order.id)
                             }
-                            className="rounded-lg bg-red-600 px-3 py-2 text-xs font-bold text-white"
+                            className="rounded-lg bg-[#475569] px-3 py-2 text-xs font-bold text-white hover:bg-[#172554]"
                           >
                             Delete
                           </button>
@@ -440,15 +440,15 @@ export default function OrdersModule() {
       </div>
 
       {selectedOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#172554]/60 p-4">
+          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-[#E2E8F0] border border-[#CBD5E1] shadow-2xl">
             <div className="flex items-center justify-between border-b p-6">
               <div>
                 <h2 className="text-xl font-black">
                   Order Details
                 </h2>
 
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-[#64748B]">
                   {selectedOrder.id}
                 </p>
               </div>
@@ -467,7 +467,7 @@ export default function OrdersModule() {
                   Customer
                 </h3>
 
-                <div className="rounded-lg bg-gray-50 p-4">
+                <div className="rounded-lg bg-[#F8FAF9] p-4">
                   <p>
                     <strong>Name:</strong>{" "}
                     {selectedOrder.customer?.name || "-"}
@@ -505,19 +505,19 @@ export default function OrdersModule() {
                 <div
                   className={`rounded-xl p-4 ${
                     selectedOrder.deliveryMethod === "pickup"
-                      ? "bg-purple-50"
-                      : "bg-blue-50"
+                      ? "bg-[#F3E8FF]"
+                      : "bg-[#ECFEFF]"
                   }`}
                 >
-                  <p className="text-xs font-semibold uppercase text-gray-500">
+                  <p className="text-xs font-semibold uppercase text-[#64748B]">
                     Order Receiving Method
                   </p>
 
                   <p
                     className={`mt-1 text-lg font-black ${
                       selectedOrder.deliveryMethod === "pickup"
-                        ? "text-purple-700"
-                        : "text-blue-700"
+                        ? "text-[#7C3AED]"
+                        : "text-[#1E3A8A]"
                     }`}
                   >
                     {selectedOrder.deliveryMethod === "pickup"
@@ -525,7 +525,7 @@ export default function OrdersModule() {
                       : "🚚 Delivery"}
                   </p>
 
-                  <p className="mt-1 text-sm text-gray-600">
+                  <p className="mt-1 text-sm text-[#64748B]">
                     {selectedOrder.deliveryMethod === "pickup"
                       ? "Customer will collect the order personally. No delivery fee."
                       : "Order will be delivered to the customer's location."}
@@ -538,12 +538,12 @@ export default function OrdersModule() {
                   Delivery Information
                 </h3>
 
-                <div className="rounded-xl bg-orange-50 p-4">
+                <div className="rounded-xl border border-[#FED7AA] bg-[#FFF7ED] p-4">
 
                   <div className="grid gap-4 sm:grid-cols-2">
 
                     <div>
-                      <p className="text-xs font-semibold uppercase text-gray-500">
+                      <p className="text-xs font-semibold uppercase text-[#64748B]">
                         Distance
                       </p>
 
@@ -555,11 +555,11 @@ export default function OrdersModule() {
                     </div>
 
                     <div>
-                      <p className="text-xs font-semibold uppercase text-gray-500">
+                      <p className="text-xs font-semibold uppercase text-[#64748B]">
                         Delivery Fee
                       </p>
 
-                      <p className="mt-1 text-lg font-black text-orange-600">
+                      <p className="mt-1 text-lg font-black text-[#F59E0B]">
                         TZS {Number(
                           selectedOrder.deliveryFee || 0
                         ).toLocaleString()}
@@ -569,17 +569,17 @@ export default function OrdersModule() {
                   </div>
 
                   {selectedOrder.location && (
-                    <div className="mt-4 border-t border-orange-200 pt-4">
+                    <div className="mt-4 border-t border-[#FED7AA] pt-4">
 
-                      <p className="text-xs font-semibold uppercase text-gray-500">
+                      <p className="text-xs font-semibold uppercase text-[#64748B]">
                         Customer Location
                       </p>
 
-                      <p className="mt-1 text-sm text-gray-700">
+                      <p className="mt-1 text-sm text-[#475569]">
                         Latitude: {selectedOrder.location.latitude}
                       </p>
 
-                      <p className="text-sm text-gray-700">
+                      <p className="text-sm text-[#475569]">
                         Longitude: {selectedOrder.location.longitude}
                       </p>
 
@@ -587,7 +587,7 @@ export default function OrdersModule() {
                         href={`https://www.google.com/maps?q=${selectedOrder.location.latitude},${selectedOrder.location.longitude}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="mt-3 inline-block rounded-lg bg-orange-600 px-4 py-2 text-sm font-bold text-white hover:bg-orange-700"
+                        className="mt-3 inline-block rounded-lg bg-[#F59E0B] px-4 py-2 text-sm font-bold text-white hover:bg-[#D97706]"
                       >
                         📍 Open Customer Location
                       </a>
@@ -596,7 +596,7 @@ export default function OrdersModule() {
                   )}
 
                   {!selectedOrder.location && (
-                    <p className="mt-4 text-sm text-gray-500">
+                    <p className="mt-4 text-sm text-[#64748B]">
                       Customer location was not provided.
                     </p>
                   )}
@@ -617,7 +617,7 @@ export default function OrdersModule() {
                         className="flex items-center justify-between gap-4 p-4"
                       >
                         <div className="flex min-w-0 items-center gap-4">
-                          <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl border bg-gray-100">
+                          <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl border bg-[#EEF3F0]">
                             {item.image ? (
                               <img
                                 src={item.image}
@@ -625,7 +625,7 @@ export default function OrdersModule() {
                                 className="h-full w-full object-cover"
                               />
                             ) : (
-                              <div className="flex h-full w-full items-center justify-center text-xs text-gray-400">
+                              <div className="flex h-full w-full items-center justify-center text-xs text-[#94A3B8]">
                                 No image
                               </div>
                             )}
@@ -636,7 +636,7 @@ export default function OrdersModule() {
                               {item.name}
                             </p>
 
-                            <p className="text-sm text-gray-500">
+                            <p className="text-sm text-[#64748B]">
                               Qty: {item.quantity}
                             </p>
                           </div>
@@ -655,7 +655,7 @@ export default function OrdersModule() {
                 </div>
               </section>
 
-              <section className="rounded-xl bg-gray-950 p-5 text-white">
+              <section className="rounded-xl bg-[#172033] p-5 text-white">
                 <div className="flex justify-between">
                   <span>Subtotal</span>
 
@@ -678,7 +678,7 @@ export default function OrdersModule() {
                   </span>
                 </div>
 
-                <div className="mt-4 flex justify-between border-t border-gray-700 pt-4 text-lg font-black">
+                <div className="mt-4 flex justify-between border-t border-[#334155] pt-4 text-lg font-black">
                   <span>Total</span>
 
                   <span>

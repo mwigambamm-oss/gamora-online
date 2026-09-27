@@ -45,8 +45,8 @@ export default function AdminNewLoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-100 px-4">
-      <div className="w-full max-w-md rounded-3xl bg-white p-8 shadow-xl">
+    <main className="flex min-h-screen items-center justify-center bg-[#EEF3F0] px-4">
+      <div className="w-full max-w-md rounded-3xl bg-[#E2E8F0] border border-[#CBD5E1] p-8 shadow-xl">
 
         <div className="mb-8 text-center">
           <img
@@ -67,7 +67,7 @@ export default function AdminNewLoginPage() {
         <form onSubmit={handleLogin} className="space-y-5">
 
           <div>
-            <label className="mb-2 block text-sm font-bold text-slate-700">
+            <label className="mb-2 block text-sm font-bold text-[#475569]">
               Email
             </label>
 
@@ -78,12 +78,12 @@ export default function AdminNewLoginPage() {
               placeholder="Enter admin email"
               autoComplete="email"
               required
-              className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-sky-600 focus:ring-2 focus:ring-sky-100"
+              className="w-full rounded-xl border border-[#CBD5E1] px-4 py-3 outline-none focus:border-sky-600 focus:ring-2 focus:ring-sky-100"
             />
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-bold text-slate-700">
+            <label className="mb-2 block text-sm font-bold text-[#475569]">
               Password
             </label>
 
@@ -94,12 +94,12 @@ export default function AdminNewLoginPage() {
               placeholder="Enter password"
               autoComplete="current-password"
               required
-              className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-sky-600 focus:ring-2 focus:ring-sky-100"
+              className="w-full rounded-xl border border-[#CBD5E1] px-4 py-3 outline-none focus:border-sky-600 focus:ring-2 focus:ring-sky-100"
             />
           </div>
 
           {error && (
-            <div className="rounded-xl bg-red-50 px-4 py-3 text-sm font-bold text-red-600">
+            <div className="rounded-xl bg-amber-50 px-4 py-3 text-sm font-bold text-amber-700">
               {error}
             </div>
           )}

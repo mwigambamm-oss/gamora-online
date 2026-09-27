@@ -240,24 +240,24 @@ const response = await fetch(
     : [];
 
 return (
-  <div className="min-h-screen bg-[#F8F6F6] text-[#3F3437]">
+  <div className="min-h-screen bg-[#EEF2F6] text-[#172033]">
     <div className="flex min-h-screen">
 
         {/* SIDEBAR */}
-<aside className="flex w-72 flex-col border-r border-[#E8DEE1] bg-white text-[#3F3437] shadow-sm">
+<aside className="flex w-72 flex-col border-r border-[#243B64] bg-[#172554] text-white shadow-lg">
 
-          <div className="border-b border-[#E8DEE1] p-6">
+          <div className="border-b border-[#243B64] p-6">
             <div className="text-base font-medium">
               GAMORA
             </div>
 
-            <div className="mt-1 text-xs font-medium text-slate-400">
+            <div className="mt-1 text-xs font-medium text-[#94A3B8]">
               BUSINESS CONTROL CENTER
             </div>
           </div>
 
           <div className="flex-1 overflow-y-auto p-4">
-            <div className="mb-3 px-3 text-xs font-bold uppercase tracking-wider text-slate-500">
+            <div className="mb-3 px-3 text-xs font-bold uppercase tracking-wider text-[#94A3B8]">
               Main Menu
             </div>
 
@@ -268,8 +268,8 @@ return (
                   onClick={() => setActive(item)}
                   className={`flex w-full items-center rounded-xl px-3 py-2 text-left text-sm font-semibold transition ${
                     active === item
-                      ? "bg-[#800020] text-white"
-: "text-[#3F3437] hover:bg-[#F8EDEF] hover:text-[#800020]"
+                      ? "bg-[#172554] text-white shadow-md"
+: "text-slate-200 hover:bg-[#1E3A8A] hover:text-white"
 
                   }`}
                 >
@@ -279,13 +279,13 @@ return (
             </nav>
           </div>
 
-          <div className="border-t border-[#E8DEE1] p-4">
+          <div className="border-t border-[#243B64] p-4">
             <button
               onClick={async () => {
                 await supabase.auth.signOut();
                 window.location.href = "/admin-new/login";
               }}
-              className="w-full rounded-xl bg-red-600 px-4 py-3 text-xs font-normal text-white hover:bg-red-700"
+              className="w-full rounded-xl bg-[#0F766E] px-4 py-3 text-xs font-semibold text-white hover:bg-[#0D6B63]"
             >
               Logout
             </button>
@@ -296,7 +296,7 @@ return (
         <main className="flex-1">
 
           {/* TOP BAR */}
-          <header className="border-b bg-white px-4 py-3 shadow-sm">
+          <header className="border-b border-[#D5DCE5] bg-[#F8FAFC] px-4 py-3 shadow-sm">
             <div className="flex items-center justify-between">
 
               <div>
@@ -321,7 +321,7 @@ return (
                   </div>
                 </div>
 
-<div className="h-20 w-20 overflow-hidden rounded-full border-2 border-[#800020] bg-white">
+<div className="h-20 w-20 overflow-hidden rounded-full border-2 border-[#0F766E] bg-[#E2E8F0]">
   <img
     src="/admin-picture.jpeg"
     alt="Administrator"
@@ -372,7 +372,7 @@ return (
             ) : active === "Settings" ? (
               <SettingsModule />
             ) : active !== "Dashboard" ? (
-              <div className="rounded-2xl border bg-white p-5 text-center shadow-sm">
+              <div className="rounded-2xl border border-[#D7DEE8] bg-[#F8FAFC] p-5 text-center shadow-sm">
                 <div className="text-4xl">
                   🚧
                 </div>
@@ -388,7 +388,7 @@ return (
 
                 <button
                   onClick={() => setActive("Dashboard")}
-                  className="mt-6 rounded-xl bg-[#800020] px-5 py-3 font-bold text-white"
+                  className="mt-6 rounded-xl bg-[#172554] px-5 py-3 font-bold text-white hover:bg-[#0F766E]"
                 >
                   Back to Dashboard
                 </button>
@@ -396,8 +396,8 @@ return (
             ) : (
               <>
                 {/* WELCOME */}
-                <div className="mb-6 #ROUND rounded-2xl bg-gradient-to-r from-[#800020] to-[#A64D63] p-6 text-white shadow-lg">
-                  <div className="text-sm font-medium text-[#FBECEF]">
+                <div className="mb-6 rounded-2xl bg-gradient-to-r from-[#172554] via-[#183B63] to-[#0F766E] p-6 text-white shadow-lg">
+                  <div className="text-sm font-medium text-[#99F6E4]">
                     GAMORA ONLINE
                   </div>
 
@@ -405,7 +405,7 @@ return (
                     Business Overview
                   </h2>
 
-                  <p className="mt-2 max-w-2xl text-sm text-slate-300">
+                  <p className="mt-2 max-w-2xl text-sm text-[#CBD5E1]">
                     Hapa ndipo utaona hali ya biashara yako kwa
                     ujumla: sales, orders, payments, stock,
                     expenses na profit.
@@ -428,8 +428,8 @@ return (
       onClick={() => setPeriod(option)}
       className={`rounded-xl border px-4 py-2 text-sm font-semibold ${
         period === option
-          ? "border-[#800020] bg-[#800020] text-white"
-          : "bg-white text-slate-700 hover:bg-[#F8F6F6]"
+          ? "border-[#0F766E] bg-[#0F766E] text-white"
+          : "bg-[#F8FAFC] text-[#475569] hover:bg-[#E2E8F0]"
       }`}
     >
       {option}
@@ -438,28 +438,28 @@ return (
 </div>
 
 {period === "Custom Range" && (
-  <div className="mb-6 flex flex-wrap items-end gap-3 rounded-xl bg-white p-4 shadow-sm">
+  <div className="mb-6 flex flex-wrap items-end gap-3 rounded-xl bg-[#F8FAFC] border border-[#D7DEE8] p-4 shadow-sm">
     <div>
-      <label className="mb-1 block text-sm font-semibold text-slate-700">
+      <label className="mb-1 block text-sm font-semibold text-[#475569]">
         From
       </label>
       <input
         type="date"
         value={fromDate}
         onChange={(e) => setFromDate(e.target.value)}
-        className="rounded-xl border border-slate-300 px-4 py-2 text-sm"
+        className="rounded-xl border border-[#CBD5E1] bg-white px-4 py-2 text-sm"
       />
     </div>
 
     <div>
-      <label className="mb-1 block text-sm font-semibold text-slate-700">
+      <label className="mb-1 block text-sm font-semibold text-[#475569]">
         To
       </label>
       <input
         type="date"
         value={toDate}
         onChange={(e) => setToDate(e.target.value)}
-        className="rounded-xl border border-slate-300 px-4 py-2 text-sm"
+        className="rounded-xl border border-[#CBD5E1] bg-white px-4 py-2 text-sm"
       />
     </div>
   </div>
@@ -475,7 +475,7 @@ return (
 
 {/* CARDS */}
                 {loading ? (
-                  <div className="rounded-2xl bg-white p-5 text-center shadow-sm">
+                  <div className="rounded-2xl bg-[#F8FAFC] border border-[#D7DEE8] p-5 text-center shadow-sm">
                     Loading business data...
                   </div>
                 ) : (
@@ -485,19 +485,33 @@ return (
                         key={card.title}
                         type="button"
                         onClick={() => setSelectedCard(card.title)}
-                        className="rounded-xl border bg-white p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md active:scale-[0.99]"
+                        className={`rounded-xl border border-[#D7DEE8] bg-[#F8FAFC] p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md active:scale-[0.99] ${
+                          card.title === "Revenue"
+                            ? "border-l-4 border-l-[#172554]"
+                            : card.title === "COGS"
+                            ? "border-l-4 border-l-[#06B6D4]"
+                            : card.title === "Gross Profit"
+                            ? "border-l-4 border-l-[#7C3AED]"
+                            : card.title === "Expenses"
+                            ? "border-l-4 border-l-[#F59E0B]"
+                            : card.title === "Net Profit"
+                            ? "border-l-4 border-l-[#0F766E]"
+                            : card.title === "Pending Orders" || card.title === "Pending Payments"
+                            ? "border-l-4 border-l-[#F59E0B]"
+                            : "border-l-4 border-l-[#64748B]"
+                        }` }
                       >
                         <div className="flex items-center justify-between">
                           <span className="text-lg">
                             {card.icon}
                           </span>
 
-                          <span className="text-xs font-bold uppercase text-slate-400">
+                          <span className="text-xs font-bold uppercase text-[#94A3B8]">
                             {card.title}
                           </span>
                         </div>
 
-                        <div className="mt-3 text-lg font-black text-[#800020]">
+                        <div className="mt-3 text-lg font-black text-[#172554]">
                           {card.value}
                         </div>
                       </button>
@@ -507,16 +521,16 @@ return (
 
                 {/* KPI DETAILS */}
                 {selectedCard && data && (
-                  <div className="mt-4 rounded-2xl border bg-white p-5 shadow-sm">
+                  <div className="mt-4 rounded-2xl border border-[#D7DEE8] bg-[#F8FAFC] p-5 shadow-sm">
                     <div className="mb-4 flex items-center justify-between">
-                      <h3 className="text-lg font-black text-[#800020]">
+                      <h3 className="text-lg font-black text-[#172554]">
                         {selectedCard} Details
                       </h3>
 
                       <button
                         type="button"
                         onClick={() => setSelectedCard(null)}
-                        className="rounded-lg border px-3 py-1.5 text-sm font-bold text-slate-600 hover:bg-slate-50"
+                        className="rounded-lg border px-3 py-1.5 text-sm font-bold text-[#64748B] hover:bg-[#E2E8F0]"
                       >
                         Close
                       </button>
@@ -816,7 +830,7 @@ return (
                                   type="number"
                                   min="0"
                                   defaultValue={Number(product.stock || 0)}
-                                  className="w-20 rounded-lg border px-3 py-2 text-center font-bold outline-none focus:border-[#800020]"
+                                  className="w-20 rounded-lg border px-3 py-2 text-center font-bold outline-none focus:border-[#172554] focus:ring-2 focus:ring-[#D1FAE5]"
                                   aria-label={`Stock for ${product.name || `Product #${product.id}`}`}
                                   onChange={(event) => {
                                     const value = Number(event.target.value);
@@ -837,7 +851,7 @@ return (
                                       handleLowStockUpdate(product, input.value);
                                     }
                                   }}
-                                  className="rounded-lg bg-[#800020] px-3 py-2 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
+                                  className="rounded-lg bg-[#172554] px-3 py-2 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
                                 >
                                   {updatingStockId === Number(product.id)
                                     ? "Saving..."
@@ -878,7 +892,7 @@ return (
                                   Cost: {money(product.cost_price)}
                                 </div>
                               </div>
-                              <div className="font-black text-red-600">
+                              <div className="font-black text-[#475569]">
                                 Stock: 0
                               </div>
                             </div>
@@ -917,7 +931,7 @@ return (
                 {data && (
                   <div className="mt-6 grid gap-6 lg:grid-cols-2">
 
-                    <div className="rounded-2xl border bg-white p-6 shadow-sm">
+                    <div className="rounded-2xl border border-[#D7DEE8] bg-[#F8FAFC] p-6 shadow-sm">
                       <h3 className="text-lg font-black">
                         Business Health
                       </h3>
@@ -959,7 +973,7 @@ return (
                             Out of Stock
                           </span>
 
-                          <span className="font-bold text-red-600">
+                          <span className="font-bold text-[#475569]">
                             {data.summary.outOfStock}
                           </span>
                         </div>
@@ -967,7 +981,7 @@ return (
                       </div>
                     </div>
 
-                    <div className="rounded-2xl border bg-white p-6 shadow-sm">
+                    <div className="rounded-2xl border border-[#D7DEE8] bg-[#F8FAFC] p-6 shadow-sm">
                       <h3 className="text-lg font-black">
                         Financial Summary
                       </h3>
@@ -1009,7 +1023,7 @@ return (
                             Expenses
                           </span>
 
-                          <span className="font-bold text-red-600">
+                          <span className="font-bold text-[#475569]">
                             {money(data.summary.expenses)}
                           </span>
                         </div>

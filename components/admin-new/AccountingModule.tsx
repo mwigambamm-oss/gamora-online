@@ -41,16 +41,16 @@ function StatCard({
 }) {
   const valueClass =
     tone === "green"
-      ? "text-green-700"
+      ? "text-[#1E3A8A]"
       : tone === "red"
-        ? "text-red-600"
+        ? "text-amber-700"
         : tone === "maroon"
-          ? "text-[#800020]"
-          : "text-[#3F3437]";
+          ? "text-[#172554]"
+          : "text-[#1E293B]";
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
+    <div className="rounded-2xl border border-[#CBD5E1] bg-[#E2E8F0] p-5 shadow-sm">
+      <p className="text-xs font-bold uppercase tracking-wider text-[#64748B]">
         {title}
       </p>
 
@@ -59,7 +59,7 @@ function StatCard({
       </h3>
 
       {subtitle && (
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-1 text-xs text-[#64748B]">
           {subtitle}
         </p>
       )}
@@ -492,15 +492,15 @@ export default function AccountingModule() {
       <div className="flex flex-wrap items-end justify-between gap-4">
 
         <div>
-          <p className="text-xs font-black uppercase tracking-widest text-[#800020]">
+          <p className="text-xs font-black uppercase tracking-widest text-[#172554]">
             GAMORA ONLINE
           </p>
 
-          <h2 className="text-3xl font-black text-[#3F3437]">
+          <h2 className="text-3xl font-black text-[#1E293B]">
             Accounting
           </h2>
 
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-[#64748B]">
             Financial control center
           </p>
         </div>
@@ -510,7 +510,7 @@ export default function AccountingModule() {
           <button
             onClick={load}
             disabled={loading}
-            className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            className="rounded-xl border border-[#CBD5E1] bg-[#E2E8F0] px-4 py-3 text-sm font-bold text-[#475569] hover:bg-[#F8FAFC] disabled:opacity-50"
           >
             {loading ? "Refreshing..." : "↻ Refresh"}
           </button>
@@ -518,7 +518,7 @@ export default function AccountingModule() {
           <select
             value={period}
             onChange={(e) => setPeriod(e.target.value)}
-            className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold outline-none"
+            className="rounded-xl border border-[#CBD5E1] bg-[#E2E8F0] px-4 py-3 text-sm font-bold outline-none"
           >
             <option>Today</option>
             <option>Yesterday</option>
@@ -533,8 +533,8 @@ export default function AccountingModule() {
 
       {/* LOADING */}
       {loading && (
-        <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center">
-          <p className="font-bold text-slate-600">
+        <div className="rounded-2xl border border-[#CBD5E1] bg-[#E2E8F0] p-10 text-center">
+          <p className="font-bold text-[#64748B]">
             Loading accounting...
           </p>
         </div>
@@ -542,14 +542,14 @@ export default function AccountingModule() {
 
       {/* EMPTY / ERROR */}
       {!loading && !summary && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center">
-          <p className="font-bold text-red-700">
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-center">
+          <p className="font-bold text-amber-700">
             Unable to load accounting data.
           </p>
 
           <button
             onClick={load}
-            className="mt-3 rounded-xl bg-[#800020] px-5 py-2 text-sm font-bold text-white"
+            className="mt-3 rounded-xl bg-[#0F766E] px-5 py-2 text-sm font-bold text-white hover:bg-[#115E59]"
           >
             Try Again
           </button>
@@ -626,15 +626,15 @@ export default function AccountingModule() {
           {/* INCOME STATEMENT + CASH POSITION */}
           <div className="grid gap-6 lg:grid-cols-2">
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="rounded-2xl border border-[#CBD5E1] bg-[#E2E8F0] p-6 shadow-sm">
 
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-xl font-black text-[#3F3437]">
+                  <h3 className="text-xl font-black text-[#1E293B]">
                     Income Statement
                   </h3>
 
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-[#64748B]">
                     {period}
                   </p>
                 </div>
@@ -643,7 +643,7 @@ export default function AccountingModule() {
               <div className="mt-6 space-y-4 text-sm">
 
                 <div className="flex justify-between">
-                  <span className="text-slate-600">
+                  <span className="text-[#64748B]">
                     Product Revenue
                   </span>
 
@@ -653,7 +653,7 @@ export default function AccountingModule() {
                 </div>
 
                 <div className="flex justify-between">
-                  <span className="text-slate-600">
+                  <span className="text-[#64748B]">
                     Delivery Income
                   </span>
 
@@ -673,11 +673,11 @@ export default function AccountingModule() {
                 </div>
 
                 <div className="flex justify-between">
-                  <span className="text-slate-600">
+                  <span className="text-[#64748B]">
                     Cost of Goods Sold
                   </span>
 
-                  <b className="text-red-600">
+                  <b className="text-amber-700">
                     - {money(summary.cogs)}
                   </b>
                 </div>
@@ -687,22 +687,22 @@ export default function AccountingModule() {
                     Gross Profit
                   </span>
 
-                  <b className="text-green-700">
+                  <b className="text-[#1E3A8A]">
                     {money(summary.grossProfit)}
                   </b>
                 </div>
 
                 <div className="flex justify-between">
-                  <span className="text-slate-600">
+                  <span className="text-[#64748B]">
                     Operating Expenses
                   </span>
 
-                  <b className="text-red-600">
+                  <b className="text-amber-700">
                     - {money(summary.expenses)}
                   </b>
                 </div>
 
-                <div className="flex justify-between border-t-2 border-[#800020] pt-4 text-lg">
+                <div className="flex justify-between border-t-2 border-[#172554] pt-4 text-lg">
                   <span className="font-black">
                     NET PROFIT
                   </span>
@@ -710,8 +710,8 @@ export default function AccountingModule() {
                   <b
                     className={
                       summary.netProfit >= 0
-                        ? "text-green-700"
-                        : "text-red-600"
+                        ? "text-[#1E3A8A]"
+                        : "text-amber-700"
                     }
                   >
                     {money(summary.netProfit)}
@@ -722,20 +722,20 @@ export default function AccountingModule() {
             </div>
 
             {/* STOCK */}
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="rounded-2xl border border-[#CBD5E1] bg-[#E2E8F0] p-6 shadow-sm">
 
-              <h3 className="text-xl font-black text-[#3F3437]">
+              <h3 className="text-xl font-black text-[#1E293B]">
                 Inventory Valuation
               </h3>
 
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-[#64748B]">
                 Current stock value
               </p>
 
               <div className="mt-6 space-y-5">
 
-                <div className="rounded-xl bg-slate-50 p-4">
-                  <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                <div className="rounded-xl bg-[#F8FAFC] p-4">
+                  <p className="text-xs font-bold uppercase tracking-wider text-[#64748B]">
                     Cost Value
                   </p>
 
@@ -744,12 +744,12 @@ export default function AccountingModule() {
                   </p>
                 </div>
 
-                <div className="rounded-xl bg-slate-50 p-4">
-                  <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                <div className="rounded-xl bg-[#F8FAFC] p-4">
+                  <p className="text-xs font-bold uppercase tracking-wider text-[#64748B]">
                     Selling Value
                   </p>
 
-                  <p className="mt-1 text-xl font-black text-green-700">
+                  <p className="mt-1 text-xl font-black text-[#1E3A8A]">
                     {money(summary.stockSellingValue)}
                   </p>
                 </div>
@@ -757,7 +757,7 @@ export default function AccountingModule() {
                 <div className="grid grid-cols-3 gap-3">
 
                   <div className="rounded-xl border p-3 text-center">
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-[#64748B]">
                       Products
                     </p>
 
@@ -767,21 +767,21 @@ export default function AccountingModule() {
                   </div>
 
                   <div className="rounded-xl border p-3 text-center">
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-[#64748B]">
                       Low Stock
                     </p>
 
-                    <p className="mt-1 text-lg font-black text-orange-600">
+                    <p className="mt-1 text-lg font-black text-[#F59E0B]">
                       {summary.lowStock}
                     </p>
                   </div>
 
                   <div className="rounded-xl border p-3 text-center">
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-[#64748B]">
                       Out of Stock
                     </p>
 
-                    <p className="mt-1 text-lg font-black text-red-600">
+                    <p className="mt-1 text-lg font-black text-amber-700">
                       {summary.outOfStock}
                     </p>
                   </div>
@@ -794,19 +794,19 @@ export default function AccountingModule() {
           </div>
 
           {/* PAYMENT METHODS */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="rounded-2xl border border-[#CBD5E1] bg-[#E2E8F0] p-6 shadow-sm">
 
-            <h3 className="text-xl font-black text-[#3F3437]">
+            <h3 className="text-xl font-black text-[#1E293B]">
               Payment Methods
             </h3>
 
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-[#64748B]">
               Collections received during the selected period
             </p>
 
             {Object.keys(summary.paymentMethods || {}).length === 0 ? (
 
-              <div className="mt-5 rounded-xl bg-slate-50 p-6 text-center text-sm text-slate-500">
+              <div className="mt-5 rounded-xl bg-[#F8FAFC] p-6 text-center text-sm text-[#64748B]">
                 No payments recorded for this period.
               </div>
 
@@ -818,9 +818,9 @@ export default function AccountingModule() {
                   ([method, amount]) => (
                     <div
                       key={method}
-                      className="rounded-xl border border-slate-200 p-4"
+                      className="rounded-xl border border-[#CBD5E1] p-4"
                     >
-                      <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                      <p className="text-xs font-bold uppercase tracking-wider text-[#64748B]">
                         {method}
                       </p>
 
@@ -838,16 +838,16 @@ export default function AccountingModule() {
 
 
           {/* EXPENSES MANAGEMENT */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="rounded-2xl border border-[#CBD5E1] bg-[#E2E8F0] p-6 shadow-sm">
 
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 
               <div>
-                <h3 className="text-xl font-black text-[#3F3437]">
+                <h3 className="text-xl font-black text-[#1E293B]">
                   Expenses Management
                 </h3>
 
-                <p className="mt-1 text-sm text-slate-500">
+                <p className="mt-1 text-sm text-[#64748B]">
                   Record, review and manage business expenses.
                 </p>
               </div>
@@ -868,7 +868,7 @@ export default function AccountingModule() {
                     setShowExpenseForm(true);
                   }
                 }}
-                className="rounded-xl bg-[#800020] px-5 py-3 text-sm font-bold text-white hover:opacity-90"
+                className="rounded-xl bg-[#172554] px-5 py-3 text-sm font-bold text-white hover:bg-[#0F766E]"
               >
                 {showExpenseForm ? "Cancel" : "+ Add Expense"}
               </button>
@@ -877,14 +877,14 @@ export default function AccountingModule() {
 
             {/* EXPENSE FORM */}
             {showExpenseForm && (
-              <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+              <div className="mt-6 rounded-2xl border border-[#CBD5E1] bg-[#F8FAFC] p-5">
 
                 <div className="mb-5">
-                  <h4 className="font-black text-[#3F3437]">
+                  <h4 className="font-black text-[#1E293B]">
                     {editingExpense ? "Edit Expense" : "Add New Expense"}
                   </h4>
 
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p className="mt-1 text-xs text-[#64748B]">
                     Enter the expense details below.
                   </p>
                 </div>
@@ -892,7 +892,7 @@ export default function AccountingModule() {
                 <div className="grid gap-4 md:grid-cols-2">
 
                   <div>
-                    <label className="mb-1 block text-xs font-bold text-slate-600">
+                    <label className="mb-1 block text-xs font-bold text-[#64748B]">
                       Expense Title
                     </label>
 
@@ -905,12 +905,12 @@ export default function AccountingModule() {
                         }))
                       }
                       placeholder="e.g. Facebook Ads"
-                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-[#800020]"
+                      className="w-full rounded-xl border border-[#CBD5E1] bg-[#E2E8F0] px-4 py-3 text-sm outline-none focus:border-[#172554]"
                     />
                   </div>
 
                   <div>
-                    <label className="mb-1 block text-xs font-bold text-slate-600">
+                    <label className="mb-1 block text-xs font-bold text-[#64748B]">
                       Category
                     </label>
 
@@ -922,7 +922,7 @@ export default function AccountingModule() {
                           category: e.target.value,
                         }))
                       }
-                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-[#800020]"
+                      className="w-full rounded-xl border border-[#CBD5E1] bg-[#E2E8F0] px-4 py-3 text-sm outline-none focus:border-[#172554]"
                     >
                       {EXPENSE_CATEGORIES.map((category) => (
                         <option key={category} value={category}>
@@ -933,7 +933,7 @@ export default function AccountingModule() {
                   </div>
 
                   <div>
-                    <label className="mb-1 block text-xs font-bold text-slate-600">
+                    <label className="mb-1 block text-xs font-bold text-[#64748B]">
                       Date
                     </label>
 
@@ -946,12 +946,12 @@ export default function AccountingModule() {
                           expense_date: e.target.value,
                         }))
                       }
-                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-[#800020]"
+                      className="w-full rounded-xl border border-[#CBD5E1] bg-[#E2E8F0] px-4 py-3 text-sm outline-none focus:border-[#172554]"
                     />
                   </div>
 
                   <div>
-                    <label className="mb-1 block text-xs font-bold text-slate-600">
+                    <label className="mb-1 block text-xs font-bold text-[#64748B]">
                       Amount (TZS)
                     </label>
 
@@ -967,12 +967,12 @@ export default function AccountingModule() {
                         }))
                       }
                       placeholder="0"
-                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-[#800020]"
+                      className="w-full rounded-xl border border-[#CBD5E1] bg-[#E2E8F0] px-4 py-3 text-sm outline-none focus:border-[#172554]"
                     />
                   </div>
 
                   <div className="md:col-span-2">
-                    <label className="mb-1 block text-xs font-bold text-slate-600">
+                    <label className="mb-1 block text-xs font-bold text-[#64748B]">
                       Notes
                     </label>
 
@@ -986,7 +986,7 @@ export default function AccountingModule() {
                       }
                       rows={3}
                       placeholder="Optional notes..."
-                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-[#800020]"
+                      className="w-full rounded-xl border border-[#CBD5E1] bg-[#E2E8F0] px-4 py-3 text-sm outline-none focus:border-[#172554]"
                     />
                   </div>
 
@@ -997,7 +997,7 @@ export default function AccountingModule() {
                   <button
                     onClick={saveExpense}
                     disabled={expenseSaving}
-                    className="rounded-xl bg-[#800020] px-6 py-3 text-sm font-bold text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="rounded-xl bg-[#0F766E] px-6 py-3 text-sm font-bold text-white hover:bg-[#115E59] disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {expenseSaving
                       ? "Saving..."
@@ -1009,7 +1009,7 @@ export default function AccountingModule() {
                   <button
                     onClick={resetExpenseForm}
                     disabled={expenseSaving}
-                    className="rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-bold text-slate-700 hover:bg-slate-100"
+                    className="rounded-xl border border-[#CBD5E1] bg-[#E2E8F0] px-6 py-3 text-sm font-bold text-[#475569] hover:bg-[#EEF3F0]"
                   >
                     Cancel
                   </button>
@@ -1022,18 +1022,18 @@ export default function AccountingModule() {
             {/* EXPENSE SUMMARY */}
             <div className="mt-6 grid gap-4 md:grid-cols-2">
 
-              <div className="rounded-xl bg-slate-50 p-5">
-                <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
+              <div className="rounded-xl bg-[#F8FAFC] p-5">
+                <p className="text-xs font-bold uppercase tracking-wider text-[#64748B]">
                   Selected Period Expenses
                 </p>
 
-                <p className="mt-2 text-2xl font-black text-[#800020]">
+                <p className="mt-2 text-2xl font-black text-[#172554]">
                   {money(summary.expenses)}
                 </p>
               </div>
 
-              <div className="rounded-xl bg-slate-50 p-5">
-                <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
+              <div className="rounded-xl bg-[#F8FAFC] p-5">
+                <p className="text-xs font-bold uppercase tracking-wider text-[#64748B]">
                   All Recorded Expenses
                 </p>
 
@@ -1053,17 +1053,17 @@ export default function AccountingModule() {
             <div className="mt-6">
 
               <div className="mb-3">
-                <h4 className="font-black text-[#3F3437]">
+                <h4 className="font-black text-[#1E293B]">
                   Category Totals
                 </h4>
 
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-[#64748B]">
                   Based on all recorded expenses.
                 </p>
               </div>
 
               {expenses.length === 0 ? (
-                <div className="rounded-xl bg-slate-50 p-5 text-center text-sm text-slate-500">
+                <div className="rounded-xl bg-[#F8FAFC] p-5 text-center text-sm text-[#64748B]">
                   No expense records yet.
                 </div>
               ) : (
@@ -1085,9 +1085,9 @@ export default function AccountingModule() {
                   ).map(([category, amount]) => (
                     <div
                       key={category}
-                      className="rounded-xl border border-slate-200 p-4"
+                      className="rounded-xl border border-[#CBD5E1] p-4"
                     >
-                      <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                      <p className="text-xs font-bold uppercase tracking-wider text-[#64748B]">
                         {category}
                       </p>
 
@@ -1107,33 +1107,33 @@ export default function AccountingModule() {
 
               <div className="mb-3 flex items-center justify-between gap-3">
                 <div>
-                  <h4 className="font-black text-[#3F3437]">
+                  <h4 className="font-black text-[#1E293B]">
                     Expense History
                   </h4>
 
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p className="mt-1 text-xs text-[#64748B]">
                     All recorded business expenses.
                   </p>
                 </div>
 
                 {expenseLoading && (
-                  <span className="text-xs font-bold text-slate-500">
+                  <span className="text-xs font-bold text-[#64748B]">
                     Loading...
                   </span>
                 )}
               </div>
 
               {expenses.length === 0 ? (
-                <div className="rounded-xl bg-slate-50 p-8 text-center text-sm text-slate-500">
+                <div className="rounded-xl bg-[#F8FAFC] p-8 text-center text-sm text-[#64748B]">
                   No expense records found.
                 </div>
               ) : (
-                <div className="overflow-x-auto rounded-xl border border-slate-200">
+                <div className="overflow-x-auto rounded-xl border border-[#CBD5E1]">
 
                   <table className="min-w-full text-sm">
 
-                    <thead className="bg-slate-50">
-                      <tr className="text-left text-xs font-bold uppercase tracking-wider text-slate-500">
+                    <thead className="bg-[#F8FAFC]">
+                      <tr className="text-left text-xs font-bold uppercase tracking-wider text-[#64748B]">
                         <th className="px-4 py-3">Date</th>
                         <th className="px-4 py-3">Title</th>
                         <th className="px-4 py-3">Category</th>
@@ -1146,18 +1146,18 @@ export default function AccountingModule() {
                     <tbody className="divide-y divide-slate-100">
 
                       {expenses.map((expense) => (
-                        <tr key={expense.id} className="hover:bg-slate-50">
+                        <tr key={expense.id} className="hover:bg-[#F8FAFC]">
 
                           <td className="whitespace-nowrap px-4 py-3 font-medium">
                             {expense.expense_date}
                           </td>
 
-                          <td className="px-4 py-3 font-bold text-[#3F3437]">
+                          <td className="px-4 py-3 font-bold text-[#1E293B]">
                             {expense.title}
                           </td>
 
                           <td className="px-4 py-3">
-                            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700">
+                            <span className="rounded-full bg-[#EEF3F0] px-3 py-1 text-xs font-bold text-[#475569]">
                               {expense.category || "Other"}
                             </span>
                           </td>
@@ -1166,7 +1166,7 @@ export default function AccountingModule() {
                             {money(expense.amount)}
                           </td>
 
-                          <td className="max-w-[240px] px-4 py-3 text-slate-500">
+                          <td className="max-w-[240px] px-4 py-3 text-[#64748B]">
                             {expense.notes || "—"}
                           </td>
 
@@ -1177,7 +1177,7 @@ export default function AccountingModule() {
                               <button
                                 onClick={() => startEditExpense(expense)}
                                 disabled={expenseSaving}
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-50"
+                                className="rounded-lg border border-[#CBD5E1] px-3 py-2 text-xs font-bold text-[#475569] hover:bg-[#EEF3F0] disabled:opacity-50"
                               >
                                 Edit
                               </button>
@@ -1185,7 +1185,7 @@ export default function AccountingModule() {
                               <button
                                 onClick={() => deleteExpense(expense.id)}
                                 disabled={expenseSaving}
-                                className="rounded-lg bg-red-600 px-3 py-2 text-xs font-bold text-white hover:bg-red-700 disabled:opacity-50"
+                                className="rounded-lg bg-[#475569] px-3 py-2 text-xs font-bold text-white hover:bg-[#172554] disabled:opacity-50"
                               >
                                 Delete
                               </button>
@@ -1210,16 +1210,16 @@ export default function AccountingModule() {
 
 
           {/* PAYMENTS / COLLECTIONS MANAGEMENT */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="rounded-2xl border border-[#CBD5E1] bg-[#E2E8F0] p-6 shadow-sm">
 
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 
               <div>
-                <h3 className="text-xl font-black text-[#3F3437]">
+                <h3 className="text-xl font-black text-[#1E293B]">
                   Payments & Collections
                 </h3>
 
-                <p className="mt-1 text-sm text-slate-500">
+                <p className="mt-1 text-sm text-[#64748B]">
                   Record and manage customer payments and collections.
                 </p>
               </div>
@@ -1240,7 +1240,7 @@ export default function AccountingModule() {
                     setShowPaymentForm(true);
                   }
                 }}
-                className="rounded-xl bg-[#800020] px-5 py-3 text-sm font-bold text-white hover:opacity-90"
+                className="rounded-xl bg-[#172554] px-5 py-3 text-sm font-bold text-white hover:bg-[#0F766E]"
               >
                 {showPaymentForm ? "Cancel" : "+ Record Payment"}
               </button>
@@ -1250,26 +1250,26 @@ export default function AccountingModule() {
             {/* COLLECTION SUMMARY */}
             <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
 
-              <div className="rounded-xl bg-slate-50 p-4">
-                <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
+              <div className="rounded-xl bg-[#F8FAFC] p-4">
+                <p className="text-xs font-bold uppercase tracking-wider text-[#64748B]">
                   Total Collected
                 </p>
-                <p className="mt-2 text-xl font-black text-green-700">
+                <p className="mt-2 text-xl font-black text-[#1E3A8A]">
                   {money(summary.paidAmount)}
                 </p>
               </div>
 
-              <div className="rounded-xl bg-slate-50 p-4">
-                <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
+              <div className="rounded-xl bg-[#F8FAFC] p-4">
+                <p className="text-xs font-bold uppercase tracking-wider text-[#64748B]">
                   Receivable
                 </p>
-                <p className="mt-2 text-xl font-black text-red-600">
+                <p className="mt-2 text-xl font-black text-amber-700">
                   {money(summary.unpaidAmount)}
                 </p>
               </div>
 
-              <div className="rounded-xl bg-slate-50 p-4">
-                <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
+              <div className="rounded-xl bg-[#F8FAFC] p-4">
+                <p className="text-xs font-bold uppercase tracking-wider text-[#64748B]">
                   Payments Recorded
                 </p>
                 <p className="mt-2 text-xl font-black">
@@ -1277,11 +1277,11 @@ export default function AccountingModule() {
                 </p>
               </div>
 
-              <div className="rounded-xl bg-slate-50 p-4">
-                <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
+              <div className="rounded-xl bg-[#F8FAFC] p-4">
+                <p className="text-xs font-bold uppercase tracking-wider text-[#64748B]">
                   Pending Payments
                 </p>
-                <p className="mt-2 text-xl font-black text-orange-600">
+                <p className="mt-2 text-xl font-black text-[#F59E0B]">
                   {summary.pendingPayments}
                 </p>
               </div>
@@ -1290,14 +1290,14 @@ export default function AccountingModule() {
 
             {/* PAYMENT FORM */}
             {showPaymentForm && (
-              <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+              <div className="mt-6 rounded-2xl border border-[#CBD5E1] bg-[#F8FAFC] p-5">
 
                 <div className="mb-5">
-                  <h4 className="font-black text-[#3F3437]">
+                  <h4 className="font-black text-[#1E293B]">
                     {editingPayment ? "Edit Payment" : "Record New Payment"}
                   </h4>
 
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p className="mt-1 text-xs text-[#64748B]">
                     Record the amount actually received from the customer.
                   </p>
                 </div>
@@ -1305,7 +1305,7 @@ export default function AccountingModule() {
                 <div className="grid gap-4 md:grid-cols-2">
 
                   <div className="md:col-span-2">
-                    <label className="mb-1 block text-xs font-bold text-slate-600">
+                    <label className="mb-1 block text-xs font-bold text-[#64748B]">
                       Order
                     </label>
 
@@ -1323,7 +1323,7 @@ export default function AccountingModule() {
                           amount: order ? String(order.total) : prev.amount,
                         }));
                       }}
-                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-[#800020] disabled:bg-slate-100"
+                      className="w-full rounded-xl border border-[#CBD5E1] bg-[#E2E8F0] px-4 py-3 text-sm outline-none focus:border-[#172554] disabled:bg-[#EEF3F0]"
                     >
                       <option value="">Select order</option>
 
@@ -1336,7 +1336,7 @@ export default function AccountingModule() {
                   </div>
 
                   <div>
-                    <label className="mb-1 block text-xs font-bold text-slate-600">
+                    <label className="mb-1 block text-xs font-bold text-[#64748B]">
                       Amount Paid (TZS)
                     </label>
 
@@ -1352,12 +1352,12 @@ export default function AccountingModule() {
                         }))
                       }
                       placeholder="0"
-                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-[#800020]"
+                      className="w-full rounded-xl border border-[#CBD5E1] bg-[#E2E8F0] px-4 py-3 text-sm outline-none focus:border-[#172554]"
                     />
                   </div>
 
                   <div>
-                    <label className="mb-1 block text-xs font-bold text-slate-600">
+                    <label className="mb-1 block text-xs font-bold text-[#64748B]">
                       Payment Method
                     </label>
 
@@ -1369,7 +1369,7 @@ export default function AccountingModule() {
                           payment_method: e.target.value,
                         }))
                       }
-                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-[#800020]"
+                      className="w-full rounded-xl border border-[#CBD5E1] bg-[#E2E8F0] px-4 py-3 text-sm outline-none focus:border-[#172554]"
                     >
                       {PAYMENT_METHODS.map((method) => (
                         <option key={method} value={method}>
@@ -1380,7 +1380,7 @@ export default function AccountingModule() {
                   </div>
 
                   <div>
-                    <label className="mb-1 block text-xs font-bold text-slate-600">
+                    <label className="mb-1 block text-xs font-bold text-[#64748B]">
                       Payment Status
                     </label>
 
@@ -1392,7 +1392,7 @@ export default function AccountingModule() {
                           payment_status: e.target.value,
                         }))
                       }
-                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-[#800020]"
+                      className="w-full rounded-xl border border-[#CBD5E1] bg-[#E2E8F0] px-4 py-3 text-sm outline-none focus:border-[#172554]"
                     >
                       {PAYMENT_STATUSES.map((status) => (
                         <option key={status} value={status}>
@@ -1403,7 +1403,7 @@ export default function AccountingModule() {
                   </div>
 
                   <div>
-                    <label className="mb-1 block text-xs font-bold text-slate-600">
+                    <label className="mb-1 block text-xs font-bold text-[#64748B]">
                       Transaction Reference
                     </label>
 
@@ -1416,7 +1416,7 @@ export default function AccountingModule() {
                         }))
                       }
                       placeholder="e.g. MPESA transaction ID"
-                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-[#800020]"
+                      className="w-full rounded-xl border border-[#CBD5E1] bg-[#E2E8F0] px-4 py-3 text-sm outline-none focus:border-[#172554]"
                     />
                   </div>
 
@@ -1427,7 +1427,7 @@ export default function AccountingModule() {
                   <button
                     onClick={savePayment}
                     disabled={paymentSaving}
-                    className="rounded-xl bg-[#800020] px-6 py-3 text-sm font-bold text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="rounded-xl bg-[#0F766E] px-6 py-3 text-sm font-bold text-white hover:bg-[#115E59] disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {paymentSaving
                       ? "Saving..."
@@ -1439,7 +1439,7 @@ export default function AccountingModule() {
                   <button
                     onClick={resetPaymentForm}
                     disabled={paymentSaving}
-                    className="rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-bold text-slate-700 hover:bg-slate-100"
+                    className="rounded-xl border border-[#CBD5E1] bg-[#E2E8F0] px-6 py-3 text-sm font-bold text-[#475569] hover:bg-[#EEF3F0]"
                   >
                     Cancel
                   </button>
@@ -1452,7 +1452,7 @@ export default function AccountingModule() {
             {/* COLLECTIONS BY METHOD */}
             <div className="mt-6">
 
-              <h4 className="font-black text-[#3F3437]">
+              <h4 className="font-black text-[#1E293B]">
                 Collections by Payment Method
               </h4>
 
@@ -1462,9 +1462,9 @@ export default function AccountingModule() {
                   ([method, amount]) => (
                     <div
                       key={method}
-                      className="rounded-xl border border-slate-200 p-4"
+                      className="rounded-xl border border-[#CBD5E1] p-4"
                     >
-                      <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                      <p className="text-xs font-bold uppercase tracking-wider text-[#64748B]">
                         {method}
                       </p>
 
@@ -1476,7 +1476,7 @@ export default function AccountingModule() {
                 )}
 
                 {Object.keys(summary.paymentMethods || {}).length === 0 && (
-                  <div className="rounded-xl bg-slate-50 p-5 text-sm text-slate-500 sm:col-span-2 lg:col-span-4">
+                  <div className="rounded-xl bg-[#F8FAFC] p-5 text-sm text-[#64748B] sm:col-span-2 lg:col-span-4">
                     No collections recorded for the selected period.
                   </div>
                 )}
@@ -1490,33 +1490,33 @@ export default function AccountingModule() {
 
               <div className="mb-3 flex items-center justify-between gap-3">
                 <div>
-                  <h4 className="font-black text-[#3F3437]">
+                  <h4 className="font-black text-[#1E293B]">
                     Payment History
                   </h4>
 
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p className="mt-1 text-xs text-[#64748B]">
                     All recorded customer payments.
                   </p>
                 </div>
 
                 {paymentLoading && (
-                  <span className="text-xs font-bold text-slate-500">
+                  <span className="text-xs font-bold text-[#64748B]">
                     Loading...
                   </span>
                 )}
               </div>
 
               {payments.length === 0 ? (
-                <div className="rounded-xl bg-slate-50 p-8 text-center text-sm text-slate-500">
+                <div className="rounded-xl bg-[#F8FAFC] p-8 text-center text-sm text-[#64748B]">
                   No payment records found.
                 </div>
               ) : (
-                <div className="overflow-x-auto rounded-xl border border-slate-200">
+                <div className="overflow-x-auto rounded-xl border border-[#CBD5E1]">
 
                   <table className="min-w-full text-sm">
 
-                    <thead className="bg-slate-50">
-                      <tr className="text-left text-xs font-bold uppercase tracking-wider text-slate-500">
+                    <thead className="bg-[#F8FAFC]">
+                      <tr className="text-left text-xs font-bold uppercase tracking-wider text-[#64748B]">
                         <th className="px-4 py-3">Date</th>
                         <th className="px-4 py-3">Order</th>
                         <th className="px-4 py-3">Method</th>
@@ -1530,13 +1530,13 @@ export default function AccountingModule() {
                     <tbody className="divide-y divide-slate-100">
 
                       {payments.map((payment) => (
-                        <tr key={payment.id} className="hover:bg-slate-50">
+                        <tr key={payment.id} className="hover:bg-[#F8FAFC]">
 
                           <td className="whitespace-nowrap px-4 py-3">
                             {new Date(payment.created_at).toLocaleString()}
                           </td>
 
-                          <td className="px-4 py-3 font-bold text-[#3F3437]">
+                          <td className="px-4 py-3 font-bold text-[#1E293B]">
                             {payment.order_number}
                           </td>
 
@@ -1552,15 +1552,15 @@ export default function AccountingModule() {
                             <span
                               className={
                                 payment.payment_status === "Paid"
-                                  ? "rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-700"
-                                  : "rounded-full bg-orange-100 px-3 py-1 text-xs font-bold text-orange-700"
+                                  ? "rounded-full bg-[#ECFEFF] px-3 py-1 text-xs font-bold text-[#0F766E]"
+                                  : "rounded-full bg-orange-100 px-3 py-1 text-xs font-bold text-[#D97706]"
                               }
                             >
                               {payment.payment_status}
                             </span>
                           </td>
 
-                          <td className="px-4 py-3 text-slate-500">
+                          <td className="px-4 py-3 text-[#64748B]">
                             {payment.transaction_ref || "—"}
                           </td>
 
@@ -1571,7 +1571,7 @@ export default function AccountingModule() {
                               <button
                                 onClick={() => startEditPayment(payment)}
                                 disabled={paymentSaving}
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-50"
+                                className="rounded-lg border border-[#CBD5E1] px-3 py-2 text-xs font-bold text-[#475569] hover:bg-[#EEF3F0] disabled:opacity-50"
                               >
                                 Edit
                               </button>
@@ -1579,7 +1579,7 @@ export default function AccountingModule() {
                               <button
                                 onClick={() => deletePayment(payment.id)}
                                 disabled={paymentSaving}
-                                className="rounded-lg bg-red-600 px-3 py-2 text-xs font-bold text-white hover:bg-red-700 disabled:opacity-50"
+                                className="rounded-lg bg-[#475569] px-3 py-2 text-xs font-bold text-white hover:bg-[#172554] disabled:opacity-50"
                               >
                                 Delete
                               </button>
@@ -1605,16 +1605,16 @@ export default function AccountingModule() {
           {/* ACCOUNTING CONTROLS */}
           <div className="grid gap-6 lg:grid-cols-2">
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="rounded-2xl border border-[#CBD5E1] bg-[#E2E8F0] p-6 shadow-sm">
 
-              <h3 className="text-xl font-black text-[#3F3437]">
+              <h3 className="text-xl font-black text-[#1E293B]">
                 Accounting Controls
               </h3>
 
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
 
-                <div className="rounded-xl bg-slate-50 p-4">
-                  <p className="text-xs text-slate-500">
+                <div className="rounded-xl bg-[#F8FAFC] p-4">
+                  <p className="text-xs text-[#64748B]">
                     Orders
                   </p>
 
@@ -1623,32 +1623,32 @@ export default function AccountingModule() {
                   </p>
                 </div>
 
-                <div className="rounded-xl bg-slate-50 p-4">
-                  <p className="text-xs text-slate-500">
+                <div className="rounded-xl bg-[#F8FAFC] p-4">
+                  <p className="text-xs text-[#64748B]">
                     Receivables
                   </p>
 
-                  <p className="text-xl font-black text-red-600">
+                  <p className="text-xl font-black text-amber-700">
                     {money(summary.unpaidAmount)}
                   </p>
                 </div>
 
-                <div className="rounded-xl bg-slate-50 p-4">
-                  <p className="text-xs text-slate-500">
+                <div className="rounded-xl bg-[#F8FAFC] p-4">
+                  <p className="text-xs text-[#64748B]">
                     Gross Margin
                   </p>
 
-                  <p className="text-xl font-black text-green-700">
+                  <p className="text-xl font-black text-[#1E3A8A]">
                     {Number(summary.grossMargin || 0).toFixed(2)}%
                   </p>
                 </div>
 
-                <div className="rounded-xl bg-slate-50 p-4">
-                  <p className="text-xs text-slate-500">
+                <div className="rounded-xl bg-[#F8FAFC] p-4">
+                  <p className="text-xs text-[#64748B]">
                     Net Margin
                   </p>
 
-                  <p className="text-xl font-black text-[#800020]">
+                  <p className="text-xl font-black text-[#172554]">
                     {Number(summary.netMargin || 0).toFixed(2)}%
                   </p>
                 </div>
@@ -1657,13 +1657,13 @@ export default function AccountingModule() {
 
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="rounded-2xl border border-[#CBD5E1] bg-[#E2E8F0] p-6 shadow-sm">
 
-              <h3 className="text-xl font-black text-[#3F3437]">
+              <h3 className="text-xl font-black text-[#1E293B]">
                 Reports
               </h3>
 
-              <p className="mt-1 text-sm text-slate-500">
+              <p className="mt-1 text-sm text-[#64748B]">
                 Detailed financial reports can be generated from the Reports module.
               </p>
 
@@ -1671,14 +1671,14 @@ export default function AccountingModule() {
 
                 <button
                   onClick={() => window.print()}
-                  className="rounded-xl bg-[#800020] px-5 py-3 text-sm font-bold text-white hover:opacity-90"
+                  className="rounded-xl bg-[#172554] px-5 py-3 text-sm font-bold text-white hover:bg-[#0F766E]"
                 >
                   Print Report
                 </button>
 
                 <button
                   onClick={() => window.location.href = "/admin-new"}
-                  className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50"
+                  className="rounded-xl border border-[#CBD5E1] bg-[#E2E8F0] px-5 py-3 text-sm font-bold text-[#475569] hover:bg-[#F8FAFC]"
                 >
                   Back to Admin
                 </button>

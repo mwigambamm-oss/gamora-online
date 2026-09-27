@@ -1,156 +1,244 @@
 import { NextResponse } from "next/server";
-import { execFile } from "child_process";
-import { promisify } from "util";
+import { promises as fs } from "fs";
+import os from "os";
 import path from "path";
 
-const execFileAsync = promisify(execFile);
+import {
+  getProductById,
+  updateProduct,
+} from "@/lib/products";
 
-type Detection = {
-  color: string;
-  confidence: number;
-  coverage: number;
-  percentage: number;
-  decision: "auto" | "review";
-};
+import {
+  detectProductColors,
+} from "@/lib/product-color/detector";
 
-type ImageDetection = {
-  image: string;
-  detectedColor: string;
-  confidence: number;
-  coverage: number;
-  percentage: number;
-  decision: "auto" | "review";
-  alternatives: Detection[];
-};
+import {
+  MAX_IMAGE_SIZE_BYTES,
+} from "@/lib/product-color/thresholds";
 
-export async function POST(request: Request) {
+
+function isAllowedImageUrl(
+  value: string
+) {
   try {
-    const body = await request.json();
+    const url = new URL(value);
 
-    const images: string[] =
-      Array.isArray(body?.images)
-        ? body.images.filter(
-            (image: unknown): image is string =>
-              typeof image === "string" &&
-              image.trim().length > 0
-          )
-        : [];
+    return (
+      url.protocol === "http:" ||
+      url.protocol === "https:"
+    );
+  } catch {
+    return false;
+  }
+}
 
-    const colors = Array.isArray(body?.colors)
-      ? body.colors
-          .filter(
-            (color: unknown): color is string =>
-              typeof color === "string"
-          )
-          .map((color: string) => color.trim())
-          .filter(Boolean)
-      : [];
 
-    if (!images.length) {
+async function prepareImage(
+  image: string,
+  directory: string,
+  index: number
+) {
+  if (image.startsWith("/")) {
+    const localPath = path.join(
+      process.cwd(),
+      "public",
+      image.replace(/^\/+/, "")
+    );
+
+    await fs.access(localPath);
+
+    return localPath;
+  }
+
+  if (!isAllowedImageUrl(image)) {
+    throw new Error(
+      "Invalid product image URL"
+    );
+  }
+
+  const response = await fetch(
+    image,
+    {
+      signal:
+        AbortSignal.timeout(
+          30_000
+        ),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      `Unable to download product image (${response.status})`
+    );
+  }
+
+  const contentType =
+    response.headers.get(
+      "content-type"
+    ) || "";
+
+  if (
+    !contentType.startsWith(
+      "image/"
+    )
+  ) {
+    throw new Error(
+      "Product image URL did not return an image"
+    );
+  }
+
+  const buffer =
+    Buffer.from(
+      await response.arrayBuffer()
+    );
+
+  if (
+    buffer.length >
+    MAX_IMAGE_SIZE_BYTES
+  ) {
+    throw new Error(
+      "Product image is too large"
+    );
+  }
+
+  const extension =
+    contentType.includes("png")
+      ? ".png"
+      : contentType.includes("webp")
+      ? ".webp"
+      : ".jpg";
+
+  const output = path.join(
+    directory,
+    `product-${index}${extension}`
+  );
+
+  await fs.writeFile(
+    output,
+    buffer
+  );
+
+  return output;
+}
+
+
+export async function POST(
+  _request: Request,
+  {
+    params,
+  }: {
+    params: Promise<{
+      id: string;
+    }>;
+  }
+) {
+  const temporaryDirectory =
+    await fs.mkdtemp(
+      path.join(
+        os.tmpdir(),
+        "gamora-admin-color-"
+      )
+    );
+
+  try {
+    const { id } =
+      await params;
+
+    const productId =
+      Number(id);
+
+    const product =
+      await getProductById(
+        productId
+      );
+
+    if (!product) {
       return NextResponse.json(
         {
           success: false,
-          error: "Product has no images",
+          error:
+            "Product not found",
+        },
+        { status: 404 }
+      );
+    }
+
+    const images = [
+      ...(product.images || []),
+      ...(product.image
+        ? [product.image]
+        : []),
+    ].filter(
+      (
+        image
+      ): image is string =>
+        typeof image === "string" &&
+        image.trim().length > 0
+    );
+
+    const uniqueImages = [
+      ...new Set(images),
+    ];
+
+    if (!uniqueImages.length) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Product has no images",
         },
         { status: 400 }
       );
     }
 
-    const python = path.join(
-      process.cwd(),
-      "python/color_detector/.venv/bin/python"
-    );
+    const localImages: string[] =
+      [];
 
-    const script = path.join(
-      process.cwd(),
-      "python/color_detector/detect_color.py"
-    );
-
-    const uniqueImages: string[] = [
-      ...new Set(images),
-    ];
-
-    const imageDetections: ImageDetection[] = [];
-
-    for (const image of uniqueImages) {
-      try {
-        const detectorArgs = [
-          script,
-          image,
-          ...colors,
-        ];
-
-        const { stdout } =
-          await execFileAsync(
-            python,
-            detectorArgs,
-            {
-              timeout: 30000,
-              maxBuffer: 1024 * 1024,
-            }
-          );
-
-        const result = JSON.parse(stdout);
-
-        if (
-          !result.success ||
-          !Array.isArray(result.results)
-        ) {
-          continue;
-        }
-
-        const detections =
-          result.results as Detection[];
-
-        const meaningfulDetections =
-          detections
-            .filter(
-              (item) =>
-                item.coverage >= 0.025 &&
-                item.percentage >= 0.025
-            )
-            .sort(
-              (a, b) =>
-                b.percentage -
-                  a.percentage ||
-                b.confidence -
-                  a.confidence
-            )
-            .slice(0, 5);
-
-        if (
-          !meaningfulDetections.length
-        ) {
-          continue;
-        }
-
-        const topDetection =
-          meaningfulDetections[0];
-
-        imageDetections.push({
-          image,
-          detectedColor:
-            topDetection.color,
-          confidence:
-            topDetection.confidence,
-          coverage:
-            topDetection.coverage,
-          percentage:
-            topDetection.percentage,
-          decision:
-            topDetection.decision,
-          alternatives:
-            meaningfulDetections,
-        });
-      } catch (error) {
-        console.error(
-          "OpenCV failed for image:",
-          image,
-          error
-        );
-      }
+    for (
+      let index = 0;
+      index < uniqueImages.length;
+      index++
+    ) {
+      localImages.push(
+        await prepareImage(
+          uniqueImages[index],
+          temporaryDirectory,
+          index
+        )
+      );
     }
 
+    const result =
+      await detectProductColors(
+        localImages
+      );
+
+    if (
+      !result.success ||
+      !result.colors.length
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          threshold:
+            result.threshold,
+          images_analyzed:
+            result.images_analyzed,
+          image_detections:
+            [],
+          colors: [],
+          error:
+            result.error ??
+            "Unable to detect product colours",
+        },
+        { status: 422 }
+      );
+    }
+
+    /*
+     * Convert temporary detector paths
+     * back to the real product image URLs.
+     */
     const imageColorMap: Record<
       string,
       {
@@ -159,49 +247,126 @@ export async function POST(request: Request) {
       }
     > = {};
 
-    for (const detection of imageDetections) {
-      const color =
-        detection.detectedColor;
+    const imageDetections =
+      result.image_detections.map(
+        (detection) => {
+          const match =
+            localImages.findIndex(
+              (localPath) =>
+                localPath ===
+                detection.image
+            );
 
-      if (!imageColorMap[color]) {
-        imageColorMap[color] = {
+          const originalImage =
+            match >= 0
+              ? uniqueImages[match]
+              : "";
+
+          return {
+            ...detection,
+            image:
+              originalImage,
+          };
+        }
+      );
+
+    for (
+      const detection
+      of imageDetections
+    ) {
+      if (
+        !detection.image ||
+        !detection.detectedColor
+      ) {
+        continue;
+      }
+
+      if (
+        !imageColorMap[
+          detection.detectedColor
+        ]
+      ) {
+        imageColorMap[
+          detection.detectedColor
+        ] = {
           images: [],
           confidence:
             detection.confidence,
         };
       }
 
-      imageColorMap[color].images.push(
+      imageColorMap[
+        detection.detectedColor
+      ].images.push(
         detection.image
       );
 
-      imageColorMap[color].confidence =
+      imageColorMap[
+        detection.detectedColor
+      ].confidence =
         Math.max(
-          imageColorMap[color].confidence,
+          imageColorMap[
+            detection.detectedColor
+          ].confidence,
           detection.confidence
         );
     }
 
-    for (const color of Object.keys(
-      imageColorMap
-    )) {
-      imageColorMap[color].images = [
+    for (
+      const color
+      of Object.keys(
+        imageColorMap
+      )
+    ) {
+      imageColorMap[
+        color
+      ].images = [
         ...new Set(
-          imageColorMap[color].images
+          imageColorMap[
+            color
+          ].images
         ),
       ];
     }
 
+    const detectedProductColors =
+      [
+        ...new Set(
+          imageDetections
+            .map(
+              (item) =>
+                item.detectedColor
+            )
+            .filter(Boolean)
+        ),
+      ];
+
+    await updateProduct(
+      productId,
+      {
+        image_color_map:
+          imageColorMap,
+        colors:
+          detectedProductColors,
+      }
+    );
+
     return NextResponse.json({
       success: true,
-      colors,
+      productId,
+      threshold:
+        result.threshold,
+      images_analyzed:
+        result.images_analyzed,
       image_color_map:
         imageColorMap,
       imageDetections,
+      colors:
+        detectedProductColors,
     });
   } catch (error) {
     console.error(
-      "OpenCV color detection failed:",
+      "Admin product colour detection failed:",
       error
     );
 
@@ -211,9 +376,17 @@ export async function POST(request: Request) {
         error:
           error instanceof Error
             ? error.message
-            : "OpenCV color detection failed",
+            : "Unable to detect product colours",
       },
       { status: 500 }
+    );
+  } finally {
+    await fs.rm(
+      temporaryDirectory,
+      {
+        recursive: true,
+        force: true,
+      }
     );
   }
 }

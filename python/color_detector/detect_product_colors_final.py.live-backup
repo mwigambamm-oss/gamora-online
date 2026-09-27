@@ -1,0 +1,817 @@
+import json
+import sys
+from pathlib import Path
+
+import cv2
+import numpy as np
+from rembg import new_session, remove
+
+
+CONFIDENCE_THRESHOLD = 0.60
+MAX_COLOURS = 5
+MAX_IMAGE_SIDE = 900
+MAX_SAMPLES = 12000
+CLUSTERS = 8
+MIN_CLUSTER_SHARE = 0.035
+
+
+def resize_image(image):
+    height, width = image.shape[:2]
+    largest = max(height, width)
+
+    if largest <= MAX_IMAGE_SIDE:
+        return image
+
+    scale = MAX_IMAGE_SIDE / largest
+
+    return cv2.resize(
+        image,
+        (
+            max(1, int(width * scale)),
+            max(1, int(height * scale)),
+        ),
+        interpolation=cv2.INTER_AREA,
+    )
+
+
+def segment_product(image, session):
+    encoded = cv2.imencode(".png", image)[1]
+
+    rgba_bytes = remove(
+        encoded.tobytes(),
+        session=session,
+    )
+
+    segmented = cv2.imdecode(
+        np.frombuffer(rgba_bytes, dtype=np.uint8),
+        cv2.IMREAD_UNCHANGED,
+    )
+
+    if segmented is None:
+        return None, None
+
+    if len(segmented.shape) == 3 and segmented.shape[2] == 4:
+        rgb = cv2.cvtColor(
+            segmented,
+            cv2.COLOR_BGRA2RGB,
+        )
+
+        alpha = segmented[:, :, 3]
+
+        mask = alpha > 45
+
+        return rgb, mask
+
+    rgb = cv2.cvtColor(
+        segmented,
+        cv2.COLOR_BGR2RGB,
+    )
+
+    return rgb, np.ones(
+        rgb.shape[:2],
+        dtype=bool,
+    )
+
+
+def sample_pixels(rgb, mask):
+    pixels = rgb[mask]
+
+    if len(pixels) == 0:
+        return None
+
+    if len(pixels) > MAX_SAMPLES:
+        indexes = np.linspace(
+            0,
+            len(pixels) - 1,
+            MAX_SAMPLES,
+            dtype=np.int32,
+        )
+
+        pixels = pixels[indexes]
+
+    return np.float32(pixels)
+
+
+def cluster_pixels(pixels):
+    if pixels is None or len(pixels) < 50:
+        return []
+
+    cluster_count = min(
+        CLUSTERS,
+        max(2, len(pixels) // 400),
+    )
+
+    criteria = (
+        cv2.TERM_CRITERIA_EPS
+        + cv2.TERM_CRITERIA_MAX_ITER,
+        40,
+        0.8,
+    )
+
+    _, labels, centers = cv2.kmeans(
+        pixels,
+        cluster_count,
+        None,
+        criteria,
+        4,
+        cv2.KMEANS_PP_CENTERS,
+    )
+
+    labels = labels.reshape(-1)
+
+    results = []
+
+    for index, center in enumerate(centers):
+        share = float(
+            np.mean(labels == index)
+        )
+
+        if share < MIN_CLUSTER_SHARE:
+            continue
+
+        results.append(
+            {
+                "rgb": center.tolist(),
+                "share": share,
+            }
+        )
+
+    results.sort(
+        key=lambda item: item["share"],
+        reverse=True,
+    )
+
+    return results
+
+
+def classify_rgb(rgb):
+    rgb_uint8 = np.uint8(
+        [[
+            [
+                max(0, min(255, int(value)))
+                for value in rgb
+            ]
+        ]]
+    )
+
+    hsv = cv2.cvtColor(
+        rgb_uint8,
+        cv2.COLOR_RGB2HSV,
+    )[0, 0]
+
+    h = float(hsv[0]) / 179.0
+    s = float(hsv[1]) / 255.0
+    v = float(hsv[2]) / 255.0
+
+    # Neutral colours first.
+    if v <= 0.15:
+        return "Black", 0.97
+
+    if s <= 0.075 and v >= 0.90:
+        return "White", 0.94
+
+    if s <= 0.13 and v <= 0.72:
+        return "Gray", 0.90
+
+    if s <= 0.16 and v >= 0.72:
+        return "Cream", 0.80
+
+    # Red / pink family.
+    if h < 0.035 or h >= 0.965:
+        if v < 0.50:
+            return "Maroon", 0.88
+
+        if v < 0.68:
+            return "Burgundy", 0.86
+
+        return "Red", 0.91
+
+    # Orange / beige / brown.
+    if h < 0.095:
+        if v > 0.78 and s < 0.42:
+            return "Beige", 0.80
+
+        if s < 0.30:
+            return "Khaki", 0.78
+
+        if v < 0.48:
+            return "Brown", 0.82
+
+        return "Orange", 0.88
+
+    # Yellow.
+    if h < 0.18:
+        if s < 0.35:
+            return "Cream", 0.80
+
+        return "Yellow", 0.90
+
+    # Green.
+    if h < 0.43:
+        if v < 0.48:
+            return "Dark Green", 0.89
+
+        return "Green", 0.90
+
+    # Cyan / turquoise.
+    if h < 0.55:
+        if v < 0.48:
+            return "Dark Blue", 0.86
+
+        if s < 0.35:
+            return "Light Blue", 0.80
+
+        return "Turquoise", 0.88
+
+    # Blue.
+    if h < 0.70:
+        if v < 0.50:
+            return "Navy Blue", 0.91
+
+        if v < 0.68:
+            return "Dark Blue", 0.88
+
+        return "Blue", 0.91
+
+    # Purple / pink.
+    if h < 0.86:
+        return "Purple", 0.90
+
+    if h < 0.96:
+        return "Pink", 0.89
+
+    return "Brown", 0.78
+
+
+def rgb_distance(a, b):
+    a = np.asarray(
+        a,
+        dtype=np.float32,
+    )
+
+    b = np.asarray(
+        b,
+        dtype=np.float32,
+    )
+
+    return float(
+        np.linalg.norm(a - b)
+    )
+
+
+COLOUR_REFERENCES = {
+    "Black": (25, 25, 25),
+    "White": (245, 245, 245),
+    "Gray": (145, 145, 145),
+    "Silver": (175, 180, 185),
+    "Cream": (238, 225, 190),
+    "Beige": (215, 195, 155),
+    "Brown": (125, 80, 50),
+    "Red": (210, 45, 45),
+    "Maroon": (125, 35, 45),
+    "Burgundy": (110, 35, 45),
+    "Pink": (225, 115, 155),
+    "Orange": (235, 125, 40),
+    "Yellow": (235, 205, 45),
+    "Green": (45, 150, 75),
+    "Dark Green": (35, 95, 55),
+    "Blue": (45, 90, 210),
+    "Navy Blue": (30, 55, 120),
+    "Dark Blue": (25, 55, 110),
+    "Light Blue": (120, 180, 225),
+    "Purple": (125, 70, 170),
+    "Turquoise": (55, 185, 180),
+    "Khaki": (145, 140, 95),
+}
+
+
+def reference_adjustment(rgb, classified_name):
+    distances = []
+
+    for name, reference in COLOUR_REFERENCES.items():
+        distances.append(
+            (
+                rgb_distance(rgb, reference),
+                name,
+            )
+        )
+
+    distances.sort(
+        key=lambda item: item[0]
+    )
+
+    nearest_distance, nearest_name = distances[0]
+
+    second_distance = (
+        distances[1][0]
+        if len(distances) > 1
+        else nearest_distance + 1
+    )
+
+    separation = max(
+        0.0,
+        min(
+            1.0,
+            (
+                second_distance
+                - nearest_distance
+            ) / 100.0,
+        ),
+    )
+
+    if nearest_name == classified_name:
+        return nearest_name, separation
+
+    return (
+        classified_name,
+        separation * 0.65,
+    )
+
+
+def cluster_confidence(
+    share,
+    base_confidence,
+    separation,
+):
+    share_score = min(
+        1.0,
+        share / 0.35,
+    )
+
+    confidence = (
+        0.55 * base_confidence
+        + 0.30 * share_score
+        + 0.15 * separation
+    )
+
+    return max(
+        0.0,
+        min(0.99, confidence),
+    )
+
+
+def normalize_name(name):
+    mapping = {
+        "Grey": "Gray",
+        "Off White": "White",
+        "Pure White": "White",
+        "Navy": "Navy Blue",
+        "Dark Navy": "Navy Blue",
+        "Light Green": "Green",
+    }
+
+    return mapping.get(
+        name,
+        name,
+    )
+
+
+def analyse_image(image_path, session):
+    image = cv2.imread(
+        str(image_path),
+        cv2.IMREAD_COLOR,
+    )
+
+    if image is None:
+        return {
+            "success": False,
+            "image": str(image_path),
+            "detections": [],
+            "fallback": True,
+        }
+
+    image = resize_image(image)
+
+    rgb, mask = None, None
+
+    # Primary method: remove the background and analyse
+    # product-only pixels.
+    try:
+        rgb, mask = segment_product(
+            image,
+            session,
+        )
+    except Exception:
+        rgb, mask = None, None
+
+    pixels = None
+
+    if rgb is not None and mask is not None:
+        try:
+            pixels = sample_pixels(
+                rgb,
+                mask,
+            )
+        except Exception:
+            pixels = None
+
+    # Fallback:
+    # If segmentation fails or produces no useful pixels,
+    # analyse the central product region instead of returning
+    # an empty result.
+    if pixels is None or len(pixels) < 50:
+        h, w = image.shape[:2]
+
+        y1 = int(h * 0.18)
+        y2 = int(h * 0.82)
+        x1 = int(w * 0.18)
+        x2 = int(w * 0.82)
+
+        fallback_bgr = image[
+            y1:y2,
+            x1:x2,
+        ]
+
+        if fallback_bgr.size:
+            fallback_rgb = cv2.cvtColor(
+                fallback_bgr,
+                cv2.COLOR_BGR2RGB,
+            )
+
+            fallback_pixels = fallback_rgb.reshape(
+                -1,
+                3,
+            )
+
+            # Remove obvious near-white background pixels,
+            # but never allow the fallback to become empty.
+            hsv = cv2.cvtColor(
+                fallback_rgb,
+                cv2.COLOR_RGB2HSV,
+            )
+
+            saturation = hsv[:, :, 1]
+            value = hsv[:, :, 2]
+
+            useful = ~(
+                (saturation < 18)
+                & (value > 242)
+            )
+
+            filtered = fallback_pixels[
+                useful.reshape(-1)
+            ]
+
+            if len(filtered) >= 50:
+                pixels = np.float32(filtered)
+            else:
+                pixels = np.float32(
+                    fallback_pixels
+                )
+
+    if pixels is None or len(pixels) == 0:
+        # Absolute final fallback using the image centre.
+        h, w = image.shape[:2]
+
+        cy = h // 2
+        cx = w // 2
+
+        y1 = max(0, cy - max(1, h // 10))
+        y2 = min(h, cy + max(1, h // 10))
+        x1 = max(0, cx - max(1, w // 10))
+        x2 = min(w, cx + max(1, w // 10))
+
+        centre = image[
+            y1:y2,
+            x1:x2,
+        ]
+
+        centre_rgb = cv2.cvtColor(
+            centre,
+            cv2.COLOR_BGR2RGB,
+        )
+
+        pixels = np.float32(
+            centre_rgb.reshape(-1, 3)
+        )
+
+    if len(pixels) > MAX_SAMPLES:
+        indexes = np.linspace(
+            0,
+            len(pixels) - 1,
+            MAX_SAMPLES,
+            dtype=np.int32,
+        )
+
+        pixels = pixels[indexes]
+
+    clusters = cluster_pixels(
+        pixels
+    )
+
+    detections = []
+
+    # Normal clustering path.
+    for cluster in clusters:
+        rgb_value = cluster["rgb"]
+
+        name, base_confidence = classify_rgb(
+            rgb_value
+        )
+
+        name, separation = reference_adjustment(
+            rgb_value,
+            name,
+        )
+
+        confidence = cluster_confidence(
+            cluster["share"],
+            base_confidence,
+            separation,
+        )
+
+        detections.append(
+            {
+                "color": normalize_name(name),
+                "confidence": round(
+                    confidence,
+                    3,
+                ),
+                "coverage": round(
+                    cluster["share"],
+                    4,
+                ),
+                "rgb": [
+                    round(float(v), 1)
+                    for v in rgb_value
+                ],
+            }
+        )
+
+    # Absolute fallback:
+    # if clustering cannot produce a result, classify the
+    # median colour of the available product-region pixels.
+    if not detections:
+        median_rgb = np.median(
+            pixels,
+            axis=0,
+        )
+
+        name, base_confidence = classify_rgb(
+            median_rgb
+        )
+
+        name, separation = reference_adjustment(
+            median_rgb,
+            name,
+        )
+
+        confidence = max(
+            0.60,
+            min(
+                0.92,
+                0.65 * base_confidence
+                + 0.35 * separation,
+            ),
+        )
+
+        detections.append(
+            {
+                "color": normalize_name(name),
+                "confidence": round(
+                    confidence,
+                    3,
+                ),
+                "coverage": 1.0,
+                "rgb": [
+                    round(float(v), 1)
+                    for v in median_rgb
+                ],
+            }
+        )
+
+    detections.sort(
+        key=lambda item: (
+            item["coverage"]
+            * item["confidence"]
+        ),
+        reverse=True,
+    )
+
+    return {
+        "success": bool(detections),
+        "image": str(image_path),
+        "detections": detections[:5],
+        "fallback": (
+            rgb is None
+            or mask is None
+            or pixels is None
+        ),
+    }
+
+
+def choose_primary(detections):
+    if not detections:
+        return None
+
+    # Primary colour is the strongest meaningful
+    # product colour, not simply the brightest pixel.
+    ranked = sorted(
+        detections,
+        key=lambda item: (
+            item["coverage"]
+            * item["confidence"],
+            item["coverage"],
+            item["confidence"],
+        ),
+        reverse=True,
+    )
+
+    primary = ranked[0]
+
+    if primary["confidence"] < CONFIDENCE_THRESHOLD:
+        return None
+
+    return primary
+
+
+def main():
+    image_paths = [
+        Path(value)
+        for value in sys.argv[1:]
+        if value.strip()
+    ]
+
+    if not image_paths:
+        print(
+            json.dumps(
+                {
+                    "success": False,
+                    "threshold": CONFIDENCE_THRESHOLD,
+                    "images_analyzed": 0,
+                    "image_detections": [],
+                    "colors": [],
+                    "error": "No images supplied",
+                }
+            )
+        )
+
+        return
+
+    try:
+        print(
+            "Loading product segmentation model...",
+            file=sys.stderr,
+        )
+
+        session = new_session(
+            "u2netp"
+        )
+
+        image_detections = []
+        product_color_map = {}
+
+        images_analyzed = 0
+
+        for image_path in image_paths:
+            try:
+                analysis = analyse_image(
+                    image_path,
+                    session,
+                )
+
+                if not analysis["success"]:
+                    image_detections.append(
+                        {
+                            "image": str(image_path),
+                            "detectedColor": "",
+                            "confidence": 0.0,
+                            "coverage": 0.0,
+                            "alternatives": [],
+                        }
+                    )
+
+                    continue
+
+                images_analyzed += 1
+
+                detections = analysis[
+                    "detections"
+                ]
+
+                primary = choose_primary(
+                    detections
+                )
+
+                if primary is None:
+                    image_detections.append(
+                        {
+                            "image": str(image_path),
+                            "detectedColor": "",
+                            "confidence": 0.0,
+                            "coverage": 0.0,
+                            "alternatives": detections,
+                        }
+                    )
+
+                    continue
+
+                alternatives = [
+                    item
+                    for item in detections
+                    if item["color"]
+                    != primary["color"]
+                ][:4]
+
+                image_detections.append(
+                    {
+                        "image": str(image_path),
+                        "detectedColor": primary["color"],
+                        "confidence": primary[
+                            "confidence"
+                        ],
+                        "coverage": primary[
+                            "coverage"
+                        ],
+                        "alternatives": alternatives,
+                    }
+                )
+
+                color = primary[
+                    "color"
+                ]
+
+                if color not in product_color_map:
+                    product_color_map[color] = {
+                        "images": [],
+                        "confidence": 0.0,
+                    }
+
+                product_color_map[color][
+                    "images"
+                ].append(
+                    str(image_path)
+                )
+
+                product_color_map[color][
+                    "confidence"
+                ] = max(
+                    product_color_map[color][
+                        "confidence"
+                    ],
+                    primary["confidence"],
+                )
+
+            except Exception as error:
+                print(
+                    f"Colour detection failed for "
+                    f"{image_path}: {error}",
+                    file=sys.stderr,
+                )
+
+                image_detections.append(
+                    {
+                        "image": str(image_path),
+                        "detectedColor": "",
+                        "confidence": 0.0,
+                        "coverage": 0.0,
+                        "alternatives": [],
+                    }
+                )
+
+        colors = list(
+            product_color_map.keys()
+        )[:MAX_COLOURS]
+
+        image_detections = [
+            item
+            for item in image_detections
+        ]
+
+        success = bool(
+            image_detections
+            and any(
+                item["detectedColor"]
+                for item in image_detections
+            )
+        )
+
+        print(
+            json.dumps(
+                {
+                    "success": success,
+                    "threshold": CONFIDENCE_THRESHOLD,
+                    "images_analyzed": images_analyzed,
+                    "image_detections": image_detections,
+                    "colors": colors,
+                }
+            )
+        )
+
+    except Exception as error:
+        print(
+            json.dumps(
+                {
+                    "success": False,
+                    "threshold": CONFIDENCE_THRESHOLD,
+                    "images_analyzed": 0,
+                    "image_detections": [],
+                    "colors": [],
+                    "error": str(error),
+                }
+            )
+        )
+
+
+if __name__ == "__main__":
+    main()

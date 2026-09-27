@@ -91,42 +91,42 @@ export default function CustomersModule() {
     <section className="space-y-6">
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.25em] text-[#800020]">
+          <p className="text-xs font-black uppercase tracking-[0.25em] text-[#172554]">
             GAMORA ONLINE
           </p>
-          <h2 className="mt-1 text-2xl font-black text-[#3F3437]">
+          <h2 className="mt-1 text-2xl font-black text-[#1E293B]">
             Customers
           </h2>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-[#64748B]">
             Manage and review customers generated from real orders.
           </p>
         </div>
 
         <button
           onClick={load}
-          className="rounded-xl bg-[#800020] px-5 py-3 text-sm font-bold text-white hover:bg-[#6b001b]"
+          className="rounded-xl bg-[#172554] px-5 py-3 text-sm font-bold text-white hover:bg-[#0F766E]"
         >
           🔄 Refresh
         </button>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <div className="rounded-2xl border border-[#E8DEE1] bg-white p-5 shadow-sm">
-          <p className="text-sm text-slate-500">Total Customers</p>
+        <div className="rounded-2xl border border-[#CBD5E1] bg-[#E2E8F0] p-5 shadow-sm">
+          <p className="text-sm text-[#64748B]">Total Customers</p>
           <p className="mt-2 text-3xl font-black">
             {loading ? "..." : customers.length}
           </p>
         </div>
 
-        <div className="rounded-2xl border border-[#E8DEE1] bg-white p-5 shadow-sm">
-          <p className="text-sm text-slate-500">Total Orders</p>
+        <div className="rounded-2xl border border-[#CBD5E1] bg-[#E2E8F0] p-5 shadow-sm">
+          <p className="text-sm text-[#64748B]">Total Orders</p>
           <p className="mt-2 text-3xl font-black">
             {loading ? "..." : orders.length}
           </p>
         </div>
 
-        <div className="rounded-2xl border border-[#E8DEE1] bg-white p-5 shadow-sm">
-          <p className="text-sm text-slate-500">Customer Sales</p>
+        <div className="rounded-2xl border border-[#CBD5E1] bg-[#E2E8F0] p-5 shadow-sm">
+          <p className="text-sm text-[#64748B]">Customer Sales</p>
           <p className="mt-2 text-xl font-black">
             {loading
               ? "..."
@@ -140,11 +140,11 @@ export default function CustomersModule() {
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-[#E8DEE1] bg-white shadow-sm">
+      <div className="overflow-hidden rounded-2xl border border-[#CBD5E1] bg-[#E2E8F0] shadow-sm">
         <div className="flex flex-col justify-between gap-4 border-b p-5 md:flex-row md:items-center">
           <div>
             <h3 className="font-black">Customer List</h3>
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-[#64748B]">
               {filtered.length} customer(s)
             </p>
           </div>
@@ -153,12 +153,12 @@ export default function CustomersModule() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search name, phone or email..."
-            className="w-full rounded-xl border border-[#E8DEE1] px-4 py-3 text-sm outline-none focus:border-[#800020] md:w-80"
+            className="w-full rounded-xl border border-[#CBD5E1] px-4 py-3 text-sm outline-none focus:border-[#172554] md:w-80"
           />
         </div>
 
         {loading ? (
-          <div className="p-12 text-center text-slate-500">
+          <div className="p-12 text-center text-[#64748B]">
             ⏳ Loading customers...
           </div>
         ) : filtered.length === 0 ? (
@@ -170,7 +170,7 @@ export default function CustomersModule() {
           <div className="overflow-x-auto">
             <table className="w-full min-w-[850px]">
               <thead>
-                <tr className="border-b bg-slate-50 text-left text-sm">
+                <tr className="border-b bg-[#F8FAF9] text-left text-sm">
                   <th className="px-5 py-4">Customer</th>
                   <th className="px-5 py-4">Phone</th>
                   <th className="px-5 py-4">Email</th>
@@ -184,7 +184,7 @@ export default function CustomersModule() {
                 {filtered.map((customer) => (
                   <tr
                     key={customer.key}
-                    className="border-b last:border-0 hover:bg-slate-50"
+                    className="border-b last:border-0 hover:bg-[#F8FAF9]"
                   >
                     <td className="px-5 py-4 font-bold">
                       {customer.name}
@@ -204,7 +204,7 @@ export default function CustomersModule() {
                     <td className="px-5 py-4">
                       <button
                         onClick={() => setSelected(customer)}
-                        className="rounded-lg bg-[#F8EDEF] px-3 py-2 text-xs font-bold text-[#800020] hover:bg-[#f1dfe4]"
+                        className="rounded-lg bg-[#ECFDF5] px-3 py-2 text-xs font-bold text-[#172554] hover:bg-[#D1FAE5]"
                       >
                         View
                       </button>
@@ -218,13 +218,13 @@ export default function CustomersModule() {
       </div>
 
       {selected && (
-        <div className="rounded-2xl border border-[#E8DEE1] bg-white p-6 shadow-sm">
+        <div className="rounded-2xl border border-[#CBD5E1] bg-[#E2E8F0] p-6 shadow-sm">
           <div className="flex items-center justify-between gap-4">
             <div>
               <h3 className="text-xl font-black">
                 {selected.name}
               </h3>
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-[#64748B]">
                 Customer details
               </p>
             </div>
@@ -239,7 +239,7 @@ export default function CustomersModule() {
 
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             <div>
-              <p className="text-xs font-bold uppercase text-slate-400">
+              <p className="text-xs font-bold uppercase text-[#94A3B8]">
                 Phone
               </p>
               <p className="mt-1 font-semibold">
@@ -248,7 +248,7 @@ export default function CustomersModule() {
             </div>
 
             <div>
-              <p className="text-xs font-bold uppercase text-slate-400">
+              <p className="text-xs font-bold uppercase text-[#94A3B8]">
                 Email
               </p>
               <p className="mt-1 font-semibold">
@@ -257,7 +257,7 @@ export default function CustomersModule() {
             </div>
 
             <div>
-              <p className="text-xs font-bold uppercase text-slate-400">
+              <p className="text-xs font-bold uppercase text-[#94A3B8]">
                 Address
               </p>
               <p className="mt-1 font-semibold">
@@ -266,10 +266,10 @@ export default function CustomersModule() {
             </div>
 
             <div>
-              <p className="text-xs font-bold uppercase text-slate-400">
+              <p className="text-xs font-bold uppercase text-[#94A3B8]">
                 Total Spent
               </p>
-              <p className="mt-1 font-black text-[#800020]">
+              <p className="mt-1 font-black text-[#172554]">
                 {money(selected.spent)}
               </p>
             </div>

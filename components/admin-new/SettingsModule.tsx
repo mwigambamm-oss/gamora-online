@@ -41,15 +41,15 @@ export default function SettingsModule() {
   return (
     <section className="space-y-6">
       <div>
-        <h2 className="text-2xl font-black text-[#3F3437]">
+        <h2 className="text-2xl font-black text-[#1E293B]">
           Settings
         </h2>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-[#64748B]">
           Manage GAMORA ONLINE business control preferences.
         </p>
       </div>
 
-      <div className="rounded-2xl border border-[#E8DEE1] bg-white p-6 shadow-sm">
+      <div className="rounded-2xl border border-[#CBD5E1] bg-[#E2E8F0] p-6 shadow-sm">
         <h3 className="text-lg font-black">
           Store Information
         </h3>
@@ -62,7 +62,7 @@ export default function SettingsModule() {
             <input
               value={storeName}
               onChange={(e) => setStoreName(e.target.value)}
-              className="mt-2 w-full rounded-xl border border-[#E8DEE1] px-4 py-3 outline-none focus:border-[#800020]"
+              className="mt-2 w-full rounded-xl border border-[#CBD5E1] px-4 py-3 outline-none focus:border-[#172554]"
             />
           </div>
 
@@ -74,7 +74,7 @@ export default function SettingsModule() {
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="0712345678"
-              className="mt-2 w-full rounded-xl border border-[#E8DEE1] px-4 py-3 outline-none focus:border-[#800020]"
+              className="mt-2 w-full rounded-xl border border-[#CBD5E1] px-4 py-3 outline-none focus:border-[#172554]"
             />
           </div>
 
@@ -87,7 +87,7 @@ export default function SettingsModule() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="store@example.com"
-              className="mt-2 w-full rounded-xl border border-[#E8DEE1] px-4 py-3 outline-none focus:border-[#800020]"
+              className="mt-2 w-full rounded-xl border border-[#CBD5E1] px-4 py-3 outline-none focus:border-[#172554]"
             />
           </div>
 
@@ -98,7 +98,7 @@ export default function SettingsModule() {
             <select
               value={currency}
               onChange={(e) => setCurrency(e.target.value)}
-              className="mt-2 w-full rounded-xl border border-[#E8DEE1] px-4 py-3 outline-none focus:border-[#800020]"
+              className="mt-2 w-full rounded-xl border border-[#CBD5E1] px-4 py-3 outline-none focus:border-[#172554]"
             >
               <option value="TZS">TZS — Tanzanian Shilling</option>
               <option value="USD">USD — US Dollar</option>
@@ -109,28 +109,28 @@ export default function SettingsModule() {
         <div className="mt-6 flex flex-wrap items-center gap-4">
           <button
             onClick={saveSettings}
-            className="rounded-xl bg-[#800020] px-6 py-3 font-bold text-white hover:bg-[#6b001b]"
+            className="rounded-xl bg-[#172033] px-6 py-3 font-bold text-white hover:bg-[#1E3A8A]"
           >
             Save Settings
           </button>
 
           {saved && (
-            <span className="text-sm font-bold text-green-600">
+            <span className="text-sm font-bold text-[#172554]">
               ✓ Settings saved successfully
             </span>
           )}
         </div>
       </div>
 
-      <div className="rounded-2xl border border-[#E8DEE1] bg-slate-50 p-6">
+      <div className="rounded-2xl border border-[#CBD5E1] bg-[#F8FAF9] p-6">
         <h3 className="font-black">Security</h3>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-[#64748B]">
           Update your administrator password securely.
         </p>
 
         <a
           href="/recover-admin-password"
-          className="mt-4 inline-flex rounded-xl border border-[#800020] px-5 py-3 text-sm font-bold text-[#800020] hover:bg-[#800020] hover:text-white"
+          className="mt-4 inline-flex rounded-xl border border-[#172554] px-5 py-3 text-sm font-bold text-[#172554] hover:bg-[#172033] hover:text-white"
         >
           🔐 Change Password
         </a>

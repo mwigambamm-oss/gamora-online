@@ -1,0 +1,72 @@
+import type { MetadataRoute } from "next";
+import { getProducts } from "@/lib/products";
+
+const baseUrl = "https://gamoraonline.co.tz";
+
+const categories = [
+  "womens-fashion",
+  "mens-fashion",
+  "shoes",
+  "phones-electronics",
+  "home-kitchen",
+  "accessories",
+  "beauty-personal-care",
+  "computers-accessories",
+  "baby-kids",
+  "sports-fitness",
+  "automotive",
+  "tools-hardware",
+  "books-stationery",
+  "jewelry-watches",
+  "furniture",
+  "garden-outdoor",
+  "health-wellness",
+  "gaming",
+];
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const products = await getProducts();
+
+  const productUrls: MetadataRoute.Sitemap = products
+    .filter((product) => product?.id)
+    .map((product) => ({
+      url: `${baseUrl}/product/${product.id}`,
+      changeFrequency: "weekly",
+      priority: 0.8,
+    }));
+
+  const categoryUrls: MetadataRoute.Sitemap = categories.map((category) => ({
+    url: `${baseUrl}/category/${category}`,
+    changeFrequency: "daily",
+    priority: 0.7,
+  }));
+
+  const staticUrls: MetadataRoute.Sitemap = [
+    {
+      url: baseUrl,
+      changeFrequency: "daily",
+      priority: 1,
+    },
+    {
+      url: `${baseUrl}/contact`,
+      changeFrequency: "monthly",
+      priority: 0.5,
+    },
+    {
+      url: `${baseUrl}/about`,
+      changeFrequency: "monthly",
+      priority: 0.5,
+    },
+    {
+      url: `${baseUrl}/help`,
+      changeFrequency: "monthly",
+      priority: 0.4,
+    },
+  ];
+
+  return [
+    ...staticUrls,
+    ...categoryUrls,
+    ...productUrls,
+  ];
+}

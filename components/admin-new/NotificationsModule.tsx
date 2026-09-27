@@ -100,24 +100,24 @@ export default function NotificationsModule() {
     <section className="space-y-6">
       <div className="flex items-end justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-black text-[#3F3437]">
+          <h2 className="text-2xl font-black text-[#1E293B]">
             Notifications
           </h2>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-[#64748B]">
             Important business alerts and system notifications.
           </p>
         </div>
 
         <button
           onClick={load}
-          className="rounded-xl border border-[#E8DEE1] bg-white px-5 py-3 text-sm font-bold hover:bg-slate-50"
+          className="rounded-xl border border-[#CBD5E1] bg-[#E2E8F0] px-5 py-3 text-sm font-bold hover:bg-[#F8FAF9]"
         >
           🔄 Refresh
         </button>
       </div>
 
       {loading ? (
-        <div className="rounded-2xl border border-[#E8DEE1] bg-white p-10 text-center text-slate-500 shadow-sm">
+        <div className="rounded-2xl border border-[#CBD5E1] bg-[#E2E8F0] p-10 text-center text-[#64748B] shadow-sm">
           Loading notifications...
         </div>
       ) : (
@@ -125,18 +125,18 @@ export default function NotificationsModule() {
           {items.map((item, index) => (
             <div
               key={`${item.title}-${index}`}
-              className="rounded-2xl border border-[#E8DEE1] bg-white p-5 shadow-sm"
+              className="rounded-2xl border border-[#CBD5E1] bg-[#E2E8F0] p-5 shadow-sm"
             >
               <div className="flex gap-4">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#F8EDEF] text-xl">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#ECFDF5] text-xl">
                   {item.icon}
                 </div>
 
                 <div>
-                  <p className="font-black text-[#3F3437]">
+                  <p className="font-black text-[#1E293B]">
                     {item.title}
                   </p>
-                  <p className="mt-1 text-sm text-slate-500">
+                  <p className="mt-1 text-sm text-[#64748B]">
                     {item.message}
                   </p>
                 </div>

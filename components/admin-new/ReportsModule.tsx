@@ -213,16 +213,16 @@ export default function ReportsModule() {
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div>
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#800020] text-xl">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#172033] text-xl">
               📊
             </div>
 
             <div>
-              <h2 className="text-2xl font-black text-[#3F3437]">
+              <h2 className="text-2xl font-black text-[#1E293B]">
                 Report Center
               </h2>
 
-              <p className="mt-1 text-sm text-slate-500">
+              <p className="mt-1 text-sm text-[#64748B]">
                 Generate professional GAMORA ONLINE business reports.
               </p>
             </div>
@@ -231,13 +231,13 @@ export default function ReportsModule() {
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
-        <div className="rounded-2xl border border-[#E8DEE1] bg-white p-6 shadow-sm">
+        <div className="rounded-2xl border border-[#CBD5E1] bg-[#E2E8F0] p-6 shadow-sm">
           <div>
-            <h3 className="text-lg font-black text-[#3F3437]">
+            <h3 className="text-lg font-black text-[#1E293B]">
               Select Report
             </h3>
 
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-[#64748B]">
               Choose the report you want to download.
             </p>
           </div>
@@ -253,8 +253,8 @@ export default function ReportsModule() {
                   onClick={() => setReport(item.value)}
                   className={`rounded-xl border p-4 text-left transition ${
                     active
-                      ? "border-[#800020] bg-[#800020]/5 ring-1 ring-[#800020]"
-                      : "border-[#E8DEE1] hover:border-[#800020]/40 hover:bg-slate-50"
+                      ? "border-[#172554] bg-[#172033]/5 ring-1 ring-[#172554]"
+                      : "border-[#CBD5E1] hover:border-[#172554]/40 hover:bg-[#F8FAF9]"
                   }`}
                 >
                   <div className="flex items-start gap-3">
@@ -263,13 +263,13 @@ export default function ReportsModule() {
                     <div className="min-w-0">
                       <p
                         className={`font-bold ${
-                          active ? "text-[#800020]" : "text-[#3F3437]"
+                          active ? "text-[#172554]" : "text-[#1E293B]"
                         }`}
                       >
                         {item.label}
                       </p>
 
-                      <p className="mt-1 text-xs leading-5 text-slate-500">
+                      <p className="mt-1 text-xs leading-5 text-[#64748B]">
                         {item.description}
                       </p>
                     </div>
@@ -280,19 +280,19 @@ export default function ReportsModule() {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-[#E8DEE1] bg-white p-6 shadow-sm">
-          <h3 className="text-lg font-black text-[#3F3437]">
+        <div className="rounded-2xl border border-[#CBD5E1] bg-[#E2E8F0] p-6 shadow-sm">
+          <h3 className="text-lg font-black text-[#1E293B]">
             Report Period
           </h3>
 
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-[#64748B]">
             Select the period covered by the report.
           </p>
 
           <select
             value={period}
             onChange={(e) => setPeriod(e.target.value as Period)}
-            className="mt-5 w-full rounded-xl border border-[#DCCED2] bg-white px-4 py-3 text-sm font-semibold outline-none focus:border-[#800020]"
+            className="mt-5 w-full rounded-xl border border-[#CBD5E1] bg-[#E2E8F0] px-4 py-3 text-sm font-semibold outline-none focus:border-[#172554]"
           >
             <option value="today">Today</option>
             <option value="this-week">This Week</option>
@@ -305,40 +305,40 @@ export default function ReportsModule() {
 
           {period === "custom" && (
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <label className="text-sm font-semibold text-slate-600">
+              <label className="text-sm font-semibold text-[#64748B]">
                 From
                 <input
                   type="date"
                   value={from}
                   onChange={(e) => setFrom(e.target.value)}
-                  className="mt-2 w-full rounded-xl border border-[#DCCED2] px-3 py-3 outline-none focus:border-[#800020]"
+                  className="mt-2 w-full rounded-xl border border-[#CBD5E1] px-3 py-3 outline-none focus:border-[#172554]"
                 />
               </label>
 
-              <label className="text-sm font-semibold text-slate-600">
+              <label className="text-sm font-semibold text-[#64748B]">
                 To
                 <input
                   type="date"
                   value={to}
                   onChange={(e) => setTo(e.target.value)}
-                  className="mt-2 w-full rounded-xl border border-[#DCCED2] px-3 py-3 outline-none focus:border-[#800020]"
+                  className="mt-2 w-full rounded-xl border border-[#CBD5E1] px-3 py-3 outline-none focus:border-[#172554]"
                 />
               </label>
             </div>
           )}
 
-          <div className="mt-6 rounded-xl bg-slate-50 p-4">
-            <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
+          <div className="mt-6 rounded-xl bg-[#F8FAF9] p-4">
+            <p className="text-xs font-bold uppercase tracking-wide text-[#94A3B8]">
               Selected report
             </p>
 
             <div className="mt-2 flex items-center gap-3">
               <span className="text-2xl">{selectedReport.icon}</span>
               <div>
-                <p className="font-black text-[#3F3437]">
+                <p className="font-black text-[#1E293B]">
                   {selectedReport.label}
                 </p>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-[#64748B]">
                   GAMORA ONLINE
                 </p>
               </div>
@@ -347,14 +347,14 @@ export default function ReportsModule() {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-[#E8DEE1] bg-white p-6 shadow-sm">
+      <div className="rounded-2xl border border-[#CBD5E1] bg-[#E2E8F0] p-6 shadow-sm">
         <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-center">
           <div>
-            <h3 className="text-lg font-black text-[#3F3437]">
+            <h3 className="text-lg font-black text-[#1E293B]">
               Download Report
             </h3>
 
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-[#64748B]">
               Your selected report will be generated with the GAMORA ONLINE
               branding and logo.
             </p>
@@ -365,7 +365,7 @@ export default function ReportsModule() {
               type="button"
               disabled={!!downloading}
               onClick={() => download("pdf")}
-              className="rounded-xl bg-[#800020] px-6 py-3 text-sm font-black text-white transition hover:bg-[#6b001b] disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-xl bg-[#172033] px-6 py-3 text-sm font-black text-white transition hover:bg-[#1E3A8A] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {downloading === "pdf" ? "Generating..." : "📄 Download PDF"}
             </button>
@@ -374,7 +374,7 @@ export default function ReportsModule() {
               type="button"
               disabled={!!downloading}
               onClick={() => download("word")}
-              className="rounded-xl border border-[#DCCED2] bg-white px-6 py-3 text-sm font-black text-[#3F3437] transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-xl border border-[#CBD5E1] bg-[#E2E8F0] px-6 py-3 text-sm font-black text-[#1E293B] transition hover:bg-[#F8FAF9] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {downloading === "word" ? "Generating..." : "📝 Download Word"}
             </button>
@@ -383,7 +383,7 @@ export default function ReportsModule() {
               type="button"
               disabled={!!downloading}
               onClick={() => download("excel")}
-              className="rounded-xl border border-[#DCCED2] bg-white px-6 py-3 text-sm font-black text-[#3F3437] transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-xl border border-[#CBD5E1] bg-[#E2E8F0] px-6 py-3 text-sm font-black text-[#1E293B] transition hover:bg-[#F8FAF9] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {downloading === "excel" ? "Generating..." : "📊 Download Excel"}
             </button>
@@ -391,7 +391,7 @@ export default function ReportsModule() {
         </div>
 
         {message && (
-          <div className="mt-5 rounded-xl bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-600">
+          <div className="mt-5 rounded-xl bg-[#F8FAF9] px-4 py-3 text-sm font-semibold text-[#64748B]">
             {message}
           </div>
         )}

@@ -99,18 +99,18 @@ export default function InventoryModule() {
 
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div>
-          <h2 className="text-2xl font-black text-[#3F3437]">
+          <h2 className="text-2xl font-black text-[#1E293B]">
             Inventory
           </h2>
 
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-[#64748B]">
             Monitor stock levels and update inventory.
           </p>
         </div>
 
         <button
           onClick={loadInventory}
-          className="rounded-xl bg-[#800020] px-5 py-3 text-sm font-bold text-white hover:bg-[#6b001b]"
+          className="rounded-xl bg-[#172554] px-5 py-3 text-sm font-bold text-white hover:bg-[#0F766E]"
         >
           🔄 Refresh
         </button>
@@ -118,8 +118,8 @@ export default function InventoryModule() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
 
-        <div className="rounded-2xl border border-[#E8DEE1] bg-white p-5 shadow-sm">
-          <p className="text-sm text-slate-500">
+        <div className="rounded-2xl border border-[#CBD5E1] bg-[#E2E8F0] p-5 shadow-sm">
+          <p className="text-sm text-[#64748B]">
             Products
           </p>
 
@@ -128,8 +128,8 @@ export default function InventoryModule() {
           </p>
         </div>
 
-        <div className="rounded-2xl border border-[#E8DEE1] bg-white p-5 shadow-sm">
-          <p className="text-sm text-slate-500">
+        <div className="rounded-2xl border border-[#CBD5E1] bg-[#E2E8F0] p-5 shadow-sm">
+          <p className="text-sm text-[#64748B]">
             Units in Stock
           </p>
 
@@ -138,22 +138,22 @@ export default function InventoryModule() {
           </p>
         </div>
 
-        <div className="rounded-2xl border border-yellow-200 bg-yellow-50 p-5 shadow-sm">
-          <p className="text-sm text-slate-500">
+        <div className="rounded-2xl border border-[#FED7AA] bg-[#FFF7ED] p-5 shadow-sm">
+          <p className="text-sm text-[#64748B]">
             Low Stock
           </p>
 
-          <p className="mt-2 text-3xl font-black text-yellow-700">
+          <p className="mt-2 text-3xl font-black text-[#F59E0B]">
             {lowStock}
           </p>
         </div>
 
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-5 shadow-sm">
-          <p className="text-sm text-slate-500">
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
+          <p className="text-sm text-[#64748B]">
             Out of Stock
           </p>
 
-          <p className="mt-2 text-3xl font-black text-red-700">
+          <p className="mt-2 text-3xl font-black text-amber-700">
             {outOfStock}
           </p>
         </div>
@@ -162,8 +162,8 @@ export default function InventoryModule() {
 
       <div className="grid gap-4 md:grid-cols-3">
 
-        <div className="rounded-2xl border border-[#E8DEE1] bg-white p-5 shadow-sm">
-          <p className="text-sm font-semibold text-slate-500">
+        <div className="rounded-2xl border border-[#CBD5E1] bg-[#E2E8F0] p-5 shadow-sm">
+          <p className="text-sm font-semibold text-[#64748B]">
             Stock Cost Value
           </p>
 
@@ -171,13 +171,13 @@ export default function InventoryModule() {
             TZS {stockCostValue.toLocaleString()}
           </p>
 
-          <p className="mt-1 text-xs text-slate-400">
+          <p className="mt-1 text-xs text-[#94A3B8]">
             Stock × Buying Price
           </p>
         </div>
 
-        <div className="rounded-2xl border border-[#E8DEE1] bg-white p-5 shadow-sm">
-          <p className="text-sm font-semibold text-slate-500">
+        <div className="rounded-2xl border border-[#CBD5E1] bg-[#E2E8F0] p-5 shadow-sm">
+          <p className="text-sm font-semibold text-[#64748B]">
             Potential Sales Value
           </p>
 
@@ -185,28 +185,28 @@ export default function InventoryModule() {
             TZS {potentialSalesValue.toLocaleString()}
           </p>
 
-          <p className="mt-1 text-xs text-slate-400">
+          <p className="mt-1 text-xs text-[#94A3B8]">
             Stock × Selling Price
           </p>
         </div>
 
-        <div className="rounded-2xl border border-green-200 bg-green-50 p-5 shadow-sm">
-          <p className="text-sm font-semibold text-slate-500">
+        <div className="rounded-2xl border border-[#A7F3D0] bg-[#ECFDF5] p-5 shadow-sm">
+          <p className="text-sm font-semibold text-[#64748B]">
             Potential Gross Profit
           </p>
 
-          <p className="mt-2 text-2xl font-black text-green-700">
+          <p className="mt-2 text-2xl font-black text-[#1E3A8A]">
             TZS {potentialGrossProfit.toLocaleString()}
           </p>
 
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-[#64748B]">
             Sales Value − Cost Value
           </p>
         </div>
 
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-[#E8DEE1] bg-white shadow-sm">
+      <div className="overflow-hidden rounded-2xl border border-[#CBD5E1] bg-[#E2E8F0] shadow-sm">
 
         <div className="flex flex-col justify-between gap-4 border-b p-5 md:flex-row md:items-center">
 
@@ -215,7 +215,7 @@ export default function InventoryModule() {
               Stock Management
             </h3>
 
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-[#64748B]">
               Update stock directly from the Business Control Center.
             </p>
           </div>
@@ -224,7 +224,7 @@ export default function InventoryModule() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search product..."
-            className="rounded-xl border border-[#E8DEE1] px-4 py-3 text-sm outline-none focus:border-[#800020]"
+            className="rounded-xl border border-[#CBD5E1] px-4 py-3 text-sm outline-none focus:border-[#172554]"
           />
 
         </div>
@@ -233,7 +233,7 @@ export default function InventoryModule() {
           <div className="p-12 text-center">
             <div className="text-4xl">⏳</div>
 
-            <p className="mt-3 text-sm text-slate-500">
+            <p className="mt-3 text-sm text-[#64748B]">
               Loading inventory...
             </p>
           </div>
@@ -251,7 +251,7 @@ export default function InventoryModule() {
             <table className="w-full min-w-[1100px]">
 
               <thead>
-                <tr className="border-b bg-slate-50 text-left text-sm">
+                <tr className="border-b bg-[#F8FAF9] text-left text-sm">
                   <th className="px-5 py-4">
                     Product
                   </th>
@@ -302,7 +302,7 @@ export default function InventoryModule() {
                   return (
                     <tr
                       key={product.id}
-                      className="border-b hover:bg-slate-50"
+                      className="border-b hover:bg-[#F8FAF9]"
                     >
 
                       <td className="px-5 py-4">
@@ -315,7 +315,7 @@ export default function InventoryModule() {
                               className="h-12 w-12 rounded-lg object-cover"
                             />
                           ) : (
-                            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-slate-100">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-[#EEF3F0]">
                               📦
                             </div>
                           )}
@@ -325,7 +325,7 @@ export default function InventoryModule() {
                               {product.name}
                             </p>
 
-                            <p className="text-xs text-slate-400">
+                            <p className="text-xs text-[#94A3B8]">
                               ID: {product.id}
                             </p>
                           </div>
@@ -365,10 +365,10 @@ export default function InventoryModule() {
                           }
                           className={`w-28 rounded-lg border px-3 py-2 font-black outline-none ${
                             stock <= 0
-                              ? "border-red-300 bg-red-50 text-red-700"
+                              ? "border-amber-300 bg-amber-50 text-amber-700"
                               : stock <= 5
-                              ? "border-yellow-300 bg-yellow-50 text-yellow-700"
-                              : "border-green-300 bg-green-50 text-green-700"
+                              ? "border-yellow-300 bg-yellow-50 text-[#F59E0B]"
+                              : "border-[#86EFAC] bg-[#ECFDF5] text-[#047857]"
                           }`}
                         />
 
@@ -382,7 +382,7 @@ export default function InventoryModule() {
                         ).toLocaleString()}
                       </td>
 
-                      <td className="px-5 py-4 font-bold text-green-700">
+                      <td className="px-5 py-4 font-bold text-[#1E3A8A]">
                         TZS{" "}
                         {(
                           (Number(product.price || 0) -
@@ -396,10 +396,10 @@ export default function InventoryModule() {
                         <span
                           className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${
                             status === "Out of Stock"
-                              ? "bg-red-100 text-red-700"
+                              ? "bg-amber-100 text-amber-700"
                               : status === "Low Stock"
-                              ? "bg-yellow-100 text-yellow-700"
-                              : "bg-green-100 text-green-700"
+                              ? "bg-yellow-100 text-[#F59E0B]"
+                              : "bg-[#ECFEFF] text-[#0F766E]"
                           }`}
                         >
                           {status}

@@ -262,6 +262,11 @@ while (true) {
       }
 
       try {
+        await answerCallback(
+          callback.id,
+          `⏳ Updating order to ${newStatus}...`
+        );
+
         const statusResponse =
           await fetch(
             `${APP}/api/orders/status`,
@@ -292,12 +297,8 @@ while (true) {
             statusResult
           );
 
-          await answerCallback(
-            callback.id,
-            `❌ ${
-              statusResult?.error ||
-              "Failed to update order"
-            }`
+          console.error(
+            `❌ Telegram order update failed: ${orderNumber} → ${newStatus}`
           );
 
           continue;
@@ -305,11 +306,6 @@ while (true) {
 
         console.log(
           `✅ ${orderNumber} → ${newStatus}`
-        );
-
-        await answerCallback(
-          callback.id,
-          `✅ Order ${newStatus}`
         );
 
         try {
@@ -334,9 +330,8 @@ while (true) {
           error
         );
 
-        await answerCallback(
-          callback.id,
-          "❌ Could not update order"
+        console.error(
+          `❌ Could not update order: ${orderNumber}`
         );
       }
     }

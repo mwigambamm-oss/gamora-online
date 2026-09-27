@@ -151,13 +151,13 @@ export default function ProductsModule() {
 
           element.classList.add(
             "ring-2",
-            "ring-blue-500"
+            "ring-green-600"
           );
 
           window.setTimeout(() => {
             element.classList.remove(
               "ring-2",
-              "ring-blue-500"
+              "ring-green-600"
             );
           }, 2000);
         }
@@ -820,7 +820,7 @@ export default function ProductsModule() {
 
 
   return (
-    <main className="p-6 bg-gray-100 min-h-screen">
+    <main className="p-6 bg-[#EEF3F0] min-h-screen">
 
 
       <div className="flex justify-between items-center mb-6">
@@ -838,27 +838,27 @@ export default function ProductsModule() {
 
         <form
           onSubmit={handleSubmit}
-          className="mb-8 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-lg"
+          className="mb-8 overflow-hidden rounded-2xl border border-[#CBD5E1] bg-[#E2E8F0] shadow-lg"
         >
 
-          <div className="border-b border-gray-100 px-5 py-4">
+          <div className="border-b border-[#D7DEE8] bg-[#F8FAFC] px-5 py-4">
             <button
               type="button"
               onClick={() => {
                 setShowForm(false);
                 setEditingId(null);
               }}
-              className="rounded-lg bg-gray-800 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-900"
+              className="rounded-lg bg-[#172554] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#0F766E]"
             >
               ← Back to Products
             </button>
           </div>
 
-          <div className="bg-gradient-to-r from-blue-700 to-blue-500 px-6 py-5 text-white">
+          <div className="bg-gradient-to-r from-[#172554] via-[#183B63] to-[#0F766E] px-6 py-5 text-white">
             <h2 className="text-xl font-bold">
               {editingId ? "Edit Product" : "Add New Product"}
             </h2>
-            <p className="mt-1 text-sm text-blue-100">
+            <p className="mt-1 text-sm text-green-100">
               Add complete product information, pricing and variations.
             </p>
           </div>
@@ -866,14 +866,14 @@ export default function ProductsModule() {
           <div className="space-y-6 p-6">
 
             <section>
-              <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-gray-500">
+              <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-[#64748B]">
                 Basic Information
               </h3>
 
               <div className="grid gap-4 md:grid-cols-2">
 
                 <div className="md:col-span-2">
-                  <label className="mb-1.5 block text-sm font-semibold text-gray-700">
+                  <label className="mb-1.5 block text-sm font-semibold text-[#475569]">
                     Product Name
                   </label>
                   <input
@@ -881,12 +881,12 @@ export default function ProductsModule() {
                     value={form.name}
                     onChange={handleChange}
                     placeholder="e.g. Naviforce Steel Watch"
-                    className="w-full rounded-xl border border-gray-200 bg-gray-50 p-3.5 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
+                    className="w-full rounded-xl border border-[#CBD5E1] bg-[#F8FAF9] p-3.5 outline-none transition focus:border-[#172554] focus:bg-[#F8FAFC] focus:ring-2 focus:ring-[#D1FAE5]"
                   />
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-sm font-semibold text-gray-700">
+                  <label className="mb-1.5 block text-sm font-semibold text-[#475569]">
                     Selling Price
                   </label>
                   <input
@@ -895,12 +895,12 @@ export default function ProductsModule() {
                     value={form.price}
                     onChange={handleChange}
                     placeholder="0"
-                    className="w-full rounded-xl border border-gray-200 bg-gray-50 p-3.5 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
+                    className="w-full rounded-xl border border-[#CBD5E1] bg-[#F8FAF9] p-3.5 outline-none transition focus:border-[#172554] focus:bg-[#F8FAFC] focus:ring-2 focus:ring-[#D1FAE5]"
                   />
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-sm font-semibold text-gray-700">
+                  <label className="mb-1.5 block text-sm font-semibold text-[#475569]">
                     Old Price
                   </label>
                   <input
@@ -909,12 +909,12 @@ export default function ProductsModule() {
                     value={form.oldPrice}
                     onChange={handleChange}
                     placeholder="Optional"
-                    className="w-full rounded-xl border border-gray-200 bg-gray-50 p-3.5 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
+                    className="w-full rounded-xl border border-[#CBD5E1] bg-[#F8FAF9] p-3.5 outline-none transition focus:border-[#172554] focus:bg-[#F8FAFC] focus:ring-2 focus:ring-[#D1FAE5]"
                   />
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-sm font-semibold text-gray-700">
+                  <label className="mb-1.5 block text-sm font-semibold text-[#475569]">
                     Selling Cost
                   </label>
                   <input
@@ -923,15 +923,15 @@ export default function ProductsModule() {
                     value={form.cost_price}
                     onChange={handleChange}
                     placeholder="Your buying cost"
-                    className="w-full rounded-xl border border-gray-200 bg-gray-50 p-3.5 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
+                    className="w-full rounded-xl border border-[#CBD5E1] bg-[#F8FAF9] p-3.5 outline-none transition focus:border-[#172554] focus:bg-[#F8FAFC] focus:ring-2 focus:ring-[#D1FAE5]"
                   />
-                  <p className="mt-1 text-xs text-gray-400">
+                  <p className="mt-1 text-xs text-[#94A3B8]">
                     Used to calculate your profit.
                   </p>
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-sm font-semibold text-gray-700">
+                  <label className="mb-1.5 block text-sm font-semibold text-[#475569]">
                     Stock
                   </label>
                   <input
@@ -940,7 +940,7 @@ export default function ProductsModule() {
                     value={form.stock}
                     onChange={handleChange}
                     placeholder="Available quantity"
-                    className="w-full rounded-xl border border-gray-200 bg-gray-50 p-3.5 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
+                    className="w-full rounded-xl border border-[#CBD5E1] bg-[#F8FAF9] p-3.5 outline-none transition focus:border-[#172554] focus:bg-[#F8FAFC] focus:ring-2 focus:ring-[#D1FAE5]"
                   />
                 </div>
 
@@ -948,14 +948,14 @@ export default function ProductsModule() {
             </section>
 
             <section>
-              <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-gray-500">
+              <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-[#64748B]">
                 Product Variations
               </h3>
 
               <div className="grid gap-4 md:grid-cols-2">
 
                 <div>
-                  <label className="mb-1.5 block text-sm font-semibold text-gray-700">
+                  <label className="mb-1.5 block text-sm font-semibold text-[#475569]">
                     Colors
                   </label>
 
@@ -967,16 +967,16 @@ export default function ProductsModule() {
                     ).join(", ")}
                     readOnly
                     placeholder="Assign a colour to each product image"
-                    className="w-full rounded-xl border border-gray-200 bg-gray-100 p-3.5 font-semibold text-gray-900 outline-none"
+                    className="w-full rounded-xl border border-[#CBD5E1] bg-[#EEF3F0] p-3.5 font-semibold text-[#1E293B] outline-none"
                   />
 
-                  <p className="mt-1 text-xs text-gray-400">
+                  <p className="mt-1 text-xs text-[#94A3B8]">
                     Automatically generated from the colour assigned to each product image.
                   </p>
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-sm font-semibold text-gray-700">
+                  <label className="mb-1.5 block text-sm font-semibold text-[#475569]">
                     Sizes
                   </label>
                   <input
@@ -984,9 +984,9 @@ export default function ProductsModule() {
                     value={form.sizes}
                     onChange={handleChange}
                     placeholder="S, M, L, XL"
-                    className="w-full rounded-xl border border-gray-200 bg-gray-50 p-3.5 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
+                    className="w-full rounded-xl border border-[#CBD5E1] bg-[#F8FAF9] p-3.5 outline-none transition focus:border-[#172554] focus:bg-[#F8FAFC] focus:ring-2 focus:ring-[#D1FAE5]"
                   />
-                  <p className="mt-1 text-xs text-gray-400">
+                  <p className="mt-1 text-xs text-[#94A3B8]">
                     Separate sizes with commas.
                   </p>
 
@@ -1001,12 +1001,12 @@ export default function ProductsModule() {
                     let allocated = 0;
 
                     return sizeList.length > 0 ? (
-                      <div className="mt-3 overflow-hidden rounded-xl border border-gray-200 bg-white">
-                        <div className="grid grid-cols-3 bg-gray-50 text-xs font-bold uppercase tracking-wide text-gray-600">
-                          <div className="border-r border-gray-200 px-3 py-2.5">
+                      <div className="mt-3 overflow-hidden rounded-xl border border-[#CBD5E1] bg-[#E2E8F0]">
+                        <div className="grid grid-cols-3 bg-[#F8FAF9] text-xs font-bold uppercase tracking-wide text-[#64748B]">
+                          <div className="border-r border-[#CBD5E1] px-3 py-2.5">
                             Size
                           </div>
-                          <div className="border-r border-gray-200 px-3 py-2.5">
+                          <div className="border-r border-[#CBD5E1] px-3 py-2.5">
                             Optional Price
                           </div>
                           <div className="px-3 py-2.5">
@@ -1030,14 +1030,14 @@ export default function ProductsModule() {
                           return (
                             <div
                               key={size}
-                              className="border-t border-gray-200"
+                              className="border-t border-[#CBD5E1]"
                             >
                               <div className="grid grid-cols-3">
-                                <div className="flex items-center border-r border-gray-200 px-3 py-2.5 text-sm font-semibold text-gray-700">
+                                <div className="flex items-center border-r border-[#CBD5E1] px-3 py-2.5 text-sm font-semibold text-[#475569]">
                                   {size}
                                 </div>
 
-                                <div className="border-r border-gray-200 p-2">
+                                <div className="border-r border-[#CBD5E1] p-2">
                                   <input
                                     type="number"
                                     min="0"
@@ -1052,7 +1052,7 @@ export default function ProductsModule() {
                                       }))
                                     }
                                     placeholder={`Main: ${form.price || "—"}`}
-                                    className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
+                                    className="w-full rounded-lg border border-[#CBD5E1] bg-[#F8FAF9] px-3 py-2 text-sm outline-none focus:border-[#172554] focus:bg-[#F8FAFC] focus:ring-2 focus:ring-[#D1FAE5]"
                                   />
                                 </div>
 
@@ -1086,23 +1086,23 @@ export default function ProductsModule() {
                                       }));
                                     }}
                                     placeholder={String(remainingBefore)}
-                                    className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
+                                    className="w-full rounded-lg border border-[#CBD5E1] bg-[#F8FAF9] px-3 py-2 text-sm outline-none focus:border-[#172554] focus:bg-[#F8FAFC] focus:ring-2 focus:ring-[#D1FAE5]"
                                   />
 
-                                  <div className="mt-1 text-[11px] text-gray-400">
+                                  <div className="mt-1 text-[11px] text-[#94A3B8]">
                                     Available: {remainingBefore}
                                   </div>
                                 </div>
                               </div>
 
-                              <div className="border-t border-gray-100 px-3 py-1.5 text-right text-[11px] text-gray-400">
+                              <div className="border-t border-[#E2E8F0] px-3 py-1.5 text-right text-[11px] text-[#94A3B8]">
                                 Remaining after {size}: {remainingAfter}
                               </div>
                             </div>
                           );
                         })}
 
-                        <div className="border-t-2 border-gray-200 bg-gray-50 px-3 py-2.5 text-xs font-semibold">
+                        <div className="border-t-2 border-[#CBD5E1] bg-[#F8FAF9] px-3 py-2.5 text-xs font-semibold">
                           <div className="flex justify-between">
                             <span>Total Stock</span>
                             <span>{totalStock}</span>
@@ -1127,7 +1127,7 @@ export default function ProductsModule() {
             </section>
 
             <section>
-              <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-gray-500">
+              <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-[#64748B]">
                 Category
               </h3>
 
@@ -1165,7 +1165,7 @@ export default function ProductsModule() {
             <button
               type="button"
               onClick={addCategory}
-              className="bg-gray-800 text-white px-4 rounded"
+              className="bg-[#172554] text-white px-4 rounded hover:bg-[#0F766E]"
             >
               Add
             </button>
@@ -1174,7 +1174,7 @@ export default function ProductsModule() {
             </section>
 
             <section>
-              <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-gray-500">
+              <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-[#64748B]">
                 Product Description
               </h3>
 
@@ -1184,12 +1184,12 @@ export default function ProductsModule() {
             onChange={handleChange}
             placeholder="Product description"
             rows={6}
-            className="w-full rounded-xl border border-gray-200 bg-gray-50 p-3.5 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100 resize-none"
+            className="w-full rounded-xl border border-[#CBD5E1] bg-[#F8FAF9] p-3.5 outline-none transition focus:border-[#172554] focus:bg-[#F8FAFC] focus:ring-2 focus:ring-[#D1FAE5] resize-none"
               />
             </section>
 
             <section>
-              <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-gray-500">
+              <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-[#64748B]">
                 Product Images
               </h3>
 
@@ -1279,14 +1279,14 @@ export default function ProductsModule() {
 />
 
               {form.images?.length > 0 && (
-                <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50 p-4">
+                <div className="mt-4 rounded-xl border border-[#CBD5E1] bg-[#F8FAF9] p-4">
                   <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                      <h4 className="text-base font-black text-gray-900">
+                      <h4 className="text-base font-black text-[#1E293B]">
                         Assign Colour to Each Image
                       </h4>
 
-                      <p className="mt-1 text-xs text-gray-600">
+                      <p className="mt-1 text-xs text-[#64748B]">
                         Detect the product colour automatically for every image.
                         You can still correct any image manually below.
                       </p>
@@ -1296,7 +1296,7 @@ export default function ProductsModule() {
                       type="button"
                       onClick={redetectProductColours}
                       disabled={detectingColors || uploading}
-                      className="shrink-0 rounded-lg bg-blue-600 px-4 py-2.5 text-xs font-black text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="shrink-0 rounded-lg bg-[#172554] px-4 py-2.5 text-xs font-black text-white transition hover:bg-[#1E3A8A] disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {detectingColors
                         ? "Detecting Colours..."
@@ -1308,9 +1308,9 @@ export default function ProductsModule() {
                     {form.images.map((url, index) => (
                       <div
                         key={`${url}-${index}`}
-                        className="overflow-hidden rounded-xl border border-gray-200 bg-white"
+                        className="overflow-hidden rounded-xl border border-[#CBD5E1] bg-[#E2E8F0]"
                       >
-                        <div className="relative aspect-square bg-gray-50">
+                        <div className="relative aspect-square bg-[#F8FAF9]">
                           <img
                             src={url}
                             alt={`${form.name || "Product"} image ${index + 1}`}
@@ -1318,14 +1318,14 @@ export default function ProductsModule() {
                           />
 
                           {form.image === url && (
-                            <span className="absolute left-2 top-2 rounded-full bg-blue-600 px-2 py-1 text-[10px] font-black text-white">
+                            <span className="absolute left-2 top-2 rounded-full bg-[#172554] px-2 py-1 text-[10px] font-black text-white">
                               MAIN
                             </span>
                           )}
                         </div>
 
                         <div className="p-3">
-                          <label className="mb-1 block text-xs font-bold text-gray-600">
+                          <label className="mb-1 block text-xs font-bold text-[#64748B]">
                             Image {index + 1} Colour
                           </label>
 
@@ -1339,7 +1339,7 @@ export default function ProductsModule() {
                                 [url]: colour,
                               }));
                             }}
-                            className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                            className="w-full rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] px-3 py-2 text-sm font-semibold text-[#1E293B] outline-none focus:border-[#172554] focus:ring-2 focus:ring-[#D1FAE5]"
                           >
                             <option value="">
                               Default / No Colour
@@ -1358,7 +1358,7 @@ export default function ProductsModule() {
                           <button
                             type="button"
                             onClick={() => setMainImage(url)}
-                            className="mt-2 w-full rounded-lg bg-gray-100 px-3 py-2 text-xs font-bold text-gray-700 transition hover:bg-gray-200"
+                            className="mt-2 w-full rounded-lg bg-[#E2E8F0] px-3 py-2 text-xs font-bold text-[#475569] transition hover:bg-[#CBD5E1]"
                           >
                             {form.image === url
                               ? "✓ Main Image"
@@ -1368,7 +1368,7 @@ export default function ProductsModule() {
                           <button
                             type="button"
                             onClick={() => removeImage(url)}
-                            className="mt-2 w-full rounded-lg bg-red-50 px-3 py-2 text-xs font-bold text-red-600 transition hover:bg-red-100"
+                            className="mt-2 w-full rounded-lg bg-amber-50 px-3 py-2 text-xs font-bold text-amber-700 transition hover:bg-amber-100"
                           >
                             Remove Image
                           </button>
@@ -1377,8 +1377,8 @@ export default function ProductsModule() {
                     ))}
                   </div>
 
-                  <div className="mt-4 rounded-lg bg-white px-3 py-3 text-xs text-gray-600 ring-1 ring-inset ring-gray-200">
-                    <span className="font-bold text-gray-900">
+                  <div className="mt-4 rounded-lg bg-[#E2E8F0] px-3 py-3 text-xs text-[#64748B] ring-1 ring-inset ring-[#CBD5E1]">
+                    <span className="font-bold text-[#1E293B]">
                       How it works:
                     </span>{" "}
                     Black images are shown when the customer selects Black,
@@ -1388,19 +1388,19 @@ export default function ProductsModule() {
               )}
 
               {uploading && (
-                <div className="mt-3 rounded-xl bg-blue-50 px-4 py-3 text-sm font-medium text-blue-700">
+                <div className="mt-3 rounded-xl bg-[#ECFEFF] px-4 py-3 text-sm font-medium text-[#0F766E]">
                   Uploading images...
                 </div>
               )}
 
             </section>
 
-            <div className="flex flex-col gap-3 border-t border-gray-100 pt-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-3 border-t border-[#D7DEE8] pt-5 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-sm font-semibold text-gray-700">
+                <p className="text-sm font-semibold text-[#475569]">
                   {editingId ? "Ready to update?" : "Ready to publish?"}
                 </p>
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-[#94A3B8]">
                   Check price, cost, stock and variations before saving.
                 </p>
               </div>
@@ -1408,7 +1408,7 @@ export default function ProductsModule() {
               <button
                 type="submit"
                 disabled={uploading}
-                className="rounded-xl bg-blue-600 px-7 py-3.5 font-bold text-white shadow-md transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-xl bg-[#0F766E] px-7 py-3.5 font-bold text-white shadow-md transition hover:bg-[#115E59] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {editingId ? "Update Product" : "Save Product"}
               </button>
@@ -1423,14 +1423,14 @@ export default function ProductsModule() {
 
       <div className="mb-6">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-gray-800">
+          <h2 className="text-lg font-bold text-[#172033]">
             Product Categories
           </h2>
 
           <button
             type="button"
             onClick={() => setShowForm(!showForm)}
-            className="ml-auto rounded-lg bg-red-600 px-6 py-3 font-bold text-white shadow-md transition hover:bg-red-700"
+            className="ml-auto rounded-lg bg-[#172554] px-6 py-3 font-bold text-white shadow-md transition hover:bg-[#0F766E]"
           >
             + Add Product
           </button>
@@ -1533,8 +1533,8 @@ export default function ProductsModule() {
               onClick={() => setSelectedCategory(category.name)}
               className={`rounded-md border px-2.5 py-1 text-[11px] font-semibold transition ${
                 selectedCategory === category.name
-                  ? "border-[#800020] bg-[#800020] text-white shadow-md"
-                  : "border-[#800020] bg-white text-[#800020] hover:bg-[#800020] hover:text-white"
+                  ? "border-[#0F766E] bg-[#0F766E] text-white shadow-md"
+                  : "border-[#CBD5E1] bg-[#F8FAFC] text-[#475569] hover:border-[#0F766E] hover:bg-[#ECFEFF] hover:text-[#0F766E]"
               }`}
             >
               {category.name}
@@ -1559,12 +1559,12 @@ export default function ProductsModule() {
         <div
           id={`admin-product-${product.id}`}
           key={product.id}
-          className="bg-white p-4 rounded shadow flex justify-between gap-4 transition-all duration-300"
+          className="bg-[#E2E8F0] border border-[#CBD5E1] p-4 rounded shadow flex justify-between gap-4 transition-all duration-300"
         >
 
           <div className="flex min-w-0 flex-1 gap-4">
 
-            <div className="h-24 w-24 shrink-0 overflow-hidden rounded-lg border bg-gray-50">
+            <div className="h-24 w-24 shrink-0 overflow-hidden rounded-lg border bg-[#F8FAF9]">
               {product.images?.[0] || product.image ? (
                 <img
                   src={product.images?.[0] || product.image || ""}
@@ -1573,7 +1573,7 @@ export default function ProductsModule() {
                   loading="lazy"
                 />
               ) : (
-                <div className="flex h-full w-full items-center justify-center text-xs text-gray-400">
+                <div className="flex h-full w-full items-center justify-center text-xs text-[#94A3B8]">
                   No image
                 </div>
               )}
@@ -1585,7 +1585,7 @@ export default function ProductsModule() {
               {product.name}
             </h2>
 
-            <div className="mt-2 grid grid-cols-2 gap-x-5 gap-y-1 text-sm text-gray-600 sm:grid-cols-4">
+            <div className="mt-2 grid grid-cols-2 gap-x-5 gap-y-1 text-sm text-[#64748B] sm:grid-cols-4">
               <p>
                 <span className="font-semibold">Price:</span>{" "}
                 TZS {product.price.toLocaleString()}
@@ -1598,7 +1598,7 @@ export default function ProductsModule() {
 
               <p>
                 <span className="font-semibold">Profit:</span>{" "}
-                <span className="font-bold text-green-600">
+                <span className="font-bold text-[#172554]">
                   TZS {(Number(product.price || 0) - Number(product.cost_price || 0)).toLocaleString()}
                 </span>
               </p>
@@ -1609,7 +1609,7 @@ export default function ProductsModule() {
               </p>
             </div>
 
-            <p className="mt-2 text-sm text-gray-500">
+            <p className="mt-2 text-sm text-[#64748B]">
               <span className="font-semibold">Category:</span>{" "}
               {product.category || "—"}
             </p>
@@ -1619,7 +1619,7 @@ export default function ProductsModule() {
                 {product.colors?.map((color) => (
                   <span
                     key={`color-${color}`}
-                    className="rounded-full bg-blue-50 px-3 py-1 font-medium text-blue-700"
+                    className="rounded-full bg-[#F3E8FF] px-3 py-1 font-medium text-[#7C3AED]"
                   >
                     {color}
                   </span>
@@ -1628,7 +1628,7 @@ export default function ProductsModule() {
                 {product.sizes?.map((size) => (
                   <span
                     key={`size-${size}`}
-                    className="rounded-full bg-gray-100 px-3 py-1 font-medium text-gray-700"
+                    className="rounded-full bg-[#EEF3F0] px-3 py-1 font-medium text-[#475569]"
                   >
                     {size}
                   </span>
@@ -1647,7 +1647,7 @@ export default function ProductsModule() {
 
             <button
               onClick={()=>editProduct(product)}
-              className="bg-yellow-500 text-white px-3 py-2 rounded"
+              className="bg-[#F59E0B] text-white px-3 py-2 rounded hover:bg-[#D97706]"
             >
               Edit
             </button>
@@ -1655,7 +1655,7 @@ export default function ProductsModule() {
 
             <button
               onClick={()=>removeProduct(product.id)}
-              className="bg-red-600 text-white px-3 py-2 rounded"
+              className="bg-[#172554] text-white px-3 py-2 rounded hover:bg-[#0F766E]"
             >
               Delete
             </button>

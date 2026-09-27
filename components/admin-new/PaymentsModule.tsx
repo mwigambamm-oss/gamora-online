@@ -173,7 +173,7 @@ return(
 
 <div>
 
-<p className="text-xs font-black text-[#800020]">
+<p className="text-xs font-black text-[#172554]">
 GAMORA ONLINE
 </p>
 
@@ -186,7 +186,7 @@ Payments
 
 <button
 onClick={load}
-className="rounded-xl bg-[#800020] px-5 py-3 text-white font-bold"
+className="rounded-xl bg-[#172554] px-5 py-3 text-white font-bold hover:bg-[#0F766E]"
 >
 🔄 Refresh
 </button>
@@ -196,7 +196,7 @@ className="rounded-xl bg-[#800020] px-5 py-3 text-white font-bold"
 
 
 
-<div className="rounded-2xl bg-white border p-6">
+<div className="rounded-2xl bg-[#E2E8F0] border border-[#CBD5E1] p-6">
 
 
 <h3 className="font-black text-lg">
@@ -273,7 +273,7 @@ setProof(e.target.files?.[0]?.name||"")
 
 <button
 onClick={save}
-className="mt-4 rounded-xl bg-[#800020] px-6 py-3 text-white font-bold"
+className="mt-4 rounded-xl bg-[#0F766E] px-6 py-3 text-white font-bold hover:bg-[#115E59]"
 >
 
 {edit?"Update Payment":"Save Payment"}
@@ -286,14 +286,14 @@ className="mt-4 rounded-xl bg-[#800020] px-6 py-3 text-white font-bold"
 
 
 
-<div className="bg-white border rounded-2xl overflow-hidden">
+<div className="bg-[#E2E8F0] border border-[#CBD5E1] rounded-2xl overflow-hidden">
 
 
 <table className="w-full">
 
 <thead>
 
-<tr className="border-b bg-slate-50">
+<tr className="border-b bg-[#F8FAF9]">
 
 <th className="p-4 text-left">Order</th>
 <th className="p-4">Amount</th>
@@ -339,7 +339,7 @@ setAmount(String(p.amount));
 setMethod(p.payment_method);
 
 }}
-className="bg-blue-600 text-white px-3 py-2 rounded-lg"
+className="bg-[#172554] text-white px-3 py-2 rounded-lg hover:bg-[#0F766E]"
 >
 Edit
 </button>
@@ -347,7 +347,7 @@ Edit
 
 <button
 onClick={()=>remove(p.id)}
-className="bg-red-600 text-white px-3 py-2 rounded-lg"
+className="bg-[#475569] text-white px-3 py-2 rounded-lg hover:bg-[#172554]"
 >
 Delete
 </button>
@@ -355,7 +355,7 @@ Delete
 
 <button
 onClick={()=>printReceipt(p)}
-className="bg-green-600 text-white px-3 py-2 rounded-lg"
+className="bg-[#172554] text-white px-3 py-2 rounded-lg hover:bg-[#0F766E]"
 >
 Receipt
 </button>

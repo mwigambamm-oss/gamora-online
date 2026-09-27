@@ -1,0 +1,10 @@
+backup/
+*.backup
+node_modules/
+.next/
+.git/
+.vercel/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log

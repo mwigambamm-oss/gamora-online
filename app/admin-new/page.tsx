@@ -19,6 +19,7 @@ const InventoryModule = dynamic(() => import("@/components/admin-new/InventoryMo
 const ProductsModule = dynamic(() => import("@/components/admin-new/ProductsModule"));
 const SalesChart = dynamic(() => import("@/components/admin-new/dashboard/SalesChart"));
 const TopProducts = dynamic(() => import("@/components/admin-new/dashboard/TopProducts"));
+const BusinessCharts = dynamic(() => import("@/components/admin-new/dashboard/BusinessCharts"));
 const NotificationBell = dynamic(() => import("@/components/admin-new/dashboard/NotificationBell"));
 const MessagesModule = dynamic(() => import("@/components/admin-new/MessagesModule"));
 
@@ -1006,7 +1007,11 @@ return (
                   <div className="mt-6 grid gap-6 lg:grid-cols-2">
 
                     <SalesChart
-                      orders={data.orders || []}
+                      revenue={data.summary.revenue || 0}
+                      cogs={data.summary.cogs || 0}
+                      grossProfit={data.summary.grossProfit || 0}
+                      expenses={data.summary.expenses || 0}
+                      netProfit={data.summary.netProfit || 0}
                     />
 
                     <TopProducts
@@ -1017,6 +1022,24 @@ return (
                   </div>
                 )}
 
+
+                {/* BUSINESS CHARTS */}
+                {data && (
+                  <div className="mt-6 grid gap-6 lg:grid-cols-2">
+                    <BusinessCharts
+                      orders={data.orders || []}
+                      orderItems={data.orderItems || []}
+                      payments={data.payments || []}
+                      products={data.products || []}
+                      expenses={data.expenses || []}
+                      revenue={data.summary.revenue || 0}
+                      cogs={data.summary.cogs || 0}
+                      grossProfit={data.summary.grossProfit || 0}
+                      totalExpenses={data.summary.expenses || 0}
+                      netProfit={data.summary.netProfit || 0}
+                    />
+                  </div>
+                )}
 
                 {/* BUSINESS STATUS */}
                 {data && (

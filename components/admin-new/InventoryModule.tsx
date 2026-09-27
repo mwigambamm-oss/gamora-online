@@ -75,13 +75,24 @@ export default function InventoryModule() {
     (product) => Number(product.stock || 0) <= 0
   ).length;
 
-  const inventoryValue = products.reduce(
+  const stockCostValue = products.reduce(
     (sum, product) =>
       sum +
       Number(product.cost_price || 0) *
         Number(product.stock || 0),
     0
   );
+
+  const potentialSalesValue = products.reduce(
+    (sum, product) =>
+      sum +
+      Number(product.price || 0) *
+        Number(product.stock || 0),
+    0
+  );
+
+  const potentialGrossProfit =
+    potentialSalesValue - stockCostValue;
 
   return (
     <section className="space-y-6">
@@ -149,14 +160,50 @@ export default function InventoryModule() {
 
       </div>
 
-      <div className="rounded-2xl border border-[#E8DEE1] bg-white p-5 shadow-sm">
-        <p className="text-sm font-semibold text-slate-500">
-          Inventory Cost Value
-        </p>
+      <div className="grid gap-4 md:grid-cols-3">
 
-        <p className="mt-2 text-2xl font-black">
-          TZS {inventoryValue.toLocaleString()}
-        </p>
+        <div className="rounded-2xl border border-[#E8DEE1] bg-white p-5 shadow-sm">
+          <p className="text-sm font-semibold text-slate-500">
+            Stock Cost Value
+          </p>
+
+          <p className="mt-2 text-2xl font-black">
+            TZS {stockCostValue.toLocaleString()}
+          </p>
+
+          <p className="mt-1 text-xs text-slate-400">
+            Stock × Buying Price
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-[#E8DEE1] bg-white p-5 shadow-sm">
+          <p className="text-sm font-semibold text-slate-500">
+            Potential Sales Value
+          </p>
+
+          <p className="mt-2 text-2xl font-black">
+            TZS {potentialSalesValue.toLocaleString()}
+          </p>
+
+          <p className="mt-1 text-xs text-slate-400">
+            Stock × Selling Price
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-green-200 bg-green-50 p-5 shadow-sm">
+          <p className="text-sm font-semibold text-slate-500">
+            Potential Gross Profit
+          </p>
+
+          <p className="mt-2 text-2xl font-black text-green-700">
+            TZS {potentialGrossProfit.toLocaleString()}
+          </p>
+
+          <p className="mt-1 text-xs text-slate-500">
+            Sales Value − Cost Value
+          </p>
+        </div>
+
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-[#E8DEE1] bg-white shadow-sm">
@@ -201,7 +248,7 @@ export default function InventoryModule() {
         ) : (
           <div className="overflow-x-auto">
 
-            <table className="w-full min-w-[800px]">
+            <table className="w-full min-w-[1100px]">
 
               <thead>
                 <tr className="border-b bg-slate-50 text-left text-sm">
@@ -214,7 +261,11 @@ export default function InventoryModule() {
                   </th>
 
                   <th className="px-5 py-4">
-                    Cost Price
+                    Buying Price
+                  </th>
+
+                  <th className="px-5 py-4">
+                    Selling Price
                   </th>
 
                   <th className="px-5 py-4">
@@ -222,7 +273,11 @@ export default function InventoryModule() {
                   </th>
 
                   <th className="px-5 py-4">
-                    Stock Value
+                    Stock Cost Value
+                  </th>
+
+                  <th className="px-5 py-4">
+                    Potential Profit
                   </th>
 
                   <th className="px-5 py-4">
@@ -289,6 +344,13 @@ export default function InventoryModule() {
                         ).toLocaleString()}
                       </td>
 
+                      <td className="px-5 py-4 font-semibold">
+                        TZS{" "}
+                        {Number(
+                          product.price || 0
+                        ).toLocaleString()}
+                      </td>
+
                       <td className="px-5 py-4">
 
                         <input
@@ -316,6 +378,15 @@ export default function InventoryModule() {
                         TZS{" "}
                         {(
                           Number(product.cost_price || 0) *
+                          stock
+                        ).toLocaleString()}
+                      </td>
+
+                      <td className="px-5 py-4 font-bold text-green-700">
+                        TZS{" "}
+                        {(
+                          (Number(product.price || 0) -
+                            Number(product.cost_price || 0)) *
                           stock
                         ).toLocaleString()}
                       </td>

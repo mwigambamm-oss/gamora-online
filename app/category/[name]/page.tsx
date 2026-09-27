@@ -278,13 +278,13 @@ export default function CategoryPage() {
 
           {Object.keys(SUBCATEGORY_RULES[name] || {}).length > 0 && (
             <div className="mb-6 overflow-x-auto scrollbar-hide">
-              <div className="flex min-w-max gap-2 rounded-xl bg-white p-2 shadow-sm">
+              <div className="flex min-w-max gap-1 rounded-xl bg-white p-1.5 shadow-sm sm:gap-2 sm:p-2">
                 <button
                   type="button"
                   onClick={() => {
                     router.push(`/category/${encodeURIComponent(name)}`);
                   }}
-                  className={`rounded-full px-4 py-2 text-[11px] font-black transition ${
+                  className={`rounded-full px-2.5 py-1.5 text-[10px] font-black transition sm:px-4 sm:py-2 sm:text-[11px] ${
                     !subcategory
                       ? "bg-[#E30613] text-white"
                       : "bg-slate-100 text-slate-600 hover:bg-slate-200"
@@ -302,7 +302,7 @@ export default function CategoryPage() {
                         `/category/${encodeURIComponent(name)}?subcategory=${encodeURIComponent(item)}`
                       );
                     }}
-                    className={`rounded-full px-4 py-2 text-[11px] font-black transition ${
+                    className={`rounded-full px-2.5 py-1.5 text-[10px] font-black transition sm:px-4 sm:py-2 sm:text-[11px] ${
                       subcategory === item
                         ? "bg-[#E30613] text-white"
                         : "bg-slate-100 text-slate-600 hover:bg-slate-200"

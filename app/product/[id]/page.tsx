@@ -111,8 +111,8 @@ const [cartCount, setCartCount] = useState(0);
   const [reviewComment, setReviewComment] = useState("");
   const [reviewLoading, setReviewLoading] = useState(false);
 
-  const [selectedColor, setSelectedColor] = useState("");
-  const [selectedSize, setSelectedSize] = useState("");
+  const [selectedColor, setSelectedColor] = useState<string[]>([]);
+  const [selectedSize, setSelectedSize] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState("description");
   const [likes, setLikes] = useState(200);
   const [orders, setOrders] = useState(300);
@@ -208,13 +208,8 @@ setProduct(item);
         );
       }
 
-      if (item.colors && item.colors.length > 0) {
-        setSelectedColor(item.colors[0]);
-      }
-
-      if (item.sizes && item.sizes.length > 0) {
-        setSelectedSize(item.sizes[0]);
-      }
+      setSelectedColor([]);
+      setSelectedSize([]);
 
       const all = await getProducts();
 
@@ -278,29 +273,26 @@ setProduct(item);
     Object.keys(product.image_color_map).length > 0;
 
   const selectedColorImages =
-    selectedColor &&
-    product?.image_color_map?.[selectedColor]?.images
-      ? product.image_color_map[selectedColor].images
+    selectedColor.length > 0 && product?.image_color_map
+      ? selectedColor.flatMap(
+          (color) =>
+            product.image_color_map?.[color]?.images || []
+        )
       : [];
 
   const colorOutOfStock =
-    !!selectedColor &&
+    selectedColor.length > 0 &&
     hasColorImageMap &&
     selectedColorImages.length === 0;
 
-  const variantImages = hasColorImageMap
-    ? selectedColor
-      ? selectedColorImages
+  const variantImages =
+    selectedColor.length > 0 && selectedColorImages.length > 0
+      ? [...new Set(selectedColorImages)]
       : product?.images && product.images.length > 0
       ? product.images
       : product?.image
       ? [product.image]
-      : []
-    : product?.images && product.images.length > 0
-    ? product.images
-    : product?.image
-    ? [product.image]
-    : [];
+      : [];
 
   const images = variantImages;
 
@@ -324,7 +316,7 @@ setProduct(item);
    */
   useEffect(() => {
     setActiveImage(0);
-  }, [product?.id, selectedColor]);
+  }, [product?.id, selectedColor.join("|")]);
 
   /*
    * NEXT IMAGE
@@ -445,8 +437,8 @@ setProduct(item);
       stock: product.stock,
       image: cartImage,
       quantity: quantity,
-      selectedColor: selectedColor,
-      selectedSize: selectedSize,
+      selectedColor: selectedColor.join(" | "),
+      selectedSize: selectedSize.join(" | "),
     };
 
     try {
@@ -460,8 +452,8 @@ setProduct(item);
           selectedSize?: string;
         }) =>
           item.id === product.id &&
-          item.selectedColor === selectedColor &&
-          item.selectedSize === selectedSize
+          item.selectedColor === selectedColor.join(" | ") &&
+          item.selectedSize === selectedSize.join(" | ")
       );
 
       if (existingIndex >= 0) {
@@ -504,8 +496,8 @@ window.dispatchEvent(new Event("cartUpdated"));
       stock: product.stock,
       image: cartImage,
       quantity: quantity,
-      selectedColor: selectedColor,
-      selectedSize: selectedSize,
+      selectedColor: selectedColor.join(" | "),
+      selectedSize: selectedSize.join(" | "),
     };
 
     try {
@@ -706,7 +698,7 @@ window.dispatchEvent(new Event("cartUpdated"));
                 <div className="flex h-full w-full flex-col items-center justify-center px-6 text-center">
                   <div className="mb-3 text-4xl">×</div>
                   <p className="text-base font-semibold text-slate-800 sm:text-lg">
-                    {selectedColor}
+                    {selectedColor.join(", ")}
                   </p>
                   <p className="mt-1 text-sm font-medium text-[#E30613]">
                     {t("This color is out of stock", "Rangi hii imekwisha")}
@@ -973,9 +965,15 @@ window.dispatchEvent(new Event("cartUpdated"));
                       <button
                         key={color}
                         type="button"
-                        onClick={() => setSelectedColor(color)}
+                        onClick={() =>
+                          setSelectedColor((prev) =>
+                            prev.includes(color)
+                              ? prev.filter((item) => item !== color)
+                              : [...prev, color]
+                          )
+                        }
                         className={`rounded-md px-3 py-1.5 text-xs transition ${
-                          selectedColor === color
+                          selectedColor.includes(color)
                             ? "border border-[#E30613] bg-red-50 text-[#E30613]"
                             : "border border-slate-200 bg-white text-slate-600 hover:border-red-200"
                         }`}
@@ -998,9 +996,15 @@ window.dispatchEvent(new Event("cartUpdated"));
                       <button
                         key={size}
                         type="button"
-                        onClick={() => setSelectedSize(size)}
+                        onClick={() =>
+                          setSelectedSize((prev) =>
+                            prev.includes(size)
+                              ? prev.filter((item) => item !== size)
+                              : [...prev, size]
+                          )
+                        }
                         className={`rounded-md px-3 py-1.5 text-xs transition ${
-                          selectedSize === size
+                          selectedSize.includes(size)
                             ? "border border-[#E30613] bg-red-50 text-[#E30613]"
                             : "border border-slate-200 bg-white text-slate-600 hover:border-red-200"
                         }`}

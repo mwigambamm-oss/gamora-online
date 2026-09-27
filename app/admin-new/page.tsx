@@ -153,6 +153,19 @@ const response = await fetch(
   const money = (value: number) =>
     `TZS ${Number(value || 0).toLocaleString()}`;
 
+  const revenue = Number(data?.summary.revenue || 0);
+  const cogs = Number(data?.summary.cogs || 0);
+  const grossProfit = Number(data?.summary.grossProfit || 0);
+  const expenses = Number(data?.summary.expenses || 0);
+  const netProfit = Number(data?.summary.netProfit || 0);
+  const ordersCount = Number(data?.summary.orders || 0);
+
+  const grossMargin = revenue > 0 ? (grossProfit / revenue) * 100 : 0;
+  const netMargin = revenue > 0 ? (netProfit / revenue) * 100 : 0;
+  const cogsRatio = revenue > 0 ? (cogs / revenue) * 100 : 0;
+  const expenseRatio = revenue > 0 ? (expenses / revenue) * 100 : 0;
+  const averageOrderValue = ordersCount > 0 ? revenue / ordersCount : 0;
+
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
   const [updatingStockId, setUpdatingStockId] = useState<number | null>(null);
 
@@ -907,6 +920,84 @@ return (
                         )}
                       </div>
                     )}
+                  </div>
+                )}
+
+                {/* FINANCIAL RATIOS */}
+                {data && (
+                  <div className="mt-6">
+                    <div className="mb-4">
+                      <h2 className="text-xl font-black text-[#172033]">
+                        Financial Ratios
+                      </h2>
+                      <p className="text-sm text-[#64748B]">
+                        Key performance ratios calculated from the selected period.
+                      </p>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+
+                      <div className="rounded-2xl border border-[#99F6E4] bg-[#ECFEFF] p-5 shadow-sm">
+                        <div className="text-sm font-bold text-[#0F766E]">
+                          Gross Profit Margin
+                        </div>
+                        <div className="mt-2 text-3xl font-black text-[#172033]">
+                          {grossMargin.toFixed(1)}%
+                        </div>
+                        <div className="mt-1 text-xs text-[#64748B]">
+                          Gross Profit ÷ Revenue
+                        </div>
+                      </div>
+
+                      <div className="rounded-2xl border border-[#DDD6FE] bg-[#F5F3FF] p-5 shadow-sm">
+                        <div className="text-sm font-bold text-[#7C3AED]">
+                          Net Profit Margin
+                        </div>
+                        <div className="mt-2 text-3xl font-black text-[#172033]">
+                          {netMargin.toFixed(1)}%
+                        </div>
+                        <div className="mt-1 text-xs text-[#64748B]">
+                          Net Profit ÷ Revenue
+                        </div>
+                      </div>
+
+                      <div className="rounded-2xl border border-[#BAE6FD] bg-[#F0F9FF] p-5 shadow-sm">
+                        <div className="text-sm font-bold text-[#0369A1]">
+                          COGS Ratio
+                        </div>
+                        <div className="mt-2 text-3xl font-black text-[#172033]">
+                          {cogsRatio.toFixed(1)}%
+                        </div>
+                        <div className="mt-1 text-xs text-[#64748B]">
+                          COGS ÷ Revenue
+                        </div>
+                      </div>
+
+                      <div className="rounded-2xl border border-[#FED7AA] bg-[#FFF7ED] p-5 shadow-sm">
+                        <div className="text-sm font-bold text-[#D97706]">
+                          Expense Ratio
+                        </div>
+                        <div className="mt-2 text-3xl font-black text-[#172033]">
+                          {expenseRatio.toFixed(1)}%
+                        </div>
+                        <div className="mt-1 text-xs text-[#64748B]">
+                          Expenses ÷ Revenue
+                        </div>
+                      </div>
+
+                      <div className="rounded-2xl border border-[#CBD5E1] bg-[#F8FAFC] p-5 shadow-sm">
+                        <div className="text-sm font-bold text-[#475569]">
+                          Average Order Value
+                        </div>
+                        <div className="mt-2 text-2xl font-black text-[#172033]">
+                          {money(averageOrderValue)}
+                        </div>
+                        <div className="mt-1 text-xs text-[#64748B]">
+                          Revenue ÷ Orders
+                        </div>
+                      </div>
+
+                    </div>
                   </div>
                 )}
 

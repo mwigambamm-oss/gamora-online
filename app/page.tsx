@@ -849,7 +849,13 @@ export default function HomePage() {
 
             <button
               type="button"
-              className="absolute right-1 top-1 flex h-9 w-12 items-center justify-center rounded-full bg-[#E30613] text-lg text-white"
+              aria-label={language === "sw" ? "Tafuta" : "Search"}
+              onClick={() => {
+                document
+                  .getElementById("products")
+                  ?.scrollIntoView({ behavior: "smooth", block: "start" });
+              }}
+              className="absolute right-1 top-1 flex h-9 w-12 items-center justify-center rounded-full bg-[#E30613] text-lg text-white transition hover:bg-red-700"
             >
               ⌕
             </button>
@@ -957,7 +963,13 @@ export default function HomePage() {
 
       <button
         type="button"
-        className="absolute right-1 top-1 flex h-6 w-7 items-center justify-center rounded-full bg-[#E30613] text-sm text-white"
+        aria-label={language === "sw" ? "Tafuta" : "Search"}
+        onClick={() => {
+          document
+            .getElementById("products")
+            ?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }}
+        className="absolute right-1 top-1 flex h-6 w-7 items-center justify-center rounded-full bg-[#E30613] text-sm text-white transition hover:bg-red-700"
       >
         ⌕
       </button>

@@ -129,7 +129,7 @@ export default function SettingsModule() {
         </p>
 
         <a
-          href="/admin/change-password"
+          href="/recover-admin-password"
           className="mt-4 inline-flex rounded-xl border border-[#800020] px-5 py-3 text-sm font-bold text-[#800020] hover:bg-[#800020] hover:text-white"
         >
           🔐 Change Password

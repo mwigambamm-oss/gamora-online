@@ -73,7 +73,7 @@ export default function RecoverAdminPasswordPage() {
       setConfirmPassword("");
 
       setTimeout(() => {
-        router.replace("/admin/login");
+        router.replace("/admin-new/login");
       }, 1800);
     } catch {
       setError(
@@ -209,7 +209,7 @@ export default function RecoverAdminPasswordPage() {
         </form>
 
         <a
-          href="/admin/login"
+          href="/admin-new/login"
           className="mt-6 block text-center text-xs font-normal text-sky-700 hover:underline"
         >
           ← Back to Admin Login

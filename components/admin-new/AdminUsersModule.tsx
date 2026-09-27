@@ -41,7 +41,7 @@ export default function AdminUsersModule() {
 
         <div className="border-t bg-slate-50 p-6">
           <a
-            href="/admin/change-password"
+            href="/recover-admin-password"
             className="inline-flex rounded-xl bg-[#800020] px-5 py-3 text-sm font-bold text-white hover:bg-[#6b001b]"
           >
             🔐 Change Password

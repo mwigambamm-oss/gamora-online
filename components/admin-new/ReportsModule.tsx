@@ -161,7 +161,7 @@ export default function ReportsModule() {
               </div>
 
               <a
-                href="/admin/reports"
+                href="/admin-new"
                 className="mt-5 block rounded-xl border border-[#E8DEE1] px-4 py-3 text-center text-sm font-bold transition hover:bg-slate-50"
               >
                 Open Full Reports Center →

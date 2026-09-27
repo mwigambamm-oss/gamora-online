@@ -3,11 +3,13 @@
 export default function NotificationBell({
  pendingOrders=0,
  pendingPayments=0,
- lowStock=0
+ lowStock=0,
+ onClick
 }:{
  pendingOrders:number;
  pendingPayments:number;
  lowStock:number;
+ onClick: () => void;
 }){
 
  const total =
@@ -21,6 +23,9 @@ export default function NotificationBell({
  <div className="relative">
 
    <button
+    type="button"
+    onClick={onClick}
+    aria-label="Open notifications"
     className="relative rounded-xl border bg-white px-4 py-3 shadow-sm hover:bg-slate-50"
    >
 

@@ -335,6 +335,7 @@ return (
                   pendingOrders={data.summary.pendingOrders}
                   pendingPayments={data.summary.pendingPayments}
                   lowStock={data.summary.lowStock}
+                  onClick={() => setActive("Notifications")}
                 />
               )}
 

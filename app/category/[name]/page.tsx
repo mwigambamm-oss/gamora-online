@@ -315,13 +315,6 @@ export default function CategoryPage() {
             </div>
           )}
 
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="shrink-0 rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-black text-slate-700 transition hover:border-[#E30613] hover:text-[#E30613]"
-          >
-            ← Back
-          </button>
         </div>
 
         {loading ? (

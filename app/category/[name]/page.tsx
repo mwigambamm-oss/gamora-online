@@ -1,8 +1,174 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { getProducts, shuffleProducts, type Product } from "@/lib/products";
+
+const SUBCATEGORY_RULES: Record<string, Record<string, string[]>> = {
+  "Women's Fashion": {
+    Dresses: ["dress", "dresses", "gown"],
+    Tops: ["top", "tops", "blouse", "crop top"],
+    Shirts: ["shirt", "shirts"],
+    Jeans: ["jean", "jeans", "denim"],
+    Trousers: ["trouser", "trousers", "pants"],
+    Skirts: ["skirt", "skirts"],
+    Jumpsuits: ["jumpsuit", "jumpsuits"],
+    Hijabs: ["hijab", "hijabs", "headscarf"],
+  },
+  "Men's Fashion": {
+    Shirts: ["shirt", "shirts"],
+    "T-Shirts": ["t-shirt", "tshirt", "tee"],
+    Jeans: ["jean", "jeans", "denim"],
+    Trousers: ["trouser", "trousers", "pants"],
+    Suits: ["suit", "suits", "blazer"],
+    Jackets: ["jacket", "jackets", "coat"],
+  },
+  Shoes: {
+    Heels: ["heel", "heels", "high heel", "pump"],
+    Sneakers: ["sneaker", "sneakers", "trainer", "trainers"],
+    Sandals: ["sandal", "sandals"],
+    Flats: ["flat shoe", "flats", "flat shoes"],
+    Boots: ["boot", "boots"],
+    Loafers: ["loafer", "loafers"],
+    Slippers: ["slipper", "slippers"],
+    "Formal Shoes": ["formal shoe", "formal shoes", "office shoe"],
+  },
+  "Phones & Electronics": {
+    Smartphones: ["smartphone", "phone", "iphone", "samsung", "android", "mobile"],
+    Earphones: ["earphone", "earphones", "earbud", "earbuds"],
+    Headphones: ["headphone", "headphones"],
+    Chargers: ["charger", "chargers", "adapter", "adaptor"],
+    "Power Banks": ["power bank", "powerbank"],
+    Speakers: ["speaker", "speakers", "bluetooth speaker"],
+    Cables: ["cable", "usb cable", "charging cable"],
+  },
+  "Home & Kitchen": {
+    Cookware: ["cookware", "pan", "frying pan", "pot", "pots"],
+    "Pressure Cookers": ["pressure cooker", "pressure cookers"],
+    "Kitchen Tools": ["kitchen tool", "utensil", "utensils", "spatula"],
+    Storage: ["storage", "container", "containers", "organizer"],
+    Cleaning: ["cleaning", "mop", "broom", "cleaner"],
+    Tableware: ["plate", "plates", "cup", "cups", "cutlery"],
+  },
+  Accessories: {
+    Bags: ["bag", "bags", "handbag", "backpack", "purse"],
+    Wallets: ["wallet", "wallets"],
+    Belts: ["belt", "belts"],
+    Caps: ["cap", "caps", "hat", "hats"],
+    Sunglasses: ["sunglasses", "sun glasses"],
+    Scarves: ["scarf", "scarves"],
+  },
+  "Beauty & Personal Care": {
+    Makeup: ["makeup", "lipstick", "foundation", "mascara", "concealer"],
+    Perfumes: ["perfume", "perfumes", "fragrance"],
+    Skincare: ["skincare", "skin care", "cream", "serum", "lotion"],
+    "Hair Care": ["hair", "shampoo", "conditioner", "wig", "wigs"],
+    "Body Care": ["body care", "body lotion", "soap", "deodorant"],
+  },
+  "Computers & Accessories": {
+    Laptops: ["laptop", "notebook"],
+    "Desktop Computers": ["desktop", "desktop computer", "pc"],
+    Keyboards: ["keyboard", "keyboards"],
+    Mice: ["mouse", "mice"],
+    Monitors: ["monitor", "monitors", "display"],
+    "Computer Accessories": ["computer accessory", "usb hub", "webcam"],
+  },
+  "Baby & Kids": {
+    "Baby Clothes": ["baby clothes", "baby clothing", "infant clothes"],
+    "Kids Shoes": ["kids shoes", "children shoes", "baby shoes"],
+    Toys: ["toy", "toys"],
+    "Baby Care": ["baby care", "diaper", "diapers", "feeding bottle"],
+    "Kids Bags": ["kids bag", "school bag", "children bag"],
+  },
+  "Sports & Fitness": {
+    Fitness: ["fitness", "gym", "workout"],
+    Running: ["running", "running shoe"],
+    Football: ["football", "soccer"],
+    Basketball: ["basketball"],
+    Cycling: ["cycling", "bicycle", "bike"],
+    "Sports Accessories": ["sports accessory", "sports accessories"],
+  },
+  Automotive: {
+    "Car Accessories": ["car accessory", "car accessories"],
+    "Motorcycle Accessories": ["motorcycle", "motorbike", "boda"],
+    "Car Care": ["car care", "car wash", "polish"],
+    Lighting: ["car light", "led light", "headlight"],
+    Tools: ["automotive tool", "car tool"],
+  },
+  "Tools & Hardware": {
+    "Hand Tools": ["hand tool", "hammer", "pliers", "screwdriver"],
+    "Power Tools": ["power tool", "drill", "grinder"],
+    Hardware: ["hardware", "bolt", "nut", "screw"],
+    Electrical: ["electrical", "switch", "socket"],
+    "Safety Equipment": ["safety", "helmet", "gloves", "goggles"],
+  },
+  "Books & Stationery": {
+    Books: ["book", "books", "novel"],
+    Notebooks: ["notebook", "notebooks", "exercise book"],
+    Pens: ["pen", "pens", "ballpoint"],
+    "School Supplies": ["school", "school supplies", "pencil", "eraser"],
+    Office: ["office", "stapler", "file", "folder"],
+  },
+  "Jewelry & Watches": {
+    Watches: ["watch", "watches", "smart watch", "smartwatch"],
+    Rings: ["ring", "rings"],
+    Necklaces: ["necklace", "necklaces"],
+    Bracelets: ["bracelet", "bracelets"],
+    Earrings: ["earring", "earrings"],
+  },
+  Furniture: {
+    Sofas: ["sofa", "sofas", "couch"],
+    Beds: ["bed", "beds", "bedroom"],
+    Tables: ["table", "tables"],
+    Chairs: ["chair", "chairs"],
+    Cabinets: ["cabinet", "cabinets", "wardrobe"],
+  },
+  "Garden & Outdoor": {
+    Gardening: ["garden", "gardening", "plant"],
+    "Outdoor Furniture": ["outdoor furniture", "patio"],
+    "Garden Tools": ["garden tool", "pruner", "watering"],
+    Camping: ["camping", "tent"],
+    "Outdoor Lighting": ["outdoor light", "solar light"],
+  },
+  "Health & Wellness": {
+    "Personal Care": ["personal care"],
+    Fitness: ["fitness", "exercise", "workout"],
+    Wellness: ["wellness", "massage"],
+    "Health Accessories": ["health accessory", "thermometer"],
+    "Medical Supplies": ["medical", "medical supplies"],
+  },
+  Gaming: {
+    "Gaming Consoles": ["gaming console", "playstation", "xbox", "console"],
+    "Gaming Controllers": ["controller", "gamepad"],
+    "Gaming Headsets": ["gaming headset", "gaming headphones"],
+    "Gaming Accessories": ["gaming accessory", "gaming accessories"],
+    "Gaming Chairs": ["gaming chair", "gaming chairs"],
+  },
+};
+
+function getAutomaticSubcategory(product: Product, category: string) {
+  const text = [
+    product.name,
+    product.name_sw,
+    product.description,
+    product.description_sw,
+    ...Object.entries(product.specifications || {}).map(([key, value]) => `${key} ${value}`),
+    ...Object.entries(product.specifications_sw || {}).map(([key, value]) => `${key} ${value}`),
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  const rules = SUBCATEGORY_RULES[category] || {};
+
+  for (const [subcategory, keywords] of Object.entries(rules)) {
+    if (keywords.some((keyword) => text.includes(keyword.toLowerCase()))) {
+      return subcategory;
+    }
+  }
+
+  return "";
+}
 
 const CATEGORY_IMAGES: Record<string, string> = {
   "Women's Fashion": "/images/womens-fashion.jpg",
@@ -29,6 +195,8 @@ const CATEGORY_IMAGES: Record<string, string> = {
 export default function CategoryPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const subcategory = searchParams.get("subcategory") || "";
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -47,8 +215,15 @@ export default function CategoryPage() {
           limit: 100,
         });
 
+        const filtered = subcategory
+          ? data.filter(
+              (product) =>
+                getAutomaticSubcategory(product, name) === subcategory
+            )
+          : data;
+
         if (!cancelled) {
-          setProducts(shuffleProducts(data));
+          setProducts(shuffleProducts(filtered));
         }
       } catch (error) {
         console.error("Category products loading error:", error);
@@ -68,7 +243,7 @@ export default function CategoryPage() {
     return () => {
       cancelled = true;
     };
-  }, [name]);
+  }, [name, subcategory]);
 
   return (
     <main className="min-h-screen bg-[#f8fafc] px-4 py-6">
@@ -94,10 +269,51 @@ export default function CategoryPage() {
               </h1>
 
               <p className="text-xs text-slate-500">
-                Explore products in this category
+                {subcategory
+                  ? `Showing ${subcategory} products`
+                  : "Explore products in this category"}
               </p>
             </div>
           </div>
+
+          {Object.keys(SUBCATEGORY_RULES[name] || {}).length > 0 && (
+            <div className="mb-6 overflow-x-auto scrollbar-hide">
+              <div className="flex min-w-max gap-2 rounded-xl bg-white p-2 shadow-sm">
+                <button
+                  type="button"
+                  onClick={() => {
+                    router.push(`/category/${encodeURIComponent(name)}`);
+                  }}
+                  className={`rounded-full px-4 py-2 text-[11px] font-black transition ${
+                    !subcategory
+                      ? "bg-[#E30613] text-white"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  }`}
+                >
+                  All
+                </button>
+
+                {Object.keys(SUBCATEGORY_RULES[name] || {}).map((item) => (
+                  <button
+                    key={item}
+                    type="button"
+                    onClick={() => {
+                      router.push(
+                        `/category/${encodeURIComponent(name)}?subcategory=${encodeURIComponent(item)}`
+                      );
+                    }}
+                    className={`rounded-full px-4 py-2 text-[11px] font-black transition ${
+                      subcategory === item
+                        ? "bg-[#E30613] text-white"
+                        : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    }`}
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           <button
             type="button"

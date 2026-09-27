@@ -323,7 +323,7 @@ return (
                 </h1>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="ml-auto flex items-center gap-3">
 
                 <div className="hidden text-right sm:block">
                   <div className="text-xs font-normal">
@@ -335,23 +335,24 @@ return (
                   </div>
                 </div>
 
-<div className="h-20 w-20 overflow-hidden rounded-full border-2 border-[#0F766E] bg-[#E2E8F0]">
-  <img
-    src="/admin-picture.jpeg"
-    alt="Administrator"
-    className="h-full w-full object-contain"
-  />
-</div>
-              </div>
+                <div className="h-20 w-20 overflow-hidden rounded-full border-2 border-[#0F766E] bg-[#E2E8F0]">
+                  <img
+                    src="/admin-picture.jpeg"
+                    alt="Administrator"
+                    className="h-full w-full object-contain"
+                  />
+                </div>
 
-              {data && (
-                <NotificationBell
-                  pendingOrders={data.summary.pendingOrders}
-                  pendingPayments={data.summary.pendingPayments}
-                  lowStock={data.summary.lowStock}
-                  onClick={() => setActive("Notifications")}
-                />
-              )}
+                {data && (
+                  <NotificationBell
+                    pendingOrders={data.summary.pendingOrders}
+                    pendingPayments={data.summary.pendingPayments}
+                    lowStock={data.summary.lowStock}
+                    onClick={() => setActive("Notifications")}
+                  />
+                )}
+
+              </div>
 
             </div>
           </header>

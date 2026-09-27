@@ -243,7 +243,7 @@ export default function HomePage() {
 
     async function loadProducts() {
       try {
-        const data = await getSupabaseProducts({ limit: 40 });
+        const data = await getSupabaseProducts({ limit: 200 });
 
         if (active) {
           setProducts(shuffleProducts(data));
@@ -609,6 +609,37 @@ export default function HomePage() {
     });
   }, [products, search, selectedCategory]);
 
+  const mixedMoreProducts = useMemo(() => {
+    const groups = new Map<string, Product[]>();
+
+    for (const product of filteredProducts) {
+      const category = String(product.category || "Other").trim() || "Other";
+      const current = groups.get(category) || [];
+      current.push(product);
+      groups.set(category, current);
+    }
+
+    const categoryGroups = Array.from(groups.values()).map((items) =>
+      shuffleProducts(items)
+    );
+
+    const mixed: Product[] = [];
+    let remaining = true;
+
+    while (remaining) {
+      remaining = false;
+
+      for (const group of categoryGroups) {
+        if (group.length > 0) {
+          mixed.push(group.shift()!);
+          remaining = true;
+        }
+      }
+    }
+
+    return shuffleProducts(mixed);
+  }, [filteredProducts]);
+
   useEffect(() => {
     setVisibleProductsCount(100);
     setCategoryVisibleCounts({});
@@ -658,71 +689,145 @@ export default function HomePage() {
   );
 
   const subcategoryRules: Record<string, Record<string, string[]>> = {
-    Shoes: {
-      Heels: ["heel", "heels", "high heel", "pump", "stiletto"],
-      Sneakers: ["sneaker", "sneakers", "trainer", "trainers", "sports shoe"],
-      Sandals: ["sandal", "sandals", "slides", "open shoe"],
-      Flats: ["flat shoe", "flats", "ballet flat"],
-      Boots: ["boot", "boots", "ankle boot", "combat boot"],
-      Loafers: ["loafer", "loafers", "moccasin", "moccasins"],
-      Slippers: ["slipper", "slippers", "flip flop", "flip-flop"],
-      "Formal Shoes": ["formal shoe", "office shoe", "dress shoe", "leather shoe"],
-    },
-
     "Women's Fashion": {
       Dresses: ["dress", "dresses", "gown"],
-      Tops: ["top", "tops", "blouse", "blouses"],
-      Shirts: ["shirt", "shirts", "t-shirt", "tshirt"],
-      Jeans: ["jean", "jeans"],
-      Trousers: ["trouser", "trousers", "pants", "suruali"],
+      Tops: ["top", "tops", "blouse", "crop top"],
+      Shirts: ["shirt", "shirts"],
+      Jeans: ["jean", "jeans", "denim"],
+      Trousers: ["trouser", "trousers", "pants"],
       Skirts: ["skirt", "skirts"],
       Jumpsuits: ["jumpsuit", "jumpsuits"],
       Hijabs: ["hijab", "hijabs", "headscarf"],
     },
-
     "Men's Fashion": {
-      Shirts: ["shirt", "shirts", "polo"],
+      Shirts: ["shirt", "shirts"],
       "T-Shirts": ["t-shirt", "tshirt", "tee"],
-      Jeans: ["jean", "jeans"],
+      Jeans: ["jean", "jeans", "denim"],
       Trousers: ["trouser", "trousers", "pants"],
       Suits: ["suit", "suits", "blazer"],
       Jackets: ["jacket", "jackets", "coat"],
     },
-
+    Shoes: {
+      Heels: ["heel", "heels", "high heel", "pump"],
+      Sneakers: ["sneaker", "sneakers", "trainer", "trainers"],
+      Sandals: ["sandal", "sandals"],
+      Flats: ["flat shoe", "flats", "flat shoes"],
+      Boots: ["boot", "boots"],
+      Loafers: ["loafer", "loafers"],
+      Slippers: ["slipper", "slippers"],
+      "Formal Shoes": ["formal shoe", "formal shoes", "office shoe"],
+    },
     "Phones & Electronics": {
-      Smartphones: ["smartphone", "iphone", "android", "galaxy", "phone"],
-      Earphones: ["earphone", "earphones", "earbud", "airpod", "airpods"],
-      Headphones: ["headphone", "headphones", "headset"],
-      Chargers: ["charger", "charging"],
+      Smartphones: ["smartphone", "phone", "iphone", "samsung", "android", "mobile"],
+      Earphones: ["earphone", "earphones", "earbud", "earbuds"],
+      Headphones: ["headphone", "headphones"],
+      Chargers: ["charger", "chargers", "adapter", "adaptor"],
       "Power Banks": ["power bank", "powerbank"],
-      Speakers: ["speaker", "speakers"],
+      Speakers: ["speaker", "speakers", "bluetooth speaker"],
       "Smart Watches": ["smart watch", "smartwatch"],
-      Cables: ["cable", "usb cable", "type c"],
+      Cables: ["cable", "usb cable", "charging cable"],
     },
-
     "Home & Kitchen": {
-      Cookware: ["cookware", "pot", "pan", "frying pan"],
-      "Pressure Cookers": ["pressure cooker"],
-      "Kitchen Tools": ["kitchen", "utensil", "spatula", "knife"],
-      Storage: ["storage", "container", "organizer"],
-      Cleaning: ["cleaning", "mop", "broom"],
-      Tableware: ["plate", "cup", "glass", "cutlery"],
+      Cookware: ["cookware", "pan", "frying pan", "pot", "pots"],
+      "Pressure Cookers": ["pressure cooker", "pressure cookers"],
+      "Kitchen Tools": ["kitchen tool", "utensil", "utensils", "spatula"],
+      Storage: ["storage", "container", "containers", "organizer"],
+      Cleaning: ["cleaning", "mop", "broom", "cleaner"],
+      Tableware: ["plate", "plates", "cup", "cups", "cutlery"],
     },
-
+    Accessories: {
+      Bags: ["bag", "bags", "handbag", "backpack", "purse"],
+      Wallets: ["wallet", "wallets"],
+      Belts: ["belt", "belts"],
+      Caps: ["cap", "caps", "hat", "hats"],
+      Sunglasses: ["sunglasses", "sun glasses"],
+      Scarves: ["scarf", "scarves"],
+    },
     "Beauty & Personal Care": {
-      Makeup: ["makeup", "lipstick", "foundation", "mascara", "eyeliner"],
-      Perfumes: ["perfume", "parfum", "fragrance"],
-      Skincare: ["skincare", "skin care", "serum", "moisturizer"],
-      "Hair Care": ["hair", "shampoo", "conditioner", "wig", "weave"],
-      "Body Care": ["body lotion", "body wash", "soap"],
+      Makeup: ["makeup", "lipstick", "foundation", "mascara", "concealer"],
+      Perfumes: ["perfume", "perfumes", "fragrance"],
+      Skincare: ["skincare", "skin care", "cream", "serum", "lotion"],
+      "Hair Care": ["hair", "shampoo", "conditioner", "wig", "wigs"],
+      "Body Care": ["body care", "body lotion", "soap", "deodorant"],
     },
-
+    "Computers & Accessories": {
+      Laptops: ["laptop", "notebook"],
+      "Desktop Computers": ["desktop", "desktop computer", "pc"],
+      Keyboards: ["keyboard", "keyboards"],
+      Mice: ["mouse", "mice"],
+      Monitors: ["monitor", "monitors", "display"],
+      "Computer Accessories": ["computer accessory", "usb hub", "webcam"],
+    },
+    "Baby & Kids": {
+      "Baby Clothes": ["baby clothes", "baby clothing", "infant clothes"],
+      "Kids Shoes": ["kids shoes", "children shoes", "baby shoes"],
+      Toys: ["toy", "toys"],
+      "Baby Care": ["baby care", "diaper", "diapers", "feeding bottle"],
+      "Kids Bags": ["kids bag", "school bag", "children bag"],
+    },
+    "Sports & Fitness": {
+      Fitness: ["fitness", "gym", "workout"],
+      Running: ["running", "running shoe"],
+      Football: ["football", "soccer"],
+      Basketball: ["basketball"],
+      Cycling: ["cycling", "bicycle", "bike"],
+      "Sports Accessories": ["sports accessory", "sports accessories"],
+    },
+    Automotive: {
+      "Car Accessories": ["car accessory", "car accessories"],
+      "Motorcycle Accessories": ["motorcycle", "motorbike", "boda"],
+      "Car Care": ["car care", "car wash", "polish"],
+      Lighting: ["car light", "led light", "headlight"],
+      Tools: ["automotive tool", "car tool"],
+    },
+    "Tools & Hardware": {
+      "Hand Tools": ["hand tool", "hammer", "pliers", "screwdriver"],
+      "Power Tools": ["power tool", "drill", "grinder"],
+      Hardware: ["hardware", "bolt", "nut", "screw"],
+      Electrical: ["electrical", "switch", "socket"],
+      "Safety Equipment": ["safety", "helmet", "gloves", "goggles"],
+    },
+    "Books & Stationery": {
+      Books: ["book", "books", "novel"],
+      Notebooks: ["notebook", "notebooks", "exercise book"],
+      Pens: ["pen", "pens", "ballpoint"],
+      "School Supplies": ["school", "school supplies", "pencil", "eraser"],
+      Office: ["office", "stapler", "file", "folder"],
+    },
     "Jewelry & Watches": {
-      Watches: ["watch", "watches", "wristwatch"],
+      Watches: ["watch", "watches", "smart watch", "smartwatch"],
       Rings: ["ring", "rings"],
-      Necklaces: ["necklace", "necklaces", "chain"],
+      Necklaces: ["necklace", "necklaces"],
       Bracelets: ["bracelet", "bracelets"],
       Earrings: ["earring", "earrings"],
+    },
+    Furniture: {
+      Sofas: ["sofa", "sofas", "couch"],
+      Beds: ["bed", "beds", "bedroom"],
+      Tables: ["table", "tables"],
+      Chairs: ["chair", "chairs"],
+      Cabinets: ["cabinet", "cabinets", "wardrobe"],
+    },
+    "Garden & Outdoor": {
+      Gardening: ["garden", "gardening", "plant"],
+      "Outdoor Furniture": ["outdoor furniture", "patio"],
+      "Garden Tools": ["garden tool", "pruner", "watering"],
+      Camping: ["camping", "tent"],
+      "Outdoor Lighting": ["outdoor light", "solar light"],
+    },
+    "Health & Wellness": {
+      "Personal Care": ["personal care"],
+      Fitness: ["fitness", "exercise", "workout"],
+      Wellness: ["wellness", "massage"],
+      "Health Accessories": ["health accessory", "thermometer"],
+      "Medical Supplies": ["medical", "medical supplies"],
+    },
+    Gaming: {
+      "Gaming Consoles": ["gaming console", "playstation", "xbox", "console"],
+      "Gaming Controllers": ["controller", "gamepad"],
+      "Gaming Headsets": ["gaming headset", "gaming headphones"],
+      "Gaming Accessories": ["gaming accessory", "gaming accessories"],
+      "Gaming Chairs": ["gaming chair", "gaming chairs"],
     },
   };
 
@@ -760,12 +865,39 @@ export default function HomePage() {
   };
 
   const categoryProducts = useMemo(() => {
+    const normalizeCategory = (value: string) =>
+      value
+        .toLowerCase()
+        .replace(/&/g, "and")
+        .replace(/[’']/g, "")
+        .replace(/[^a-z0-9]+/g, "")
+        .trim();
+
+    const shuffle = <T,>(items: T[]) => {
+      const copy = [...items];
+
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+
+      return copy;
+    };
+
     const result: Record<string, Product[]> = {};
 
     ALL_CATEGORIES.forEach((category) => {
-      result[category] = products.filter(
-        (product) => product.category === category
-      );
+      const normalizedCategory = normalizeCategory(category);
+
+      const matchingProducts = products.filter((product) => {
+        const productCategory = normalizeCategory(
+          product.category || ""
+        );
+
+        return productCategory === normalizedCategory;
+      });
+
+      result[category] = shuffle(matchingProducts).slice(0, 6);
     });
 
     return result;
@@ -1647,14 +1779,22 @@ export default function HomePage() {
               </div>
             </div>
 
-            <CarouselArrows
-              onPrev={() =>
-                scrollCarousel(flashRef, -1)
-              }
-              onNext={() =>
-                scrollCarousel(flashRef, 1)
-              }
-            />
+            <div className="flex items-center gap-2">
+              <a
+                href="#products"
+                className="hidden rounded-full border border-[#E30613] bg-white px-4 py-2 text-[10px] font-black text-[#E30613] transition hover:bg-[#E30613] hover:text-white sm:inline-flex"
+              >
+                {language === "sw" ? "ONA ZAIDI →" : "VIEW MORE →"}
+              </a>
+              <CarouselArrows
+                onPrev={() =>
+                  scrollCarousel(flashRef, -1)
+                }
+                onNext={() =>
+                  scrollCarousel(flashRef, 1)
+                }
+              />
+            </div>
           </div>
 
           {deals.length > 0 ? (
@@ -1698,14 +1838,22 @@ export default function HomePage() {
               }
             />
 
-            <CarouselArrows
-              onPrev={() =>
-                scrollCarousel(trendingRef, -1)
-              }
-              onNext={() =>
-                scrollCarousel(trendingRef, 1)
-              }
-            />
+            <div className="flex items-center gap-2">
+              <a
+                href="#products"
+                className="hidden rounded-full border border-[#E30613] bg-white px-4 py-2 text-[10px] font-black text-[#E30613] transition hover:bg-[#E30613] hover:text-white sm:inline-flex"
+              >
+                {language === "sw" ? "ONA ZAIDI →" : "VIEW MORE →"}
+              </a>
+              <CarouselArrows
+                onPrev={() =>
+                  scrollCarousel(trendingRef, -1)
+                }
+                onNext={() =>
+                  scrollCarousel(trendingRef, 1)
+                }
+              />
+            </div>
           </div>
 
           <Carousel carouselRef={trendingRef}>
@@ -1742,14 +1890,22 @@ export default function HomePage() {
               }
             />
 
-            <CarouselArrows
-              onPrev={() =>
-                scrollCarousel(newRef, -1)
-              }
-              onNext={() =>
-                scrollCarousel(newRef, 1)
-              }
-            />
+            <div className="flex items-center gap-2">
+              <a
+                href="#products"
+                className="hidden rounded-full border border-[#E30613] bg-white px-4 py-2 text-[10px] font-black text-[#E30613] transition hover:bg-[#E30613] hover:text-white sm:inline-flex"
+              >
+                {language === "sw" ? "ONA ZAIDI →" : "VIEW MORE →"}
+              </a>
+              <CarouselArrows
+                onPrev={() =>
+                  scrollCarousel(newRef, -1)
+                }
+                onNext={() =>
+                  scrollCarousel(newRef, 1)
+                }
+              />
+            </div>
           </div>
 
           <Carousel carouselRef={newRef}>
@@ -1786,14 +1942,22 @@ export default function HomePage() {
               }
             />
 
-            <CarouselArrows
-              onPrev={() =>
-                scrollCarousel(bestRef, -1)
-              }
-              onNext={() =>
-                scrollCarousel(bestRef, 1)
-              }
-            />
+            <div className="flex items-center gap-2">
+              <a
+                href="#products"
+                className="hidden rounded-full border border-[#E30613] bg-white px-4 py-2 text-[10px] font-black text-[#E30613] transition hover:bg-[#E30613] hover:text-white sm:inline-flex"
+              >
+                {language === "sw" ? "ONA ZAIDI →" : "VIEW MORE →"}
+              </a>
+              <CarouselArrows
+                onPrev={() =>
+                  scrollCarousel(bestRef, -1)
+                }
+                onNext={() =>
+                  scrollCarousel(bestRef, 1)
+                }
+              />
+            </div>
           </div>
 
           <Carousel carouselRef={bestRef}>
@@ -1810,135 +1974,6 @@ export default function HomePage() {
           </Carousel>
         </div>
       </section>
-
-      {/* CATEGORY SECTIONS */}
-      {ALL_CATEGORIES.map((category) => {
-        const categoryItems = categoryProducts[category] || [];
-
-        const subcategories = Array.from(
-          new Set(
-            categoryItems.map((product) =>
-              getAutomaticSubcategory(product, category)
-            )
-          )
-        ).filter((name) => name !== "Other");
-
-        const activeSubcategory =
-          selectedSubcategories[category] || "All";
-
-        const visibleCategoryItems =
-          activeSubcategory === "All"
-            ? categoryItems
-            : categoryItems.filter(
-                (product) =>
-                  getAutomaticSubcategory(product, category) ===
-                  activeSubcategory
-              );
-
-        if (categoryItems.length === 0) {
-          return null;
-        }
-
-        return (
-          <section
-            key={category}
-            className="border-t border-slate-100 bg-[#f3f4f6] py-8 sm:py-12"
-            style={{ contentVisibility: "auto", containIntrinsicSize: "720px" }}
-          >
-            <div className="mx-auto max-w-[1440px] px-4 sm:px-5">
-              <div className="flex items-end justify-between gap-4">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xl">
-                      {CATEGORY_ICONS[category]}
-                    </span>
-
-                    <h2 className="text-xl font-black tracking-tight text-slate-900 sm:text-2xl">
-                      {category}
-                    </h2>
-                  </div>
-
-                  <p className="mt-1 text-xs text-slate-500">
-                    {language === "sw"
-                      ? `Bidhaa za ${category}`
-                      : `Explore ${category}`}
-                  </p>
-                </div>
-
-                <Link
-                  href={`/category/${encodeURIComponent(category)}`}
-                  className="shrink-0 rounded-full border border-slate-300 bg-white px-4 py-2 text-[10px] font-black text-slate-700 transition hover:border-blue-400 hover:text-blue-600"
-                >
-                  {language === "sw"
-                    ? "ONA ZOTE →"
-                    : "VIEW ALL →"}
-                </Link>
-              </div>
-
-              {subcategories.length > 0 && (
-                <div className="mt-5 flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-                  {["All", ...subcategories].map((subcategory) => (
-                    <button
-                      key={subcategory}
-                      type="button"
-                      onClick={() => {
-                        setSelectedSubcategories((prev) => ({
-                          ...prev,
-                          [category]: subcategory,
-                        }));
-
-                        setCategoryVisibleCounts((prev) => ({
-                          ...prev,
-                          [category]: 8,
-                        }));
-                      }}
-                      className={`shrink-0 rounded-full border px-4 py-2 text-[10px] font-black transition sm:text-xs ${
-                        activeSubcategory === subcategory
-                          ? "border-[#E30613] bg-[#E30613] text-white"
-                          : "border-slate-300 bg-white text-slate-700 hover:border-[#E30613] hover:text-[#E30613]"
-                      }`}
-                    >
-                      {subcategory}
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              <div className="mt-6 grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-6">
-                {visibleCategoryItems
-                  .slice(0, categoryVisibleCounts[category] || 8)
-                  .map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    addToCart={addToCart}
-                    currency={currency}
-                    language={language}
-                  />
-                ))}
-              </div>
-
-              {(categoryVisibleCounts[category] || 8) < visibleCategoryItems.length && (
-                <div className="mt-6 flex justify-center">
-                  <button
-                    onClick={() =>
-                      setCategoryVisibleCounts((prev) => ({
-                        ...prev,
-                        [category]: (prev[category] || 8) + 50,
-                      }))
-                    }
-                    className="rounded-full border border-[#E30613] bg-white px-6 py-2.5 text-[10px] font-black text-[#E30613] transition hover:bg-[#E30613] hover:text-white sm:px-8 sm:py-3 sm:text-xs"
-                  >
-                    {language === "sw"
-                      ? "ONA ZAIDI →"
-                      : "VIEW MORE →"}
-                  </button>
-                </div>
-              )}
-            </div>
-          </section>
-        );
-      })}
 
       {/* LONG PRODUCT FEED */}
       <section
@@ -1987,7 +2022,7 @@ export default function HomePage() {
           {filteredProducts.length > 0 ? (
             <>
               <div className="mt-7 grid grid-cols-2 gap-5 sm:grid-cols-3 sm:gap-5 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-                {filteredProducts.slice(0, visibleProductsCount).map((product) => (
+                {mixedMoreProducts.slice(0, visibleProductsCount).map((product) => (
                   <ProductCard
                     key={product.id}
                     product={product}
@@ -1998,16 +2033,19 @@ export default function HomePage() {
                 ))}
               </div>
 
-              {visibleProductsCount < filteredProducts.length && (
+              {visibleProductsCount < mixedMoreProducts.length && (
                 <div className="mt-10 flex justify-center">
                   <button
                     type="button"
-                    onClick={() =>
-                      setVisibleProductsCount(
-                        (count) => count + 100
-                      )
-                    }
-                    className="inline-flex min-w-[170px] items-center justify-center rounded-md bg-[#E30613] px-8 py-3.5 text-xs font-black uppercase tracking-wide text-white shadow-sm transition-all duration-200 hover:bg-[#c9000b] hover:shadow-md active:scale-95 sm:min-w-[190px] sm:px-10 sm:py-4 sm:text-sm"
+                    onClick={() => {
+                      setVisibleProductsCount((count) => {
+                        const nextCount = count + 100;
+                        return nextCount > mixedMoreProducts.length
+                          ? mixedMoreProducts.length
+                          : nextCount;
+                      });
+                    }}
+                    className="inline-flex  items-center justify-center rounded-md bg-[#E30613] px-5 py-2.5 text-xs font-black uppercase tracking-wide text-white shadow-sm transition-all duration-200 hover:bg-[#c9000b] hover:shadow-md active:scale-95"
                   >
                     {language === "sw"
                       ? "ONA ZAIDI"
@@ -2016,6 +2054,7 @@ export default function HomePage() {
                   </button>
                 </div>
               )}
+
             </>
           ) : (
             <EmptySection text={t.noProducts} />

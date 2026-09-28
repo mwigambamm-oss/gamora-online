@@ -217,11 +217,7 @@ setProduct(item);
         );
       }
 
-      setSelectedColor(
-        item.colors && item.colors.length > 0
-          ? [item.colors[0]]
-          : []
-      );
+      setSelectedColor([]);
 
       setSelectedSize([]);
       setSizeQuantitiesSelected({});

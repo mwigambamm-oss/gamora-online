@@ -126,29 +126,11 @@ const subtotal: number = cart.reduce(
   0
 );
 
-const discountTotal: number = cart.reduce(
-  (total: number, item: CartItem) => {
-    const oldPrice = Number(item.oldPrice || 0);
-    const price = Number(item.price || 0);
-    const quantity = Number(item.quantity || 0);
-
-    if (oldPrice > price) {
-      return total + (oldPrice - price) * quantity;
-    }
-
-    return total;
-  },
-  0
-);
-
-const discountedSubtotal =
-  subtotal - discountTotal;
-
 const deliveryFee: number =
   cart.length > 0 ? 0 : 0;
 
 const total =
-  discountedSubtotal + deliveryFee;
+  subtotal + deliveryFee;
 
   const sw = {
     cart: "Shopping Cart",
@@ -158,7 +140,6 @@ const total =
     quantity: "Idadi",
     remove: "Ondoa",
     subtotal: "Jumla ya Bidhaa",
-    discount: "Punguzo la Jumla",
     delivery: "Delivery",
     calculated: "Itahesabiwa Checkout",
     total: "Jumla",
@@ -175,7 +156,6 @@ const total =
     quantity: "Quantity",
     remove: "Remove",
     subtotal: "Subtotal",
-    discount: "Total Discount",
     delivery: "Delivery",
     calculated: "Calculated at Checkout",
     total: "Total",
@@ -417,16 +397,6 @@ const total =
                     {formatCurrency(subtotal, currency)}
                   </span>
                 </div>
-
-                {discountTotal > 0 && (
-                  <div className="flex justify-between gap-2 text-green-600">
-                    <span>{t.discount}</span>
-
-                    <span className="font-normal">
-                      - {formatCurrency(discountTotal, currency)}
-                    </span>
-                  </div>
-                )}
 
                 <div className="flex justify-between gap-2 text-slate-600">
                   <span>{t.delivery}</span>

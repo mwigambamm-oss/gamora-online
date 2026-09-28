@@ -121,36 +121,8 @@ export default function CheckoutPage() {
     }, 0);
   }, [cart]);
 
-  const discountTotal = useMemo(() => {
-    return cart.reduce((sum, item) => {
-      const oldPrice =
-        Number(item.oldPrice) || 0;
-
-      const price =
-        Number(item.price) || 0;
-
-      const quantity =
-        Number(item.quantity) || 0;
-
-      if (oldPrice > price) {
-        return (
-          sum +
-          (oldPrice - price) * quantity
-        );
-      }
-
-      return sum;
-    }, 0);
-  }, [cart]);
-
-  const originalSubtotal =
-    subtotal + discountTotal;
-
-  const discountedSubtotal =
-    subtotal - discountTotal;
-
   const total =
-    discountedSubtotal + deliveryFee;
+    subtotal + deliveryFee;
 
   function resetCalculatedLocation() {
     setCustomerLocation(null);
@@ -797,7 +769,6 @@ export default function CheckoutPage() {
 
       subtotal,
 
-      discountTotal,
 
       total: paymentAmount,
 
@@ -1095,34 +1066,6 @@ export default function CheckoutPage() {
 
               <View style={styles.divider} />
 
-              {discountTotal > 0 && (
-                <>
-                  <View style={styles.row}>
-                    <Text style={styles.label}>
-                      Original Subtotal
-                    </Text>
-                    <Text style={styles.value}>
-                      {formatCurrency(
-                        originalSubtotal,
-                        currency
-                      )}
-                    </Text>
-                  </View>
-
-                  <View style={styles.row}>
-                    <Text style={styles.label}>
-                      Discount
-                    </Text>
-                    <Text style={styles.value}>
-                      -{formatCurrency(
-                        discountTotal,
-                        currency
-                      )}
-                    </Text>
-                  </View>
-                </>
-              )}
-
               <View style={styles.row}>
                 <Text style={styles.label}>Subtotal</Text>
                 <Text style={styles.value}>
@@ -1264,29 +1207,7 @@ export default function CheckoutPage() {
             </div>
 
             <div className="mt-4 space-y-2 text-xs">
-              {discountTotal > 0 && (
-                <>
-                  <div className="flex justify-between">
-                    <span>Original Subtotal</span>
-                    <strong>
-                      {formatCurrency(
-                        originalSubtotal,
-                        currency
-                      )}
-                    </strong>
-                  </div>
 
-                  <div className="flex justify-between text-green-700">
-                    <span>Discount</span>
-                    <strong>
-                      -{formatCurrency(
-                        discountTotal,
-                        currency
-                      )}
-                    </strong>
-                  </div>
-                </>
-              )}
 
               <div className="flex justify-between">
                 <span>Subtotal</span>

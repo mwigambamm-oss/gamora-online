@@ -597,6 +597,7 @@ setProduct(item);
             id: product.id,
             name: product.name,
             price: item.price,
+            basePrice: item.basePrice,
             oldPrice:
               item.oldPrice ||
               displayOldPrice ||
@@ -719,6 +720,7 @@ setProduct(item);
             id: product.id,
             name: product.name,
             price: item.price,
+            basePrice: item.basePrice,
             oldPrice:
               item.oldPrice ||
               displayOldPrice ||

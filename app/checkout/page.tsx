@@ -10,6 +10,8 @@ type CartItem = {
   name: string;
   name_sw?: string;
   price: number;
+  basePrice?: number;
+  oldPrice?: number;
   quantity: number;
   stock?: number;
   image?: string;
@@ -766,7 +768,24 @@ export default function CheckoutPage() {
 
       subtotal,
 
-      discountTotal: 0,
+      discountTotal: cart.reduce((sum, item) => {
+        const basePrice =
+          Number(item.basePrice) ||
+          Number(item.oldPrice) ||
+          Number(item.price) ||
+          0;
+
+        const sellingPrice =
+          Number(item.price) || 0;
+
+        const quantity =
+          Number(item.quantity) || 0;
+
+        return sum + Math.max(
+          0,
+          (basePrice - sellingPrice) * quantity
+        );
+      }, 0),
 
       total: paymentAmount,
 

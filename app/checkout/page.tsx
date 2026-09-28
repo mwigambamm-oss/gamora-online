@@ -123,29 +123,34 @@ export default function CheckoutPage() {
 
   const discountTotal = useMemo(() => {
     return cart.reduce((sum, item) => {
-      const basePrice =
-        Number(item.basePrice) ||
-        Number(item.oldPrice) ||
-        Number(item.price) ||
-        0;
+      const oldPrice =
+        Number(item.oldPrice) || 0;
 
-      const sellingPrice =
+      const price =
         Number(item.price) || 0;
 
       const quantity =
         Number(item.quantity) || 0;
 
-      return sum + Math.max(
-        0,
-        (basePrice - sellingPrice) * quantity
-      );
+      if (oldPrice > price) {
+        return (
+          sum +
+          (oldPrice - price) * quantity
+        );
+      }
+
+      return sum;
     }, 0);
   }, [cart]);
 
   const originalSubtotal =
     subtotal + discountTotal;
 
-  const total = subtotal + deliveryFee;
+  const discountedSubtotal =
+    subtotal - discountTotal;
+
+  const total =
+    discountedSubtotal + deliveryFee;
 
   function resetCalculatedLocation() {
     setCustomerLocation(null);

@@ -688,7 +688,7 @@ window.dispatchEvent(new Event("cartUpdated"));
             {/* MAIN IMAGE */}
 
             <div
-              className="relative flex h-[300px] w-full items-center justify-center overflow-hidden bg-white sm:h-[390px] md:h-[500px] lg:h-[520px]"
+              className="relative flex h-[300px] w-full items-center justify-center overflow-hidden bg-white sm:h-[390px] md:h-[500px] lg:h-[520px] lg:w-[115%] lg:-ml-[7.5%]"
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
@@ -723,7 +723,7 @@ window.dispatchEvent(new Event("cartUpdated"));
                     <img
                       src={img}
                       alt={`${displayName || ""} ${index + 1}`}
-                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      className="h-full w-full object-contain object-center bg-white transition-transform duration-300 group-hover:scale-[1.02]"
                     />
 
                   </div>

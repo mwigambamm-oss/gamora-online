@@ -323,6 +323,20 @@ setProduct(item);
     );
 
   /*
+   * BULK UNIT PRICE
+   * 1-9   = base price
+   * 10-49 = 2% discount
+   * 50-99 = 5% discount
+   * 100+  = 10% discount
+   */
+  const getBulkUnitPrice = (price: number, qty: number) => {
+    if (qty >= 100) return Math.round(price * 0.90);
+    if (qty >= 50) return Math.round(price * 0.95);
+    if (qty >= 10) return Math.round(price * 0.98);
+    return price;
+  };
+
+  /*
    * COLOR + SIZE + QUANTITY CALCULATION
    * Uses product colors, sizes, size prices and size quantities.
    * No product variants are used.
@@ -358,15 +372,20 @@ setProduct(item);
           : Math.max(Math.floor(rawQuantity), 1);
 
       const colorImages = getColorImages(color);
+      const unitPrice = getBulkUnitPrice(
+        sizePrice,
+        itemQuantity
+      );
 
       return {
         color,
         size,
-        price: sizePrice,
+        price: unitPrice,
+        basePrice: sizePrice,
         stock: sizeStock,
         quantityKey,
         quantity: itemQuantity,
-        subtotal: sizePrice * itemQuantity,
+        subtotal: unitPrice * itemQuantity,
         oldPrice: Number(product?.oldPrice) || 0,
         images: colorImages,
       };

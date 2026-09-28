@@ -1574,17 +1574,104 @@ export default function CheckoutPage() {
               Mix by Yas
             </option>
 
+            <option value="NMB Bank">
+              NMB Bank
+            </option>
+
+            <option value="CRDB Bank">
+              CRDB Bank
+            </option>
+
             <option value="Cash">
               Cash
             </option>
           </select>
 
-          <p className="mt-2 text-[10px] leading-relaxed text-slate-500">
-            {t(
-              "Please use the payment numbers shown at the top left after placing your order. Currently under Sokoro Mwigamba. Gamora accounts are coming soon.",
-              "Tafadhali tumia namba za malipo zinazoonekana juu kushoto baada ya kuweka order. Kwa sasa zipo kwa jina la Sokoro Mwigamba. Akaunti za Gamora zinakuja hivi karibuni."
-            )}
-          </p>
+          {paymentMethod === "M-Pesa" && (
+            <div className="mt-3 rounded-xl border border-green-200 bg-green-50 p-3">
+              <p className="text-xs font-semibold text-green-800">
+                {t("M-Pesa Payment", "Malipo ya M-Pesa")}
+              </p>
+
+              <p className="mt-1 text-sm font-bold tracking-wide text-slate-900">
+                0798555221
+              </p>
+
+              <p className="mt-1 text-[10px] leading-4 text-slate-500">
+                {t(
+                  "Payment is currently under the name Sokoro Mwigamba while Gamora accounts are being prepared. Make sure the payer's name matches the name entered on your order.",
+                  "Malipo kwa sasa yapo kwa jina la Sokoro Mwigamba wakati akaunti za Gamora zinaandaliwa. Hakikisha jina la anayefanya malipo linafanana na jina uliloandika kwenye order."
+                )}
+              </p>
+            </div>
+          )}
+
+          {paymentMethod === "Mix by Yas" && (
+            <div className="mt-3 rounded-xl border border-sky-200 bg-sky-50 p-3">
+              <p className="text-xs font-semibold text-sky-800">
+                {t("Mix by Yas Payment", "Malipo ya Mix by Yas")}
+              </p>
+
+              <p className="mt-1 text-[10px] text-slate-500">
+                {t("Lipa number", "Namba ya Lipa")}
+              </p>
+              <p className="text-sm font-bold tracking-wide text-slate-900">
+                433064356
+              </p>
+
+              <p className="mt-2 text-[10px] text-slate-500">
+                {t("Phone number", "Namba ya simu")}
+              </p>
+              <p className="text-sm font-bold tracking-wide text-slate-900">
+                0676285283
+              </p>
+
+              <p className="mt-1 text-[10px] leading-4 text-slate-500">
+                {t(
+                  "Payment is currently under the name Sokoro Mwigamba while Gamora accounts are being prepared. Make sure the payer's name matches the name entered on your order.",
+                  "Malipo kwa sasa yapo kwa jina la Sokoro Mwigamba wakati akaunti za Gamora zinaandaliwa. Hakikisha jina la anayefanya malipo linafanana na jina uliloandika kwenye order."
+                )}
+              </p>
+            </div>
+          )}
+
+          {paymentMethod === "NMB Bank" && (
+            <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
+              <p className="text-xs font-semibold text-emerald-800">
+                {t("NMB Bank", "Benki ya NMB")}
+              </p>
+
+              <p className="mt-1 text-sm font-bold tracking-wide text-slate-900">
+                20510105556
+              </p>
+
+              <p className="mt-1 text-[10px] leading-4 text-slate-500">
+                {t(
+                  "Payment is currently under the name Sokoro Mwigamba while Gamora accounts are being prepared. Make sure the payer's name matches the name entered on your order.",
+                  "Malipo kwa sasa yapo kwa jina la Sokoro Mwigamba wakati akaunti za Gamora zinaandaliwa. Hakikisha jina la anayefanya malipo linafanana na jina uliloandika kwenye order."
+                )}
+              </p>
+            </div>
+          )}
+
+          {paymentMethod === "CRDB Bank" && (
+            <div className="mt-3 rounded-xl border border-orange-200 bg-orange-50 p-3">
+              <p className="text-xs font-semibold text-orange-800">
+                {t("CRDB Bank", "Benki ya CRDB")}
+              </p>
+
+              <p className="mt-1 text-sm font-bold tracking-wide text-slate-900">
+                01520013RMG00
+              </p>
+
+              <p className="mt-1 text-[10px] leading-4 text-slate-500">
+                {t(
+                  "Payment is currently under the name Sokoro Mwigamba while Gamora accounts are being prepared. Make sure the payer's name matches the name entered on your order.",
+                  "Malipo kwa sasa yapo kwa jina la Sokoro Mwigamba wakati akaunti za Gamora zinaandaliwa. Hakikisha jina la anayefanya malipo linafanana na jina uliloandika kwenye order."
+                )}
+              </p>
+            </div>
+          )}
 
           <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
             <div className="flex justify-between text-xs">

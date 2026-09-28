@@ -31,6 +31,8 @@ type Product = {
   >;
   colors?: string[];
   sizes?: string[];
+  sizePrices?: Record<string, number>;
+  sizeQuantities?: Record<string, number>;
   specifications?: Record<string, string>;
   specifications_sw?: Record<string, string>;
   orders_count?: number;
@@ -111,8 +113,14 @@ const [cartCount, setCartCount] = useState(0);
   const [reviewComment, setReviewComment] = useState("");
   const [reviewLoading, setReviewLoading] = useState(false);
 
+  
+
   const [selectedColor, setSelectedColor] = useState<string[]>([]);
   const [selectedSize, setSelectedSize] = useState<string[]>([]);
+  const [sizeQuantitiesSelected, setSizeQuantitiesSelected] =
+    useState<Record<string, number>>({});
+  const [selectedModel, setSelectedModel] = useState("");
+
   const [activeTab, setActiveTab] = useState("description");
   const [likes, setLikes] = useState(200);
   const [orders, setOrders] = useState(300);
@@ -146,6 +154,7 @@ if (!item) {
 
 setProduct(item);
 
+      // LOAD REAL PRODUCT VARIANTS
       // LOAD PERSISTENT LIKES + ORDERS
       try {
         const likeResponse = await fetch(
@@ -208,8 +217,15 @@ setProduct(item);
         );
       }
 
-      setSelectedColor([]);
+      setSelectedColor(
+        item.colors && item.colors.length > 0
+          ? [item.colors[0]]
+          : []
+      );
+
       setSelectedSize([]);
+      setSizeQuantitiesSelected({});
+      setSelectedModel("");
 
       const all = await getProducts();
 
@@ -266,33 +282,148 @@ setProduct(item);
 }, []);
 
   /*
-   * PRODUCT IMAGES
+   * PRODUCT VARIANT / COLOR / SIZE LOGIC
    */
-  const hasColorImageMap =
-    !!product?.image_color_map &&
-    Object.keys(product.image_color_map).length > 0;
 
-  const selectedColorImages =
-    selectedColor.length > 0 && product?.image_color_map
-      ? selectedColor.flatMap(
-          (color) =>
-            product.image_color_map?.[color]?.images || []
-        )
+  function getColorImages(color: string): string[] {
+    const map = product?.image_color_map || {};
+
+    const matchedKey = Object.keys(map).find(
+      (key) =>
+        key.trim().toLowerCase() ===
+        color.trim().toLowerCase()
+    );
+
+    return matchedKey
+      ? map[matchedKey]?.images || []
       : [];
+  }
+
+  function getColorHasStock(_color: string): boolean {
+    return Number(product?.stock) > 0;
+  }
+
+  function getColorStatus(
+    color: string
+  ): "available" | "no-image" | "out-of-stock" {
+    const hasImages = getColorImages(color).length > 0;
+
+    if (!hasImages) {
+      return "no-image";
+    }
+
+    if (!getColorHasStock(color)) {
+      return "out-of-stock";
+    }
+
+    return "available";
+  }
 
   const colorOutOfStock =
     selectedColor.length > 0 &&
-    hasColorImageMap &&
-    selectedColorImages.length === 0;
+    selectedColor.every(
+      (color) =>
+        getColorStatus(color) === "out-of-stock"
+    );
+
+  /*
+   * COLOR + SIZE + QUANTITY CALCULATION
+   * Uses product colors, sizes, size prices and size quantities.
+   * No product variants are used.
+   */
+
+  const selectedColorImages =
+    selectedColor.length > 0 && product?.image_color_map
+      ? selectedColor.flatMap((color) => getColorImages(color))
+      : [];
+
+  const selectedColorSizeLines = selectedColor.flatMap((color) =>
+    selectedSize.map((size) => {
+      const sizePrice =
+        product?.sizePrices?.[size] !== undefined
+          ? Number(product.sizePrices[size])
+          : Number(product?.price) || 0;
+
+      const sizeStock =
+        product?.sizeQuantities?.[size] !== undefined
+          ? Number(product.sizeQuantities[size])
+          : Number(product?.stock) || 0;
+
+      const quantityKey = `${color}::${size}`;
+      const rawQuantity =
+        Number(sizeQuantitiesSelected[quantityKey]) || 1;
+
+      const itemQuantity =
+        sizeStock > 0
+          ? Math.min(
+              Math.max(Math.floor(rawQuantity), 1),
+              sizeStock
+            )
+          : Math.max(Math.floor(rawQuantity), 1);
+
+      const colorImages = getColorImages(color);
+
+      return {
+        color,
+        size,
+        price: sizePrice,
+        stock: sizeStock,
+        quantityKey,
+        quantity: itemQuantity,
+        subtotal: sizePrice * itemQuantity,
+        oldPrice: Number(product?.oldPrice) || 0,
+        images: colorImages,
+      };
+    })
+  );
+
+  const selectedSizesTotal = selectedColorSizeLines.reduce(
+    (sum, item) => sum + item.subtotal,
+    0
+  );
+
+  const selectedSingleColor =
+    selectedColor.length > 0 ? selectedColor[0] : "";
+
+  const selectedSingleSize =
+    selectedSize.length > 0 ? selectedSize[0] : "";
+
+  const selectedSingleSizePrice =
+    selectedSingleSize &&
+    product?.sizePrices?.[selectedSingleSize] !== undefined
+      ? Number(product.sizePrices[selectedSingleSize])
+      : Number(product?.price) || 0;
+
+  const selectedSingleSizeStock =
+    selectedSingleSize &&
+    product?.sizeQuantities?.[selectedSingleSize] !== undefined
+      ? Number(product.sizeQuantities[selectedSingleSize])
+      : Number(product?.stock) || 0;
+
+  const displayPrice =
+    selectedSingleSizePrice;
+
+  const displayOldPrice =
+    Number(product?.oldPrice) || 0;
+
+  const displayStock =
+    selectedSingleSizeStock;
+
+  /*
+   * COLOR + SIZE + QUANTITY CALCULATION
+   * Uses product colors, sizes, size prices and size quantities.
+   * No product variants are used.
+   */
 
   const variantImages =
-    selectedColor.length > 0 && selectedColorImages.length > 0
+    selectedColorImages.length > 0
       ? [...new Set(selectedColorImages)]
-      : product?.images && product.images.length > 0
-      ? product.images
-      : product?.image
-      ? [product.image]
-      : [];
+      : product?.images &&
+          product.images.length > 0
+        ? product.images
+        : product?.image
+          ? [product.image]
+          : [];
 
   const images = variantImages;
 
@@ -316,7 +447,12 @@ setProduct(item);
    */
   useEffect(() => {
     setActiveImage(0);
-  }, [product?.id, selectedColor.join("|")]);
+  }, [
+    product?.id,
+    selectedColor.join("|"),
+    selectedSize.join("|"),
+    selectedModel,
+  ]);
 
   /*
    * NEXT IMAGE
@@ -429,37 +565,103 @@ setProduct(item);
       product.image ||
       "";
 
-    const cartItem = {
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      oldPrice: product.oldPrice,
-      stock: product.stock,
-      image: cartImage,
-      quantity: quantity,
-      selectedColor: selectedColor.join(" | "),
-      selectedSize: selectedSize.join(" | "),
-    };
-
     try {
-      const existing = localStorage.getItem("gamora_cart");
-      const cart = existing ? JSON.parse(existing) : [];
+      const existing =
+        localStorage.getItem("gamora_cart");
 
-      const existingIndex = cart.findIndex(
-        (item: {
-          id: number;
-          selectedColor?: string;
-          selectedSize?: string;
-        }) =>
-          item.id === product.id &&
-          item.selectedColor === selectedColor.join(" | ") &&
-          item.selectedSize === selectedSize.join(" | ")
-      );
+      const cart =
+        existing ? JSON.parse(existing) : [];
 
-      if (existingIndex >= 0) {
-        cart[existingIndex].quantity += 1;
+      // MULTIPLE COLOR + SIZE COMBINATIONS
+      if (
+        selectedColor.length > 0 &&
+        selectedSize.length > 0
+      ) {
+        selectedColorSizeLines.forEach((item) => {
+          const cartItem = {
+            id: product.id,
+            name: product.name,
+            price: item.price,
+            oldPrice:
+              item.oldPrice ||
+              displayOldPrice ||
+              undefined,
+            stock: item.stock,
+            image:
+              item.images?.[0] ||
+              cartImage,
+            quantity: item.quantity,
+            selectedColor: item.color,
+            selectedSize: item.size,
+            selectedModel: selectedModel,
+          };
+
+          const existingIndex =
+            cart.findIndex(
+              (item: {
+                id: number;
+                selectedColor?: string;
+                selectedSize?: string;
+                selectedModel?: string;
+              }) =>
+                item.id === product.id &&
+                item.selectedColor ===
+                  cartItem.selectedColor &&
+                item.selectedSize ===
+                  cartItem.selectedSize &&
+                item.selectedModel ===
+                  cartItem.selectedModel
+            );
+
+          if (existingIndex >= 0) {
+            cart[existingIndex].quantity +=
+              cartItem.quantity;
+          } else {
+            cart.push(cartItem);
+          }
+        });
       } else {
-        cart.push(cartItem);
+        // NORMAL SINGLE SELECTION
+        const cartItem = {
+          id: product.id,
+          name: product.name,
+          price: displayPrice,
+          oldPrice:
+            displayOldPrice || undefined,
+          stock: displayStock,
+          image: cartImage,
+          quantity: quantity,
+          selectedColor:
+            selectedSingleColor,
+          selectedSize:
+            selectedSingleSize,
+          selectedModel:
+            selectedModel,
+        };
+
+        const existingIndex =
+          cart.findIndex(
+            (item: {
+              id: number;
+              selectedColor?: string;
+              selectedSize?: string;
+              selectedModel?: string;
+            }) =>
+              item.id === product.id &&
+              item.selectedColor ===
+                cartItem.selectedColor &&
+              item.selectedSize ===
+                cartItem.selectedSize &&
+              item.selectedModel ===
+                cartItem.selectedModel
+          );
+
+        if (existingIndex >= 0) {
+          cart[existingIndex].quantity +=
+            cartItem.quantity;
+        } else {
+          cart.push(cartItem);
+        }
       }
 
       localStorage.setItem(
@@ -467,7 +669,9 @@ setProduct(item);
         JSON.stringify(cart)
       );
 
-window.dispatchEvent(new Event("cartUpdated"));
+      window.dispatchEvent(
+        new Event("cartUpdated")
+      );
 
       alert("Product added to cart.");
     } catch (error) {
@@ -488,28 +692,62 @@ window.dispatchEvent(new Event("cartUpdated"));
       product.image ||
       "";
 
-    const cartItem = {
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      oldPrice: product.oldPrice,
-      stock: product.stock,
-      image: cartImage,
-      quantity: quantity,
-      selectedColor: selectedColor.join(" | "),
-      selectedSize: selectedSize.join(" | "),
-    };
-
     try {
+      let items;
+
+      if (
+        selectedColor.length > 0 &&
+        selectedSize.length > 0
+      ) {
+        items =
+          selectedColorSizeLines.map((item) => ({
+            id: product.id,
+            name: product.name,
+            price: item.price,
+            oldPrice:
+              item.oldPrice ||
+              displayOldPrice ||
+              undefined,
+            stock: item.stock,
+            image:
+              item.images?.[0] ||
+              cartImage,
+            quantity: item.quantity,
+            selectedColor: item.color,
+            selectedSize: item.size,
+            selectedModel: selectedModel,
+          }));
+      } else {
+        items = [
+          {
+            id: product.id,
+            name: product.name,
+            price: displayPrice,
+            oldPrice:
+              displayOldPrice || undefined,
+            stock: displayStock,
+            image: cartImage,
+            quantity: quantity,
+            selectedColor:
+              selectedSingleColor,
+            selectedSize:
+              selectedSingleSize,
+            selectedModel:
+              selectedModel,
+          },
+        ];
+      }
+
       localStorage.setItem(
         "gamora_cart",
-        JSON.stringify([cartItem])
+        JSON.stringify(items)
       );
 
-      window.dispatchEvent(new Event("cartUpdated"));
+      window.dispatchEvent(
+        new Event("cartUpdated")
+      );
 
       router.push("/checkout");
-
     } catch (error) {
       console.error("Buy now error:", error);
     }
@@ -538,10 +776,10 @@ window.dispatchEvent(new Event("cartUpdated"));
    * DISCOUNT
    */
   const discount =
-    product.oldPrice && product.oldPrice > product.price
+    displayOldPrice && displayOldPrice > displayPrice
       ? Math.round(
-          ((product.oldPrice - product.price) /
-            product.oldPrice) *
+          ((displayOldPrice - displayPrice) /
+            displayOldPrice) *
             100
         )
       : 0;
@@ -550,7 +788,7 @@ window.dispatchEvent(new Event("cartUpdated"));
    * AUTOMATIC BULK PRICING
    * Based on the product's selling price.
    */
-  const basePrice = Number(product.price) || 0;
+  const basePrice = Number(displayPrice) || 0;
 
   const bulkPrices = {
     ten: Math.round(basePrice * 0.98),
@@ -679,16 +917,16 @@ window.dispatchEvent(new Event("cartUpdated"));
           </span>
         </div>
 
-        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.08fr)_minmax(360px,0.92fr)] lg:gap-10">
+        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(420px,0.95fr)] lg:gap-3">
 
           {/* ================= IMAGE AREA ================= */}
 
-          <div className="min-w-0">
+          <div className="min-w-0 w-full self-stretch">
 
             {/* MAIN IMAGE */}
 
             <div
-              className="relative flex h-[300px] w-full items-center justify-center overflow-hidden bg-white sm:h-[390px] md:h-[500px] lg:h-[520px] lg:w-[115%] lg:-ml-[7.5%]"
+              className="relative flex h-[300px] w-full items-center justify-center overflow-hidden bg-white sm:h-[390px] md:h-[500px] lg:h-[560px]"
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
@@ -717,7 +955,7 @@ window.dispatchEvent(new Event("cartUpdated"));
                 {images.map((img, index) => (
                   <div
                     key={`${img}-${index}`}
-                    className="flex h-full min-w-full items-center justify-center bg-white"
+                    className="flex h-full w-full min-w-full flex-shrink-0 items-center justify-center bg-white"
                   >
 
                     <img
@@ -817,7 +1055,7 @@ window.dispatchEvent(new Event("cartUpdated"));
 
           {/* ================= DETAILS ================= */}
 
-          <div className="min-w-0 text-left">
+          <div className="relative z-20 min-w-0 w-full overflow-visible bg-white text-left">
 
             <div>
               <h1 className="text-base font-semibold leading-6 text-slate-900 sm:text-xl md:text-2xl">
@@ -827,7 +1065,7 @@ window.dispatchEvent(new Event("cartUpdated"));
               <div className="mt-2">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-lg font-bold text-[#E30613] sm:text-xl">
-                    {formatCurrency(basePrice, currency)}
+                    {formatCurrency(displayPrice, currency)}
                   </span>
 
                   <span className="text-[10px] font-semibold text-slate-500">
@@ -858,7 +1096,7 @@ window.dispatchEvent(new Event("cartUpdated"));
                         1 pc
                       </div>
                       <div className="mt-0.5 text-[11px] font-bold text-slate-900">
-                        {formatCurrency(basePrice, currency)}
+                        {formatCurrency(displayPrice, currency)}
                       </div>
                     </div>
 
@@ -950,113 +1188,404 @@ window.dispatchEvent(new Event("cartUpdated"));
             </div>
 
             <div className="mt-4 text-xs font-medium text-green-600 sm:text-sm">
-              ✓ {t("In Stock", "Zinapatikana")} ({product.stock})
+              ✓ {t("In Stock", "Zinapatikana")} ({displayStock})
             </div>
 
             <div className="mt-3 flex flex-wrap items-end gap-4">
-              {product.colors && product.colors.length > 0 && (
+
+              {product.colors &&
+                product.colors.length > 0 && (
+                  <div>
+                    <p className="mb-1.5 text-xs font-medium text-slate-600">
+                      {t("Color", "Rangi")}
+                    </p>
+
+                    <div className="flex flex-wrap gap-1.5">
+                      {product.colors.map((color) => {
+                        const status =
+                          getColorStatus(color);
+
+                        const isSelected =
+                          selectedColor.some(
+                            (item) =>
+                              item.trim().toLowerCase() ===
+                              color.trim().toLowerCase()
+                          );
+
+                        const disabled =
+                          status === "out-of-stock" ||
+                          status === "no-image";
+
+                        return (
+                          <button
+                            key={color}
+                            type="button"
+                            disabled={disabled}
+                            onClick={() => {
+                              if (disabled) return;
+
+                              setSelectedColor((prev) =>
+                                prev.some(
+                                  (item) =>
+                                    item.trim().toLowerCase() ===
+                                    color.trim().toLowerCase()
+                                )
+                                  ? prev.filter(
+                                      (item) =>
+                                        item.trim().toLowerCase() !==
+                                        color.trim().toLowerCase()
+                                    )
+                                  : [...prev, color]
+                              );
+                            }}
+                            className={`rounded-md px-3 py-1.5 text-xs transition ${
+                              isSelected
+                                ? "border border-[#E30613] bg-red-50 text-[#E30613]"
+                                : disabled
+                                  ? "cursor-not-allowed border border-slate-100 bg-slate-50 text-slate-300"
+                                  : "border border-slate-200 bg-white text-slate-600 hover:border-red-200"
+                            }`}
+                          >
+                            {color}
+                            {status === "out-of-stock" &&
+                              " (Out)"}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+              {product.sizes &&
+                product.sizes.length > 0 && (
+                  <div>
+                    <p className="mb-1.5 text-xs font-medium text-slate-600">
+                      {t("Size", "Ukubwa")}
+                    </p>
+
+                    <div className="flex flex-wrap gap-1.5">
+                      {product.sizes.map((size) => {
+                        const isSelected =
+                          selectedSize.some(
+                            (item) =>
+                              item.trim().toLowerCase() ===
+                              size.trim().toLowerCase()
+                          );
+
+                        return (
+                          <button
+                            key={size}
+                            type="button"
+                            onClick={() => {
+                              setSelectedSize((prev) => {
+                                const exists =
+                                  prev.some(
+                                    (item) =>
+                                      item.trim().toLowerCase() ===
+                                      size.trim().toLowerCase()
+                                  );
+
+                                if (exists) {
+                                  setSizeQuantitiesSelected(
+                                    (current) => {
+                                      const next = {
+                                        ...current,
+                                      };
+
+                                      Object.keys(next)
+                                        .filter((key) =>
+                                          key.endsWith(
+                                            `::${size}`
+                                          )
+                                        )
+                                        .forEach(
+                                          (key) =>
+                                            delete next[key]
+                                        );
+
+                                      return next;
+                                    }
+                                  );
+
+                                  return prev.filter(
+                                    (item) =>
+                                      item.trim().toLowerCase() !==
+                                      size.trim().toLowerCase()
+                                  );
+                                }
+
+                                setSizeQuantitiesSelected(
+                                  (current) => {
+                                    const next = {
+                                      ...current,
+                                    };
+
+                                    selectedColor.forEach(
+                                      (color) => {
+                                        const key =
+                                          `${color}::${size}`;
+
+                                        if (
+                                          !next[key]
+                                        ) {
+                                          next[key] = 1;
+                                        }
+                                      }
+                                    );
+
+                                    return next;
+                                  }
+                                );
+
+                                return [
+                                  ...prev,
+                                  size,
+                                ];
+                              });
+                            }}
+                            className={`rounded-md px-3 py-1.5 text-xs transition ${
+                              isSelected
+                                ? "border border-[#E30613] bg-red-50 text-[#E30613]"
+                                : "border border-slate-200 bg-white text-slate-600 hover:border-red-200"
+                            }`}
+                          >
+                            {size}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+              {selectedColor.length > 0 &&
+                selectedSize.length > 0 && (
+                  <div className="w-full">
+                    <p className="mb-2 text-xs font-medium text-slate-600">
+                      {t(
+                        "Selected Combinations",
+                        "Mchanganyiko Uliyochagua"
+                      )}
+                    </p>
+
+                    <div className="space-y-2">
+                      {selectedColorSizeLines.map(
+                        (item) => (
+                          <div
+                            key={item.quantityKey}
+                            className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50/50 px-3 py-2.5"
+                          >
+                            <div className="min-w-0 w-full">
+                              <div className="text-xs font-semibold text-slate-800">
+                                {item.color} — {item.size}
+                              </div>
+
+                              <div className="mt-0.5 text-[11px] text-slate-500">
+                                {formatCurrency(
+                                  item.price,
+                                  currency
+                                )} × {item.quantity} ={" "}
+                                <span className="font-semibold text-[#E30613]">
+                                  {formatCurrency(
+                                    item.subtotal,
+                                    currency
+                                  )}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center overflow-hidden rounded-md border border-slate-200 bg-white">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setSizeQuantitiesSelected((current) => ({
+                                    ...current,
+                                    [item.quantityKey]: Math.max(
+                                      1,
+                                      item.quantity - 1
+                                    ),
+                                  }))
+                                }
+                                className="h-8 w-8 text-sm text-slate-600 hover:bg-slate-50"
+                              >
+                                −
+                              </button>
+
+                              <input
+                                type="number"
+                                min={1}
+                                max={
+                                  item.stock > 0
+                                    ? item.stock
+                                    : undefined
+                                }
+                                value={item.quantity}
+                                onChange={(e) => {
+                                  const raw =
+                                    Number(
+                                      e.target.value
+                                    );
+
+                                  const safe =
+                                    Math.max(
+                                      1,
+                                      Number.isFinite(raw)
+                                        ? Math.floor(raw)
+                                        : 1
+                                    );
+
+                                  const finalQuantity =
+                                    item.stock > 0
+                                      ? Math.min(
+                                          safe,
+                                          item.stock
+                                        )
+                                      : safe;
+
+                                  setSizeQuantitiesSelected(
+                                    (current) => ({
+                                      ...current,
+                                      [item.quantityKey]:
+                                        finalQuantity,
+                                    })
+                                  );
+                                }}
+                                className="h-8 w-12 border-x border-slate-200 bg-white text-center text-xs outline-none focus:bg-red-50"
+                                aria-label={`${item.color} ${item.size} quantity`}
+                              />
+
+                              <button
+                                type="button"
+                                disabled={
+                                  item.stock > 0 &&
+                                  item.quantity >=
+                                    item.stock
+                                }
+                                onClick={() =>
+                                  setSizeQuantitiesSelected((current) => ({
+                                    ...current,
+                                    [item.quantityKey]:
+                                      item.stock > 0
+                                        ? Math.min(
+                                            item.quantity + 1,
+                                            item.stock
+                                          )
+                                        : item.quantity + 1,
+                                  }))
+                                }
+                                className="h-8 w-8 text-sm text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-300"
+                              >
+                                +
+                              </button>
+                            </div>
+                          </div>
+                        )
+                      )}
+                    </div>
+
+                    <div className="mt-3 flex items-center justify-between rounded-lg bg-red-50 px-3 py-2.5">
+                      <span className="text-xs font-semibold text-slate-700">
+                        {t(
+                          "Selected Total",
+                          "Jumla ya Chaguo"
+                        )}
+                      </span>
+
+                      <span className="text-sm font-bold text-[#E30613]">
+                        {formatCurrency(
+                          selectedSizesTotal,
+                          currency
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+              {selectedSize.length === 0 && (
                 <div>
                   <p className="mb-1.5 text-xs font-medium text-slate-600">
-                    {t("Color", "Rangi")}
+                    {t("Quantity", "Idadi")}
                   </p>
 
-                  <div className="flex flex-wrap gap-1.5">
-                    {product.colors.map((color) => (
-                      <button
-                        key={color}
-                        type="button"
-                        onClick={() =>
-                          setSelectedColor((prev) =>
-                            prev.includes(color)
-                              ? prev.filter((item) => item !== color)
-                              : [...prev, color]
-                          )
-                        }
-                        className={`rounded-md px-3 py-1.5 text-xs transition ${
-                          selectedColor.includes(color)
-                            ? "border border-[#E30613] bg-red-50 text-[#E30613]"
-                            : "border border-slate-200 bg-white text-slate-600 hover:border-red-200"
-                        }`}
-                      >
-                        {color}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {product.sizes && product.sizes.length > 0 && (
-                <div>
-                  <p className="mb-1.5 text-xs font-medium text-slate-600">
-                    {t("Size", "Ukubwa")}
-                  </p>
-
-                  <div className="flex flex-wrap gap-1.5">
-                    {product.sizes.map((size) => (
-                      <button
-                        key={size}
-                        type="button"
-                        onClick={() =>
-                          setSelectedSize((prev) =>
-                            prev.includes(size)
-                              ? prev.filter((item) => item !== size)
-                              : [...prev, size]
-                          )
-                        }
-                        className={`rounded-md px-3 py-1.5 text-xs transition ${
-                          selectedSize.includes(size)
-                            ? "border border-[#E30613] bg-red-50 text-[#E30613]"
-                            : "border border-slate-200 bg-white text-slate-600 hover:border-red-200"
-                        }`}
-                      >
-                        {size}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div>
-                <p className="mb-1.5 text-xs font-medium text-slate-600">
-                  {t("Quantity", "Idadi")}
-                </p>
-
-                <div className="flex w-fit items-center overflow-hidden rounded-md border border-slate-200">
-                  <button
-                    type="button"
-                    onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                    className="h-8 w-8 text-sm text-slate-600 hover:bg-slate-50"
-                  >
-                    −
-                  </button>
-
-                  <input
-                    type="number"
-                    min={1}
-                    value={quantity}
-                    onChange={(e) => {
-                      const value = Number(e.target.value);
-
-                      if (!e.target.value) {
-                        setQuantity(1);
-                        return;
+                  <div className="flex w-fit items-center overflow-hidden rounded-md border border-slate-200">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setQuantity(
+                          (q) => Math.max(1, q - 1)
+                        )
                       }
+                      className="h-8 w-8 text-sm text-slate-600 hover:bg-slate-50"
+                    >
+                      −
+                    </button>
 
-                      setQuantity(Math.max(1, value));
-                    }}
-                    className="h-8 w-12 border-x border-slate-200 bg-white text-center text-xs outline-none focus:bg-red-50"
-                    aria-label={t("Quantity", "Idadi")}
-                  />
+                    <input
+                      type="number"
+                      min={1}
+                      max={
+                        displayStock > 0
+                          ? displayStock
+                          : undefined
+                      }
+                      value={quantity}
+                      onChange={(e) => {
+                        const value =
+                          Number(e.target.value);
 
-                  <button
-                    type="button"
-                    onClick={() => setQuantity((q) => q + 1)}
-                    className="h-8 w-8 text-sm text-slate-600 hover:bg-slate-50"
-                  >
-                    +
-                  </button>
+                        if (!e.target.value) {
+                          setQuantity(1);
+                          return;
+                        }
+
+                        const safe =
+                          Math.max(
+                            1,
+                            Math.floor(
+                              Number.isFinite(value)
+                                ? value
+                                : 1
+                            )
+                          );
+
+                        setQuantity(
+                          displayStock > 0
+                            ? Math.min(
+                                safe,
+                                displayStock
+                              )
+                            : safe
+                        );
+                      }}
+                      className="h-8 w-12 border-x border-slate-200 bg-white text-center text-xs outline-none focus:bg-red-50"
+                      aria-label={t(
+                        "Quantity",
+                        "Idadi"
+                      )}
+                    />
+
+                    <button
+                      type="button"
+                      disabled={
+                        displayStock > 0 &&
+                        quantity >= displayStock
+                      }
+                      onClick={() =>
+                        setQuantity((q) =>
+                          displayStock > 0
+                            ? Math.min(
+                                q + 1,
+                                displayStock
+                              )
+                            : q + 1
+                        )
+                      }
+                      className="h-8 w-8 text-sm text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-300"
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {displayDescription && (

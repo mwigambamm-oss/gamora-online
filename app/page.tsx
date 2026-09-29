@@ -991,7 +991,7 @@ export default function HomePage() {
   }
 
   return (
-    <main id="top" className="min-h-screen bg-[#f3f4f6] text-[#1f2937]">
+    <main id="top" className="min-h-screen bg-[#F7FAF8] text-[#26332C]">
       <style>{`
         @keyframes gamora-marquee {
           from { transform: translateX(100vw); }
@@ -999,13 +999,13 @@ export default function HomePage() {
         }
       `}</style>
       {notice && (
-        <div className="fixed left-1/2 top-5 z-[100] -translate-x-1/2 rounded-full bg-[#1f2937] px-5 py-3 text-xs font-bold text-white shadow-2xl sm:text-sm">
+        <div className="fixed left-1/2 top-5 z-[100] -translate-x-1/2 rounded-full bg-[#6B756E] px-5 py-3 text-xs font-bold text-[#26332C] shadow-2xl sm:text-sm">
           ✓ {notice}
         </div>
       )}
 
       {/* ANNOUNCEMENT */}
-      <div className="bg-gradient-to-r from-[#E30613] to-orange-500 text-white">
+      <div className="bg-[#E8F3ED] text-[#26332C]">
         <div className="mx-auto max-w-[1440px] overflow-hidden">
           <div className="gamora-marquee flex min-h-[38px] w-max items-center whitespace-nowrap text-[11px] font-bold sm:text-xs">
             {language === "sw"
@@ -1016,7 +1016,7 @@ export default function HomePage() {
       </div>
 
       {/* HEADER */}
-      <header className="sticky top-0 z-50 border-b border-red-100 bg-white">
+      <header className="sticky top-0 z-50 border-b border-[#E3EBE6] bg-[#E8F3ED]">
 
         {/* DESKTOP HEADER */}
         <div className="mx-auto hidden min-h-[70px] max-w-[1440px] items-center gap-4 px-3 sm:px-5 lg:flex lg:gap-6">
@@ -1025,10 +1025,10 @@ export default function HomePage() {
             onClick={() => router.push("/")}
             className="shrink-0 text-left"
           >
-            <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#E30613]">
+            <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#374151]">
               Gamora Online
             </p>
-            <p className="text-xs font-black bg-gradient-to-r from-[#E30613] via-orange-500 to-pink-500 bg-clip-text text-transparent">
+            <p className="text-xs font-black bg-gradient-to-r from-[#087443] via-[#2B8A5A] to-[#6BAF87] bg-clip-text text-transparent">
               {language === "sw"
                 ? "Soko lako la mtandaoni"
                 : "Your online marketplace"}
@@ -1040,28 +1040,28 @@ export default function HomePage() {
 
             <a
               href="#flash-sales"
-              className="shrink-0 whitespace-nowrap text-[11px] font-black text-[#E30613] transition hover:underline"
+              className="shrink-0 whitespace-nowrap text-[11px] font-black text-[#374151] transition hover:underline"
             >
               🔥 Flash Deals
             </a>
 
             <a
               href="#flash-sales"
-              className="shrink-0 whitespace-nowrap text-[11px] font-black text-slate-700 transition hover:text-[#E30613]"
+              className="shrink-0 whitespace-nowrap text-[11px] font-black text-[#26332C] transition hover:text-[#374151]"
             >
               Offers
             </a>
 
             <a
               href="#new-arrivals"
-              className="shrink-0 whitespace-nowrap text-[11px] font-black text-slate-700 transition hover:text-[#E30613]"
+              className="shrink-0 whitespace-nowrap text-[11px] font-black text-[#26332C] transition hover:text-[#374151]"
             >
               New Arrivals
             </a>
 
             <a
               href="#trending"
-              className="shrink-0 whitespace-nowrap text-[11px] font-black text-slate-700 transition hover:text-[#E30613]"
+              className="shrink-0 whitespace-nowrap text-[11px] font-black text-[#26332C] transition hover:text-[#374151]"
             >
               Trending Now
             </a>
@@ -1073,7 +1073,7 @@ export default function HomePage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder=""
-              className="h-11 w-full rounded-full border-2 border-orange-200 bg-white px-5 pr-14 text-sm outline-none transition focus:border-[#E30613] focus:shadow-md"
+              className="h-11 w-full rounded-full border-2 border-[#E3EBE6] bg-white px-5 pr-14 text-sm outline-none transition focus:border-[#087443] focus:shadow-md"
             />
             
             {!search && (
@@ -1093,7 +1093,7 @@ export default function HomePage() {
                   .getElementById("products")
                   ?.scrollIntoView({ behavior: "smooth", block: "start" });
               }}
-              className="absolute right-1 top-1 flex h-9 w-12 items-center justify-center rounded-full bg-[#E30613] text-lg text-white transition hover:bg-red-700"
+              className="absolute right-1 top-1 flex h-9 w-12 items-center justify-center rounded-full bg-[#6B756E] text-lg text-[#26332C] transition hover:bg-[#56615B]"
             >
               ⌕
             </button>
@@ -1105,8 +1105,8 @@ export default function HomePage() {
                 onClick={() => changeLanguage("en")}
               className={`rounded-md px-2.5 py-1.5 text-[10px] font-black ${
                 language === "en"
-                  ? "bg-[#E30613] text-white"
-                  : "text-slate-500"
+                  ? "bg-[#6B756E] text-white"
+                  : "text-[#26332C]"
               }`}
             >
               EN
@@ -1116,8 +1116,8 @@ export default function HomePage() {
               onClick={() => changeLanguage("sw")}
               className={`rounded-md px-2.5 py-1.5 text-[10px] font-black ${
                 language === "sw"
-                  ? "bg-[#E30613] text-white"
-                  : "text-slate-500"
+                  ? "bg-[#6B756E] text-white"
+                  : "text-[#26332C]"
               }`}
             >
               SW
@@ -1129,8 +1129,8 @@ export default function HomePage() {
               onClick={() => setCurrency("TZS")}
               className={`rounded-md px-2 py-1.5 text-[10px] font-black ${
                 currency === "TZS"
-                  ? "bg-[#E30613] text-white"
-                  : "text-slate-500"
+                  ? "bg-[#6B756E] text-white"
+                  : "text-[#26332C]"
               }`}
             >
               TZS
@@ -1140,8 +1140,8 @@ export default function HomePage() {
               onClick={() => setCurrency("USD")}
               className={`rounded-md px-2 py-1.5 text-[10px] font-black ${
                 currency === "USD"
-                  ? "bg-[#E30613] text-white"
-                  : "text-slate-500"
+                  ? "bg-[#6B756E] text-white"
+                  : "text-[#26332C]"
               }`}
             >
               USD
@@ -1150,25 +1150,25 @@ export default function HomePage() {
 
           <Link
             href="/account"
-            className="shrink-0 rounded-lg px-2 py-1 text-left transition hover:bg-red-50"
+            className="shrink-0 rounded-lg px-2 py-1 text-left transition hover:bg-[#FFF1F4]"
           >
-            <p className="text-[10px] font-bold text-slate-500">
+            <p className="text-[10px] font-bold text-[#26332C]">
               My Gamora
             </p>
-            <p className="translate-x-1 text-xs font-black text-[#E30613]">
+            <p className="translate-x-1 text-xs font-black text-[#374151]">
               Account
             </p>
           </Link>
 
             <Link
               href="/cart"
-              className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 border-red-100 bg-red-50 text-xl transition hover:border-[#E30613]"
+              className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 border-[#E3EBE6] bg-[#FFF1F4] text-xl transition hover:border-[#E30613]"
               aria-label="Cart"
             >
               🛒
 
               {cartCount > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#E30613] px-1 text-[10px] font-black text-white">
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#6B756E] px-1 text-[10px] font-black text-[#26332C]">
                   {cartCount}
                 </span>
               )}
@@ -1207,7 +1207,7 @@ export default function HomePage() {
             .getElementById("products")
             ?.scrollIntoView({ behavior: "smooth", block: "start" });
         }}
-        className="absolute right-1 top-1 flex h-6 w-7 items-center justify-center rounded-full bg-[#E30613] text-sm text-white transition hover:bg-red-700"
+        className="absolute right-1 top-1 flex h-6 w-7 items-center justify-center rounded-full bg-[#6B756E] text-sm text-[#26332C] transition hover:bg-[#56615B]"
       >
         ⌕
       </button>
@@ -1220,8 +1220,8 @@ export default function HomePage() {
         onClick={() => setLanguage("sw")}
         className={`rounded-md px-2 py-1.5 text-[10px] font-black ${
           language === "sw"
-            ? "bg-[#E30613] text-white"
-            : "text-slate-500"
+            ? "bg-[#6B756E] text-white"
+            : "text-[#26332C]"
         }`}
       >
         SW
@@ -1232,8 +1232,8 @@ export default function HomePage() {
         onClick={() => setLanguage("en")}
         className={`rounded-md px-2 py-1.5 text-[10px] font-black ${
           language === "en"
-            ? "bg-[#E30613] text-white"
-            : "text-slate-500"
+            ? "bg-[#6B756E] text-white"
+            : "text-[#26332C]"
         }`}
       >
         EN
@@ -1247,8 +1247,8 @@ export default function HomePage() {
         onClick={() => setCurrency("TZS")}
         className={`rounded-md px-2 py-1.5 text-[10px] font-black ${
           currency === "TZS"
-            ? "bg-[#E30613] text-white"
-            : "text-slate-500"
+            ? "bg-[#6B756E] text-white"
+            : "text-[#26332C]"
         }`}
       >
         TZS
@@ -1259,8 +1259,8 @@ export default function HomePage() {
         onClick={() => setCurrency("USD")}
         className={`rounded-md px-2 py-1.5 text-[10px] font-black ${
           currency === "USD"
-            ? "bg-[#E30613] text-white"
-            : "text-slate-500"
+            ? "bg-[#6B756E] text-white"
+            : "text-[#26332C]"
         }`}
       >
         USD
@@ -1279,28 +1279,28 @@ export default function HomePage() {
 
             <a
               href="#flash-sales"
-              className="relative shrink-0 cursor-pointer rounded-full px-2.5 py-1 text-[10px] font-bold text-white transition hover:bg-white/15"
+              className="relative shrink-0 cursor-pointer rounded-full px-2.5 py-1 text-[10px] font-bold text-[#26332C] transition hover:bg-white/15"
             >
               🔥 {language === "sw" ? "Ofa" : "Flash Deals"}
             </a>
 
             <a
               href="#new-arrivals"
-              className="relative shrink-0 cursor-pointer rounded-full px-2.5 py-1 text-[10px] font-bold text-white transition hover:bg-white/15"
+              className="relative shrink-0 cursor-pointer rounded-full px-2.5 py-1 text-[10px] font-bold text-[#26332C] transition hover:bg-white/15"
             >
               {language === "sw" ? "Mpya" : "New Arrivals"}
             </a>
 
             <a
               href="#best-sellers"
-              className="relative shrink-0 cursor-pointer rounded-full px-2.5 py-1 text-[10px] font-bold text-white transition hover:bg-white/15"
+              className="relative shrink-0 cursor-pointer rounded-full px-2.5 py-1 text-[10px] font-bold text-[#26332C] transition hover:bg-white/15"
             >
               {language === "sw" ? "Zinazouzwa Sana" : "Best Seller"}
             </a>
 
             <a
               href="#trending"
-              className="relative shrink-0 cursor-pointer rounded-full px-2.5 py-1 text-[10px] font-bold text-white transition hover:bg-white/15"
+              className="relative shrink-0 cursor-pointer rounded-full px-2.5 py-1 text-[10px] font-bold text-[#26332C] transition hover:bg-white/15"
             >
               🔥 {language === "sw" ? "Inayotrend" : "Trending Now"}
             </a>
@@ -1313,7 +1313,7 @@ export default function HomePage() {
           <a
             href="/"
             className={`flex flex-col items-center justify-center gap-0.5 text-[9px] font-semibold ${
-              pathname === "/" ? "text-[#E30613]" : "text-orange-500"
+              pathname === "/" ? "text-[#374151]" : "text-[#374151]"
             }`}
           >
             <span className="text-base leading-none">⌂</span>
@@ -1323,7 +1323,7 @@ export default function HomePage() {
           <a
             href="#categories"
             className={`flex flex-col items-center justify-center gap-0.5 text-[9px] font-semibold ${
-              pathname === "/" ? "text-[#E30613]" : "text-orange-500"
+              pathname === "/" ? "text-[#374151]" : "text-[#374151]"
             }`}
           >
             <span className="text-base leading-none">▦</span>
@@ -1334,13 +1334,13 @@ export default function HomePage() {
             href="/cart"
             aria-label="Cart"
             className={`relative flex flex-col items-center justify-center gap-0.5 text-[9px] font-semibold ${
-              pathname === "/cart" ? "text-[#E30613]" : "text-orange-500"
+              pathname === "/cart" ? "text-[#374151]" : "text-[#374151]"
             }`}
           >
             <span className="text-base leading-none">🛒</span>
             <span>{language === "sw" ? "Kikapu" : "Cart"}</span>
             {cartCount > 0 && (
-              <span className="absolute -right-2 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#E30613] px-1 text-[8px] font-black text-orange-300">
+              <span className="absolute -right-2 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#6B756E] px-1 text-[8px] font-black text-orange-300">
                 {cartCount}
               </span>
             )}
@@ -1349,7 +1349,7 @@ export default function HomePage() {
           <a
             href="/account"
             className={`flex flex-col items-center justify-center gap-0.5 text-[9px] font-semibold ${
-              pathname === "/account" ? "text-[#E30613]" : "text-orange-500"
+              pathname === "/account" ? "text-[#374151]" : "text-[#374151]"
             }`}
           >
             <span className="text-base leading-none">👤</span>
@@ -1361,7 +1361,7 @@ export default function HomePage() {
 
       {/* HERO */}
       <section
-        className="bg-[#eef2ff] py-4 sm:py-6"
+        className="bg-[#F7FAF8] py-4 sm:py-6"
         onMouseEnter={() => setHeroPaused(true)}
         onMouseLeave={() => setHeroPaused(false)}
       >
@@ -1373,7 +1373,7 @@ export default function HomePage() {
               <div className="border-b border-slate-100 px-5 py-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[#E30613]">
+                    <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[#374151]">
                       GAMORA MARKETPLACE
                     </p>
                     <h2 className="mt-1 text-sm font-black text-slate-900">
@@ -1384,7 +1384,7 @@ export default function HomePage() {
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <span className="rounded-full bg-[#fff1f2] px-2 py-1 text-[9px] font-bold text-[#E30613]">
+                    <span className="rounded-full bg-[#fff1f2] px-2 py-1 text-[9px] font-bold text-[#374151]">
                       {ALL_CATEGORIES.length}+
                     </span>
 
@@ -1395,7 +1395,7 @@ export default function HomePage() {
                           .getElementById("categories")
                           ?.scrollIntoView({ behavior: "smooth", block: "start" });
                       }}
-                      className="whitespace-nowrap rounded-full bg-slate-900 px-2.5 py-1 text-[9px] font-black text-white transition hover:bg-[#E30613]"
+                      className="whitespace-nowrap rounded-full bg-[#6B756E] px-2.5 py-1 text-[9px] font-black text-[#26332C] transition hover:bg-[#6B756E]"
                     >
                       {language === "sw" ? "Ona Zote →" : "View All →"}
                     </button>
@@ -1407,21 +1407,21 @@ export default function HomePage() {
                 <div className="mb-3 flex gap-1.5 overflow-hidden">
                   <button
                     type="button"
-                    className="shrink-0 rounded-full bg-[#E30613] px-3 py-1.5 text-[9px] font-bold text-white"
+                    className="shrink-0 rounded-full bg-[#6B756E] px-3 py-1.5 text-[9px] font-bold text-[#26332C]"
                   >
                     🔥 Popular
                   </button>
 
                   <button
                     type="button"
-                    className="shrink-0 rounded-full bg-orange-50 px-3 py-1.5 text-[9px] font-black text-orange-600"
+                    className="shrink-0 rounded-full bg-[#FFF8F0] px-3 py-1.5 text-[9px] font-black text-[#374151]"
                   >
                     ⚡ Deals
                   </button>
 
                   <button
                     type="button"
-                    className="shrink-0 rounded-full bg-emerald-50 px-3 py-1.5 text-[9px] font-black text-emerald-600"
+                    className="shrink-0 rounded-full bg-emerald-50 px-3 py-1.5 text-[9px] font-black text-[#374151]"
                   >
                     ✨ New
                   </button>
@@ -1447,15 +1447,15 @@ export default function HomePage() {
                     const accents = [
                       "hover:bg-pink-50 hover:text-pink-600",
                       "hover:bg-indigo-50 hover:text-indigo-600",
-                      "hover:bg-orange-50 hover:text-orange-600",
+                      "hover:bg-[#FFF8F0] hover:text-[#374151]",
                       "hover:bg-blue-50 hover:text-blue-600",
                       "hover:bg-amber-50 hover:text-amber-600",
                       "hover:bg-purple-50 hover:text-purple-600",
                       "hover:bg-fuchsia-50 hover:text-fuchsia-600",
                       "hover:bg-cyan-50 hover:text-cyan-600",
                       "hover:bg-sky-50 hover:text-sky-600",
-                      "hover:bg-emerald-50 hover:text-emerald-600",
-                      "hover:bg-red-50 hover:text-red-600",
+                      "hover:bg-emerald-50 hover:text-[#374151]",
+                      "hover:bg-[#FFF1F4] hover:text-red-600",
                       "hover:bg-lime-50 hover:text-lime-600",
                     ];
 
@@ -1478,7 +1478,7 @@ export default function HomePage() {
                         </span>
 
                         <span className="min-w-0 flex-1">
-                          <span className="block truncate text-[11px] font-bold text-slate-700 group-hover:font-black">
+                          <span className="block truncate text-[11px] font-bold text-[#26332C] group-hover:font-black">
                             {category}
                           </span>
                           <span className="block text-[8px] font-medium text-slate-400">
@@ -1503,7 +1503,7 @@ export default function HomePage() {
                       .getElementById("categories")
                       ?.scrollIntoView({ behavior: "smooth" })
                   }
-                  className="mt-2 flex w-full items-center justify-center rounded-lg bg-slate-50 py-2 text-[9px] font-black text-[#E30613] transition hover:bg-red-50"
+                  className="mt-2 flex w-full items-center justify-center rounded-lg bg-slate-50 py-2 text-[9px] font-black text-[#374151] transition hover:bg-[#FFF1F4]"
                 >
                   {language === "sw"
                     ? "VIEW MORE MAKUNDI"
@@ -1535,16 +1535,16 @@ export default function HomePage() {
                 <div className="relative z-10 grid h-full min-h-[300px] items-center gap-3 px-6 py-5 sm:min-h-[340px] sm:px-8 lg:grid-cols-[1fr_1fr] lg:px-8">
                   <div className="z-20">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="rounded-full bg-[#E30613] px-3 py-1 text-[9px] font-black uppercase tracking-wider text-white shadow-sm">
+                      <span className="rounded-full bg-[#6B756E] px-3 py-1 text-[9px] font-black uppercase tracking-wider text-[#26332C] shadow-sm">
                         🔥 {language === "sw" ? "Inapendwa" : "Trending"}
                       </span>
 
-                      <span className="rounded-full bg-orange-100 px-3 py-1 text-[9px] font-black text-orange-600">
+                      <span className="rounded-full bg-[#FFF3E8] px-3 py-1 text-[9px] font-black text-[#374151]">
                         ⚡ {language === "sw" ? "Ofa" : "DEAL"}
                       </span>
                     </div>
 
-                    <p className="mt-2 text-[8px] font-black uppercase tracking-[0.2em] text-[#E30613]">
+                    <p className="mt-2 text-[8px] font-black uppercase tracking-[0.2em] text-[#374151]">
                       GAMORA ONLINE
                     </p>
 
@@ -1552,7 +1552,7 @@ export default function HomePage() {
                       {hero.product.name}
                     </h1>
 
-                    <p className="mt-2 max-w-lg text-[10px] leading-4 text-slate-500 sm:text-xs">
+                    <p className="mt-2 max-w-lg text-[10px] leading-4 text-[#26332C] sm:text-xs">
                       {hero.product.description
                         ? hero.product.description
                             .replace(/<br\s*\/?>/gi, " ")
@@ -1566,7 +1566,7 @@ export default function HomePage() {
                     </p>
 
                     <div className="mt-2 flex items-end gap-3">
-                      <span className="text-xl font-black text-[#E30613] sm:text-2xl">
+                      <span className="text-xl font-black text-[#374151] sm:text-2xl">
                         {formatCurrency(Number(hero.product.price || 0), currency)}
                       </span>
 
@@ -1581,7 +1581,7 @@ export default function HomePage() {
                       )}
                     </div>
 
-                    <div className="mt-2 flex flex-wrap items-center gap-2 text-[8px] font-semibold text-slate-500">
+                    <div className="mt-2 flex flex-wrap items-center gap-2 text-[8px] font-semibold text-[#26332C]">
                       <span>
                         ⭐{" "}
                         {Number(hero.product.rating || 0).toFixed(1)}
@@ -1611,7 +1611,7 @@ export default function HomePage() {
                       onClick={() =>
                         window.location.href = `/product/${hero.product.id}`
                       }
-                      className="mt-3 rounded-lg bg-[#E30613] px-5 py-2.5 text-[9px] font-bold text-white shadow-lg shadow-red-200 transition hover:-translate-y-0.5 hover:bg-red-700"
+                      className="mt-3 rounded-lg bg-[#6B756E] px-5 py-2.5 text-[9px] font-bold text-[#26332C] shadow-lg shadow-red-200 transition hover:-translate-y-0.5 hover:bg-[#56615B]"
                     >
                       {language === "sw"
                         ? "ANGALIA BIDHAA"
@@ -1648,7 +1648,7 @@ export default function HomePage() {
                       heroSlides.length
                   )
                 }
-                className="absolute left-3 top-1/2 z-30 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-xl font-bold text-slate-700 shadow-lg transition hover:bg-[#E30613] hover:text-white"
+                className="absolute left-3 top-1/2 z-30 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-xl font-bold text-[#26332C] shadow-lg transition hover:bg-[#6B756E] hover:text-[#26332C]"
               >
                 ‹
               </button>
@@ -1660,7 +1660,7 @@ export default function HomePage() {
                     (heroIndex + 1) % heroSlides.length
                   )
                 }
-                className="absolute right-3 top-1/2 z-30 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-xl font-bold text-slate-700 shadow-lg transition hover:bg-[#E30613] hover:text-white"
+                className="absolute right-3 top-1/2 z-30 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-xl font-bold text-[#26332C] shadow-lg transition hover:bg-[#6B756E] hover:text-[#26332C]"
               >
                 ›
               </button>
@@ -1673,7 +1673,7 @@ export default function HomePage() {
                     onClick={() => setHeroIndex(index)}
                     className={`h-1.5 rounded-full transition-all ${
                       heroIndex === index
-                        ? "w-7 bg-[#E30613]"
+                        ? "w-7 bg-[#6B756E]"
                         : "w-1.5 bg-slate-300"
                     }`}
                   />
@@ -1730,7 +1730,7 @@ export default function HomePage() {
                   )}
                 </div>
 
-                <p className="mt-2 line-clamp-2 text-[10px] font-bold text-slate-700 sm:text-xs">
+                <p className="mt-2 line-clamp-2 text-[10px] font-bold text-[#26332C] sm:text-xs">
                   {category}
                 </p>
               </Link>
@@ -1742,7 +1742,7 @@ export default function HomePage() {
       {/* FLASH DEALS */}
       <section
         id="flash-sales" style={{ scrollMarginTop: "120px" }}
-        className="scroll-mt-24 bg-[#fff7ed] py-8 sm:py-12"
+        className="scroll-mt-24 bg-[#F8FAF9] py-8 sm:py-12"
       >
         <div className="mx-auto max-w-[1440px] px-4 sm:px-5">
           <div className="flex items-end justify-between gap-4">
@@ -1765,10 +1765,10 @@ export default function HomePage() {
                   </p>
                 </div>
 
-                <div className="rounded-lg bg-[#1f2937] px-3 py-2 text-white">
+                <div className="rounded-lg bg-[#6B756E] px-3 py-2 text-[#26332C]">
                   <p
                     style={{ color: "#FFFFFF" }}
-                    className="!text-white text-[8px] font-black uppercase"
+                    className="!text-[#26332C] text-[8px] font-black uppercase"
                   >
                     {language === "sw"
                       ? "Inaisha ndani"
@@ -1787,7 +1787,7 @@ export default function HomePage() {
             <div className="flex items-center gap-2">
               <a
                 href="#products"
-                className="hidden rounded-full border border-[#E30613] bg-white px-4 py-2 text-[10px] font-black text-[#E30613] transition hover:bg-[#E30613] hover:text-white sm:inline-flex"
+                className="hidden rounded-full border border-[#E30613] bg-white px-4 py-2 text-[10px] font-black text-[#374151] transition hover:bg-[#6B756E] hover:text-[#26332C] sm:inline-flex"
               >
                 {language === "sw" ? "ONA ZAIDI →" : "VIEW MORE →"}
               </a>
@@ -1846,7 +1846,7 @@ export default function HomePage() {
             <div className="flex items-center gap-2">
               <a
                 href="#products"
-                className="hidden rounded-full border border-[#E30613] bg-white px-4 py-2 text-[10px] font-black text-[#E30613] transition hover:bg-[#E30613] hover:text-white sm:inline-flex"
+                className="hidden rounded-full border border-[#E30613] bg-white px-4 py-2 text-[10px] font-black text-[#374151] transition hover:bg-[#6B756E] hover:text-[#26332C] sm:inline-flex"
               >
                 {language === "sw" ? "ONA ZAIDI →" : "VIEW MORE →"}
               </a>
@@ -1898,7 +1898,7 @@ export default function HomePage() {
             <div className="flex items-center gap-2">
               <a
                 href="#products"
-                className="hidden rounded-full border border-[#E30613] bg-white px-4 py-2 text-[10px] font-black text-[#E30613] transition hover:bg-[#E30613] hover:text-white sm:inline-flex"
+                className="hidden rounded-full border border-[#E30613] bg-white px-4 py-2 text-[10px] font-black text-[#374151] transition hover:bg-[#6B756E] hover:text-[#26332C] sm:inline-flex"
               >
                 {language === "sw" ? "ONA ZAIDI →" : "VIEW MORE →"}
               </a>
@@ -1950,7 +1950,7 @@ export default function HomePage() {
             <div className="flex items-center gap-2">
               <a
                 href="#products"
-                className="hidden rounded-full border border-[#E30613] bg-white px-4 py-2 text-[10px] font-black text-[#E30613] transition hover:bg-[#E30613] hover:text-white sm:inline-flex"
+                className="hidden rounded-full border border-[#E30613] bg-white px-4 py-2 text-[10px] font-black text-[#374151] transition hover:bg-[#6B756E] hover:text-[#26332C] sm:inline-flex"
               >
                 {language === "sw" ? "ONA ZAIDI →" : "VIEW MORE →"}
               </a>
@@ -1996,7 +1996,7 @@ export default function HomePage() {
                   : "More Products"}
               </h2>
 
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-[#26332C]">
                 {search
                   ? `${filteredProducts.length} ${
                       language === "sw"
@@ -2050,7 +2050,7 @@ export default function HomePage() {
                           : nextCount;
                       });
                     }}
-                    className="inline-flex  items-center justify-center rounded-md bg-[#E30613] px-5 py-2.5 text-xs font-black uppercase tracking-wide text-white shadow-sm transition-all duration-200 hover:bg-[#c9000b] hover:shadow-md active:scale-95"
+                    className="inline-flex  items-center justify-center rounded-md bg-[#6B756E] px-5 py-2.5 text-xs font-black uppercase tracking-wide text-[#26332C] shadow-sm transition-all duration-200 hover:bg-[#56615B] hover:shadow-md active:scale-95"
                   >
                     {language === "sw"
                       ? "ONA ZAIDI"
@@ -2071,23 +2071,23 @@ export default function HomePage() {
 <a
   href="#top"
   aria-label="Back to top"
-  className="fixed right-1 top-1/2 z-50 flex h-14 w-7 -translate-y-1/2 items-center justify-center rounded-l-lg bg-[#E30613] text-lg font-black text-white shadow-lg transition hover:bg-[#b80510]"
+  className="fixed right-1 top-1/2 z-50 flex h-14 w-7 -translate-y-1/2 items-center justify-center rounded-l-lg bg-[#6B756E] text-lg font-black text-[#26332C] shadow-lg transition hover:bg-[#56615B]"
 >
   ↑
 </a>
 
 {/* FOOTER */}
-<footer className="border-t border-orange-200 bg-gradient-to-br from-[#450a0a] via-[#991b1b] to-[#c2410c] py-4 sm:py-10 text-white">
+<footer className="border-t border-[#E3EBE6] bg-[#E8F3ED] py-4 sm:py-10 text-[#26332C]">
   <div className="mx-auto max-w-[1440px] px-4 sm:px-5">
 
     {/* MOBILE SELL ON GAMORA */}
-    <div className="mb-3 rounded-lg border border-orange-300/20 bg-black/10 p-3 sm:hidden">
+    <div className="mb-3 rounded-lg border border-orange-300/20 bg-[#6B756E]/10 p-3 sm:hidden">
       <div className="text-center">
-        <h3 className="text-[10px] font-bold leading-4 text-white">
+        <h3 className="text-[10px] font-bold leading-4 text-[#26332C]">
           {language === "sw" ? "Unauza bidhaa?" : "Do you sell products?"}
         </h3>
 
-        <p className="mt-1 text-[8px] leading-3.5 text-orange-100">
+        <p className="mt-1 text-[8px] leading-3.5 text-[#26332C]">
           {language === "sw"
             ? "Gamora Online inalenga kuwa marketplace inayowaunganisha wauzaji na wateja Tanzania."
             : "Gamora Online is building a marketplace connecting sellers with customers across Tanzania."}
@@ -2138,22 +2138,22 @@ export default function HomePage() {
           {language === "sw" ? "Shopping Guide" : "Shopping Guide"}
         </h3>
 
-        <div className="mt-1 space-y-1 text-[9px] leading-3.5 text-white sm:mt-4 sm:space-y-3 sm:text-xs sm:leading-normal">
-          <a href="/help" className="block whitespace-nowrap text-[8px] leading-3 hover:text-white sm:text-xs">
+        <div className="mt-1 space-y-1 text-[9px] leading-3.5 text-[#26332C] sm:mt-4 sm:space-y-3 sm:text-xs sm:leading-normal">
+          <a href="/help" className="block whitespace-nowrap !text-[#26332C] text-[8px] leading-3 hover:!text-[#374151] sm:text-xs">
             {language === "sw" ? "Jinsi ya Kuagiza" : "How to Buy"}
           </a>
 
-          <a href="/delivery" className="block hover:text-white">
+          <a href="/delivery" className="block !text-[#26332C] hover:!text-[#374151]">
             {language === "sw" ? "Delivery" : "Delivery"}
           </a>
 
-          <a href="/terms" className="block hover:text-white">
+          <a href="/terms" className="block !text-[#26332C] hover:!text-[#374151]">
             {language === "sw"
               ? "Masharti na Vigezo"
               : "Terms & Conditions"}
           </a>
 
-          <a href="/contact" className="block hover:text-white">
+          <a href="/contact" className="block !text-[#26332C] hover:!text-[#374151]">
             {language === "sw" ? "Wasiliana Nasi" : "Contact Us"}
           </a>
         </div>
@@ -2168,7 +2168,7 @@ export default function HomePage() {
             : "Frequently Asked Questions"}
         </h2>
 
-        <p className="mt-1 text-[9px] leading-4 text-orange-100">
+        <p className="mt-1 text-[9px] leading-4 text-[#26332C]">
           {language === "sw"
             ? "Majibu ya haraka kuhusu kuagiza, malipo na delivery."
             : "Quick answers about ordering, payment and delivery."}
@@ -2184,7 +2184,7 @@ export default function HomePage() {
               : "How can I place an order?"}
           </summary>
 
-          <p className="mt-2 text-[9px] leading-4 text-orange-100">
+          <p className="mt-2 text-[9px] leading-4 text-[#26332C]">
             {language === "sw"
               ? "Chagua bidhaa, ongeza kwenye cart, fungua checkout, jaza taarifa zako za delivery na ukamilishe oda."
               : "Choose a product, add it to your cart, open checkout, enter your delivery details and complete your order."}
@@ -2198,7 +2198,7 @@ export default function HomePage() {
               : "Where do you deliver?"}
           </summary>
 
-          <p className="mt-2 text-[9px] leading-4 text-orange-100">
+          <p className="mt-2 text-[9px] leading-4 text-[#26332C]">
             {language === "sw"
               ? "Gamora Online inalenga delivery ndani ya Tanzania. Gharama ya delivery huathiriwa na eneo lako."
               : "Gamora Online serves customers within Tanzania. Delivery cost depends on your location."}
@@ -2212,7 +2212,7 @@ export default function HomePage() {
               : "How can I pay for my order?"}
           </summary>
 
-          <p className="mt-2 text-[9px] leading-4 text-orange-100">
+          <p className="mt-2 text-[9px] leading-4 text-[#26332C]">
             {language === "sw"
               ? "Njia za malipo zinazoonekana kwenye checkout ndizo zinazopatikana kwa oda yako."
               : "The payment methods shown at checkout are the available options for your order."}
@@ -2226,7 +2226,7 @@ export default function HomePage() {
               : "How can I track my order?"}
           </summary>
 
-          <p className="mt-2 text-[9px] leading-4 text-orange-100">
+          <p className="mt-2 text-[9px] leading-4 text-[#26332C]">
             {language === "sw"
               ? "Fungua akaunti yako na angalia sehemu ya My Orders kuona taarifa ya oda yako."
               : "Open your account and check My Orders to view your order status."}
@@ -2240,7 +2240,7 @@ export default function HomePage() {
               : "Can I contact Gamora through WhatsApp?"}
           </summary>
 
-          <p className="mt-2 text-[9px] leading-4 text-orange-100">
+          <p className="mt-2 text-[9px] leading-4 text-[#26332C]">
             {language === "sw"
               ? "Ndiyo. Unaweza kutumia WhatsApp yetu kwa msaada kuhusu bidhaa na oda."
               : "Yes. You can use our WhatsApp for help with products and orders."}
@@ -2254,7 +2254,7 @@ export default function HomePage() {
               : "How can I get help?"}
           </summary>
 
-          <p className="mt-2 text-[9px] leading-4 text-orange-100">
+          <p className="mt-2 text-[9px] leading-4 text-[#26332C]">
             {language === "sw"
               ? "Tembelea Help Center, Contact Us au wasiliana nasi kupitia WhatsApp."
               : "Visit the Help Center, Contact Us page or reach us through WhatsApp."}
@@ -2266,14 +2266,14 @@ export default function HomePage() {
     </div>
 
     {/* MOBILE COPYRIGHT */}
-    <div className="mt-2 border-t border-white/15 pt-2 pb-2 text-center sm:hidden">
-      <p className="text-[10px] font-medium text-white">
+    <div className="mt-2 border-t border-[#DDEBE3] pt-2 pb-2 text-center sm:hidden">
+      <p className="text-[10px] font-medium text-[#26332C]">
         © {new Date().getFullYear()} Gamora Online. All rights reserved.
       </p>
     </div>
 
     {/* SELL ON GAMORA */}
-    <div className="hidden sm:block rounded-xl border border-orange-300/20 bg-black/10 p-5">
+    <div className="hidden sm:block rounded-xl border border-orange-300/20 bg-[#6B756E]/10 p-5">
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div>
           <h3 className="text-[10px] font-bold leading-4 sm:text-sm sm:font-black">
@@ -2282,7 +2282,7 @@ export default function HomePage() {
               : "Do you sell products?"}
           </h3>
 
-          <p className="mt-1 max-w-2xl text-[9px] leading-4 text-orange-100 sm:text-xs sm:leading-5">
+          <p className="mt-1 max-w-2xl text-[9px] leading-4 text-[#26332C] sm:text-xs sm:leading-5">
             {language === "sw"
               ? "Gamora Online inalenga kuwa marketplace inayowaunganisha wauzaji na wateja Tanzania."
               : "Gamora Online is building a marketplace connecting sellers with customers across Tanzania."}
@@ -2291,7 +2291,7 @@ export default function HomePage() {
 
         <a
           href="/contact"
-          className="inline-flex h-8 items-center justify-center rounded-lg bg-white px-4 text-[9px] font-black text-[#991b1b] transition hover:bg-orange-50 sm:h-9 sm:px-5 sm:text-[11px]"
+          className="inline-flex h-8 items-center justify-center rounded-lg bg-white px-4 text-[9px] font-black text-[#991b1b] transition hover:bg-[#FFF8F0] sm:h-9 sm:px-5 sm:text-[11px]"
         >
           {language === "sw" ? "WASILIANA NASI" : "CONTACT US"}
         </a>
@@ -2378,7 +2378,7 @@ export default function HomePage() {
 
     </div>
 
-    <div className="block mt-1 border-t border-white/15 pt-2 text-center text-[8px] text-orange-100 sm:mt-2 sm:pt-2 sm:text-[10px]">
+    <div className="block mt-1 border-t border-[#DDEBE3] pt-2 text-center text-[8px] text-[#26332C] sm:mt-2 sm:pt-2 sm:text-[10px]">
       © {new Date().getFullYear()} Gamora Online. All rights reserved.
     </div>
 
@@ -2427,7 +2427,7 @@ function SectionHeading({
         {title}
       </h2>
 
-      <p className="mt-1 text-xs text-slate-500">
+      <p className="mt-1 text-xs text-[#26332C]">
         {subtitle}
       </p>
     </div>
@@ -2605,7 +2605,7 @@ function ProductCard({
     <article className="group min-w-0 bg-transparent">
       <div className="relative">
         {discount > 0 && (
-          <span className="pointer-events-none absolute right-1 top-1 z-20 inline-flex w-auto max-w-fit items-center justify-center rounded-md bg-[#D00000] px-1.5 py-0.5 text-[9px] font-black leading-none text-white">
+          <span className="pointer-events-none absolute right-1 top-1 z-20 inline-flex w-auto max-w-fit items-center justify-center rounded-md bg-white px-1.5 py-0.5 text-[9px] font-black leading-none text-[#E30613]">
             -{discount}%
           </span>
         )}
@@ -2616,21 +2616,13 @@ function ProductCard({
             onClick={toggleLike}
             disabled={likeLoading}
             aria-label={liked ? "Unlike product" : "Like product"}
-            className={`flex h-7 w-7 items-center justify-center rounded-full bg-white shadow-sm ${
-              liked ? "text-[#D00000]" : "text-[#555]"
-            } transition hover:text-[#D00000]`}
+            className={`flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-md ${
+              liked ? "text-[#D7193F]" : "text-[#26332C]"
+            } transition hover:text-[#374151]`}
           >
-            <svg
-              viewBox="0 0 24 24"
-              className="h-[15px] w-[15px]"
-              fill={liked ? "currentColor" : "none"}
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path
-                d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78Z"
-              />
-            </svg>
+            <span className="block text-[28px] leading-none">
+              {liked ? "❤️" : "🤍"}
+            </span>
           </button>
 
           <button
@@ -2641,7 +2633,7 @@ function ProductCard({
                 ? "Ongeza kwenye kikapu"
                 : "Add to cart"
             }
-            className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-[#D00000] shadow-sm transition hover:bg-[#D00000] hover:text-white"
+            className="flex h-7 w-7 items-center justify-center rounded-full bg-[#FFF8E7] text-[#374151] shadow-sm transition hover:bg-[#F3E8C8] hover:text-[#1F2937]"
           >
             <svg
               viewBox="0 0 24 24"
@@ -2685,31 +2677,27 @@ function ProductCard({
 
       <div className="pt-1 text-center">
         <div className="flex flex-wrap items-baseline justify-center gap-1">
-          <span className="text-[11px] font-black text-[#D00000] sm:text-[12px]">
+          <span className="text-[11px] font-black text-[#C47A00] sm:text-[12px]">
             {formatCurrency(Number(product.price || 0), currency)}
           </span>
 
           {typeof product.oldPrice === "number" &&
             product.oldPrice > Number(product.price || 0) && (
-              <span className="text-[8px] font-bold text-black line-through sm:text-[8px]">
+              <span className="text-[11px] font-medium text-[#E30613] line-through decoration-1 decoration-[#E30613] sm:text-[12px]">
                 {formatCurrency(product.oldPrice, currency)}
               </span>
             )}
         </div>
 
-        <div className="mt-0.5 flex items-center justify-center gap-1.5 whitespace-nowrap text-[8px] font-bold text-black sm:text-[8px]">
-          <span>
-            <span className="mr-0.5 text-[9px] font-black text-[#D00000]">
-              ♥
-            </span>{" "}
-            {likes} Likes
+        <div className="mt-1 flex items-center justify-center gap-1.5 whitespace-nowrap">
+          <span className="inline-flex items-center gap-1 rounded-full bg-white px-2 py-1 text-[8px] font-bold text-[#111111] sm:text-[9px]">
+            <span className="text-[13px] leading-none text-[#D7193F]">♥</span>
+            <span>{likes} Likes</span>
           </span>
 
-          <span>
-            <span className="mr-0.5 text-[9px] font-black text-[#D00000]">
-              🛒
-            </span>{" "}
-            {orders} Ordered
+          <span className="inline-flex items-center gap-1 rounded-full bg-white px-2 py-1 text-[8px] font-bold text-[#111111] sm:text-[9px]">
+            <span className="text-[12px] leading-none">🛒</span>
+            <span>{orders} Ordered</span>
           </span>
         </div>
 
@@ -2717,7 +2705,7 @@ function ProductCard({
           <button
             type="button"
             onClick={() => addToCart(product)}
-            className="inline-flex rounded-md bg-[#E30613] px-8 py-1.5 text-[10px] font-semibold text-white transition hover:bg-[#c80511]"
+            className="inline-flex rounded-md bg-[#4B5563] px-8 py-1.5 text-[10px] font-semibold text-white transition hover:bg-[#374151]"
           >
             {language === "sw" ? "Ongeza" : "Add"}
           </button>
@@ -2748,7 +2736,7 @@ function FooterColumn({
 }) {
   return (
     <div className="min-w-0">
-      <h3 className="text-[10px] font-bold leading-4 whitespace-nowrap text-white sm:text-sm sm:font-black">
+      <h3 className="text-[10px] font-bold leading-4 whitespace-nowrap text-[#26332C] sm:text-sm sm:font-black">
         {title}
       </h3>
 
@@ -2757,7 +2745,7 @@ function FooterColumn({
           <a
             key={`${label}-${href}`}
             href={href}
-            className="block text-[9px] font-medium leading-3.5 text-slate-200 transition hover:text-white sm:text-xs sm:leading-normal"
+            className="block text-[9px] font-medium leading-3.5 text-[#26332C] transition hover:text-[#374151] sm:text-xs sm:leading-normal"
           >
             {label}
           </a>
@@ -2776,11 +2764,11 @@ function SocialButton({
 }) {
   const styles: Record<string, string> = {
     Facebook:
-      "bg-[#1877F2] text-white shadow-md shadow-blue-900/20 hover:bg-[#0d65d9]",
+      "bg-[#1877F2] text-[#26332C] shadow-md shadow-blue-900/20 hover:bg-[#0d65d9]",
     Instagram:
-      "bg-gradient-to-tr from-[#F58529] via-[#DD2A7B] to-[#8134AF] text-white shadow-md shadow-pink-900/20 hover:brightness-110",
+      "bg-gradient-to-tr from-[#F58529] via-[#DD2A7B] to-[#8134AF] text-[#26332C] shadow-md shadow-pink-900/20 hover:brightness-110",
     TikTok:
-      "bg-black text-white shadow-md shadow-black/30 hover:bg-slate-900",
+      "bg-[#6B756E] text-[#26332C] shadow-md shadow-black/30 hover:bg-[#6B756E]",
   };
 
   return (
@@ -2788,7 +2776,7 @@ function SocialButton({
       href="#"
       aria-label={label}
       className={`flex h-10 w-10 items-center justify-center rounded-full text-base transition duration-200 hover:-translate-y-0.5 ${
-        styles[label] || "bg-white text-slate-700"
+        styles[label] || "bg-white text-[#26332C]"
       }`}
     >
       {icon}

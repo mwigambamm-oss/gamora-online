@@ -2665,12 +2665,11 @@ function ProductCard({
         >
           <div className="relative flex h-[175px] w-full items-center justify-center overflow-hidden bg-transparent sm:h-[195px] lg:h-[210px]">
             {image ? (
-              <Image
+              <img
                 src={image}
                 alt={product.name}
-                fill
-                sizes="(max-width: 639px) 50vw, (max-width: 1023px) 33vw, 210px"
-                className="object-contain object-center transition-transform duration-300 group-hover:scale-[1.03]"
+                loading="lazy"
+                className="h-full w-full object-contain object-center transition-transform duration-300 group-hover:scale-[1.03]"
               />
             ) : (
               <div className="text-3xl opacity-20">

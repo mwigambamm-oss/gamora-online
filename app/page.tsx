@@ -913,7 +913,10 @@ export default function HomePage() {
 
   const heroSlides = useMemo(
     () =>
-      heroProducts.map((product, index) => ({
+      [...heroProducts]
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 8)
+        .map((product, index) => ({
         eyebrow:
           index % 4 === 0
             ? language === "sw"

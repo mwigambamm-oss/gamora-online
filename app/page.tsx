@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -243,7 +245,7 @@ export default function HomePage() {
 
     async function loadProducts() {
       try {
-        const data = await getSupabaseProducts({ limit: 200 });
+        const data = await getSupabaseProducts({ limit: 80 });
 
         if (active) {
           setProducts(shuffleProducts(data));
@@ -2663,12 +2665,12 @@ function ProductCard({
         >
           <div className="relative flex h-[175px] w-full items-center justify-center overflow-hidden bg-transparent sm:h-[195px] lg:h-[210px]">
             {image ? (
-              <img
+              <Image
                 src={image}
                 alt={product.name}
-                loading="lazy"
-                decoding="async"
-                className="h-full w-full object-contain object-center transition-transform duration-300 group-hover:scale-[1.03]"
+                fill
+                sizes="(max-width: 639px) 50vw, (max-width: 1023px) 33vw, 210px"
+                className="object-contain object-center transition-transform duration-300 group-hover:scale-[1.03]"
               />
             ) : (
               <div className="text-3xl opacity-20">

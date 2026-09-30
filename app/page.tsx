@@ -109,6 +109,8 @@ export default function HomePage() {
 
   const [products, setProducts] = useState<Product[]>([]);
   const [search, setSearch] = useState("");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
 
   const rotatingCategories =
     language === "sw"
@@ -379,6 +381,8 @@ export default function HomePage() {
 
   const filteredProducts = useMemo(() => {
     const query = search.toLowerCase().trim();
+    const minPriceValue = minPrice.trim() ? Number(minPrice) : null;
+    const maxPriceValue = maxPrice.trim() ? Number(maxPrice) : null;
 
     const normalize = (value: unknown) =>
       String(value || "")
@@ -597,6 +601,16 @@ export default function HomePage() {
 
       if (!matchesCategory) return false;
 
+      const productPrice = Number(product.price || 0);
+
+      if (minPriceValue !== null && Number.isFinite(minPriceValue)) {
+        if (productPrice < minPriceValue) return false;
+      }
+
+      if (maxPriceValue !== null && Number.isFinite(maxPriceValue)) {
+        if (productPrice > maxPriceValue) return false;
+      }
+
       if (!normalizedQuery) return true;
 
       const text = productText(product);
@@ -609,7 +623,7 @@ export default function HomePage() {
         )
       );
     });
-  }, [products, search, selectedCategory]);
+  }, [products, search, selectedCategory, minPrice, maxPrice]);
 
   const mixedMoreProducts = useMemo(() => {
     const groups = new Map<string, Product[]>();
@@ -645,7 +659,7 @@ export default function HomePage() {
   useEffect(() => {
     setVisibleProductsCount(100);
     setCategoryVisibleCounts({});
-  }, [search, selectedCategory]);
+  }, [search, selectedCategory, minPrice, maxPrice]);
 
   const deals = useMemo(
     () =>
@@ -1182,7 +1196,7 @@ export default function HomePage() {
   <div className="flex items-center gap-1.5">
 
     {/* SEARCH */}
-    <div className="relative min-w-0 flex-1">
+    <div className="relative w-full min-w-0 flex-1">
       <input
         value={search}
         onChange={(e) => setSearch(e.target.value)}
@@ -1366,156 +1380,152 @@ export default function HomePage() {
         onMouseLeave={() => setHeroPaused(false)}
       >
         <div className="mx-auto max-w-[1440px] px-3 sm:px-5">
-          <div className="grid overflow-hidden rounded-xl bg-white shadow-sm lg:grid-cols-[215px_1fr] min-[1600px]:grid-cols-[320px_950px_minmax(0,1fr)] lg:gap-5">
+          <div className="grid w-full rounded-xl bg-white shadow-sm lg:grid-cols-[230px_minmax(0,1fr)]">
             
-            {/* LEFT CATEGORIES */}
-            <aside className="hidden border-r border-slate-100 bg-white lg:block">
-              <div className="border-b border-slate-100 px-5 py-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[#374151]">
-                      GAMORA MARKETPLACE
-                    </p>
-                    <h2 className="mt-1 text-sm font-black text-slate-900">
-                      {language === "sw"
-                        ? "Nunua kwa Makundi"
-                        : "Shop by Category"}
-                    </h2>
+            {/* SEARCH BY PRICE */}
+            <aside className="hidden min-w-0 border-r border-slate-100 bg-white lg:block">
+              <div className="px-4 py-5 sm:px-5">
+                <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[#6B756E]">
+                  GAMORA MARKETPLACE
+                </p>
+
+                <h2 className="mt-1 text-sm font-black text-[#26332C]">
+                  {language === "sw" ? "Tafuta kwa Bei" : "Search by Price"}
+                </h2>
+
+                <p className="mt-1 text-[9px] leading-4 text-[#6B756E]">
+                  {language === "sw"
+                    ? "Chagua kiwango cha bei unachotaka."
+                    : "Find products within your price range."}
+                </p>
+
+                <div className="mt-5 space-y-3">
+                  {/* REAL PRICE RANGE SLIDER */}
+                  <div className="pb-1">
+                    <div className="mb-2 flex items-center justify-between">
+                      <span className="text-[9px] font-bold text-[#374151]">
+                        {language === "sw" ? "Kiwango cha bei" : "Price range"}
+                      </span>
+                      <span className="text-[9px] font-black text-[#E30613]">
+                        TZS {Number(minPrice || 0).toLocaleString()} – TZS {Number(maxPrice || 0).toLocaleString()}
+                      </span>
+                    </div>
+
+                    <div className="relative h-7">
+                      <div className="absolute left-0 right-0 top-3 h-1.5 rounded-full bg-[#E5E7EB]" />
+
+                      <div
+                        className="absolute top-3 h-1.5 rounded-full bg-[#E30613]"
+                        style={{
+                          left: `${Math.min(100, Math.max(0, ((Number(minPrice || 0) - 0) / Math.max(1, 10000000)) * 100))}%`,
+                          right: `${100 - Math.min(100, Math.max(0, ((Number(maxPrice || 10000000) - 0) / Math.max(1, 10000000)) * 100))}%`,
+                        }}
+                      />
+
+                      <input
+                        type="range"
+                        min="0"
+                        max={10000000}
+                        step="1000"
+                        value={Number(minPrice || 0)}
+                        onChange={(e) => {
+                          const value = Number(e.target.value);
+                          const currentMax = Number(maxPrice || 10000000);
+                          setMinPrice(String(Math.min(value, currentMax)));
+                        }}
+                        className="pointer-events-none absolute inset-0 h-7 w-full appearance-none bg-transparent [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:bg-[#E30613] [&::-webkit-slider-thumb]:shadow-sm"
+                      />
+
+                      <input
+                        type="range"
+                        min="0"
+                        max={10000000}
+                        step="1000"
+                        value={Number(maxPrice || 10000000)}
+                        onChange={(e) => {
+                          const value = Number(e.target.value);
+                          const currentMin = Number(minPrice || 0);
+                          setMaxPrice(String(Math.max(value, currentMin)));
+                        }}
+                        className="pointer-events-none absolute inset-0 h-7 w-full appearance-none bg-transparent [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:bg-[#E30613] [&::-webkit-slider-thumb]:shadow-sm"
+                      />
+                    </div>
+
+                    <div className="flex justify-between text-[8px] text-[#9CA3AF]">
+                      <span>TZS 0</span>
+                      <span>
+                        TZS {(10000000).toLocaleString()}
+                      </span>
+                    </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <span className="rounded-full bg-[#fff1f2] px-2 py-1 text-[9px] font-bold text-[#374151]">
-                      {ALL_CATEGORIES.length}+
-                    </span>
+                  <div>
+                    <label className="mb-1 block text-[9px] font-bold text-[#374151]">
+                      {language === "sw" ? "Bei ya chini" : "Min price"}
+                    </label>
+                    <div className="flex h-9 items-center rounded-lg border border-[#E3EBE6] bg-[#F7FAF8] px-2">
+                      <span className="mr-1 text-[8px] font-black text-[#6B756E]">
+                        TZS
+                      </span>
+                      <input
+                        type="number"
+                        min="0"
+                        inputMode="numeric"
+                        value={minPrice}
+                        onChange={(e) => setMinPrice(e.target.value)}
+                        placeholder="10,000"
+                        className="w-full min-w-0 bg-transparent text-[10px] font-semibold text-[#26332C] outline-none placeholder:text-[#9CA3AF]"
+                      />
+                    </div>
+                  </div>
 
+                  <div>
+                    <label className="mb-1 block text-[9px] font-bold text-[#374151]">
+                      {language === "sw" ? "Bei ya juu" : "Max price"}
+                    </label>
+                    <div className="flex h-9 items-center rounded-lg border border-[#E3EBE6] bg-[#F7FAF8] px-2">
+                      <span className="mr-1 text-[8px] font-black text-[#6B756E]">
+                        TZS
+                      </span>
+                      <input
+                        type="number"
+                        min="0"
+                        inputMode="numeric"
+                        value={maxPrice}
+                        onChange={(e) => setMaxPrice(e.target.value)}
+                        placeholder="100,000"
+                        className="w-full min-w-0 bg-transparent text-[10px] font-semibold text-[#26332C] outline-none placeholder:text-[#9CA3AF]"
+                      />
+                    </div>
+                  </div>
+
+                  {(minPrice || maxPrice) && (
                     <button
                       type="button"
                       onClick={() => {
-                        document
-                          .getElementById("categories")
-                          ?.scrollIntoView({ behavior: "smooth", block: "start" });
+                        setMinPrice("");
+                        setMaxPrice("");
                       }}
-                      className="whitespace-nowrap rounded-full bg-[#6B756E] px-2.5 py-1 text-[9px] font-black text-[#26332C] transition hover:bg-[#6B756E]"
+                      className="w-full rounded-lg bg-[#6B756E] py-2 text-[9px] font-black text-white transition hover:bg-[#4B5563]"
                     >
-                      {language === "sw" ? "Ona Zote →" : "View All →"}
+                      {language === "sw" ? "ONDOA FILTER" : "CLEAR FILTER"}
                     </button>
-                  </div>
+                  )}
                 </div>
-              </div>
-
-              <div className="px-3 py-3">
-                <div className="mb-3 flex gap-1.5 overflow-hidden">
-                  <button
-                    type="button"
-                    className="shrink-0 rounded-full bg-[#6B756E] px-3 py-1.5 text-[9px] font-bold text-[#26332C]"
-                  >
-                    🔥 Popular
-                  </button>
-
-                  <button
-                    type="button"
-                    className="shrink-0 rounded-full bg-[#FFF8F0] px-3 py-1.5 text-[9px] font-black text-[#374151]"
-                  >
-                    ⚡ Deals
-                  </button>
-
-                  <button
-                    type="button"
-                    className="shrink-0 rounded-full bg-emerald-50 px-3 py-1.5 text-[9px] font-black text-[#374151]"
-                  >
-                    ✨ New
-                  </button>
-                </div>
-
-                <div className="space-y-1">
-                  {ALL_CATEGORIES.slice(0, 5).map((category, index) => {
-                    const fallbackImages: Record<string, string> = {
-                      "Women's Fashion": "/images/womens-fashion.jpg",
-                      "Men's Fashion": "/images/mens-fashion.jpg",
-                      Shoes: "/images/shoes.jpg",
-                      "Phones & Electronics": "/images/phone.jpg",
-                      "Home & Kitchen": "/images/categories/kitchen.jpg",
-                      Accessories: "/images/categories/jewelry.jpg",
-                      "Beauty & Personal Care": "/images/categories/beauty.jpg",
-                      "Computers & Accessories": "/images/categories/computers.jpg",
-                      "Baby & Kids": "/images/categories/baby.jpg",
-                      "Sports & Fitness": "/images/categories/sports.jpg",
-                      Automotive: "/images/categories/automotive.jpg",
-                      "Tools & Hardware": "/images/categories/garden.jpg",
-                    };
-
-                    const accents = [
-                      "hover:bg-pink-50 hover:text-pink-600",
-                      "hover:bg-indigo-50 hover:text-indigo-600",
-                      "hover:bg-[#FFF8F0] hover:text-[#374151]",
-                      "hover:bg-blue-50 hover:text-blue-600",
-                      "hover:bg-amber-50 hover:text-amber-600",
-                      "hover:bg-purple-50 hover:text-purple-600",
-                      "hover:bg-fuchsia-50 hover:text-fuchsia-600",
-                      "hover:bg-cyan-50 hover:text-cyan-600",
-                      "hover:bg-sky-50 hover:text-sky-600",
-                      "hover:bg-emerald-50 hover:text-[#374151]",
-                      "hover:bg-[#FFF1F4] hover:text-red-600",
-                      "hover:bg-lime-50 hover:text-lime-600",
-                    ];
-
-                    return (
-                      <Link
-                        key={category}
-                        href={`/category/${encodeURIComponent(category)}`}
-                        className={`group flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left transition ${accents[index]}`}
-                      >
-                        <span className="relative flex h-9 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-slate-50 ring-1 ring-slate-100">
-                          <img
-                            src={
-                              CATEGORY_IMAGES[category] ||
-                              fallbackImages[category] ||
-                              "/images/categories/furniture.jpg"
-                            }
-                            alt={category}
-                            className="h-full w-full object-cover transition duration-300 group-hover:scale-110"
-                          />
-                        </span>
-
-                        <span className="min-w-0 flex-1">
-                          <span className="block truncate text-[11px] font-bold text-[#26332C] group-hover:font-black">
-                            {category}
-                          </span>
-                          <span className="block text-[8px] font-medium text-slate-400">
-                            {language === "sw"
-                              ? "Angalia bidhaa"
-                              : "Explore products"}
-                          </span>
-                        </span>
-
-                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-50 text-[13px] font-bold text-slate-400 transition group-hover:bg-white group-hover:text-current">
-                          →
-                        </span>
-                      </Link>
-                    );
-                  })}
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    document
-                      .getElementById("categories")
-                      ?.scrollIntoView({ behavior: "smooth" })
-                  }
-                  className="mt-2 flex w-full items-center justify-center rounded-lg bg-slate-50 py-2 text-[9px] font-black text-[#374151] transition hover:bg-[#FFF1F4]"
-                >
-                  {language === "sw"
-                    ? "VIEW MORE MAKUNDI"
-                    : "VIEW MORE CATEGORIES"}{" "}
-                  →
-                </button>
               </div>
             </aside>
 
+            {/* PRODUCT SHOWCASE + QUICK SERVICES */}
+            <div className="min-w-0">
+              <div className="grid w-full min-w-0 gap-4">
+
+            {/* PRODUCT SHOWCASE + QUICK SERVICES */}
+            <div className="min-w-0">
+              <div className="grid w-full min-w-0 gap-4">
+
             {/* GAMORA MARKETPLACE PRODUCT BANNER */}
             <div
-              className={`relative ml-0 min-h-[300px] min-[1600px]:ml-[60px] overflow-hidden sm:min-h-[340px] ${
+              className={`relative w-full w-full min-w-0 min-h-[300px] justify-self-end overflow-hidden sm:min-h-[340px] ${
                 [
                   "bg-gradient-to-br from-red-50 via-orange-50 to-yellow-100",
                   "bg-gradient-to-br from-blue-50 via-cyan-50 to-indigo-100",
@@ -1686,8 +1696,14 @@ export default function HomePage() {
                   : "Quality products • Great prices • Gamora"}
               </div>
             </div>
+
+
           </div>
         </div>
+              </div>
+            </div>
+              </div>
+            </div>
       </section>
 
       {/* CATEGORY STRIP */}

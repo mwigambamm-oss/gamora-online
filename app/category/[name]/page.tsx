@@ -271,10 +271,16 @@ export default function CategoryPage() {
               <p className="text-xs text-slate-500">
                 {subcategory
                   ? `Showing ${subcategory} products`
-                  : "Explore products in this category"}
+                  : `Shop ${name} online in Tanzania`}
               </p>
             </div>
           </div>
+
+          <p className="mt-2 max-w-4xl text-[11px] leading-5 text-slate-500 sm:text-xs">
+            {subcategory
+              ? `Shop ${subcategory} in ${name} online in Tanzania. Browse available products, compare prices and find quality products from GAMORA ONLINE.`
+              : `Shop ${name} online in Tanzania with GAMORA ONLINE. Browse quality products, compare prices and find convenient online shopping options across Tanzania.`}
+          </p>
 
           {Object.keys(SUBCATEGORY_RULES[name] || {}).length > 0 && (
             <div className="mt-3 w-full overflow-x-auto scrollbar-hide">
@@ -377,7 +383,7 @@ export default function CategoryPage() {
                     <div className="h-32 sm:h-40">
                       <img
                         src={item.image || item.images?.[0] || ""}
-                        alt={item.name}
+                        alt={`${item.name} - ${name} online Tanzania | GAMORA ONLINE`}
                         loading={products.indexOf(item) < 6 ? "eager" : "lazy"}
                         fetchPriority={products.indexOf(item) < 3 ? "high" : "auto"}
                         decoding="async"

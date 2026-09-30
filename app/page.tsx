@@ -1192,7 +1192,7 @@ export default function HomePage() {
         </div>
 
         {/* MOBILE HEADER */}
-<div className="relative z-[9999999] w-full bg-gradient-to-r from-[#450a0a] via-[#991b1b] to-[#c2410c] px-2 py-2 lg:hidden">
+<div className="relative z-[9999999] w-full bg-[#E8F3ED] px-2 py-2 lg:hidden">
   <div className="flex items-center gap-1.5">
 
     {/* SEARCH */}
@@ -1288,7 +1288,7 @@ export default function HomePage() {
     <div className="h-0.5 w-full bg-slate-200 lg:hidden" />
 
     {/* MAIN NAVIGATION */}
-        <div className="relative mt-0 bg-gradient-to-r from-[#450a0a] via-[#991b1b] to-[#c2410c] lg:hidden">
+        <div className="relative mt-0 bg-[#E8F3ED] lg:hidden">
           <div className="mx-auto flex max-w-[1440px] items-center justify-center gap-1.5 overflow-x-auto px-2 py-1.5 scrollbar-hide">
 
             <a

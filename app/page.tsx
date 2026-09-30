@@ -1559,8 +1559,14 @@ export default function HomePage() {
                     </p>
 
                     <h1 className="mt-1 max-w-xl text-2xl font-black leading-[1.02] tracking-tight text-slate-950 sm:text-3xl lg:text-4xl">
-                      {hero.product.name}
+                      {language === "sw"
+                        ? "Nunua Online Tanzania – Fashion, Viatu na Bidhaa Mbalimbali"
+                        : "Online Shopping in Tanzania – Fashion, Shoes & More"}
                     </h1>
+
+                    <h2 className="sr-only">
+                      {hero.product.name}
+                    </h2>
 
                     <p className="mt-2 max-w-lg text-[10px] leading-4 text-[#26332C] sm:text-xs">
                       {hero.product.description

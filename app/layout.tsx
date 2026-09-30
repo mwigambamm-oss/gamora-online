@@ -107,6 +107,7 @@ const websiteSchema = {
   url: "https://gamoraonline.co.tz",
   description:
     "Nunua Fashion, Shoes, Handbags, Accessories, Phones, Home & Kitchen na bidhaa nyingine online Tanzania.",
+  inLanguage: ["en-TZ", "sw-TZ"],
 };
 
 export default function RootLayout({

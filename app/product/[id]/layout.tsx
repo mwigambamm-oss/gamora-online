@@ -6,8 +6,53 @@ type Props = {
   params: Promise<{ id: string }>;
 };
 
+const baseUrl = "https://gamoraonline.co.tz";
+
 async function getProductData(id: string) {
   return getProductById(Number(id));
+}
+
+function getImageUrl(image: string): string {
+  if (image.startsWith("http")) {
+    return image;
+  }
+
+  return `${baseUrl}${image.startsWith("/") ? "" : "/"}${image}`;
+}
+
+function getProductImages(product: {
+  image?: string;
+  images?: string[];
+}): string[] {
+  const images = [
+    ...(product.image ? [product.image] : []),
+    ...(product.images ?? []),
+  ]
+    .filter(Boolean)
+    .map(getImageUrl);
+
+  return [...new Set(images)];
+}
+
+function getSeoDescription(product: {
+  name: string;
+  category: string;
+  description?: string;
+}): string {
+  const fallback = `Buy ${product.name} online in Tanzania from GAMORA ONLINE. Shop quality ${product.category.toLowerCase()} products at competitive prices with convenient delivery.`;
+
+  const source = product.description?.trim() || fallback;
+
+  const cleaned = source
+    .replace(/\s+/g, " ")
+    .replace(/\n/g, " ")
+    .trim();
+
+  if (cleaned.length <= 155) {
+    return cleaned;
+  }
+
+  return `${cleaned.slice(0, 152).trimEnd()}...`;
 }
 
 export async function generateMetadata({
@@ -21,21 +66,18 @@ export async function generateMetadata({
       title: "Product Not Found | GAMORA ONLINE",
       description:
         "This product could not be found on GAMORA ONLINE.",
+      robots: {
+        index: false,
+        follow: true,
+      },
     };
   }
 
-  const baseUrl = "https://gamoraonline.co.tz";
   const productUrl = `${baseUrl}/product/${product.id}`;
-
-  const description =
-    product.description ||
-    `Buy ${product.name} online in Tanzania from GAMORA ONLINE. Quality products at great prices with convenient delivery.`;
-
-  const imageUrl = product.image
-    ? product.image.startsWith("http")
-      ? product.image
-      : `${baseUrl}${product.image.startsWith("/") ? "" : "/"}${product.image}`
-    : `${baseUrl}/og-image.png`;
+  const description = getSeoDescription(product);
+  const productImages = getProductImages(product);
+  const imageUrl =
+    productImages[0] || `${baseUrl}/og-image.png`;
 
   return {
     title: `${product.name} | GAMORA ONLINE`,
@@ -45,6 +87,18 @@ export async function generateMetadata({
       canonical: productUrl,
     },
 
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+        "max-video-preview": -1,
+      },
+    },
+
     openGraph: {
       title: `${product.name} | GAMORA ONLINE`,
       description,
@@ -52,14 +106,17 @@ export async function generateMetadata({
       siteName: "GAMORA ONLINE",
       locale: "en_TZ",
       type: "website",
-      images: [
-        {
-          url: imageUrl,
-          width: 1200,
-          height: 630,
-          alt: product.name,
-        },
-      ],
+      images: productImages.length
+        ? productImages.map((url) => ({
+            url,
+            alt: product.name,
+          }))
+        : [
+            {
+              url: imageUrl,
+              alt: product.name,
+            },
+          ],
     },
 
     twitter: {
@@ -82,18 +139,9 @@ export default async function ProductLayout({
     return children;
   }
 
-  const baseUrl = "https://gamoraonline.co.tz";
   const productUrl = `${baseUrl}/product/${product.id}`;
-
-  const description =
-    product.description ||
-    `Buy ${product.name} online in Tanzania from GAMORA ONLINE. Quality products at great prices with convenient delivery.`;
-
-  const imageUrl = product.image
-    ? product.image.startsWith("http")
-      ? product.image
-      : `${baseUrl}${product.image.startsWith("/") ? "" : "/"}${product.image}`
-    : `${baseUrl}/og-image.png`;
+  const description = getSeoDescription(product);
+  const productImages = getProductImages(product);
 
   const breadcrumbSchema = {
     "@context": "https://schema.org",
@@ -125,7 +173,10 @@ export default async function ProductLayout({
     "@type": "Product",
     name: product.name,
     description,
-    image: [imageUrl],
+    category: product.category,
+    image: productImages.length
+      ? productImages
+      : [`${baseUrl}/og-image.png`],
     url: productUrl,
 
     brand: {
@@ -143,6 +194,11 @@ export default async function ProductLayout({
           ? "https://schema.org/InStock"
           : "https://schema.org/OutOfStock",
       itemCondition: "https://schema.org/NewCondition",
+      seller: {
+        "@type": "Organization",
+        name: "GAMORA ONLINE",
+        url: baseUrl,
+      },
     },
   };
 

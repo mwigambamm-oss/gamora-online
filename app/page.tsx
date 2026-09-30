@@ -2673,18 +2673,16 @@ function ProductCard({
           </button>
         </div>
 
-        <button
-          type="button"
-          onClick={() =>
-            window.location.href = `/product/${product.id}`
-          }
+        <Link
+          href={`/product/${product.id}`}
+          aria-label={`View ${product.name}`}
           className="block w-full text-left"
         >
           <div className="relative flex h-[175px] w-full items-center justify-center overflow-hidden bg-transparent sm:h-[195px] lg:h-[210px]">
             {image ? (
               <img
                 src={image}
-                alt={product.name}
+                alt={`${product.name} - ${product.category} online Tanzania | GAMORA ONLINE`}
                 loading="lazy"
                 className="h-full w-full object-contain object-center transition-transform duration-300 group-hover:scale-[1.03]"
               />
@@ -2694,7 +2692,7 @@ function ProductCard({
               </div>
             )}
           </div>
-        </button>
+        </Link>
       </div>
 
       <div className="pt-1 text-center">

@@ -89,21 +89,29 @@ export const metadata: Metadata = {
 
 const organizationSchema = {
   "@context": "https://schema.org",
-  "@type": "Organization",
+  "@type": "OnlineStore",
+  "@id": "https://gamoraonline.co.tz/#organization",
   name: "GAMORA ONLINE",
+  alternateName: "Gamora",
   url: "https://gamoraonline.co.tz",
+  logo: "https://gamoraonline.co.tz/gamora-logo.png",
   description:
     "GAMORA ONLINE ni duka la mtandaoni Tanzania linalokupa bidhaa bora kwa bei nzuri, ununuzi salama na delivery ya uhakika.",
   areaServed: {
     "@type": "Country",
     name: "Tanzania",
   },
+  sameAs: [
+    "https://www.instagram.com/gamoraonline_store/",
+  ],
 };
 
 const websiteSchema = {
   "@context": "https://schema.org",
   "@type": "WebSite",
+  "@id": "https://gamoraonline.co.tz/#website",
   name: "GAMORA ONLINE",
+  alternateName: "Gamora",
   url: "https://gamoraonline.co.tz",
   description:
     "Nunua Fashion, Shoes, Handbags, Accessories, Phones, Home & Kitchen na bidhaa nyingine online Tanzania.",

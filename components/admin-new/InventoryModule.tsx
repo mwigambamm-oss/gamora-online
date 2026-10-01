@@ -9,19 +9,55 @@ import {
 
 export default function InventoryModule() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [allInventoryProducts, setAllInventoryProducts] = useState<Product[]>([]);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMoreProducts, setHasMoreProducts] = useState(true);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
   async function loadInventory() {
     try {
       setLoading(true);
-      const data = await getProducts();
+      const data = await getProducts({
+        limit: 40,
+        offset: 0,
+        admin: true,
+      });
+
+      const allData = await getProducts({
+        admin: true,
+      });
+
       setProducts(data);
+      setAllInventoryProducts(allData);
+      setHasMoreProducts(data.length === 40);
     } catch (error) {
       console.error("Failed to load inventory:", error);
       setProducts([]);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function loadMoreProducts() {
+    if (loadingMore || !hasMoreProducts) return;
+
+    setLoadingMore(true);
+
+    try {
+      const data = await getProducts({
+        limit: 40,
+        offset: products.length,
+        admin: true,
+      });
+
+      setProducts((current) => [...current, ...data]);
+
+      if (data.length < 40) {
+        setHasMoreProducts(false);
+      }
+    } finally {
+      setLoadingMore(false);
     }
   }
 
@@ -38,6 +74,12 @@ export default function InventoryModule() {
       const updated = await updateProduct(product.id, { stock });
 
       setProducts((current) =>
+        current.map((item) =>
+          item.id === product.id ? updated : item
+        )
+      );
+
+      setAllInventoryProducts((current) =>
         current.map((item) =>
           item.id === product.id ? updated : item
         )
@@ -60,22 +102,22 @@ export default function InventoryModule() {
     );
   }, [products, search]);
 
-  const totalUnits = products.reduce(
+  const totalUnits = allInventoryProducts.reduce(
     (sum, product) => sum + Number(product.stock || 0),
     0
   );
 
-  const lowStock = products.filter(
+  const lowStock = allInventoryProducts.filter(
     (product) =>
       Number(product.stock || 0) > 0 &&
       Number(product.stock || 0) <= 5
   ).length;
 
-  const outOfStock = products.filter(
+  const outOfStock = allInventoryProducts.filter(
     (product) => Number(product.stock || 0) <= 0
   ).length;
 
-  const stockCostValue = products.reduce(
+  const stockCostValue = allInventoryProducts.reduce(
     (sum, product) =>
       sum +
       Number(product.cost_price || 0) *
@@ -83,7 +125,7 @@ export default function InventoryModule() {
     0
   );
 
-  const potentialSalesValue = products.reduce(
+  const potentialSalesValue = allInventoryProducts.reduce(
     (sum, product) =>
       sum +
       Number(product.price || 0) *
@@ -124,7 +166,7 @@ export default function InventoryModule() {
           </p>
 
           <p className="mt-2 text-3xl font-black">
-            {products.length}
+            {allInventoryProducts.length}
           </p>
         </div>
 
@@ -419,6 +461,19 @@ export default function InventoryModule() {
         )}
 
       </div>
+
+      {hasMoreProducts && (
+        <div className="mt-6 flex justify-center">
+          <button
+            type="button"
+            onClick={loadMoreProducts}
+            disabled={loadingMore}
+            className="rounded-xl bg-[#172554] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#0F766E] disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {loadingMore ? "Loading..." : "Load More Products"}
+          </button>
+        </div>
+      )}
 
     </section>
   );

@@ -52,6 +52,8 @@ export default function ProductsModule() {
   };
 
   const [products, setProducts] = useState<Product[]>([]);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMoreProducts, setHasMoreProducts] = useState(true);
   const [categories, setCategories] = useState<string[]>(DEFAULT_CATEGORIES);
 
   const [form, setForm] = useState(emptyForm);
@@ -116,9 +118,14 @@ export default function ProductsModule() {
   ];
 
   async function loadProducts() {
-    const data = await getProducts();
+    const data = await getProducts({
+      limit: 40,
+      offset: 0,
+      admin: true,
+    });
 
     setProducts(data);
+    setHasMoreProducts(data.length === 40);
 
     const productCategories = data
       .map((p) => p.category)
@@ -165,6 +172,28 @@ export default function ProductsModule() {
     }
   }
 
+
+  async function loadMoreProducts() {
+    if (loadingMore || !hasMoreProducts) return;
+
+    setLoadingMore(true);
+
+    try {
+      const data = await getProducts({
+        limit: 40,
+        offset: products.length,
+        admin: true,
+      });
+
+      setProducts((current) => [...current, ...data]);
+
+      if (data.length < 40) {
+        setHasMoreProducts(false);
+      }
+    } finally {
+      setLoadingMore(false);
+    }
+  }
 
   useEffect(() => {
     loadProducts();
@@ -1670,6 +1699,20 @@ export default function ProductsModule() {
 
       </div>
 
+
+
+      {hasMoreProducts && (
+        <div className="mt-6 flex justify-center">
+          <button
+            type="button"
+            onClick={loadMoreProducts}
+            disabled={loadingMore}
+            className="rounded-xl bg-[#172554] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#0F766E] disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {loadingMore ? "Loading..." : "Load More Products"}
+          </button>
+        </div>
+      )}
 
     </main>
   );

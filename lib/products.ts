@@ -150,6 +150,8 @@ function mapProduct(p: any): Product {
 export async function getProducts(options?: {
   category?: string;
   limit?: number;
+  offset?: number;
+  admin?: boolean;
 }): Promise<Product[]> {
   const customerFields = [
     "id",
@@ -174,7 +176,7 @@ export async function getProducts(options?: {
 
   let query = supabase
     .from("products")
-    .select(options ? customerFields : "*")
+    .select(options?.admin ? "*" : options ? customerFields : "*")
     .order("id", { ascending: false });
 
   if (options?.category) {
@@ -182,7 +184,14 @@ export async function getProducts(options?: {
   }
 
   if (options?.limit) {
-    query = query.limit(options.limit);
+    if (options.offset !== undefined) {
+      query = query.range(
+        options.offset,
+        options.offset + options.limit - 1
+      );
+    } else {
+      query = query.limit(options.limit);
+    }
   }
 
   const { data, error } = await query;

@@ -8,7 +8,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { FaFacebookF, FaInstagram, FaTiktok } from "react-icons/fa";
 import { translations, type Language } from "@/lib/translations";
 import { formatCurrency, type Currency } from "@/lib/currency";
-import { getProducts as getSupabaseProducts, shuffleProducts, type Product } from "@/lib/products";
+import { getProducts as getSupabaseProducts, searchProducts, shuffleProducts, type Product } from "@/lib/products";
 import { supabase } from "@/lib/supabase";
 import {
   useEffect,
@@ -109,6 +109,8 @@ export default function HomePage() {
 
   const [products, setProducts] = useState<Product[]>([]);
   const [search, setSearch] = useState("");
+    const [searchResults, setSearchResults] = useState<Product[] | null>(null);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
 
@@ -170,6 +172,7 @@ export default function HomePage() {
   const [selectedSubcategories, setSelectedSubcategories] = useState<Record<string, string>>({});
   const [visibleProductsCount, setVisibleProductsCount] = useState(100);
   const [categoryVisibleCounts, setCategoryVisibleCounts] = useState<Record<string, number>>({});
+  const [categoryCatalog, setCategoryCatalog] = useState<Product[]>([]);
   const [cartCount, setCartCount] = useState(0);
   const [heroIndex, setHeroIndex] = useState(0);
   const [heroPaused, setHeroPaused] = useState(false);
@@ -182,6 +185,28 @@ export default function HomePage() {
   const bestRef = useRef<HTMLDivElement>(null);
 
   const t = translations[language];
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadCategoryCatalog = async () => {
+      try {
+        const catalog = await getSupabaseProducts({ limit: 1000 });
+
+        if (!cancelled) {
+          setCategoryCatalog(catalog);
+        }
+      } catch (error) {
+        console.error("Failed to load category catalog:", error);
+      }
+    };
+
+    loadCategoryCatalog();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     const saved = localStorage.getItem("gamora_currency");
@@ -379,222 +404,311 @@ export default function HomePage() {
     return [...ALL_CATEGORIES, ...extra];
   }, [products]);
 
-  const filteredProducts = useMemo(() => {
-    const query = search.toLowerCase().trim();
-    const minPriceValue = minPrice.trim() ? Number(minPrice) : null;
-    const maxPriceValue = maxPrice.trim() ? Number(maxPrice) : null;
+  const performSearch = async () => {
+    const normalizedQuery = normalize(search);
 
-    const normalize = (value: unknown) =>
-      String(value || "")
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\\u0300-\\u036f]/g, "")
-        .replace(/[^a-z0-9\\s]/g, " ")
-        .replace(/\\s+/g, " ")
-        .trim();
+    if (!normalizedQuery) {
+      setSearchResults(null);
+      setSearchLoading(false);
+      return;
+    }
 
-    const normalizedQuery = normalize(query);
+    setSearchLoading(true);
+    setVisibleProductsCount(100);
 
-    const searchAliases: Record<string, string[]> = {
-      shoes: [
-        "shoe",
-        "shoes",
-        "kiatu",
-        "viatu",
-        "footwear",
-        "sandal",
-        "sandals",
-        "sneaker",
-        "sneakers",
-        "boot",
-        "boots",
-      ],
-      bags: [
-        "bag",
-        "bags",
-        "mkoba",
-        "mikoba",
-        "handbag",
-        "handbags",
-        "backpack",
-        "backpacks",
-      ],
-      phones: [
-        "phone",
-        "phones",
-        "simu",
-        "smartphone",
-        "smartphones",
-        "mobile",
-        "mobiles",
-        "iphone",
-        "android",
-      ],
-      clothes: [
-        "clothes",
-        "clothing",
-        "nguo",
-        "dress",
-        "dresses",
-        "shirt",
-        "shirts",
-        "tshirt",
-        "t shirts",
-        "jeans",
-        "trouser",
-        "trousers",
-        "suruali",
-        "skirt",
-        "skirts",
-      ],
-      electronics: [
-        "electronics",
-        "electronic",
-        "electronics",
-        "elektroniki",
-        "device",
-        "devices",
-        "gadget",
-        "gadgets",
-      ],
-      beauty: [
-        "beauty",
-        "cosmetics",
-        "cosmetic",
-        "urembo",
-        "makeup",
-        "skincare",
-        "skin care",
-        "perfume",
-        "parfum",
-      ],
-      furniture: [
-        "furniture",
-        "samani",
-        "chair",
-        "chairs",
-        "kiti",
-        "viti",
-        "table",
-        "tables",
-        "meza",
-        "sofa",
-        "sofas",
-      ],
-    };
+    try {
+      const category = searchCategoryDictionary[normalizedQuery];
 
-    const categoryMatchesAlias = (category: unknown, categorySw: unknown) => {
-      const categories = [normalize(category), normalize(categorySw)];
+      let results: Product[] = [];
 
-      if (!normalizedQuery) return false;
+      if (category) {
+        // Category searches such as:
+        // viatu -> Shoes
+        // simu -> Phones & Electronics
+        // sufuria -> Home & Kitchen
+        //
+        // Search the category itself so every product in that
+        // category can be returned directly from Supabase.
+        results = await searchProducts(category, {
+          category,
+          limit: 1000,
+        });
+      } else {
+        // Normal product search.
+        // Use the Swahili/English aliases where available.
+        const aliases = searchDictionary[normalizedQuery] || [];
 
-      return Object.entries(searchAliases).some(([key, aliases]) => {
-        const queryMatches = aliases.some(
-          (alias) =>
-            normalizedQuery === normalize(alias) ||
-            normalizedQuery.includes(normalize(alias)) ||
-            normalize(alias).includes(normalizedQuery)
+        const terms = Array.from(
+          new Set<string>(
+            [normalizedQuery, ...aliases]
+              .map((value) => normalize(value))
+              .filter(Boolean)
+          )
         );
 
-        if (!queryMatches) return false;
+        const lists = await Promise.all(
+          terms.map((term) =>
+            searchProducts(term, {
+              limit: 100,
+            })
+          )
+        );
 
-        return categories.some((value) => {
-          if (key === "shoes") {
-            return (
-              value.includes("shoe") ||
-              value.includes("viatu") ||
-              value.includes("kiatu") ||
-              value.includes("footwear")
-            );
+        const merged = new Map<number, Product>();
+
+        for (const list of lists) {
+          for (const product of list) {
+            merged.set(product.id, product);
           }
+        }
 
-          if (key === "bags") {
-            return (
-              value.includes("bag") ||
-              value.includes("mkoba") ||
-              value.includes("accessor")
-            );
-          }
+        results = Array.from(merged.values());
+      }
 
-          if (key === "phones") {
-            return (
-              value.includes("phone") ||
-              value.includes("simu") ||
-              value.includes("mobile") ||
-              value.includes("electronic")
-            );
-          }
+      setSearchResults(results);
+      setSelectedCategory("All");
+    } catch (error) {
+      console.error("Search failed:", error);
+      setSearchResults([]);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
 
-          if (key === "clothes") {
-            return (
-              value.includes("fashion") ||
-              value.includes("clothes") ||
-              value.includes("nguo") ||
-              value.includes("apparel")
-            );
-          }
+  useEffect(() => {
+    if (searchResults === null) return;
 
-          if (key === "electronics") {
-            return (
-              value.includes("electronic") ||
-              value.includes("electronics") ||
-              value.includes("elektroniki") ||
-              value.includes("gadget")
-            );
-          }
-
-          if (key === "beauty") {
-            return (
-              value.includes("beauty") ||
-              value.includes("cosmetic") ||
-              value.includes("urembo")
-            );
-          }
-
-          if (key === "furniture") {
-            return (
-              value.includes("furniture") ||
-              value.includes("samani")
-            );
-          }
-
-          return value.includes(key);
+    const timer = window.setTimeout(() => {
+      document
+        .getElementById("products")
+        ?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
         });
-      });
-    };
+    }, 100);
 
-    const productText = (product: Product) => {
-      const specificationText = Object.entries(
-        product.specifications || {}
-      )
-        .map(([key, value]) => `${key} ${value}`)
-        .join(" ");
+    return () => window.clearTimeout(timer);
+  }, [searchResults]);
 
-      const specificationSwText = Object.entries(
-        product.specifications_sw || {}
-      )
-        .map(([key, value]) => `${key} ${value}`)
-        .join(" ");
+  const handleSearchKeyDown = (
+    event: React.KeyboardEvent<HTMLInputElement>
+  ) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      performSearch();
+    }
+  };
 
-      return normalize(
-        [
-          product.name,
-          product.name_sw,
-          product.category,
-          product.category_sw,
-          product.description,
-          product.description_sw,
-          ...(product.colors || []),
-          ...(product.colors_sw || []),
-          ...(product.sizes || []),
-          ...(product.sizes_sw || []),
-          specificationText,
-          specificationSwText,
-        ].join(" ")
-      );
-    };
 
-    return products.filter((product) => {
+  const normalize = (value: unknown): string =>
+    String(value || "")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9\s]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+
+  const searchCategoryDictionary: Record<string, string> = {
+    simu: "Phones & Electronics",
+    simu_ya_mkononi: "Phones & Electronics",
+    "simu ya mkononi": "Phones & Electronics",
+
+    kiatu: "Shoes",
+    viatu: "Shoes",
+    kiatu_cha: "Shoes",
+
+    jikoni: "Home & Kitchen",
+    sufuria: "Home & Kitchen",
+    sahani: "Home & Kitchen",
+    kikombe: "Home & Kitchen",
+    vikombe: "Home & Kitchen",
+    glasi: "Home & Kitchen",
+    storage: "Home & Kitchen",
+
+    kofia: "Women's Fashion",
+    hat: "Women's Fashion",
+    chupi: "Women's Fashion",
+    underwear: "Women's Fashion",
+    mkoba: "Women's Fashion",
+    mikoba: "Women's Fashion",
+    mkufu: "Women's Fashion",
+    mikufu: "Women's Fashion",
+    hereni: "Women's Fashion",
+    bangili: "Jewelry & Watches",
+    pete: "Jewelry & Watches",
+    saa: "Jewelry & Watches",
+    watch: "Jewelry & Watches",
+    kibanio: "Women's Fashion",
+    vibanio: "Women's Fashion",
+    kilemba: "Women's Fashion",
+    vilemba: "Women's Fashion",
+    kitambaa: "Women's Fashion",
+    vitambaa: "Women's Fashion",
+    nguo: "Women's Fashion",
+    shati: "Women's Fashion",
+    suruali: "Women's Fashion",
+    gauni: "Women's Fashion",
+    sketi: "Women's Fashion",
+    blauzi: "Women's Fashion",
+    koti: "Women's Fashion",
+    sweta: "Women's Fashion",
+    fulana: "Women's Fashion",
+
+    urembo: "Beauty & Personal Care",
+    vipodozi: "Beauty & Personal Care",
+    manukato: "Beauty & Personal Care",
+
+    mtoto: "Baby & Kids",
+    watoto: "Baby & Kids",
+    toy: "Baby & Kids",
+
+    michezo: "Sports & Fitness",
+    mpira: "Sports & Fitness",
+    mazoezi: "Sports & Fitness",
+
+    gari: "Automotive",
+    magari: "Automotive",
+    pikipiki: "Automotive",
+
+    zana: "Tools & Hardware",
+
+    kompyuta: "Computers & Accessories",
+    laptop: "Computers & Accessories",
+    mouse: "Computers & Accessories",
+    keyboard: "Computers & Accessories",
+    printer: "Computers & Accessories",
+
+    gaming: "Gaming",
+    game: "Gaming",
+
+    kitabu: "Books & Stationery",
+    vitabu: "Books & Stationery",
+    kalamu: "Books & Stationery",
+    daftari: "Books & Stationery",
+
+    samani: "Furniture",
+    kiti: "Furniture",
+    viti: "Furniture",
+    meza: "Furniture",
+    kitanda: "Furniture",
+
+    bustani: "Garden & Outdoor",
+    afya: "Health & Wellness",
+    wellness: "Health & Wellness",
+  };
+
+  const searchDictionary: Record<string, string[]> = {
+    simu: ["phone", "phones", "smartphone", "smartphones", "smart phones", "mobile", "mobiles"],
+    simu_ya_mkononi: ["phone", "phones", "smartphone", "smartphones", "mobile"],
+    kofia: ["hat", "hats", "cap", "caps", "headwear", "beanie", "bonnet", "fedora", "bucket"],
+    hat: ["hat", "hats", "cap", "caps", "headwear"],
+    chupi: ["underwear", "panties", "panty", "brief", "briefs", "boxer", "boxers", "innerwear", "lingerie", "bra", "bras"],
+    underwear: ["underwear", "panties", "panty", "brief", "briefs", "boxer", "boxers", "innerwear", "lingerie"],
+    kiatu: ["shoe", "shoes", "footwear", "sandal", "sandals", "sneaker", "sneakers", "boot", "boots", "slipper", "slippers"],
+    viatu: ["shoe", "shoes", "footwear", "sandal", "sandals", "sneaker", "sneakers", "boot", "boots", "slipper", "slippers"],
+    mkoba: ["bag", "bags", "handbag", "handbags", "backpack", "backpacks", "purse", "purses", "wallet"],
+    mikoba: ["bag", "bags", "handbag", "handbags", "backpack", "backpacks", "purse", "purses"],
+    mkufu: ["necklace", "necklaces"],
+    mikufu: ["necklace", "necklaces"],
+    hereni: ["earring", "earrings"],
+    bangili: ["bracelet", "bracelets", "bangle", "bangles"],
+    pete: ["ring", "rings"],
+    saa: ["watch", "watches", "wristwatch", "wrist watches"],
+    watch: ["watch", "watches", "wristwatch"],
+    kibanio: ["hair clip", "hair clips", "hair accessory", "hair accessories"],
+    vibanio: ["hair clip", "hair clips", "hair accessory", "hair accessories"],
+    kilemba: ["headscarf", "head scarves", "turban", "turbans"],
+    vilemba: ["headscarf", "head scarves", "turban", "turbans"],
+    kitambaa: ["scarf", "scarves"],
+    vitambaa: ["scarf", "scarves"],
+    nguo: ["clothes", "clothing", "apparel", "dress", "dresses", "shirt", "shirts", "trousers", "pants", "skirt", "skirts"],
+    shati: ["shirt", "shirts"],
+    suruali: ["trouser", "trousers", "pants"],
+    gauni: ["dress", "dresses"],
+    sketi: ["skirt", "skirts"],
+    blauzi: ["blouse", "blouses"],
+    koti: ["jacket", "jackets", "coat", "coats"],
+    sweta: ["sweater", "sweaters"],
+    fulana: ["tshirt", "t shirts", "t-shirt", "shirt", "shirts"],
+    urembo: ["beauty", "cosmetics", "makeup", "skincare"],
+    vipodozi: ["cosmetics", "makeup", "beauty"],
+    manukato: ["perfume", "parfum", "fragrance", "fragrances"],
+    jikoni: ["kitchen", "cookware", "cooking", "kitchenware"],
+    sufuria: ["pot", "pots", "cookware", "cooking"],
+    sahani: ["plate", "plates", "tableware"],
+    kikombe: ["cup", "cups", "mug", "mugs"],
+    vikombe: ["cup", "cups", "mug", "mugs"],
+    glasi: ["glass", "glasses"],
+    storage: ["storage", "organizer", "organizers", "container", "containers"],
+    samani: ["furniture", "chair", "chairs", "table", "tables", "sofa", "sofas", "bed", "beds", "desk", "desks"],
+    kiti: ["chair", "chairs"],
+    viti: ["chair", "chairs"],
+    meza: ["table", "tables"],
+    kitanda: ["bed", "beds"],
+    mtoto: ["baby", "babies", "kid", "kids", "child", "children"],
+    watoto: ["baby", "babies", "kid", "kids", "child", "children"],
+    toy: ["toy", "toys"],
+    michezo: ["sports", "sport", "fitness", "gym", "exercise"],
+    mpira: ["ball", "balls", "football", "soccer", "basketball"],
+    mazoezi: ["fitness", "gym", "exercise", "workout"],
+    gari: ["car", "cars", "automotive", "vehicle", "vehicles"],
+    magari: ["car", "cars", "automotive", "vehicle", "vehicles"],
+    pikipiki: ["motorcycle", "motorcycles", "bike", "bikes"],
+    zana: ["tools", "tool", "hardware"],
+    kompyuta: ["computer", "computers", "laptop", "laptops", "pc"],
+    laptop: ["laptop", "laptops", "computer", "computers"],
+    mouse: ["mouse", "mice"],
+    keyboard: ["keyboard", "keyboards"],
+    printer: ["printer", "printers"],
+    gaming: ["gaming", "game", "games", "console", "controller"],
+    game: ["game", "games", "gaming"],
+    kitabu: ["book", "books"],
+    vitabu: ["book", "books"],
+    kalamu: ["pen", "pens"],
+    daftari: ["notebook", "notebooks"],
+    bustani: ["garden", "gardening", "outdoor"],
+    afya: ["health", "wellness"],
+    wellness: ["wellness", "health", "fitness"],
+  };
+
+  const productText = (product: Product) => {
+    const specificationText = Object.entries(product.specifications || {})
+      .map(([key, value]) => `${key} ${value}`)
+      .join(" ");
+
+    const specificationSwText = Object.entries(product.specifications_sw || {})
+      .map(([key, value]) => `${key} ${value}`)
+      .join(" ");
+
+    return normalize([
+      product.name,
+      product.name_sw,
+      product.category,
+      product.category_sw,
+      product.description,
+      product.description_sw,
+      ...(product.colors || []),
+      ...(product.colors_sw || []),
+      ...(product.sizes || []),
+      ...(product.sizes_sw || []),
+      specificationText,
+      specificationSwText,
+    ].join(" "));
+  };
+
+  const filteredProducts = useMemo(() => {
+    const normalizedQuery = normalize(search);
+
+    const minPriceValue =
+      minPrice.trim() === "" ? null : Number(minPrice);
+
+    const maxPriceValue =
+      maxPrice.trim() === "" ? null : Number(maxPrice);
+
+    const sourceProducts = searchResults !== null ? searchResults : products;
+
+    return sourceProducts.filter((product: Product) => {
       const matchesCategory =
         selectedCategory === "All" ||
         product.category === selectedCategory;
@@ -611,19 +725,55 @@ export default function HomePage() {
         if (productPrice > maxPriceValue) return false;
       }
 
+      // Supabase has already completed the search.
+      // Do not search the returned products a second time.
+      if (searchResults !== null) return true;
+
       if (!normalizedQuery) return true;
 
       const text = productText(product);
 
-      return (
-        text.includes(normalizedQuery) ||
-        categoryMatchesAlias(
-          product.category,
-          product.category_sw
+      // Exact dictionary lookup for normal/local product filtering.
+      const matchingAliases =
+        searchDictionary[normalizedQuery] || [];
+
+      const searchTerms: string[] = Array.from(
+        new Set<string>(
+          [normalizedQuery, ...matchingAliases].map((value: string) =>
+            normalize(value)
+          )
         )
       );
+
+      return searchTerms.some((term) => {
+        const words = text.split(/\s+/);
+        const termWords = term.split(/\s+/);
+
+        if (termWords.length === 1) {
+          return words.includes(term);
+        }
+
+        for (let i = 0; i <= words.length - termWords.length; i++) {
+          if (
+            termWords.every(
+              (word: string, index: number) => words[i + index] === word
+            )
+          ) {
+            return true;
+          }
+        }
+
+        return false;
+      });
     });
-  }, [products, search, selectedCategory, minPrice, maxPrice]);
+  }, [
+    products,
+    searchResults,
+    search,
+    selectedCategory,
+    minPrice,
+    maxPrice,
+  ]);
 
   const mixedMoreProducts = useMemo(() => {
     const groups = new Map<string, Product[]>();
@@ -880,6 +1030,40 @@ export default function HomePage() {
     return "Other";
   };
 
+  const allSearchSubcategories = useMemo(() => {
+    return Array.from(
+      new Set(
+        Object.values(subcategoryRules)
+          .flatMap((rules) => Object.keys(rules))
+      )
+    ).sort((a, b) => a.localeCompare(b));
+  }, []);
+
+  const handleSubcategorySelect = (subcategory: string) => {
+    const results = categoryCatalog.filter(
+      (product) =>
+        getAutomaticSubcategory(
+          product,
+          product.category || ""
+        ) === subcategory
+    );
+
+    setSearchResults(results);
+    setSearch(subcategory);
+    setSearchOpen(false);
+    setSelectedCategory("All");
+    setVisibleProductsCount(100);
+
+    window.setTimeout(() => {
+      document
+        .getElementById("products")
+        ?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+    }, 100);
+  };
+
   const categoryProducts = useMemo(() => {
     const normalizeCategory = (value: string) =>
       value
@@ -889,35 +1073,23 @@ export default function HomePage() {
         .replace(/[^a-z0-9]+/g, "")
         .trim();
 
-    const shuffle = <T,>(items: T[]) => {
-      const copy = [...items];
-
-      for (let i = copy.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [copy[i], copy[j]] = [copy[j], copy[i]];
-      }
-
-      return copy;
-    };
-
     const result: Record<string, Product[]> = {};
 
     ALL_CATEGORIES.forEach((category) => {
       const normalizedCategory = normalizeCategory(category);
 
-      const matchingProducts = products.filter((product) => {
-        const productCategory = normalizeCategory(
-          product.category || ""
+      const matchingProducts = categoryCatalog.filter((product) => {
+        return (
+          normalizeCategory(product.category || "") ===
+          normalizedCategory
         );
-
-        return productCategory === normalizedCategory;
       });
 
-      result[category] = shuffle(matchingProducts).slice(0, 6);
+      result[category] = shuffleProducts(matchingProducts);
     });
 
     return result;
-  }, [products]);
+  }, [categoryCatalog]);
 
   const heroProducts = useMemo(
     () =>
@@ -1083,204 +1255,31 @@ export default function HomePage() {
           </div>
 
           <div className="relative ml-8 w-[520px]">
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder=""
-              className="h-11 w-full rounded-full border-2 border-[#E3EBE6] bg-white px-5 pr-14 text-sm outline-none transition focus:border-[#087443] focus:shadow-md"
-            />
-            
-            {!search && (
-              <span
-                key={`desktop-${language}-${categoryIndex}`}
-                className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 animate-[gamoraCategoryUp_0.5s_ease-out] text-sm text-slate-400"
-              >
-                {rotatingCategories[categoryIndex]}
-              </span>
-            )}
+    <input
+      value={search}
+      onChange={(e) => setSearch(e.target.value)}
+      onKeyDown={handleSearchKeyDown}
+      placeholder=""
+      className="h-11 w-full rounded-full border-2 border-[#E3EBE6] bg-white px-5 pr-14 text-sm outline-none transition focus:border-[#087443] focus:shadow-md"
+    />
 
-            <button
-              type="button"
-              aria-label={language === "sw" ? "Tafuta" : "Search"}
-              onClick={() => {
-                document
-                  .getElementById("products")
-                  ?.scrollIntoView({ behavior: "smooth", block: "start" });
-              }}
-              className="absolute right-1 top-1 flex h-9 w-12 items-center justify-center rounded-full bg-[#6B756E] text-lg text-[#26332C] transition hover:bg-[#56615B]"
-            >
-              ⌕
-            </button>
-          </div>
-
-          <div className="ml-auto mr-16 flex items-center gap-5">
-            <div className="flex items-center rounded-lg border border-slate-200 p-1">
-              <button
-                onClick={() => changeLanguage("en")}
-              className={`rounded-md px-2.5 py-1.5 text-[10px] font-black ${
-                language === "en"
-                  ? "bg-[#6B756E] text-white"
-                  : "text-[#26332C]"
-              }`}
-            >
-              EN
-            </button>
-
-            <button
-              onClick={() => changeLanguage("sw")}
-              className={`rounded-md px-2.5 py-1.5 text-[10px] font-black ${
-                language === "sw"
-                  ? "bg-[#6B756E] text-white"
-                  : "text-[#26332C]"
-              }`}
-            >
-              SW
-            </button>
-          </div>
-
-          <div className="flex items-center rounded-lg border border-slate-200 p-1">
-            <button
-              onClick={() => setCurrency("TZS")}
-              className={`rounded-md px-2 py-1.5 text-[10px] font-black ${
-                currency === "TZS"
-                  ? "bg-[#6B756E] text-white"
-                  : "text-[#26332C]"
-              }`}
-            >
-              TZS
-            </button>
-
-            <button
-              onClick={() => setCurrency("USD")}
-              className={`rounded-md px-2 py-1.5 text-[10px] font-black ${
-                currency === "USD"
-                  ? "bg-[#6B756E] text-white"
-                  : "text-[#26332C]"
-              }`}
-            >
-              USD
-            </button>
-          </div>
-
-          <Link
-            href="/account"
-            className="shrink-0 rounded-lg px-2 py-1 text-left transition hover:bg-[#FFF1F4]"
-          >
-            <p className="text-[10px] font-bold text-[#26332C]">
-              My Gamora
-            </p>
-            <p className="translate-x-1 text-xs font-black text-[#374151]">
-              Account
-            </p>
-          </Link>
-
-            <Link
-              href="/cart"
-              className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 border-[#E3EBE6] bg-[#FFF1F4] text-xl transition hover:border-[#E30613]"
-              aria-label="Cart"
-            >
-              🛒
-
-              {cartCount > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#6B756E] px-1 text-[10px] font-black text-[#26332C]">
-                  {cartCount}
-                </span>
-              )}
-            </Link>
-          </div>
-
-        </div>
-
-        {/* MOBILE HEADER */}
-<div className="relative z-[9999999] w-full bg-[#E8F3ED] px-2 py-2 lg:hidden">
-  <div className="flex items-center gap-1.5">
-
-    {/* SEARCH */}
-    <div className="relative w-full min-w-0 flex-1">
-      <input
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        placeholder=""
-        className="h-8 w-full rounded-full border-0 bg-white px-3 pr-8 text-[11px] text-slate-900 outline-none"
-      />
-      
-      {!search && (
-        <span
-          key={`mobile-${language}-${categoryIndex}`}
-          className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 animate-[gamoraCategoryUp_0.5s_ease-out] text-[11px] text-slate-400"
-        >
-          {rotatingCategories[categoryIndex]}
-        </span>
-      )}
-
-      <button
-        type="button"
-        aria-label={language === "sw" ? "Tafuta" : "Search"}
-        onClick={() => {
-          document
-            .getElementById("products")
-            ?.scrollIntoView({ behavior: "smooth", block: "start" });
-        }}
-        className="absolute right-1 top-1 flex h-6 w-7 items-center justify-center rounded-full bg-[#6B756E] text-sm text-[#26332C] transition hover:bg-[#56615B]"
+    {!search && (
+      <span
+        key={`desktop-${language}-${categoryIndex}`}
+        className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 animate-[gamoraCategoryUp_0.5s_ease-out] text-sm text-slate-400"
       >
-        ⌕
-      </button>
-    </div>
+        {rotatingCategories[categoryIndex]}
+      </span>
+    )}
 
-    {/* LANGUAGE */}
-    <div className="flex shrink-0 items-center rounded-lg border border-slate-200 bg-white p-1">
-      <button
-        type="button"
-        onClick={() => setLanguage("sw")}
-        className={`rounded-md px-2 py-1.5 text-[10px] font-black ${
-          language === "sw"
-            ? "bg-[#6B756E] text-white"
-            : "text-[#26332C]"
-        }`}
-      >
-        SW
-      </button>
-
-      <button
-        type="button"
-        onClick={() => setLanguage("en")}
-        className={`rounded-md px-2 py-1.5 text-[10px] font-black ${
-          language === "en"
-            ? "bg-[#6B756E] text-white"
-            : "text-[#26332C]"
-        }`}
-      >
-        EN
-      </button>
-    </div>
-
-    {/* CURRENCY */}
-    <div className="flex shrink-0 items-center rounded-lg border border-slate-200 bg-white p-1">
-      <button
-        type="button"
-        onClick={() => setCurrency("TZS")}
-        className={`rounded-md px-2 py-1.5 text-[10px] font-black ${
-          currency === "TZS"
-            ? "bg-[#6B756E] text-white"
-            : "text-[#26332C]"
-        }`}
-      >
-        TZS
-      </button>
-
-      <button
-        type="button"
-        onClick={() => setCurrency("USD")}
-        className={`rounded-md px-2 py-1.5 text-[10px] font-black ${
-          currency === "USD"
-            ? "bg-[#6B756E] text-white"
-            : "text-[#26332C]"
-        }`}
-      >
-        USD
-      </button>
-    </div>
-
+    <button
+      type="button"
+      aria-label={language === "sw" ? "Tafuta" : "Search"}
+      onClick={performSearch}
+      className="absolute right-1 top-1 flex h-9 w-12 items-center justify-center rounded-full bg-[#6B756E] text-lg text-[#26332C] transition hover:bg-[#56615B]"
+    >
+      ⌕
+    </button>
   </div>
 </div>
 
@@ -2002,9 +2001,73 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* AUTOMATIC CATEGORY PRODUCT SECTIONS */}
+      {ALL_CATEGORIES.map((category) => {
+        const items = categoryProducts[category] || [];
+
+        if (items.length === 0) return null;
+
+        const visibleCount = categoryVisibleCounts[category] || 8;
+        const visibleItems = items.slice(0, visibleCount);
+        const hasMore = items.length > visibleCount;
+
+        return (
+          <section
+            key={`category-section-${category}`}
+            id={`category-products-${category
+              .toLowerCase()
+              .replace(/[^a-z0-9]+/g, "-")}`}
+            className="bg-[#F8FAF9] py-8 sm:py-12"
+          >
+            <div className="mx-auto max-w-[1440px] px-4 sm:px-5">
+              <div className="flex items-end justify-between gap-4">
+                <div>
+                  <h2 className="text-xl font-black tracking-tight text-slate-950 sm:text-2xl">
+                    {category}
+                  </h2>
+
+                  <p className="mt-1 text-xs text-[#6B756E]">
+                    {language === "sw"
+                      ? `${items.length} bidhaa`
+                      : `${items.length} products`}
+                  </p>
+                </div>
+
+                {hasMore && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCategoryVisibleCounts((current) => ({
+                        ...current,
+                        [category]: visibleCount + 8,
+                      }));
+                    }}
+                    className="shrink-0 rounded-full border border-[#E30613] bg-white px-4 py-2 text-[10px] font-black text-[#E30613] transition hover:bg-[#E30613] hover:text-white"
+                  >
+                    {language === "sw" ? "ONA ZAIDI" : "SEE MORE"} →
+                  </button>
+                )}
+              </div>
+
+              <div className="mt-6 grid grid-cols-2 gap-5 sm:grid-cols-3 sm:gap-5 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+                {visibleItems.map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    addToCart={addToCart}
+                    currency={currency}
+                    language={language}
+                  />
+                ))}
+              </div>
+            </div>
+          </section>
+        );
+      })}
+
       {/* LONG PRODUCT FEED */}
       <section
-        id="products"
+        id={searchResults !== null ? "search-results" : "products"}
         className="bg-white py-10 sm:py-14"
       >
         <div className="mx-auto max-w-[1440px] px-4 sm:px-5">
@@ -2049,7 +2112,9 @@ export default function HomePage() {
           {filteredProducts.length > 0 ? (
             <>
               <div className="mt-7 grid grid-cols-2 gap-5 sm:grid-cols-3 sm:gap-5 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-                {mixedMoreProducts.slice(0, visibleProductsCount).map((product) => (
+                {(searchResults !== null ? filteredProducts : mixedMoreProducts)
+                  .slice(0, visibleProductsCount)
+                  .map((product) => (
                   <ProductCard
                     key={product.id}
                     product={product}

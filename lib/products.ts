@@ -204,6 +204,67 @@ export async function getProducts(options?: {
   return (data || []).map(mapProduct);
 }
 
+
+export async function searchProducts(
+  searchTerm: string,
+  options?: {
+    category?: string;
+    limit?: number;
+  }
+): Promise<Product[]> {
+  const term = String(searchTerm || "").trim();
+
+  if (!term) return [];
+
+  const customerFields = [
+    "id",
+    "name",
+    "name_sw",
+    "price",
+    "old_price",
+    "category",
+    "category_sw",
+    "stock",
+    "image",
+    "images",
+    "colors",
+    "colors_sw",
+    "sizes",
+    "sizes_sw",
+    "discount",
+    "orders_count",
+    "likes",
+    "rating",
+    "description",
+    "description_sw",
+    "specifications",
+    "specifications_sw",
+  ].join(",");
+
+  let query = supabase
+    .from("products")
+    .select(customerFields)
+    .or(
+      `name.ilike.%${term}%,name_sw.ilike.%${term}%,category.ilike.%${term}%,category_sw.ilike.%${term}%,description.ilike.%${term}%,description_sw.ilike.%${term}%`
+    )
+    .order("id", { ascending: false });
+
+  if (options?.category) {
+    query = query.eq("category", options.category);
+  }
+
+  query = query.limit(options?.limit || 100);
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error("Failed to search products:", error);
+    return [];
+  }
+
+  return (data || []).map(mapProduct);
+}
+
 export async function getProductById(
   id: number
 ): Promise<Product | null> {

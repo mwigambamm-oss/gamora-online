@@ -205,6 +205,63 @@ export async function getProducts(options?: {
 }
 
 
+
+/**
+ * Lightweight product loader for homepage/catalog feeds.
+ * Avoids fetching heavy image arrays and variant metadata.
+ */
+export async function getHomepageProducts(options?: {
+  category?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<Product[]> {
+  const homepageFields = [
+    "id",
+    "name",
+    "name_sw",
+    "price",
+    "old_price",
+    "category",
+    "category_sw",
+    "stock",
+    "image",
+    "discount",
+    "orders_count",
+    "likes",
+    "rating",
+  ].join(",");
+
+  let query = supabase
+    .from("products")
+    .select(homepageFields)
+    .order("id", { ascending: false });
+
+  if (options?.category) {
+    query = query.eq("category", options.category);
+  }
+
+  if (options?.limit) {
+    if (options.offset !== undefined) {
+      query = query.range(
+        options.offset,
+        options.offset + options.limit - 1
+      );
+    } else {
+      query = query.limit(options.limit);
+    }
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error("Failed to load homepage products:", error);
+    return [];
+  }
+
+  return (data || []).map(mapProduct);
+}
+
+
 export async function searchProducts(
   searchTerm: string,
   options?: {

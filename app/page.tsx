@@ -8,7 +8,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { FaFacebookF, FaInstagram, FaTiktok } from "react-icons/fa";
 import { translations, type Language } from "@/lib/translations";
 import { formatCurrency, type Currency } from "@/lib/currency";
-import { getProducts as getSupabaseProducts, searchProducts, shuffleProducts, type Product } from "@/lib/products";
+import { getHomepageProducts, searchProducts, shuffleProducts, type Product } from "@/lib/products";
 import { supabase } from "@/lib/supabase";
 import {
   useEffect,
@@ -21,24 +21,24 @@ import {
 type CartItem = Product & { quantity: number };
 
 const CATEGORY_IMAGES: Record<string, string> = {
-  "Women's Fashion": "/images/womens-fashion.jpg",
-  "Men's Fashion": "/images/mens-fashion.jpg",
-  Shoes: "/images/shoes.jpg",
-  "Phones & Electronics": "/images/phone.jpg",
-  "Home & Kitchen": "/images/home-kitchen.jpg",
-  Accessories: "/images/accessories.jpg",
-  "Beauty & Personal Care": "/images/categories/beauty.jpg",
-  "Computers & Accessories": "/images/categories/computers.jpg",
-  "Baby & Kids": "/images/categories/baby.jpg",
-  "Sports & Fitness": "/images/categories/sports.jpg",
-  Automotive: "/images/categories/automotive.jpg",
-  "Tools & Hardware": "/images/categories/automotive.jpg",
-  "Books & Stationery": "/images/categories/books.jpg",
-  "Jewelry & Watches": "/images/categories/jewelry.jpg",
-  Furniture: "/images/categories/furniture.jpg",
-  "Garden & Outdoor": "/images/categories/garden.jpg",
-  "Health & Wellness": "/images/categories/health.jpg",
-  Gaming: "/images/categories/gaming.jpg",
+  "Women's Fashion": "/images/womens-fashion.webp",
+  "Men's Fashion": "/images/mens-fashion.webp",
+  Shoes: "/images/shoes.webp",
+  "Phones & Electronics": "/images/phone.webp",
+  "Home & Kitchen": "/images/home-kitchen.webp",
+  Accessories: "/images/accessories.webp",
+  "Beauty & Personal Care": "/images/categories/beauty.webp",
+  "Computers & Accessories": "/images/categories/computers.webp",
+  "Baby & Kids": "/images/categories/baby.webp",
+  "Sports & Fitness": "/images/categories/sports.webp",
+  Automotive: "/images/categories/automotive.webp",
+  "Tools & Hardware": "/images/categories/automotive.webp",
+  "Books & Stationery": "/images/categories/books.webp",
+  "Jewelry & Watches": "/images/categories/jewelry.webp",
+  Furniture: "/images/categories/furniture.webp",
+  "Garden & Outdoor": "/images/categories/garden.webp",
+  "Health & Wellness": "/images/categories/health.webp",
+  Gaming: "/images/categories/gaming.webp",
 };
 
 const CATEGORY_ICONS: Record<string, string> = {
@@ -170,7 +170,7 @@ export default function HomePage() {
   }, [language]);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedSubcategories, setSelectedSubcategories] = useState<Record<string, string>>({});
-  const [visibleProductsCount, setVisibleProductsCount] = useState(100);
+  const [visibleProductsCount, setVisibleProductsCount] = useState(40);
   const [categoryVisibleCounts, setCategoryVisibleCounts] = useState<Record<string, number>>({});
   const [categoryCatalog, setCategoryCatalog] = useState<Product[]>([]);
   const [cartCount, setCartCount] = useState(0);
@@ -191,7 +191,7 @@ export default function HomePage() {
 
     const loadCategoryCatalog = async () => {
       try {
-        const catalog = await getSupabaseProducts({ limit: 1000 });
+        const catalog = await getHomepageProducts({ limit: 200 });
 
         if (!cancelled) {
           setCategoryCatalog(catalog);
@@ -272,7 +272,7 @@ export default function HomePage() {
 
     async function loadProducts() {
       try {
-        const data = await getSupabaseProducts({ limit: 80 });
+        const data = await getHomepageProducts({ limit: 80 });
 
         if (active) {
           setProducts(shuffleProducts(data));

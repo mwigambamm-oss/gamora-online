@@ -1050,7 +1050,6 @@ export default function HomePage() {
 
     setSearchResults(results);
     setSearch(subcategory);
-    setSearchOpen(false);
     setSelectedCategory("All");
     setVisibleProductsCount(100);
 
@@ -2697,47 +2696,6 @@ function ProductCard({
           </span>
         )}
 
-        <div className="absolute right-1 top-8 z-30 flex flex-col items-center gap-1">
-          <button
-            type="button"
-            onClick={toggleLike}
-            disabled={likeLoading}
-            aria-label={liked ? "Unlike product" : "Like product"}
-            className={`flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-md ${
-              liked ? "text-[#D7193F]" : "text-[#26332C]"
-            } transition hover:text-[#374151]`}
-          >
-            <span className="block text-[28px] leading-none">
-              {liked ? "❤️" : "🤍"}
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => addToCart(product)}
-            aria-label={
-              language === "sw"
-                ? "Ongeza kwenye kikapu"
-                : "Add to cart"
-            }
-            className="flex h-7 w-7 items-center justify-center rounded-full bg-[#FFF8E7] text-[#374151] shadow-sm transition hover:bg-[#F3E8C8] hover:text-[#1F2937]"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              className="h-[16px] w-[16px]"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M2.5 3h2.2l2.1 10.1a2 2 0 0 0 2 1.6h8.4a2 2 0 0 0 1.9-1.4L21 7H5.2" />
-              <circle cx="9" cy="19" r="1.3" />
-              <circle cx="18" cy="19" r="1.3" />
-            </svg>
-          </button>
-        </div>
-
         <Link
           href={`/product/${product.id}`}
           aria-label={`View ${product.name}`}
@@ -2775,13 +2733,44 @@ function ProductCard({
         </div>
 
         <div className="mt-1 flex items-center justify-center gap-1.5 whitespace-nowrap">
-          <span className="inline-flex items-center gap-1 rounded-full bg-white px-2 py-1 text-[8px] font-bold text-[#111111] sm:text-[9px]">
-            <span className="text-[13px] leading-none text-[#D7193F]">♥</span>
+          <button
+            type="button"
+            onClick={toggleLike}
+            disabled={likeLoading}
+            aria-label={liked ? "Unlike product" : "Like product"}
+            className="inline-flex items-center gap-1 rounded-full bg-white px-2 py-1 text-[8px] font-bold text-[#111111] transition hover:bg-gray-50 disabled:opacity-60 sm:text-[9px]"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+              className={`h-[14px] w-[14px] ${
+                liked ? "fill-[#D7193F] text-[#D7193F]" : "fill-none text-[#D7193F]"
+              }`}
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78Z" />
+            </svg>
             <span>{likes} Likes</span>
-          </span>
+          </button>
 
           <span className="inline-flex items-center gap-1 rounded-full bg-white px-2 py-1 text-[8px] font-bold text-[#111111] sm:text-[9px]">
-            <span className="text-[12px] leading-none">🛒</span>
+            <svg
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+              className="h-[13px] w-[13px] text-[#111111]"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M3 3h2l2.4 11.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 1.9-1.4L21 7H6" />
+              <circle cx="9" cy="20" r="1" />
+              <circle cx="18" cy="20" r="1" />
+            </svg>
             <span>{orders} Ordered</span>
           </span>
         </div>

@@ -1038,6 +1038,9 @@ return (
                       grossProfit={data.summary.grossProfit || 0}
                       totalExpenses={data.summary.expenses || 0}
                       netProfit={data.summary.netProfit || 0}
+                      totalProducts={data.summary.products || 0}
+                      lowStockCount={data.summary.lowStock || 0}
+                      outOfStockCount={data.summary.outOfStock || 0}
                     />
                   </div>
                 )}

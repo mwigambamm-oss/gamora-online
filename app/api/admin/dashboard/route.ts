@@ -88,50 +88,24 @@ export async function GET(request: Request) {
   }
 
   try {
-    const ordersResult = await supabase
-      .from("orders")
-      .select("*")
-      .gte(
-        "created_at",
-        (fromDate || new Date(0)).toISOString()
-      )
-      .lte(
-        "created_at",
-        (toDate || new Date()).toISOString()
-      );
+    const dashboardStart = performance.now();
 
-    if (ordersResult.error) {
-      throw ordersResult.error;
-    }
-
-    const orders = ordersResult.data || [];
-
-    const orderIds = orders.map((order) =>
-      Number(order.id)
-    );
-
+    /*
+     * Run independent dashboard queries in parallel.
+     * This avoids waiting for the orders query before starting
+     * products, payments and expenses.
+     */
     const [
-      orderItemsResult,
+      ordersResult,
       paymentsResult,
-      orderPaymentsResult,
       productsResult,
       expensesResult,
     ] = await Promise.all([
-      orderIds.length > 0
-        ? supabase
-            .from("order_items")
-            .select(
-              "order_id,product_id,product_name,quantity,cost_price_at_sale,price"
-            )
-            .in("order_id", orderIds)
-        : Promise.resolve({
-            data: [],
-            error: null,
-          }),
-
       supabase
-        .from("payments")
-        .select("*")
+        .from("orders")
+        .select(
+          "id,order_number,status,subtotal,delivery_fee,total,created_at"
+        )
         .gte(
           "created_at",
           (fromDate || new Date(0)).toISOString()
@@ -144,24 +118,22 @@ export async function GET(request: Request) {
           ascending: false,
         }),
 
-      (() => {
-        const orderNumbers = (ordersResult.data || [])
-          .map((order: any) => order.order_number)
-          .filter(Boolean);
-
-        return orderNumbers.length > 0
-          ? supabase
-              .from("payments")
-              .select("*")
-              .in("order_number", orderNumbers)
-              .order("created_at", {
-                ascending: false,
-              })
-          : Promise.resolve({
-              data: [],
-              error: null,
-            });
-      })(),
+      supabase
+        .from("payments")
+        .select(
+          "id,order_number,amount,payment_status,payment_method,created_at"
+        )
+        .gte(
+          "created_at",
+          (fromDate || new Date(0)).toISOString()
+        )
+        .lte(
+          "created_at",
+          (toDate || new Date()).toISOString()
+        )
+        .order("created_at", {
+          ascending: false,
+        }),
 
       supabase
         .from("products")
@@ -171,7 +143,7 @@ export async function GET(request: Request) {
 
       supabase
         .from("expenses")
-        .select("*")
+        .select("amount,category,expense_date")
         .gte(
           "expense_date",
           (fromDate || new Date(0))
@@ -186,16 +158,12 @@ export async function GET(request: Request) {
         ),
     ]);
 
-    if (orderItemsResult.error) {
-      throw orderItemsResult.error;
+    if (ordersResult.error) {
+      throw ordersResult.error;
     }
 
     if (paymentsResult.error) {
       throw paymentsResult.error;
-    }
-
-    if (orderPaymentsResult.error) {
-      throw orderPaymentsResult.error;
     }
 
     if (productsResult.error) {
@@ -206,14 +174,68 @@ export async function GET(request: Request) {
       throw expensesResult.error;
     }
 
-    const orderItems =
-      orderItemsResult.data || [];
+    console.log(
+      `[Dashboard Timing] parallel queries: ${(performance.now() - dashboardStart).toFixed(0)}ms`
+    );
+
+    const orders = ordersResult.data || [];
+
+    const orderIds = orders.map((order) =>
+      Number(order.id)
+    );
+
+    const orderNumbers = orders
+      .map((order: any) => order.order_number)
+      .filter(Boolean);
+
+    /*
+     * These two queries depend on the selected orders,
+     * so run them after orders are available.
+     */
+    const orderItemsStart = performance.now();
+
+    let orderItems: any[] = [];
+    let orderPayments: any[] = [];
+
+    if (orderIds.length > 0) {
+      const orderItemsResult = await supabase
+        .from("order_items")
+        .select(
+          "order_id,product_id,product_name,quantity,cost_price_at_sale,price"
+        )
+        .in("order_id", orderIds);
+
+      if (orderItemsResult.error) {
+        throw orderItemsResult.error;
+      }
+
+      orderItems = orderItemsResult.data || [];
+    }
+
+    if (orderNumbers.length > 0) {
+      const orderPaymentsResult = await supabase
+        .from("payments")
+        .select(
+          "id,order_number,amount,payment_status,payment_method,created_at"
+        )
+        .in("order_number", orderNumbers)
+        .order("created_at", {
+          ascending: false,
+        });
+
+      if (orderPaymentsResult.error) {
+        throw orderPaymentsResult.error;
+      }
+
+      orderPayments = orderPaymentsResult.data || [];
+    }
+
+    console.log(
+      `[Dashboard Timing] dependent queries: ${(performance.now() - orderItemsStart).toFixed(0)}ms`
+    );
 
     const payments =
       paymentsResult.data || [];
-
-    const orderPayments =
-      orderPaymentsResult.data || [];
 
     const products =
       productsResult.data || [];
@@ -224,6 +246,8 @@ export async function GET(request: Request) {
     /*
      * SINGLE ACCOUNTING ENGINE
      */
+    const accountingStart = performance.now();
+
     const accounting = calculateAccounting({
       orders,
       orderItems,
@@ -233,16 +257,63 @@ export async function GET(request: Request) {
       expenses,
     });
 
+    /*
+     * Keep all records above for accurate server-side accounting,
+     * but do NOT send the entire dataset to the browser.
+     * The admin dashboard only needs a small recent/display subset.
+     */
+    console.log(
+      `[Dashboard Timing] accounting: ${(performance.now() - accountingStart).toFixed(0)}ms`
+    );
+    console.log(
+      `[Dashboard Timing] TOTAL: ${(performance.now() - dashboardStart).toFixed(0)}ms`
+    );
+
+    const dashboardOrders = orders
+      .slice()
+      .sort(
+        (a: any, b: any) =>
+          new Date(b.created_at || 0).getTime() -
+          new Date(a.created_at || 0).getTime()
+      )
+      .slice(0, 50);
+
+    const dashboardOrderItems = orderItems.slice(0, 100);
+
+    const dashboardPayments = payments
+      .slice()
+      .sort(
+        (a: any, b: any) =>
+          new Date(b.created_at || 0).getTime() -
+          new Date(a.created_at || 0).getTime()
+      )
+      .slice(0, 50);
+
+    const dashboardExpenses = expenses
+      .slice()
+      .sort(
+        (a: any, b: any) =>
+          String(b.expense_date || "").localeCompare(
+            String(a.expense_date || "")
+          )
+      )
+      .slice(0, 50);
+
+    const dashboardProducts = products.filter(
+      (product: any) =>
+        Number(product.stock || 0) <= 5
+    );
+
     return NextResponse.json({
       success: true,
 
       summary: accounting,
 
-      orders,
-      orderItems,
-      products,
-      payments,
-      expenses,
+      orders: dashboardOrders,
+      orderItems: dashboardOrderItems,
+      products: dashboardProducts,
+      payments: dashboardPayments,
+      expenses: dashboardExpenses,
 
       period: {
         name: period,

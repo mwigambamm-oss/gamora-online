@@ -22,6 +22,9 @@ type Props = {
   grossProfit?: number;
   totalExpenses?: number;
   netProfit?: number;
+  totalProducts?: number;
+  lowStockCount?: number;
+  outOfStockCount?: number;
 };
 
 const money = (value: number) =>
@@ -86,6 +89,9 @@ export default function BusinessCharts({
   grossProfit = 0,
   totalExpenses = 0,
   netProfit = 0,
+  totalProducts = 0,
+  lowStockCount = 0,
+  outOfStockCount = 0,
 }: Props) {
   const financialData = [
     { name: "Revenue", amount: Number(revenue || 0) },
@@ -130,22 +136,20 @@ export default function BusinessCharts({
   const inventoryData = [
     {
       name: "In Stock",
-      count: products.filter(
-        (p: any) => Number(p.stock || 0) > 5
-      ).length,
+      count: Math.max(
+        Number(totalProducts || 0) -
+          Number(lowStockCount || 0) -
+          Number(outOfStockCount || 0),
+        0
+      ),
     },
     {
       name: "Low Stock",
-      count: products.filter((p: any) => {
-        const stock = Number(p.stock || 0);
-        return stock > 0 && stock <= 5;
-      }).length,
+      count: Number(lowStockCount || 0),
     },
     {
       name: "Out of Stock",
-      count: products.filter(
-        (p: any) => Number(p.stock || 0) <= 0
-      ).length,
+      count: Number(outOfStockCount || 0),
     },
   ];
 

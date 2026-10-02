@@ -1280,6 +1280,89 @@ export default function HomePage() {
       ⌕
     </button>
   </div>
+
+          {/* DESKTOP CONTROLS */}
+          <div className="hidden items-center gap-2 lg:flex">
+
+            {/* LANGUAGE */}
+            <div className="flex items-center rounded-full border border-[#D5DED9] bg-white p-1">
+              <button
+                type="button"
+                onClick={() => setLanguage("sw")}
+                className={`rounded-full px-2.5 py-1.5 text-[10px] font-black transition ${
+                  language === "sw"
+                    ? "bg-[#087443] text-white shadow-sm"
+                    : "text-[#6B756E] hover:text-[#087443]"
+                }`}
+              >
+                SW
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setLanguage("en")}
+                className={`rounded-full px-2.5 py-1.5 text-[10px] font-black transition ${
+                  language === "en"
+                    ? "bg-[#087443] text-white shadow-sm"
+                    : "text-[#6B756E] hover:text-[#087443]"
+                }`}
+              >
+                EN
+              </button>
+            </div>
+
+            {/* CURRENCY */}
+            <div className="flex items-center rounded-full border border-[#D5DED9] bg-white p-1">
+              <button
+                type="button"
+                onClick={() => setCurrency("TZS")}
+                className={`rounded-full px-2.5 py-1.5 text-[10px] font-black transition ${
+                  currency === "TZS"
+                    ? "bg-[#087443] text-white shadow-sm"
+                    : "text-[#6B756E] hover:text-[#087443]"
+                }`}
+              >
+                TZS
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setCurrency("USD")}
+                className={`rounded-full px-2.5 py-1.5 text-[10px] font-black transition ${
+                  currency === "USD"
+                    ? "bg-[#087443] text-white shadow-sm"
+                    : "text-[#6B756E] hover:text-[#087443]"
+                }`}
+              >
+                USD
+              </button>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => router.push("/account")}
+              className="flex items-center gap-2 rounded-full px-3 py-2 text-xs font-bold text-[#374151] transition hover:bg-white hover:text-[#087443]"
+            >
+              <span className="text-lg">👤</span>
+              <span>{language === "sw" ? "Akaunti" : "Account"}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => router.push("/cart")}
+              className="relative flex items-center gap-2 rounded-full bg-[#087443] px-4 py-2.5 text-xs font-black text-white transition hover:bg-[#065D36]"
+            >
+              🛒
+              <span>{language === "sw" ? "Kikapu" : "Cart"}</span>
+
+              {cartCount > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#E30613] px-1 text-[9px] font-black text-white">
+                  {cartCount}
+                </span>
+              )}
+            </button>
+
+          </div>
 </div>
 
     {/* MOBILE HEADER SEPARATOR */}

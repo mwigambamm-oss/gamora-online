@@ -2205,20 +2205,6 @@ export default function HomePage() {
                   </p>
                 </div>
 
-                {hasMore && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCategoryVisibleCounts((current) => ({
-                        ...current,
-                        [category]: visibleCount + 8,
-                      }));
-                    }}
-                    className="shrink-0 rounded-full border border-[#E30613] bg-white px-4 py-2 text-[10px] font-black text-[#E30613] transition hover:bg-[#E30613] hover:text-white"
-                  >
-                    {language === "sw" ? "ONA ZAIDI" : "SEE MORE"} →
-                  </button>
-                )}
               </div>
 
               <div className="mt-6 grid grid-cols-2 gap-5 sm:grid-cols-3 sm:gap-5 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
@@ -2232,6 +2218,24 @@ export default function HomePage() {
                   />
                 ))}
               </div>
+
+              {hasMore && (
+                <div className="mt-8 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCategoryVisibleCounts((current) => ({
+                        ...current,
+                        [category]: visibleCount + 8,
+                      }));
+                    }}
+                    className="inline-flex items-center justify-center rounded-md bg-[#6B756E] px-5 py-2.5 text-xs font-black uppercase tracking-wide text-[#26332C] shadow-sm transition-all duration-200 hover:bg-[#56615B] hover:shadow-md active:scale-95"
+                  >
+                    {language === "sw" ? "ONA ZAIDI" : "VIEW MORE"}
+                    <span className="ml-2 text-base">→</span>
+                  </button>
+                </div>
+              )}
             </div>
           </section>
         );

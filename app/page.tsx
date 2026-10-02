@@ -1365,6 +1365,96 @@ export default function HomePage() {
           </div>
 </div>
 
+        {/* MOBILE HEADER */}
+        <div className="relative z-[9999999] w-full bg-[#E8F3ED] px-2 py-2 lg:hidden">
+          <div className="flex items-center gap-1.5">
+
+            {/* SEARCH */}
+            <div className="relative w-full min-w-0 flex-1">
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                onKeyDown={handleSearchKeyDown}
+                placeholder=""
+                className="h-8 w-full rounded-full border-0 bg-white px-3 pr-8 text-[11px] text-slate-900 outline-none"
+              />
+
+              {!search && (
+                <span
+                  key={`mobile-${language}-${categoryIndex}`}
+                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 animate-[gamoraCategoryUp_0.5s_ease-out] text-[11px] text-slate-400"
+                >
+                  {rotatingCategories[categoryIndex]}
+                </span>
+              )}
+
+              <button
+                type="button"
+                aria-label={language === "sw" ? "Tafuta" : "Search"}
+                onClick={performSearch}
+                className="absolute right-1 top-1 flex h-6 w-7 items-center justify-center rounded-full bg-[#6B756E] text-sm text-[#26332C] transition hover:bg-[#56615B]"
+              >
+                ⌕
+              </button>
+            </div>
+
+            {/* LANGUAGE */}
+            <div className="flex shrink-0 items-center rounded-lg border border-slate-200 bg-white p-1">
+              <button
+                type="button"
+                onClick={() => setLanguage("sw")}
+                className={`rounded-md px-2 py-1.5 text-[10px] font-black ${
+                  language === "sw"
+                    ? "bg-[#6B756E] text-white"
+                    : "text-[#26332C]"
+                }`}
+              >
+                SW
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setLanguage("en")}
+                className={`rounded-md px-2 py-1.5 text-[10px] font-black ${
+                  language === "en"
+                    ? "bg-[#6B756E] text-white"
+                    : "text-[#26332C]"
+                }`}
+              >
+                EN
+              </button>
+            </div>
+
+            {/* CURRENCY */}
+            <div className="flex shrink-0 items-center rounded-lg border border-slate-200 bg-white p-1">
+              <button
+                type="button"
+                onClick={() => setCurrency("TZS")}
+                className={`rounded-md px-2 py-1.5 text-[10px] font-black ${
+                  currency === "TZS"
+                    ? "bg-[#6B756E] text-white"
+                    : "text-[#26332C]"
+                }`}
+              >
+                TZS
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setCurrency("USD")}
+                className={`rounded-md px-2 py-1.5 text-[10px] font-black ${
+                  currency === "USD"
+                    ? "bg-[#6B756E] text-white"
+                    : "text-[#26332C]"
+                }`}
+              >
+                USD
+              </button>
+            </div>
+
+          </div>
+        </div>
+
     {/* MOBILE HEADER SEPARATOR */}
     <div className="h-0.5 w-full bg-slate-200 lg:hidden" />
 

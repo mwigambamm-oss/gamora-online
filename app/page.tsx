@@ -1302,7 +1302,7 @@ export default function HomePage() {
   </div>
 
           {/* DESKTOP CONTROLS */}
-          <div className="hidden items-center gap-2 lg:flex">
+          <div className="hidden items-center gap-2 lg:flex 2xl:ml-auto">
 
             {/* LANGUAGE */}
             <div className="flex items-center rounded-full border border-[#D5DED9] bg-white p-1">

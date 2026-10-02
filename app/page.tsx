@@ -170,7 +170,7 @@ export default function HomePage() {
   }, [language]);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedSubcategories, setSelectedSubcategories] = useState<Record<string, string>>({});
-  const [visibleProductsCount, setVisibleProductsCount] = useState(40);
+  const [visibleProductsCount, setVisibleProductsCount] = useState(100);
   const [categoryVisibleCounts, setCategoryVisibleCounts] = useState<Record<string, number>>({});
   const [categoryCatalog, setCategoryCatalog] = useState<Product[]>([]);
   const [cartCount, setCartCount] = useState(0);
@@ -178,6 +178,26 @@ export default function HomePage() {
   const [heroPaused, setHeroPaused] = useState(false);
   const [notice, setNotice] = useState("");
   const [flashTime, setFlashTime] = useState("00:00:00");
+  const [desktopProductLimit, setDesktopProductLimit] = useState<number | null>(null);
+
+  useEffect(() => {
+    const updateDesktopProductLimit = () => {
+      if (window.innerWidth >= 1536) {
+        setDesktopProductLimit(20);
+      } else if (window.innerWidth >= 1280) {
+        setDesktopProductLimit(16);
+      } else {
+        setDesktopProductLimit(null);
+      }
+    };
+
+    updateDesktopProductLimit();
+    window.addEventListener("resize", updateDesktopProductLimit);
+
+    return () => {
+      window.removeEventListener("resize", updateDesktopProductLimit);
+    };
+  }, []);
 
   const flashRef = useRef<HTMLDivElement>(null);
   const trendingRef = useRef<HTMLDivElement>(null);
@@ -2179,7 +2199,7 @@ export default function HomePage() {
 
         if (items.length === 0) return null;
 
-        const visibleCount = categoryVisibleCounts[category] || 8;
+        const visibleCount = categoryVisibleCounts[category] || desktopProductLimit || 8;
         const visibleItems = items.slice(0, visibleCount);
         const hasMore = items.length > visibleCount;
 

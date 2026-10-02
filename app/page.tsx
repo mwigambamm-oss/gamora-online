@@ -2207,7 +2207,7 @@ export default function HomePage() {
 
               </div>
 
-              <div className="mt-6 grid grid-cols-2 gap-5 sm:grid-cols-3 sm:gap-5 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+              <div className="mt-6 grid grid-cols-2 gap-5 sm:grid-cols-3 sm:gap-5 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-10">
                 {visibleItems.map((product) => (
                   <ProductCard
                     key={product.id}
@@ -2287,7 +2287,7 @@ export default function HomePage() {
 
           {filteredProducts.length > 0 ? (
             <>
-              <div className="mt-7 grid grid-cols-2 gap-5 sm:grid-cols-3 sm:gap-5 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+              <div className="mt-7 grid grid-cols-2 gap-5 sm:grid-cols-3 sm:gap-5 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-10">
                 {(searchResults !== null ? filteredProducts : mixedMoreProducts)
                   .slice(0, visibleProductsCount)
                   .map((product) => (

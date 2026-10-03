@@ -1,67 +1,138 @@
 "use client";
 
-import { useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 
-export default function LoginPage(){
+export default function LoginPage() {
+  const router = useRouter();
 
-const router = useRouter();
-const [email,setEmail]=useState("");
-const [password,setPassword]=useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-async function login(){
+  async function login(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
 
-const {error}=await supabase.auth.signInWithPassword({
-email,
-password
-});
+    setError("");
 
-if(error){
-alert(error.message);
-return;
-}
+    const cleanEmail = email.trim();
 
-router.push("/profile");
+    if (!cleanEmail || !password) {
+      setError("Please enter your email and password.");
+      return;
+    }
 
-}
+    setLoading(true);
 
-return (
-<main className="min-h-screen bg-slate-50 p-5">
+    const { error } = await supabase.auth.signInWithPassword({
+      email: cleanEmail,
+      password,
+    });
 
-<div className="mx-auto max-w-md rounded-xl border bg-white p-6">
+    setLoading(false);
 
-<h1 className="text-lg font-medium">
-Login
-</h1>
+    if (error) {
+      setError(
+        error.message === "Invalid login credentials"
+          ? "Email or password is incorrect."
+          : error.message
+      );
+      return;
+    }
 
-<input
-className="mt-5 w-full rounded-lg border px-3 py-2 text-sm"
-placeholder="Email"
-onChange={e=>setEmail(e.target.value)}
-/>
+    router.replace("/profile");
+  }
 
-<input
-type="password"
-className="mt-3 w-full rounded-lg border px-3 py-2 text-sm"
-placeholder="Password"
-onChange={e=>setPassword(e.target.value)}
-/>
+  return (
+    <main className="min-h-screen bg-slate-50 p-5">
+      <div className="mx-auto max-w-md rounded-xl border bg-white p-6">
+        <div className="text-center">
+          <a href="/" className="text-lg font-semibold text-slate-900">
+            GAMORA <span className="text-sky-700">ONLINE</span>
+          </a>
 
-<button
-onClick={login}
-className="mt-4 w-full rounded-lg bg-sky-700 py-2 text-sm text-white"
->
-Login
-</button>
+          <h1 className="mt-6 text-xl font-medium text-slate-800">
+            Login
+          </h1>
 
-<a href="/register" className="mt-3 block text-center text-xs text-sky-700">
-Create account
-</a>
+          <p className="mt-2 text-sm text-slate-500">
+            Ingia kwenye akaunti yako ya GAMORA ONLINE.
+          </p>
+        </div>
 
-</div>
+        <form onSubmit={login} className="mt-6">
+          <label className="text-xs font-medium text-slate-700">
+            Email
+          </label>
 
-</main>
-)
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Email address"
+            autoComplete="email"
+            className="mt-2 w-full rounded-lg border px-3 py-2.5 text-sm outline-none focus:border-sky-600"
+          />
 
+          <label className="mt-4 block text-xs font-medium text-slate-700">
+            Password
+          </label>
+
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Password"
+            autoComplete="current-password"
+            className="mt-2 w-full rounded-lg border px-3 py-2.5 text-sm outline-none focus:border-sky-600"
+          />
+
+          <div className="mt-2 text-right">
+            <a
+              href="/recover-password"
+              className="text-xs text-sky-700 hover:underline"
+            >
+              Forgot password?
+            </a>
+          </div>
+
+          {error && (
+            <p className="mt-4 rounded-lg bg-red-50 p-3 text-xs leading-5 text-red-700">
+              {error}
+            </p>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="mt-5 w-full rounded-lg bg-sky-700 py-2.5 text-sm font-medium text-white disabled:opacity-60"
+          >
+            {loading ? "Logging in..." : "Login"}
+          </button>
+        </form>
+
+        <div className="mt-5 border-t pt-5 text-center">
+          <p className="text-xs text-slate-500">
+            Huna akaunti?
+          </p>
+
+          <a
+            href="/register"
+            className="mt-2 inline-block text-sm font-medium text-sky-700 hover:underline"
+          >
+            Create Account
+          </a>
+        </div>
+
+        <a
+          href="/"
+          className="mt-5 block text-center text-xs text-slate-500 hover:text-slate-700"
+        >
+          ← Rudi Dukani
+        </a>
+      </div>
+    </main>
+  );
 }

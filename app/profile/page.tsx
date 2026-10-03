@@ -1,107 +1,139 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 
 export default function ProfilePage() {
+  const router = useRouter();
 
-const [logged,setLogged] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
+  const [loading, setLoading] = useState(true);
 
-return (
-<main className="min-h-screen bg-slate-50">
+  useEffect(() => {
+    let mounted = true;
 
-<header className="border-b bg-white">
-<div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
+    async function loadUser() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-<a href="/" className="text-sm font-medium">
-GAMORA <span className="text-sky-700">ONLINE</span>
-</a>
+      if (!mounted) return;
 
-<a href="/" className="text-xs text-sky-700">
-← Dukani
-</a>
+      if (!user) {
+        setLoading(false);
+        router.replace("/login");
+        return;
+      }
 
-</div>
-</header>
+      setUserEmail(user.email ?? "");
+      setLoading(false);
+    }
 
+    loadUser();
 
-<section className="mx-auto max-w-md px-4 py-8">
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!mounted) return;
 
-<h1 className="text-xl font-medium text-slate-800">
-Account
-</h1>
+      if (!session?.user) {
+        router.replace("/login");
+        return;
+      }
 
-<p className="mt-2 text-sm text-slate-500">
-Ingia au tengeneza akaunti yako ya GAMORA ONLINE.
-</p>
+      setUserEmail(session.user.email ?? "");
+    });
 
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, [router]);
 
-<div className="mt-6 rounded-xl border bg-white p-5">
+  async function logout() {
+    const { error } = await supabase.auth.signOut();
 
+    if (error) {
+      alert(error.message);
+      return;
+    }
 
-{logged ? (
+    router.replace("/login");
+  }
 
-<div>
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-slate-50 p-5">
+        <div className="mx-auto max-w-md rounded-xl border bg-white p-6">
+          <p className="text-sm text-slate-500">Loading account...</p>
+        </div>
+      </main>
+    );
+  }
 
-<h2 className="text-sm font-medium">
-Karibu kwenye akaunti yako
-</h2>
+  return (
+    <main className="min-h-screen bg-slate-50">
+      <header className="border-b bg-white">
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
+          <a href="/" className="text-sm font-medium">
+            GAMORA <span className="text-sky-700">ONLINE</span>
+          </a>
 
-<div className="mt-4 space-y-2 text-xs text-slate-600">
+          <a href="/" className="text-xs text-sky-700">
+            ← Dukani
+          </a>
+        </div>
+      </header>
 
-<p>📦 Oda Zangu</p>
-<p>♡ Orodha ya Matamanio</p>
-<p>👤 Taarifa Zangu</p>
+      <section className="mx-auto max-w-md px-4 py-8">
+        <h1 className="text-xl font-medium text-slate-800">
+          Account
+        </h1>
 
-</div>
+        <p className="mt-2 text-sm text-slate-500">
+          Akaunti yako ya GAMORA ONLINE.
+        </p>
 
+        <div className="mt-6 rounded-xl border bg-white p-5">
+          <div>
+            <h2 className="text-sm font-medium text-slate-800">
+              Karibu kwenye akaunti yako
+            </h2>
 
-<button
-onClick={()=>setLogged(false)}
-className="mt-5 rounded-lg bg-red-600 px-4 py-2 text-xs text-white"
->
-Logout
-</button>
+            <p className="mt-2 text-sm text-slate-600">
+              {userEmail}
+            </p>
 
-</div>
+            <div className="mt-5 space-y-2 text-xs text-slate-600">
+              <a
+                href="/orders"
+                className="block rounded-lg border px-3 py-3 hover:bg-slate-50"
+              >
+                📦 Oda Zangu
+              </a>
 
-) : (
+              <a
+                href="/wishlist"
+                className="block rounded-lg border px-3 py-3 hover:bg-slate-50"
+              >
+                ♡ Orodha ya Matamanio
+              </a>
 
-<div className="space-y-3">
+              <div className="rounded-lg border px-3 py-3">
+                👤 Taarifa Zangu
+              </div>
+            </div>
 
-
-<button
-onClick={()=>setLogged(true)}
-className="w-full rounded-lg bg-sky-700 py-3 text-sm text-white"
->
-Login
-</button>
-
-
-<button
-className="w-full rounded-lg border py-3 text-sm text-slate-700"
->
-Register
-</button>
-
-
-<a
-href="/recover-password"
-className="block text-center text-xs text-sky-700"
->
-Recover Password
-</a>
-
-
-</div>
-
-)}
-
-</div>
-
-
-</section>
-
-</main>
-)
-
+            <button
+              onClick={logout}
+              className="mt-5 w-full rounded-lg bg-red-600 px-4 py-3 text-xs font-medium text-white"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+      </section>
+    </main>
+  );
 }

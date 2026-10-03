@@ -2972,15 +2972,6 @@ function ProductCard({
           </span>
         </div>
 
-        <div className="mt-1 flex justify-center">
-          <button
-            type="button"
-            onClick={() => addToCart(product)}
-            className="inline-flex rounded-md bg-[#4B5563] px-8 py-1.5 text-[10px] font-semibold text-white transition hover:bg-[#374151]"
-          >
-            {language === "sw" ? "Ongeza" : "Add"}
-          </button>
-        </div>
       </div>
     </article>
   );

@@ -880,244 +880,328 @@ export default function CheckoutPage() {
     const receiptDate = new Date();
 
     async function downloadReceipt() {
-      const { pdf, Document, Page, Text, View, Image, StyleSheet } =
-        await import("@react-pdf/renderer");
+      const { jsPDF } = await import("jspdf");
+      const QRCodeModule = await import("qrcode");
+      const QRCode = QRCodeModule.default ?? QRCodeModule;
 
-      const styles = StyleSheet.create({
-        page: {
-          padding: 28,
-          backgroundColor: "#800020",
-          color: "#ffffff",
-          fontFamily: "Helvetica",
-        },
-        header: {
-          alignItems: "center",
-          marginBottom: 18,
-        },
-        logo: {
-          width: 95,
-          height: 95,
-          objectFit: "contain",
-          marginBottom: 8,
-        },
-        brand: {
-          fontSize: 20,
-          fontWeight: "bold",
-          letterSpacing: 1,
-        },
-        subtitle: {
-          marginTop: 4,
-          fontSize: 9,
-          color: "#f8dfe5",
-        },
-        receiptTitle: {
-          marginTop: 18,
-          fontSize: 16,
-          fontWeight: "bold",
-          textAlign: "center",
-        },
-        card: {
-          marginTop: 14,
-          padding: 12,
-          borderRadius: 8,
-          backgroundColor: "#ffffff",
-          color: "#222222",
-        },
-        row: {
-          flexDirection: "row",
-          justifyContent: "space-between",
-          marginBottom: 6,
-          fontSize: 9,
-        },
-        label: {
-          color: "#666666",
-        },
-        value: {
-          fontWeight: "bold",
-        },
-        divider: {
-          borderBottomWidth: 1,
-          borderBottomColor: "#dddddd",
-          marginVertical: 8,
-        },
-        item: {
-          marginBottom: 8,
-        },
-        itemName: {
-          fontSize: 9,
-          fontWeight: "bold",
-        },
-        itemLine: {
-          flexDirection: "row",
-          justifyContent: "space-between",
-          marginTop: 3,
-          fontSize: 8,
-          color: "#555555",
-        },
-        totalBox: {
-          marginTop: 10,
-          padding: 12,
-          borderRadius: 8,
-          backgroundColor: "#E30613",
-          color: "#ffffff",
-        },
-        totalLabel: {
-          fontSize: 11,
-          fontWeight: "bold",
-        },
-        totalValue: {
-          marginTop: 4,
-          fontSize: 18,
-          fontWeight: "bold",
-        },
-        footer: {
-          marginTop: 18,
-          textAlign: "center",
-          fontSize: 8,
-          color: "#f8dfe5",
-        },
+      const receiptUrl =
+        `${window.location.origin}/order/${encodeURIComponent(orderNumber)}`;
+
+      const qrDataUrl = await QRCode.toDataURL(receiptUrl, {
+        width: 220,
+        margin: 1,
+        errorCorrectionLevel: "M",
       });
 
-      const Receipt = () => (
-        <Document>
-          <Page size="A4" style={styles.page}>
-            <View style={styles.header}>
-              <Image
-                src={`${window.location.origin}/gamora-logo.png`}
-                style={styles.logo}
-              />
-              <Text style={styles.brand}>GAMORA ONLINE</Text>
-              <Text style={styles.subtitle}>
-                Your Online Marketplace
-              </Text>
-              <Text style={styles.subtitle}>
-                gamoraonline.co.tz
-              </Text>
-            </View>
+      const doc = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
 
-            <Text style={styles.receiptTitle}>
-              RECEIPT
-            </Text>
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
 
-            <View style={styles.card}>
-              <View style={styles.row}>
-                <Text style={styles.label}>Order Number</Text>
-                <Text style={styles.value}>{orderNumber}</Text>
-              </View>
+      const burgundy = "#800020";
+      const red = "#E30613";
+      const dark = "#191919";
+      const gray = "#696969";
+      const light = "#F7F7F7";
 
-              <View style={styles.row}>
-                <Text style={styles.label}>Date</Text>
-                <Text style={styles.value}>
-                  {receiptDate.toLocaleDateString()}
-                </Text>
-              </View>
+      const money = (value: number) =>
+        formatCurrency(Number(value || 0), currency);
 
-              <View style={styles.row}>
-                <Text style={styles.label}>Customer</Text>
-                <Text style={styles.value}>{name.trim()}</Text>
-              </View>
+      // Page background
+      doc.setFillColor(burgundy);
+      doc.rect(0, 0, pageWidth, pageHeight, "F");
 
-              <View style={styles.row}>
-                <Text style={styles.label}>Phone</Text>
-                <Text style={styles.value}>{phone.trim()}</Text>
-              </View>
+      // Main white receipt card
+      doc.setFillColor(255, 255, 255);
+      doc.roundedRect(12, 10, pageWidth - 24, pageHeight - 20, 5, 5, "F");
 
-              <View style={styles.row}>
-                <Text style={styles.label}>Delivery</Text>
-                <Text style={styles.value}>{receiptAddress}</Text>
-              </View>
+      let y = 22;
 
-              <View style={styles.row}>
-                <Text style={styles.label}>Payment</Text>
-                <Text style={styles.value}>{paymentMethod}</Text>
-              </View>
+      // Logo
+      try {
+        const logoResponse = await fetch(
+          `${window.location.origin}/gamora-logo.png`
+        );
+        const logoBlob = await logoResponse.blob();
 
-              <View style={styles.row}>
-                <Text style={styles.label}>Payment Status</Text>
-                <Text style={styles.value}>PENDING</Text>
-              </View>
+        const logoDataUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(String(reader.result));
+          reader.onerror = reject;
+          reader.readAsDataURL(logoBlob);
+        });
 
-              <View style={styles.row}>
-                <Text style={styles.label}>Order Status</Text>
-                <Text style={styles.value}>PENDING</Text>
-              </View>
+        doc.addImage(logoDataUrl, "PNG", pageWidth / 2 - 13, y, 26, 26);
+        y += 31;
+      } catch {
+        y += 5;
+      }
 
-              <View style={styles.divider} />
+      // Brand
+      doc.setTextColor(dark);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(18);
+      doc.text("GAMORA ONLINE", pageWidth / 2, y, {
+        align: "center",
+      });
 
-              {cart.map((item, index) => (
-                <View key={`${item.id}-${index}`} style={styles.item}>
-                  <Text style={styles.itemName}>
-                    {item.name}
-                  </Text>
-                  <View style={styles.itemLine}>
-                    <Text>
-                      Qty: {Number(item.quantity)}
-                    </Text>
-                    <Text>
-                      {formatCurrency(
-                        Number(item.price) *
-                          Number(item.quantity),
-                        currency
-                      )}
-                    </Text>
-                  </View>
-                </View>
-              ))}
+      y += 6;
 
-              <View style={styles.divider} />
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(gray);
+      doc.text("Your Online Marketplace", pageWidth / 2, y, {
+        align: "center",
+      });
 
-              <View style={styles.row}>
-                <Text style={styles.label}>Subtotal</Text>
-                <Text style={styles.value}>
-                  {formatCurrency(subtotal, currency)}
-                </Text>
-              </View>
+      y += 4;
 
-              <View style={styles.row}>
-                <Text style={styles.label}>Delivery Fee</Text>
-                <Text style={styles.value}>
-                  {formatCurrency(deliveryFee, currency)}
-                </Text>
-              </View>
+      doc.text("gamoraonline.co.tz", pageWidth / 2, y, {
+        align: "center",
+      });
 
-              {distanceKm > 0 && (
-                <View style={styles.row}>
-                  <Text style={styles.label}>Distance</Text>
-                  <Text style={styles.value}>
-                    {distanceKm.toFixed(1)} KM
-                  </Text>
-                </View>
-              )}
+      y += 10;
 
-              <View style={styles.totalBox}>
-                <Text style={styles.totalLabel}>
-                  TOTAL
-                </Text>
-                <Text style={styles.totalValue}>
-                  {formatCurrency(total, currency)}
-                </Text>
-              </View>
-            </View>
+      // Receipt title
+      doc.setTextColor(red);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(15);
+      doc.text("RECEIPT", pageWidth / 2, y, {
+        align: "center",
+      });
 
-            <Text style={styles.footer}>
-              Thank you for shopping with GAMORA ONLINE!
-            </Text>
-          </Page>
-        </Document>
+      y += 9;
+
+      // Information box
+      doc.setFillColor(light);
+      doc.roundedRect(19, y, pageWidth - 38, 54, 3, 3, "F");
+
+      const infoX = 24;
+      const valueX = pageWidth - 24;
+
+      const infoRow = (
+        label: string,
+        value: string,
+        offset: number
+      ) => {
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        doc.setTextColor(gray);
+        doc.text(label, infoX, y + offset);
+
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(dark);
+
+        const maxWidth = pageWidth - 70;
+        const lines = doc.splitTextToSize(value || "-", maxWidth);
+
+        doc.text(lines, valueX, y + offset, {
+          align: "right",
+        });
+      };
+
+      infoRow("Order Number", orderNumber, 9);
+      infoRow(
+        "Date",
+        receiptDate.toLocaleDateString("en-GB"),
+        17
+      );
+      infoRow("Customer", name.trim(), 25);
+      infoRow("Phone", phone.trim(), 33);
+      infoRow("Payment", paymentMethod, 41);
+
+      const deliveryText =
+        receiptAddress.length > 75
+          ? `${receiptAddress.slice(0, 72)}...`
+          : receiptAddress;
+
+      infoRow("Delivery", deliveryText, 49);
+
+      y += 62;
+
+      // Status
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(8);
+      doc.setTextColor(red);
+      doc.text("PAYMENT STATUS: PENDING", 24, y);
+
+      doc.text("ORDER STATUS: PENDING", pageWidth - 24, y, {
+        align: "right",
+      });
+
+      y += 8;
+
+      // Divider
+      doc.setDrawColor(220, 220, 220);
+      doc.line(20, y, pageWidth - 20, y);
+
+      y += 8;
+
+      // Items
+      doc.setTextColor(dark);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.text("ORDER ITEMS", 24, y);
+
+      y += 7;
+
+      cart.forEach((item) => {
+        const quantity = Number(item.quantity || 0);
+        const itemPrice = Number(item.price || 0);
+        const itemTotal = itemPrice * quantity;
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(8);
+        doc.setTextColor(dark);
+
+        const itemName = doc.splitTextToSize(
+          String(item.name || "Product"),
+          115
+        );
+
+        doc.text(itemName, 24, y);
+
+        const nameHeight = itemName.length * 4;
+
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(gray);
+        doc.setFontSize(7);
+
+        doc.text(
+          `Qty: ${quantity} × ${money(itemPrice)}`,
+          24,
+          y + nameHeight + 2
+        );
+
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(dark);
+        doc.setFontSize(8);
+
+        doc.text(
+          money(itemTotal),
+          pageWidth - 24,
+          y,
+          { align: "right" }
+        );
+
+        y += Math.max(13, nameHeight + 8);
+      });
+
+      doc.setDrawColor(220, 220, 220);
+      doc.line(20, y, pageWidth - 20, y);
+
+      y += 8;
+
+      // Totals
+      const totalRow = (
+        label: string,
+        value: string,
+        bold = false
+      ) => {
+        doc.setFont("helvetica", bold ? "bold" : "normal");
+        doc.setFontSize(bold ? 11 : 8);
+        doc.setTextColor(bold ? dark : gray);
+
+        doc.text(label, 24, y);
+        doc.text(value, pageWidth - 24, y, {
+          align: "right",
+        });
+
+        y += bold ? 7 : 6;
+      };
+
+      totalRow("Subtotal", money(subtotal));
+
+      if (Number(deliveryFee) > 0) {
+        totalRow("Delivery Fee", money(deliveryFee));
+      }
+
+      if (distanceKm > 0) {
+        totalRow("Distance", `${distanceKm.toFixed(1)} KM`);
+      }
+
+      y += 2;
+
+      // Total box
+      doc.setFillColor(red);
+      doc.roundedRect(
+        20,
+        y,
+        pageWidth - 40,
+        22,
+        3,
+        3,
+        "F"
       );
 
-      const blob = await pdf(<Receipt />).toBlob();
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.text("TOTAL", 27, y + 9);
 
-      link.href = url;
-      link.download = `Gamora-Receipt-${orderNumber}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
+      doc.setFontSize(15);
+      doc.text(
+        money(total),
+        pageWidth - 27,
+        y + 10,
+        { align: "right" }
+      );
 
-      URL.revokeObjectURL(url);
+      y += 31;
+
+      // QR section
+      doc.setTextColor(dark);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(8);
+      doc.text(
+        "SCAN TO VERIFY ORDER",
+        pageWidth / 2,
+        y,
+        { align: "center" }
+      );
+
+      y += 4;
+
+      doc.addImage(
+        qrDataUrl,
+        "PNG",
+        pageWidth / 2 - 22,
+        y,
+        44,
+        44
+      );
+
+      y += 48;
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(6.5);
+      doc.setTextColor(gray);
+
+      doc.text(
+        receiptUrl,
+        pageWidth / 2,
+        y,
+        { align: "center" }
+      );
+
+      y += 9;
+
+      doc.setFontSize(7);
+      doc.text(
+        "Thank you for shopping with GAMORA ONLINE!",
+        pageWidth / 2,
+        y,
+        { align: "center" }
+      );
+
+      // Download
+      doc.save(`Gamora-Receipt-${orderNumber}.pdf`);
     }
+
 
     return (
       <main className="min-h-screen bg-[#800020] p-5">

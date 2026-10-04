@@ -154,66 +154,48 @@ if (!item) {
 
 setProduct(item);
 
-      // LOAD REAL PRODUCT VARIANTS
       // LOAD PERSISTENT LIKES + ORDERS
+      // Logged-in users read their Like directly from Supabase.
+      setLikes(
+        Math.max(200, Number(item.likes || 200))
+      );
+
+      setOrders(
+        Math.max(
+          300,
+          Number(item.orders_count || 300)
+        )
+      );
+
       try {
-        const likeResponse = await fetch(
-          `/api/products/${productId}/like`,
-          {
-            method: "GET",
-            cache: "no-store",
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        if (user) {
+          const { data: likeRow, error: likeError } =
+            await supabase
+              .from("product_likes")
+              .select("id")
+              .eq("product_id", productId)
+              .eq("user_id", user.id)
+              .maybeSingle();
+
+          if (likeError) {
+            console.error(
+              "Failed to load user Like:",
+              likeError
+            );
+          } else {
+            setLiked(Boolean(likeRow));
           }
-        );
-
-        if (likeResponse.ok) {
-          const likeData = await likeResponse.json();
-
-          setLikes(
-            Math.max(
-              200,
-              Number(likeData.likes || item.likes || 200)
-            )
-          );
-
-          setOrders(
-            Math.max(
-              300,
-              Number(
-                likeData.orders ||
-                  item.orders_count ||
-                  300
-              )
-            )
-          );
-
-          setLiked(Boolean(likeData.liked));
         } else {
-          setLikes(
-            Math.max(200, Number(item.likes || 200))
-          );
-
-          setOrders(
-            Math.max(
-              300,
-              Number(item.orders_count || 300)
-            )
-          );
+          setLiked(false);
         }
       } catch (error) {
         console.error(
-          "Failed to load product social proof:",
+          "Failed to load product Like:",
           error
-        );
-
-        setLikes(
-          Math.max(200, Number(item.likes || 200))
-        );
-
-        setOrders(
-          Math.max(
-            300,
-            Number(item.orders_count || 300)
-          )
         );
       }
 
@@ -828,69 +810,62 @@ setProduct(item);
         ).toFixed(1)
       : "0.0";
 
-  async function loadLikeState(productId: number) {
-    try {
-      const response = await fetch(
-        `/api/products/${productId}/like`,
-        {
-          method: "GET",
-          cache: "no-store",
-        }
-      );
-
-      if (!response.ok) return;
-
-      const data = await response.json();
-
-      setLikes(Math.max(200, Number(data.likes || 200)));
-      setOrders(Math.max(300, Number(data.orders || 300)));
-      setLiked(Boolean(data.liked));
-    } catch (error) {
-      console.error("Failed to load like state:", error);
-    }
-  }
-
   async function toggleLike() {
     if (!product || likeLoading) return;
 
+    const previousLiked = liked;
+    const nextLiked = !previousLiked;
+
+    // Instant UI update.
+    setLiked(nextLiked);
+    setLikes((current) =>
+      Math.max(200, current + (nextLiked ? 1 : -1))
+    );
     setLikeLoading(true);
 
     try {
       const {
-        data: { session },
-      } = await supabase.auth.getSession();
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
 
-      const headers: HeadersInit = {};
-
-      if (session?.access_token) {
-        headers.Authorization = `Bearer ${session.access_token}`;
+      if (userError) {
+        throw new Error(userError.message);
       }
 
-      const response = await fetch(
-        `/api/products/${product.id}/like`,
-        {
-          method: "POST",
-          headers,
+      if (!user) {
+        throw new Error("Please login to like this product.");
+      }
+
+      if (nextLiked) {
+        const { error } = await supabase
+          .from("product_likes")
+          .insert({
+            product_id: product.id,
+            user_id: user.id,
+          });
+
+        if (error && error.code !== "23505") {
+          throw new Error(error.message);
         }
+      } else {
+        const { error } = await supabase
+          .from("product_likes")
+          .delete()
+          .eq("product_id", product.id)
+          .eq("user_id", user.id);
+
+        if (error) {
+          throw new Error(error.message);
+        }
+      }
+    } catch (error) {
+      // Roll back only when Supabase fails.
+      setLiked(previousLiked);
+      setLikes((current) =>
+        Math.max(200, current + (previousLiked ? 1 : -1))
       );
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error(
-            data?.message ||
-              data?.error ||
-              "Unable to update like"
-          );
-        }
-        throw new Error(data?.error || "Failed to update like");
-      }
-
-      setLiked(Boolean(data.liked));
-      setLikes(Math.max(200, Number(data.likes || 200)));
-      setOrders(Math.max(300, Number(data.orders || 300)));
-    } catch (error) {
       console.error("Like error:", error);
     } finally {
       setLikeLoading(false);
@@ -1152,7 +1127,6 @@ setProduct(item);
               <button
                 type="button"
                 onClick={toggleLike}
-                disabled={likeLoading}
                 aria-label={
                   liked
                     ? t("Unlike this product", "Ondoa Like")
@@ -1162,7 +1136,7 @@ setProduct(item);
                   liked
                     ? "border-red-200 bg-red-50 text-[#E30613]"
                     : "border-red-200 bg-white text-[#E30613] hover:bg-red-50"
-                } ${likeLoading ? "opacity-60" : ""}`}
+                }`}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"

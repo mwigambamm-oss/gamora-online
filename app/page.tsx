@@ -113,6 +113,58 @@ export default function HomePage() {
   const [searchLoading, setSearchLoading] = useState(false);
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
+  const [accountInitial, setAccountInitial] = useState<string | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadAccountInitial() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!mounted) return;
+
+      const firstName = String(
+        user?.user_metadata?.first_name ??
+        user?.user_metadata?.firstName ??
+        ""
+      ).trim();
+      const email = String(user?.email ?? "").trim();
+
+      const initial =
+        firstName.charAt(0) ||
+        email.charAt(0) ||
+        "";
+
+      setAccountInitial(initial ? initial.toUpperCase() : null);
+    }
+
+    loadAccountInitial();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!mounted) return;
+
+      const firstName = String(
+        session?.user?.user_metadata?.first_name ?? ""
+      ).trim();
+      const email = String(session?.user?.email ?? "").trim();
+
+      const initial =
+        firstName.charAt(0) ||
+        email.charAt(0) ||
+        "";
+
+      setAccountInitial(initial ? initial.toUpperCase() : null);
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
 
   const rotatingCategories =
     language === "sw"
@@ -1363,7 +1415,15 @@ export default function HomePage() {
               onClick={() => router.push("/account")}
               className="flex items-center gap-2 rounded-full px-3 py-2 text-xs font-bold text-[#374151] transition hover:bg-white hover:text-[#087443]"
             >
-              <span className="text-lg">👤</span>
+              <span
+                className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-black ${
+                  accountInitial
+                    ? "bg-[#087443] text-white"
+                    : "text-lg"
+                }`}
+              >
+                {accountInitial || "👤"}
+              </span>
               <span>{language === "sw" ? "Akaunti" : "Account"}</span>
             </button>
 
@@ -1557,7 +1617,15 @@ export default function HomePage() {
               pathname === "/account" ? "text-[#374151]" : "text-[#374151]"
             }`}
           >
-            <span className="text-base leading-none">👤</span>
+            <span
+              className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-black leading-none ${
+                accountInitial
+                  ? "bg-[#087443] text-white"
+                  : "text-base"
+              }`}
+            >
+              {accountInitial || "👤"}
+            </span>
             <span>{language === "sw" ? "Gamora Yangu" : "My Gamora"}</span>
           </a>
         </div>
@@ -2883,6 +2951,53 @@ function ProductCard({
       setLikeLoading(false);
     }
   };
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadLikeState = async () => {
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (!session?.access_token || cancelled) {
+          return;
+        }
+
+        const response = await fetch(
+          `/api/products/${product.id}/like`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${session.access_token}`,
+            },
+            cache: "no-store",
+          }
+        );
+
+        if (!response.ok || cancelled) {
+          return;
+        }
+
+        const data = await response.json();
+
+        if (!cancelled) {
+          setLiked(Boolean(data.liked));
+          setLikes(Math.max(200, Number(data.likes || 200)));
+          setOrders(Math.max(300, Number(data.orders || 300)));
+        }
+      } catch (error) {
+        console.error("Failed to load product like state:", error);
+      }
+    };
+
+    loadLikeState();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [product.id]);
 
   return (
     <article className="group min-w-0 bg-transparent">

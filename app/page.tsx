@@ -3032,25 +3032,25 @@ function ProductCard({
 
       <div className="pt-1 text-center">
         <div className="flex flex-wrap items-baseline justify-center gap-1">
-          <span className="text-[11px] font-black text-[#C47A00] sm:text-[12px]">
+          <span className="text-[8px] font-black text-[#111111] sm:text-[9px]">
             {formatCurrency(Number(product.price || 0), currency)}
           </span>
 
           {typeof product.oldPrice === "number" &&
             product.oldPrice > Number(product.price || 0) && (
-              <span className="text-[11px] font-medium text-[#E30613] line-through decoration-1 decoration-[#E30613] sm:text-[12px]">
+              <span className="text-[8px] font-medium text-[#E30613] line-through decoration-1 decoration-[#E30613] sm:text-[9px]">
                 {formatCurrency(product.oldPrice, currency)}
               </span>
             )}
         </div>
 
-        <div className="mt-1 flex items-center justify-center gap-1.5 whitespace-nowrap">
+        <div className="mt-1 flex items-center justify-center gap-0 whitespace-nowrap">
           <button
             type="button"
             onClick={toggleLike}
             disabled={likeLoading}
             aria-label={liked ? "Unlike product" : "Like product"}
-            className="inline-flex items-center gap-1 rounded-full bg-white px-2 py-1 text-[8px] font-bold text-[#111111] transition hover:bg-gray-50 disabled:opacity-60 sm:text-[9px]"
+            className="inline-flex items-center gap-1 rounded-full bg-white px-1 py-1 text-[7px] font-bold text-[#111111] transition hover:bg-gray-50 disabled:opacity-60 sm:text-[8px]"
           >
             <svg
               viewBox="0 0 24 24"
@@ -3065,10 +3065,10 @@ function ProductCard({
             >
               <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78Z" />
             </svg>
-            <span>{likes} Likes</span>
+            <span className="text-[#555555]">{likes} Likes</span>
           </button>
 
-          <span className="inline-flex items-center gap-1 rounded-full bg-white px-2 py-1 text-[8px] font-bold text-[#111111] sm:text-[9px]">
+          <span className="inline-flex items-center gap-1 rounded-full bg-white px-1 py-1 text-[7px] font-bold text-[#111111] sm:text-[8px]">
             <svg
               viewBox="0 0 24 24"
               aria-hidden="true"
@@ -3083,7 +3083,7 @@ function ProductCard({
               <circle cx="9" cy="20" r="1" />
               <circle cx="18" cy="20" r="1" />
             </svg>
-            <span>{orders} Ordered</span>
+            <span className="text-[#555555]">{orders} Ordered</span>
           </span>
         </div>
 

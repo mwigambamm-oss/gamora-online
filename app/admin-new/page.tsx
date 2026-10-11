@@ -17,6 +17,7 @@ const PaymentsModule = dynamic(() => import("@/components/admin-new/PaymentsModu
 const CustomersModule = dynamic(() => import("@/components/admin-new/CustomersModule"));
 const InventoryModule = dynamic(() => import("@/components/admin-new/InventoryModule"));
 const ProductsModule = dynamic(() => import("@/components/admin-new/ProductsModule"));
+const CategoriesModule = dynamic(() => import("@/components/admin-new/CategoriesModule"));
 const SalesChart = dynamic(() => import("@/components/admin-new/dashboard/SalesChart"));
 const TopProducts = dynamic(() => import("@/components/admin-new/dashboard/TopProducts"));
 const BusinessCharts = dynamic(() => import("@/components/admin-new/dashboard/BusinessCharts"));
@@ -49,6 +50,7 @@ const menu = [
   "Dashboard",
   "Orders",
   "Products",
+  "Categories",
   "Inventory",
   "Customers",
   "Messages",
@@ -364,6 +366,8 @@ return (
               <OrdersModule />
             ) : active === "Products" ? (
               <ProductsModule />
+            ) : active === "Categories" ? (
+              <CategoriesModule />
             ) : active === "Inventory" ? (
               <InventoryModule />
             ) : active === "Customers" ? (

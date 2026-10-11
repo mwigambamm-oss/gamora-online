@@ -181,3 +181,88 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
+
+// Update an existing category name and/or image.
+export async function PATCH(request: Request) {
+  try {
+    const user = await authenticatedUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "Please sign in to manage categories." },
+        { status: 401 }
+      );
+    }
+
+    const formData = await request.formData();
+    const id = Number(formData.get("id"));
+    const name = String(formData.get("name") ?? "").trim();
+    const image = formData.get("image");
+
+    if (!Number.isInteger(id) || id <= 0 || !name) {
+      return NextResponse.json(
+        { error: "A valid category ID and name are required." },
+        { status: 400 }
+      );
+    }
+
+    const db = adminClient();
+    const values: { name: string; image_url?: string } = { name };
+
+    if (image instanceof File && image.size > 0) {
+      if (!image.type.startsWith("image/")) {
+        return NextResponse.json(
+          { error: "Please select an image file." },
+          { status: 400 }
+        );
+      }
+
+      if (image.size > 5 * 1024 * 1024) {
+        return NextResponse.json(
+          { error: "Image must be 5 MB or smaller." },
+          { status: 400 }
+        );
+      }
+
+      const extension = image.name.split(".").pop()?.toLowerCase() || "jpg";
+      const safeExtension = /^[a-z0-9]+$/.test(extension) ? extension : "jpg";
+      const storagePath = `categories/${crypto.randomUUID()}.${safeExtension}`;
+
+      const { error: uploadError } = await db.storage
+        .from("product-images")
+        .upload(storagePath, image, {
+          contentType: image.type,
+          upsert: false,
+        });
+
+      if (uploadError) {
+        return NextResponse.json(
+          { error: `Image upload failed: ${uploadError.message}` },
+          { status: 500 }
+        );
+      }
+
+      values.image_url = db.storage
+        .from("product-images")
+        .getPublicUrl(storagePath).data.publicUrl;
+    }
+
+    const { data, error } = await db
+      .from("product_categories")
+      .update(values)
+      .eq("id", id)
+      .select("id,name,image_url")
+      .single();
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ category: data });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Unable to update category.";
+
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}

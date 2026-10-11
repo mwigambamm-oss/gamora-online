@@ -55,54 +55,6 @@ export default function ProductsModule() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMoreProducts, setHasMoreProducts] = useState(true);
   const [categories, setCategories] = useState<string[]>(DEFAULT_CATEGORIES);
-  const [categoryImageUrls, setCategoryImageUrls] = useState<Record<string, string>>({});
-  const [categoryImageFile, setCategoryImageFile] = useState<File | null>(null);
-  const [categorySaving, setCategorySaving] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadSavedCategories() {
-      try {
-        const response = await fetch("/api/admin-new/categories", {
-          cache: "no-store",
-        });
-        if (!response.ok) return;
-
-        const result = await response.json();
-        const saved = Array.isArray(result.categories) ? result.categories : [];
-        if (cancelled) return;
-
-        setCategories((current) =>
-          Array.from(new Set([
-            ...DEFAULT_CATEGORIES,
-            ...current,
-            ...saved.map((item: { name?: string }) => item.name || "").filter(Boolean),
-          ]))
-        );
-
-        setCategoryImageUrls(
-          Object.fromEntries(
-            saved
-              .filter((item: { name?: string; image_url?: string | null }) =>
-                item.name && item.image_url
-              )
-              .map((item: { name: string; image_url: string }) => [
-                item.name,
-                item.image_url,
-              ])
-          )
-        );
-      } catch (error) {
-        console.error("Failed to load saved categories:", error);
-      }
-    }
-
-    loadSavedCategories();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   const [form, setForm] = useState(emptyForm);
 
@@ -355,8 +307,8 @@ export default function ProductsModule() {
     setCategories((current) =>
       Array.from(
         new Set([
-          ...DEFAULT_CATEGORIES,
           ...current,
+          ...DEFAULT_CATEGORIES,
           ...productCategories,
         ])
       )
@@ -699,112 +651,69 @@ export default function ProductsModule() {
 
   }
 
-  async function addCategory() {
-    const name = newCategory.trim();
-    if (!name) return;
 
-    setCategorySaving(true);
-    try {
-      const body = new FormData();
-      body.set("name", name);
+  /* GAMORA_ADMIN_CATEGORIES_SYNC */
+  useEffect(() => {
+    let active = true;
 
-      const response = await fetch("/api/admin-new/categories", {
-        method: "POST",
-        body,
-      });
-      const result = await response.json();
+    async function loadAdminCategories() {
+      try {
+        const response = await fetch("/api/admin-new/categories", {
+          cache: "no-store",
+        });
 
-      if (!response.ok) {
-        alert(result.error || "Imeshindikana kuhifadhi category.");
-        return;
+        if (!response.ok) {
+          throw new Error("Failed to load admin categories");
+        }
+
+        const payload: any = await response.json();
+        const rows = Array.isArray(payload)
+          ? payload
+          : payload?.categories ?? payload?.data ?? payload?.results ?? [];
+
+        const names = rows
+          .map((row: any) => typeof row === "string" ? row : row?.name)
+          .filter((name: unknown): name is string =>
+            typeof name === "string" && name.trim().length > 0
+          )
+          .map((name: string) => name.trim());
+
+        if (active && names.length > 0) {
+          setCategories(current =>
+            Array.from(new Set([...names, ...current]))
+          );
+        }
+      } catch (error) {
+        console.error("Gamora categories sync failed:", error);
       }
-
-      const savedName = result.category?.name || name;
-      setCategories((current) =>
-        Array.from(new Set([...current, savedName]))
-      );
-      if (result.category?.image_url) {
-        setCategoryImageUrls((current) => ({
-          ...current,
-          [savedName]: result.category.image_url,
-        }));
-      }
-      setForm((current) => ({ ...current, category: savedName }));
-      setNewCategory("");
-    } catch (error) {
-      console.error(error);
-      alert("Imeshindikana kuwasiliana na server. Jaribu tena.");
-    } finally {
-      setCategorySaving(false);
-    }
-  }
-
-  async function saveCategoryImage() {
-    const name = (form.category || newCategory).trim();
-    if (!name) {
-      alert("Chagua category au andika jina la category kwanza.");
-      return;
-    }
-    if (!categoryImageFile) {
-      alert("Chagua picha ya category kwanza.");
-      return;
     }
 
-    if (!categoryImageFile.type.startsWith("image/")) {
-      alert("Tafadhali chagua faili la picha.");
-      return;
-    }
-    if (categoryImageFile.size > 5 * 1024 * 1024) {
-      alert("Picha isizidi MB 5.");
-      return;
-    }
+    loadAdminCategories();
+    return () => { active = false; };
+  }, []);
 
-    setCategorySaving(true);
-    try {
-      const body = new FormData();
-      body.set("name", name);
-      body.set("image", categoryImageFile);
+  function addCategory(){
 
-      const response = await fetch("/api/admin-new/categories", {
-        method: "POST",
-        body,
-      });
-      const result = await response.json();
+    const name =
+      newCategory.trim();
 
-      if (!response.ok) {
-        alert(result.error || "Imeshindikana kuhifadhi picha ya category.");
-        return;
-      }
+    if(!name) return;
 
-      const savedName = result.category?.name || name;
-      const imageUrl = result.category?.image_url;
 
-      setCategories((current) =>
-        Array.from(new Set([...current, savedName]))
-      );
-      if (imageUrl) {
-        setCategoryImageUrls((current) => ({
-          ...current,
-          [savedName]: imageUrl,
-        }));
-      }
+    setCategories([
+      ...categories,
+      name,
+    ]);
 
-      setForm((current) => ({ ...current, category: savedName }));
-      setNewCategory("");
-      setCategoryImageFile(null);
 
-      const input = document.getElementById(
-        "admin-category-image"
-      ) as HTMLInputElement | null;
-      if (input) input.value = "";
+    setForm({
+      ...form,
+      category:name,
+    });
 
-      alert("Picha ya category imehifadhiwa kikamilifu.");
-    } catch (error) {
-      console.error(error);
-      alert("Imeshindikana kuwasiliana na server. Jaribu tena.");
-    } finally {
-      setCategorySaving(false);
-    }
+
+    setNewCategory("");
+
   }
 
   function buildImageColourMap(
@@ -1500,55 +1409,11 @@ export default function ProductsModule() {
             <button
               type="button"
               onClick={addCategory}
-              disabled={categorySaving}
-              className="bg-[#172554] text-white px-4 rounded hover:bg-[#0F766E] disabled:opacity-50"
+              className="bg-[#172554] text-white px-4 rounded hover:bg-[#0F766E]"
             >
-              {categorySaving ? "Saving..." : "Add"}
+              Add
             </button>
 
-              </div>
-
-              <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
-                <h4 className="mb-2 text-sm font-bold text-slate-800">
-                  Category Image
-                </h4>
-                <p className="mb-3 text-xs text-slate-600">
-                  Chagua category hapo juu ili kubadilisha picha yake, au ongeza
-                  category mpya. Picha itaonekana homepage na kwenye ukurasa wa category.
-                </p>
-
-                {form.category && categoryImageUrls[form.category] && (
-                  <img
-                    src={categoryImageUrls[form.category]}
-                    alt={form.category}
-                    className="mb-3 h-20 w-20 rounded-xl border border-slate-200 bg-white object-cover"
-                  />
-                )}
-
-                <input
-                  id="admin-category-image"
-                  type="file"
-                  accept="image/*"
-                  onChange={(event) =>
-                    setCategoryImageFile(event.target.files?.[0] || null)
-                  }
-                  className="block w-full text-sm text-slate-700 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-200 file:px-3 file:py-2"
-                />
-
-                {categoryImageFile && (
-                  <p className="mt-2 text-xs text-slate-600">
-                    Picha iliyochaguliwa: {categoryImageFile.name}
-                  </p>
-                )}
-
-                <button
-                  type="button"
-                  onClick={saveCategoryImage}
-                  disabled={categorySaving}
-                  className="mt-3 rounded-lg bg-[#e30613] px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
-                >
-                  {categorySaving ? "Saving..." : "Save Category Image"}
-                </button>
               </div>
             </section>
 

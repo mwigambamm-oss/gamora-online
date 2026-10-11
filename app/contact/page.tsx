@@ -174,7 +174,7 @@ export default function ContactPage() {
       {/* CONTACT CARDS */}
       <section className="mx-auto max-w-6xl px-4 py-14">
 
-        <div className="grid gap-6 md:grid-cols-4">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
 
           {/* PHONE */}
           <a
@@ -210,21 +210,37 @@ export default function ContactPage() {
             </p>
           </a>
 
-          {/* EMAIL */}
-          <a
-            href="mailto:officialgamoraonline@gmail.com"
-            className="rounded-xl bg-white p-4 text-center shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
-          >
-            <FaEnvelope className="mx-auto text-lg text-sky-700" />
+          {/* EMAIL CONTACTS */}
+          {[
+            {
+              title: "General Inquiries",
+              email: "info@gamoraonline.co.tz",
+            },
+            {
+              title: "Sales",
+              email: "sales@gamoraonline.co.tz",
+            },
+            {
+              title: "Customer Support",
+              email: "support@gamoraonline.co.tz",
+            },
+          ].map((contact) => (
+            <a
+              key={contact.email}
+              href={`mailto:${contact.email}`}
+              className="rounded-xl bg-white p-4 text-center shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+            >
+              <FaEnvelope className="mx-auto text-lg text-sky-700" />
 
-            <h2 className="mt-3 text-sm font-medium">
-              {t.email}
-            </h2>
+              <h2 className="mt-3 text-sm font-medium">
+                {contact.title}
+              </h2>
 
-            <p className="mt-2 break-all text-sm text-slate-500">
-              officialgamoraonline@gmail.com
-            </p>
-          </a>
+              <p className="mt-2 break-all text-sm text-slate-500">
+                {contact.email}
+              </p>
+            </a>
+          ))}
 
           {/* LOCATION */}
           <div className="rounded-xl bg-white p-4 text-center shadow-sm">

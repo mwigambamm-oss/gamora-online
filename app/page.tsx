@@ -114,6 +114,48 @@ export default function HomePage() {
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [accountInitial, setAccountInitial] = useState<string | null>(null);
+  const [savedCategoryNames, setSavedCategoryNames] = useState<string[]>([]);
+  const [categoryImageUrls, setCategoryImageUrls] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadCategoryImages() {
+      try {
+        const response = await fetch("/api/admin-new/categories", {
+          cache: "no-store",
+        });
+        if (!response.ok) return;
+
+        const result = await response.json();
+        const saved = Array.isArray(result.categories) ? result.categories : [];
+        if (cancelled) return;
+
+        setSavedCategoryNames(
+          saved.map((item: { name?: string }) => item.name || "").filter(Boolean)
+        );
+        setCategoryImageUrls(
+          Object.fromEntries(
+            saved
+              .filter((item: { name?: string; image_url?: string | null }) =>
+                item.name && item.image_url
+              )
+              .map((item: { name: string; image_url: string }) => [
+                item.name,
+                item.image_url,
+              ])
+          )
+        );
+      } catch (error) {
+        console.error("Failed to load category images:", error);
+      }
+    }
+
+    loadCategoryImages();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -473,8 +515,10 @@ export default function HomePage() {
       (name) => !ALL_CATEGORIES.includes(name)
     );
 
-    return [...ALL_CATEGORIES, ...extra];
-  }, [products]);
+    return Array.from(
+      new Set([...ALL_CATEGORIES, ...extra, ...savedCategoryNames])
+    );
+  }, [products, savedCategoryNames]);
 
   const performSearch = async () => {
     const normalizedQuery = normalize(search);
@@ -1998,9 +2042,9 @@ export default function HomePage() {
                 className="group min-w-[110px] text-center"
               >
                 <div className="mx-auto h-20 w-20 overflow-hidden rounded-full border border-slate-200 bg-white shadow-sm transition group-hover:-translate-y-1 group-hover:border-blue-300 group-hover:shadow-md sm:h-24 sm:w-24">
-                  {CATEGORY_IMAGES[category] ? (
+                  {(categoryImageUrls[category] || CATEGORY_IMAGES[category]) ? (
                     <img
-                      src={CATEGORY_IMAGES[category]}
+                      src={categoryImageUrls[category] || CATEGORY_IMAGES[category]}
                       alt={category}
                       className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
                     />
@@ -2495,19 +2539,18 @@ export default function HomePage() {
           </a>
 
           <a href="/delivery" className="block !text-[#26332C] hover:!text-[#374151]">
-            {language === "sw" ? "Delivery" : "Delivery"}
+            Delivery
           </a>
 
           <a href="/terms" className="block !text-[#26332C] hover:!text-[#374151]">
-            {language === "sw"
-              ? "Masharti na Vigezo"
-              : "Terms & Conditions"}
+            {language === "sw" ? "Masharti na Vigezo" : "Terms & Conditions"}
           </a>
 
           <a href="/contact" className="block !text-[#26332C] hover:!text-[#374151]">
             {language === "sw" ? "Wasiliana Nasi" : "Contact Us"}
           </a>
         </div>
+
       </div>
 
 {/* FAQ */}

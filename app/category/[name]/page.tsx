@@ -200,8 +200,39 @@ export default function CategoryPage() {
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [savedCategoryImage, setSavedCategoryImage] = useState("");
 
   const name = decodeURIComponent(String(params.name || ""));
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadSavedCategoryImage() {
+      try {
+        const response = await fetch("/api/admin-new/categories", {
+          cache: "no-store",
+        });
+        if (!response.ok) return;
+
+        const result = await response.json();
+        const match = (Array.isArray(result.categories) ? result.categories : [])
+          .find((item: { name?: string }) => item.name === name);
+
+        if (!cancelled) {
+          setSavedCategoryImage(match?.image_url || "");
+        }
+      } catch (error) {
+        console.error("Failed to load saved category image:", error);
+      }
+    }
+
+    setSavedCategoryImage("");
+    loadSavedCategoryImage();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [name]);
 
   useEffect(() => {
     let cancelled = false;
@@ -251,9 +282,9 @@ export default function CategoryPage() {
 
         <div className="mb-6 rounded-2xl bg-white p-3 shadow-sm sm:p-4">
           <div className="flex min-w-0 items-center gap-3 sm:gap-4">
-            {CATEGORY_IMAGES[name] && (
+            {(savedCategoryImage || CATEGORY_IMAGES[name]) && (
               <img
-                src={CATEGORY_IMAGES[name]}
+                src={savedCategoryImage || CATEGORY_IMAGES[name]}
                 alt={name}
                 width={64}
                 height={64}

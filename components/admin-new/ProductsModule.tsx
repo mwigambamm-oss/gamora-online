@@ -55,6 +55,54 @@ export default function ProductsModule() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMoreProducts, setHasMoreProducts] = useState(true);
   const [categories, setCategories] = useState<string[]>(DEFAULT_CATEGORIES);
+  const [categoryImageUrls, setCategoryImageUrls] = useState<Record<string, string>>({});
+  const [categoryImageFile, setCategoryImageFile] = useState<File | null>(null);
+  const [categorySaving, setCategorySaving] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadSavedCategories() {
+      try {
+        const response = await fetch("/api/admin-new/categories", {
+          cache: "no-store",
+        });
+        if (!response.ok) return;
+
+        const result = await response.json();
+        const saved = Array.isArray(result.categories) ? result.categories : [];
+        if (cancelled) return;
+
+        setCategories((current) =>
+          Array.from(new Set([
+            ...DEFAULT_CATEGORIES,
+            ...current,
+            ...saved.map((item: { name?: string }) => item.name || "").filter(Boolean),
+          ]))
+        );
+
+        setCategoryImageUrls(
+          Object.fromEntries(
+            saved
+              .filter((item: { name?: string; image_url?: string | null }) =>
+                item.name && item.image_url
+              )
+              .map((item: { name: string; image_url: string }) => [
+                item.name,
+                item.image_url,
+              ])
+          )
+        );
+      } catch (error) {
+        console.error("Failed to load saved categories:", error);
+      }
+    }
+
+    loadSavedCategories();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const [form, setForm] = useState(emptyForm);
 
@@ -304,10 +352,11 @@ export default function ProductsModule() {
       .map((p) => p.category)
       .filter(Boolean);
 
-    setCategories(
+    setCategories((current) =>
       Array.from(
         new Set([
           ...DEFAULT_CATEGORIES,
+          ...current,
           ...productCategories,
         ])
       )
@@ -650,28 +699,112 @@ export default function ProductsModule() {
 
   }
 
-  function addCategory(){
+  async function addCategory() {
+    const name = newCategory.trim();
+    if (!name) return;
 
-    const name =
-      newCategory.trim();
+    setCategorySaving(true);
+    try {
+      const body = new FormData();
+      body.set("name", name);
 
-    if(!name) return;
+      const response = await fetch("/api/admin-new/categories", {
+        method: "POST",
+        body,
+      });
+      const result = await response.json();
 
+      if (!response.ok) {
+        alert(result.error || "Imeshindikana kuhifadhi category.");
+        return;
+      }
 
-    setCategories([
-      ...categories,
-      name,
-    ]);
+      const savedName = result.category?.name || name;
+      setCategories((current) =>
+        Array.from(new Set([...current, savedName]))
+      );
+      if (result.category?.image_url) {
+        setCategoryImageUrls((current) => ({
+          ...current,
+          [savedName]: result.category.image_url,
+        }));
+      }
+      setForm((current) => ({ ...current, category: savedName }));
+      setNewCategory("");
+    } catch (error) {
+      console.error(error);
+      alert("Imeshindikana kuwasiliana na server. Jaribu tena.");
+    } finally {
+      setCategorySaving(false);
+    }
+  }
 
+  async function saveCategoryImage() {
+    const name = (form.category || newCategory).trim();
+    if (!name) {
+      alert("Chagua category au andika jina la category kwanza.");
+      return;
+    }
+    if (!categoryImageFile) {
+      alert("Chagua picha ya category kwanza.");
+      return;
+    }
 
-    setForm({
-      ...form,
-      category:name,
-    });
+    if (!categoryImageFile.type.startsWith("image/")) {
+      alert("Tafadhali chagua faili la picha.");
+      return;
+    }
+    if (categoryImageFile.size > 5 * 1024 * 1024) {
+      alert("Picha isizidi MB 5.");
+      return;
+    }
 
+    setCategorySaving(true);
+    try {
+      const body = new FormData();
+      body.set("name", name);
+      body.set("image", categoryImageFile);
 
-    setNewCategory("");
+      const response = await fetch("/api/admin-new/categories", {
+        method: "POST",
+        body,
+      });
+      const result = await response.json();
 
+      if (!response.ok) {
+        alert(result.error || "Imeshindikana kuhifadhi picha ya category.");
+        return;
+      }
+
+      const savedName = result.category?.name || name;
+      const imageUrl = result.category?.image_url;
+
+      setCategories((current) =>
+        Array.from(new Set([...current, savedName]))
+      );
+      if (imageUrl) {
+        setCategoryImageUrls((current) => ({
+          ...current,
+          [savedName]: imageUrl,
+        }));
+      }
+
+      setForm((current) => ({ ...current, category: savedName }));
+      setNewCategory("");
+      setCategoryImageFile(null);
+
+      const input = document.getElementById(
+        "admin-category-image"
+      ) as HTMLInputElement | null;
+      if (input) input.value = "";
+
+      alert("Picha ya category imehifadhiwa kikamilifu.");
+    } catch (error) {
+      console.error(error);
+      alert("Imeshindikana kuwasiliana na server. Jaribu tena.");
+    } finally {
+      setCategorySaving(false);
+    }
   }
 
   function buildImageColourMap(
@@ -1367,11 +1500,55 @@ export default function ProductsModule() {
             <button
               type="button"
               onClick={addCategory}
-              className="bg-[#172554] text-white px-4 rounded hover:bg-[#0F766E]"
+              disabled={categorySaving}
+              className="bg-[#172554] text-white px-4 rounded hover:bg-[#0F766E] disabled:opacity-50"
             >
-              Add
+              {categorySaving ? "Saving..." : "Add"}
             </button>
 
+              </div>
+
+              <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <h4 className="mb-2 text-sm font-bold text-slate-800">
+                  Category Image
+                </h4>
+                <p className="mb-3 text-xs text-slate-600">
+                  Chagua category hapo juu ili kubadilisha picha yake, au ongeza
+                  category mpya. Picha itaonekana homepage na kwenye ukurasa wa category.
+                </p>
+
+                {form.category && categoryImageUrls[form.category] && (
+                  <img
+                    src={categoryImageUrls[form.category]}
+                    alt={form.category}
+                    className="mb-3 h-20 w-20 rounded-xl border border-slate-200 bg-white object-cover"
+                  />
+                )}
+
+                <input
+                  id="admin-category-image"
+                  type="file"
+                  accept="image/*"
+                  onChange={(event) =>
+                    setCategoryImageFile(event.target.files?.[0] || null)
+                  }
+                  className="block w-full text-sm text-slate-700 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-200 file:px-3 file:py-2"
+                />
+
+                {categoryImageFile && (
+                  <p className="mt-2 text-xs text-slate-600">
+                    Picha iliyochaguliwa: {categoryImageFile.name}
+                  </p>
+                )}
+
+                <button
+                  type="button"
+                  onClick={saveCategoryImage}
+                  disabled={categorySaving}
+                  className="mt-3 rounded-lg bg-[#e30613] px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
+                >
+                  {categorySaving ? "Saving..." : "Save Category Image"}
+                </button>
               </div>
             </section>
 

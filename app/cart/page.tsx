@@ -3,6 +3,7 @@
 import { useLanguage } from "@/components/providers/LanguageProvider";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { formatCurrency, type Currency } from "@/lib/currency";
 
 type CartItem = {
@@ -18,6 +19,7 @@ type CartItem = {
 };
 
 export default function CartPage() {
+  const router = useRouter();
   const { language, setLanguage } = useLanguage();
   const [currency, setCurrency] = useState<Currency>("TZS");
 
@@ -287,9 +289,13 @@ const total =
 
                   <div className="flex gap-2">
 
-                    {/* IMAGE */}
-                    <div className="flex h-36 w-36 md:h-64 md:w-64 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-sky-50">
-
+                    {/* IMAGE: open Product Detail */}
+                    <button
+                      type="button"
+                      onClick={() => router.push(`/product/${item.id}`)}
+                      aria-label={language === "sw" ? `Angalia ${item.name}` : `View ${item.name}`}
+                      className="flex h-36 w-36 md:h-64 md:w-64 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-lg bg-sky-50"
+                    >
                       {item.image ? (
                         <img
                           src={item.image}
@@ -297,19 +303,29 @@ const total =
                           className="h-full w-full object-contain p-2"
                         />
                       ) : (
-                        <span className="text-5xl">
-                          🛍️
-                        </span>
+                        <span className="text-5xl">🛍️</span>
                       )}
-
-                    </div>
+                    </button>
 
                     {/* DETAILS */}
                     <div className="min-w-0 flex-1">
 
                       <h2 className="font-medium text-slate-900">
-                        {item.name}
+                        <button
+                          type="button"
+                          onClick={() => router.push(`/product/${item.id}`)}
+                          className="cursor-pointer text-left hover:text-red-600"
+                        >
+                          {item.name}
+                        </button>
                       </h2>
+                      <button
+                        type="button"
+                        onClick={() => router.push(`/product/${item.id}`)}
+                        className="mt-1 cursor-pointer text-xs font-semibold text-red-600 hover:underline"
+                      >
+                        {language === "sw" ? "Angalia maelezo / Ongeza zaidi" : "View details / Add more"}
+                      </button>
 
                       <p className="mt-2 font-normal text-sky-700">
                         {formatCurrency(Number(item.price), currency)}

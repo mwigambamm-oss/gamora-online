@@ -1371,19 +1371,52 @@ export default function CheckoutPage() {
     {cart.map((item) => (
       <div
         key={item.id}
-        className="flex items-center justify-between rounded-lg bg-white p-3"
+        className="flex items-center justify-between gap-3 rounded-lg bg-white p-3"
       >
-        <div>
-          <p className="text-xs font-bold text-slate-800">
-            {language === "sw" ? (item.name_sw || item.name) : item.name}
-          </p>
+        <div className="flex min-w-0 items-center gap-3">
+          <button
+            type="button"
+            onClick={() => router.push(`/product/${item.id}`)}
+            aria-label={t("View product details", "Angalia maelezo ya bidhaa")}
+            className="shrink-0 cursor-pointer"
+          >
+            {item.image ? (
+              <img
+                src={item.image}
+                alt={language === "sw" ? (item.name_sw || item.name) : item.name}
+                className="h-16 w-16 rounded-lg object-contain"
+              />
+            ) : (
+              <span className="flex h-16 w-16 items-center justify-center rounded-lg bg-slate-100 text-xs text-slate-400">
+                {t("Image", "Picha")}
+              </span>
+            )}
+          </button>
 
-          <p className="text-xs text-slate-500">
-            {t("Qty:", "Idadi:")} {item.quantity}
-          </p>
+          <div className="min-w-0">
+            <button
+              type="button"
+              onClick={() => router.push(`/product/${item.id}`)}
+              className="cursor-pointer text-left text-xs font-bold text-slate-800 hover:text-red-600"
+            >
+              {language === "sw" ? (item.name_sw || item.name) : item.name}
+            </button>
+
+            <p className="text-xs text-slate-500">
+              {t("Qty:", "Idadi:")} {item.quantity}
+            </p>
+
+            <button
+              type="button"
+              onClick={() => router.push(`/product/${item.id}`)}
+              className="mt-1 cursor-pointer text-xs font-semibold text-red-600 hover:underline"
+            >
+              {t("View details / Add more", "Angalia maelezo / Ongeza bidhaa")}
+            </button>
+          </div>
         </div>
 
-        <p className="text-xs font-bold text-sky-700">
+        <p className="shrink-0 text-xs font-bold text-sky-700">
           TZS{" "}
           {(
             Number(item.price) *

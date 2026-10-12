@@ -948,7 +948,12 @@ export default function ProductsModule() {
       await loadProducts();
     } catch (error) {
       console.error("Failed saving product:", error);
-      const message = error instanceof Error ? error.message : String(error);
+      const message =
+        error instanceof Error
+          ? error.message
+          : typeof error === "object" && error !== null
+            ? JSON.stringify(error, null, 2)
+            : String(error);
       alert(`Failed to save the product: ${message}`);
     } finally {
       setDetectingColors(false);
@@ -997,7 +1002,12 @@ export default function ProductsModule() {
         error
       );
 
-      const message = error instanceof Error ? error.message : String(error);
+      const message =
+        error instanceof Error
+          ? error.message
+          : typeof error === "object" && error !== null
+            ? JSON.stringify(error, null, 2)
+            : String(error);
       alert(`Failed to save the product: ${message}`);
     } finally {
       setDetectingColors(false);

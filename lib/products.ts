@@ -370,18 +370,24 @@ export async function saveProduct(product: Omit<Product, "id">) {
     orders_count: Math.floor(Math.random() * 1701) + 300,
   };
 
-  const { data, error } = await supabase
-    .from("products")
-    .insert(dbProduct)
-    .select("*")
-    .single();
+  const response = await fetch("/api/admin-new/products", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "same-origin",
+    body: JSON.stringify(dbProduct),
+  });
 
-  if (error) {
-    console.error("Failed to save product:", error);
-    throw error;
+  const result = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(result.error || "Failed to save product.");
   }
 
-  return mapProduct(data);
+  if (!result.data) {
+    throw new Error("The server did not return the saved product.");
+  }
+
+  return mapProduct(result.data);
 }
 
 export async function updateProduct(

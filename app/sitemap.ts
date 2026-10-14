@@ -55,11 +55,20 @@ async function getAllProductUrls(): Promise<MetadataRoute.Sitemap> {
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const productUrls = await getAllProductUrls();
 
-  const categoryUrls: MetadataRoute.Sitemap = categories.map((category) => ({
-    url: `${baseUrl}/category/${encodeURIComponent(category)}`,
-    changeFrequency: "daily",
-    priority: 0.7,
-  }));
+  const categoryResults = await Promise.all(
+    categories.map(async (category) => ({
+      category,
+      products: await getProducts({ category, limit: 1 }),
+    }))
+  );
+
+  const categoryUrls: MetadataRoute.Sitemap = categoryResults
+    .filter(({ products }) => products.length > 0)
+    .map(({ category }) => ({
+      url: `${baseUrl}/category/${encodeURIComponent(category)}`,
+      changeFrequency: "daily",
+      priority: 0.7,
+    }));
 
   const staticUrls: MetadataRoute.Sitemap = [
     { url: baseUrl, changeFrequency: "daily", priority: 1 },

@@ -2534,6 +2534,9 @@ export default function HomePage() {
         </h3>
 
         <div className="mt-1 space-y-1 text-[9px] leading-3.5 text-[#26332C] sm:mt-4 sm:space-y-3 sm:text-xs sm:leading-normal">
+          <a href="/all-products" className="block whitespace-nowrap !text-[#26332C] text-[8px] leading-3 hover:!text-[#374151] sm:text-xs">Shop All Products</a>
+          <a href="/login" className="block whitespace-nowrap !text-[#26332C] text-[8px] leading-3 hover:!text-[#374151] sm:text-xs">Login</a>
+          <a href="/register" className="block whitespace-nowrap !text-[#26332C] text-[8px] leading-3 hover:!text-[#374151] sm:text-xs">Sign Up</a>
           <a href="/help" className="block whitespace-nowrap !text-[#26332C] text-[8px] leading-3 hover:!text-[#374151] sm:text-xs">
             {language === "sw" ? "Jinsi ya Kuagiza" : "How to Buy"}
           </a>

@@ -20,5 +20,5 @@ export default async function ProductPage({
     notFound();
   }
 
-  return <ProductClient params={params} />;
+  return <ProductClient params={params} initialProduct={product} />;
 }

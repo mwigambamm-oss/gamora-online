@@ -49,8 +49,10 @@ type Review = {
 
 export default function ProductPage({
   params,
+  initialProduct,
 }: {
   params: Promise<{ id: string }>;
+  initialProduct: Product;
 }) {
   const router = useRouter();
   const { language } = useLanguage();
@@ -60,7 +62,7 @@ export default function ProductPage({
   }, [language]);
   const t = (en: string, sw: string) => (language === "sw" ? sw : en);
 
-  const [product, setProduct] = useState<Product | null>(null);
+  const [product, setProduct] = useState<Product | null>(initialProduct);
 
   const displayName = product?.name;
 

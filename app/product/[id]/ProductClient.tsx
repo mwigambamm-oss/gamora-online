@@ -64,6 +64,7 @@ export default function ProductPage({
   const t = (en: string, sw: string) => (language === "sw" ? sw : en);
 
   const [product, setProduct] = useState<Product | null>(initialProduct);
+  const [descriptionExpanded, setDescriptionExpanded] = useState(false);
 
   const displayName = product?.name;
 
@@ -1669,9 +1670,27 @@ const selectedColorSizeLines = selectedColor.flatMap((color) =>
                   {t("Description", "Maelezo")}
                 </h3>
 
-                <p className="mt-1.5 max-w-3xl whitespace-pre-line text-xs leading-5 text-slate-600 sm:text-sm sm:leading-6">
+                <p
+                  className={`mt-1.5 max-w-3xl whitespace-pre-line text-xs leading-5 text-slate-600 sm:text-sm sm:leading-6 ${
+                    descriptionExpanded ? "" : "line-clamp-2"
+                  }`}
+                >
                   {displayDescription}
                 </p>
+
+                {displayDescription.split("\\n").join(" ").trim().length > 0 &&
+                  displayDescription.trim().length > 100 && (
+                    <button
+                      type="button"
+                      onClick={() => setDescriptionExpanded((expanded) => !expanded)}
+                      className="mt-1 text-xs font-semibold text-[#E30613] hover:underline sm:text-sm"
+                      aria-expanded={descriptionExpanded}
+                    >
+                      {descriptionExpanded
+                        ? t("See less", "Onyesha machache")
+                        : t("See more", "Soma zaidi")}
+                    </button>
+                  )}
               </div>
             )}
 

@@ -49,6 +49,7 @@ export default function ProductsModule() {
     description: "",
     image: "",
     images: [] as string[],
+    videos: [] as string[],
   };
 
   const [products, setProducts] = useState<Product[]>([]);
@@ -796,6 +797,7 @@ export default function ProductsModule() {
       description: product.description || "",
       image: product.image || "",
       images: product.images || [],
+      videos: product.videos || [],
     });
 
     setImageColors(
@@ -920,6 +922,7 @@ export default function ProductsModule() {
 
       image: images[0] || form.image || "",
       images,
+      videos: form.videos || [],
 
       image_color_map: imageColorMap,
     };
@@ -1442,6 +1445,100 @@ export default function ProductsModule() {
             rows={6}
             className="w-full rounded-xl border border-[#CBD5E1] bg-[#F8FAF9] p-3.5 outline-none transition focus:border-[#172554] focus:bg-[#F8FAFC] focus:ring-2 focus:ring-[#D1FAE5] resize-none"
               />
+            </section>
+
+            <section className="mb-6 rounded-xl border border-[#CBD5E1] p-4">
+              <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-[#64748B]">
+                Product Videos
+              </h3>
+              <p className="mb-3 text-sm text-slate-600">
+                Upload MP4, WebM or MOV videos. Maximum 50 MB per video.
+              </p>
+              <input
+                type="file"
+                accept="video/mp4,video/webm,video/quicktime"
+                multiple
+                disabled={uploading}
+                onChange={async (event) => {
+                  const selected = Array.from(event.currentTarget.files || []);
+                  event.currentTarget.value = "";
+                  if (!selected.length) return;
+
+                  const valid = selected.filter((file) => file.size <= 50 * 1024 * 1024);
+                  if (valid.length !== selected.length) {
+                    alert("Video files must be 50 MB or smaller.");
+                  }
+                  if (!valid.length) return;
+
+                  setUploading(true);
+                  try {
+                    const { supabase } = await import("@/lib/supabase");
+                    const uploaded: string[] = [];
+
+                    for (const file of valid) {
+                      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "-");
+                      const fileName = `videos/${Date.now()}-${Math.random().toString(36).slice(2)}-${safeName}`;
+                      const { error } = await supabase.storage
+                        .from("product-images")
+                        .upload(fileName, file, {
+                          contentType: file.type,
+                          upsert: false,
+                        });
+
+                      if (error) {
+                        console.error("Video upload failed:", error);
+                        alert(`Video upload failed: ${error.message}`);
+                        continue;
+                      }
+
+                      const { data } = supabase.storage
+                        .from("product-images")
+                        .getPublicUrl(fileName);
+
+                      if (data?.publicUrl) uploaded.push(data.publicUrl);
+                    }
+
+                    if (uploaded.length) {
+                      setForm((current) => ({
+                        ...current,
+                        videos: [...(current.videos || []), ...uploaded],
+                      }));
+                    }
+                  } catch (error) {
+                    console.error("Video upload failed:", error);
+                    alert("Video upload failed. Check the Storage bucket settings and try again.");
+                  } finally {
+                    setUploading(false);
+                  }
+                }}
+              />
+
+              {(form.videos || []).length > 0 && (
+                <div className="mt-4 space-y-3">
+                  {(form.videos || []).map((url, index) => (
+                    <div key={`${url}-${index}`} className="flex items-center gap-3">
+                      <video
+                        src={url}
+                        controls
+                        playsInline
+                        preload="metadata"
+                        className="h-16 w-28 rounded bg-black"
+                      />
+                      <span className="min-w-0 flex-1 truncate text-xs">{url.split("/").pop()}</span>
+                      <button
+                        type="button"
+                        className="text-sm font-medium text-red-600"
+                        onClick={() => setForm((current) => ({
+                          ...current,
+                          videos: (current.videos || []).filter((_, i) => i !== index),
+                        }))}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </section>
 
             <section>

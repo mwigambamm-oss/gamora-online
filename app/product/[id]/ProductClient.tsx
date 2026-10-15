@@ -22,6 +22,7 @@ type Product = {
   description_sw?: string;
   image?: string;
   images?: string[];
+  videos?: string[];
   image_color_map?: Record<
     string,
     {
@@ -117,11 +118,17 @@ const [cartCount, setCartCount] = useState(0);
 
   
 
-  const [selectedColor, setSelectedColor] = useState<string[]>([]);
-  const [selectedSize, setSelectedSize] = useState<string[]>([]);
-  const [sizeQuantitiesSelected, setSizeQuantitiesSelected] =
-    useState<Record<string, number>>({});
-  const [selectedModel, setSelectedModel] = useState("");
+const [selectedColor, setSelectedColor] = useState<string[]>([]);
+const [selectedSizesByColor, setSelectedSizesByColor] =
+  useState<Record<string, string[]>>({});
+const [sizeQuantitiesSelected, setSizeQuantitiesSelected] =
+  useState<Record<string, number>>({});
+
+const [selectedModel, setSelectedModel] = useState("");
+
+const selectedSize = selectedColor.flatMap(
+  (color) => selectedSizesByColor[color] ?? []
+);
 
   const [activeTab, setActiveTab] = useState("description");
   const [likes, setLikes] = useState(200);
@@ -203,7 +210,7 @@ setProduct(item);
 
       setSelectedColor([]);
 
-      setSelectedSize([]);
+      setSelectedSizesByColor({});
       setSizeQuantitiesSelected({});
       setSelectedModel("");
 
@@ -331,8 +338,8 @@ setProduct(item);
       ? selectedColor.flatMap((color) => getColorImages(color))
       : [];
 
-  const selectedColorSizeLines = selectedColor.flatMap((color) =>
-    selectedSize.map((size) => {
+const selectedColorSizeLines = selectedColor.flatMap((color) =>
+  (selectedSizesByColor[color] ?? []).map((size) => {
       const sizePrice =
         product?.sizePrices?.[size] !== undefined
           ? Number(product.sizePrices[size])
@@ -425,21 +432,23 @@ setProduct(item);
           : [];
 
   const images = variantImages;
+  const galleryItems = [
+    ...images.map((url) => ({ type: "image" as const, url })),
+    ...(product?.videos || []).map((url) => ({ type: "video" as const, url })),
+  ];
 
   /*
    * AUTO SLIDE
    */
   useEffect(() => {
-    if (images.length <= 1) return;
-
+    if (galleryItems.length <= 1 || galleryItems.some((item) => item.type === "video")) return;
     const timer = setInterval(() => {
       setActiveImage((current) =>
-        current >= images.length - 1 ? 0 : current + 1
+        current >= galleryItems.length - 1 ? 0 : current + 1
       );
     }, 4000);
-
     return () => clearInterval(timer);
-  }, [product?.id, images.length]);
+  }, [product?.id, galleryItems.length]);
 
   /*
    * RESET IMAGE WHEN PRODUCT CHANGES
@@ -449,7 +458,7 @@ setProduct(item);
   }, [
     product?.id,
     selectedColor.join("|"),
-    selectedSize.join("|"),
+    JSON.stringify(selectedSizesByColor),
     selectedModel,
   ]);
 
@@ -572,10 +581,7 @@ setProduct(item);
         existing ? JSON.parse(existing) : [];
 
       // MULTIPLE COLOR + SIZE COMBINATIONS
-      if (
-        selectedColor.length > 0 &&
-        selectedSize.length > 0
-      ) {
+      if (selectedColorSizeLines.length > 0) {
         selectedColorSizeLines.forEach((item) => {
           const cartItem = {
             id: product.id,
@@ -695,10 +701,7 @@ setProduct(item);
     try {
       let items;
 
-      if (
-        selectedColor.length > 0 &&
-        selectedSize.length > 0
-      ) {
+      if (selectedColorSizeLines.length > 0) {
         items =
           selectedColorSizeLines.map((item) => ({
             id: product.id,
@@ -771,7 +774,7 @@ setProduct(item);
   /*
    * ONLY SHOW 6 THUMBNAILS
    */
-  const visibleThumbnails = images.slice(0, 6);
+  const visibleThumbnails = galleryItems.slice(0, 6);
 
   /*
    * DISCOUNT
@@ -946,18 +949,19 @@ setProduct(item);
                 }}
               >
 
-                {images.map((img, index) => (
+                {galleryItems.map((item, index) => (
                   <div
-                    key={`${img}-${index}`}
+                    key={`${item.url}-${index}`}
                     className="flex h-full w-full min-w-full flex-shrink-0 items-center justify-center bg-white"
                   >
-
-                    <img
-                      src={img}
-                      alt={`${displayName || ""} ${index + 1}`}
-                      className="h-full w-full object-contain object-center bg-white transition-transform duration-300 group-hover:scale-[1.02]"
-                    />
-
+                    {item.type === "video" ? (
+                      <video src={item.url} controls playsInline preload="metadata"
+                        className="h-full w-full bg-black object-contain"
+                        aria-label={`${displayName || "Product"} video ${index + 1}`} />
+                    ) : (
+                      <img src={item.url} alt={`${displayName || ""} ${index + 1}`}
+                        className="h-full w-full object-contain object-center bg-white transition-transform duration-300 group-hover:scale-[1.02]" />
+                    )}
                   </div>
                 ))}
 
@@ -966,7 +970,7 @@ setProduct(item);
 
               {/* PREVIOUS */}
 
-              {images.length > 1 && (
+              {galleryItems.length > 1 && (
                 <button
                   type="button"
                   onClick={previousImage}
@@ -979,7 +983,7 @@ setProduct(item);
 
               {/* NEXT */}
 
-              {images.length > 1 && (
+              {galleryItems.length > 1 && (
                 <button
                   type="button"
                   onClick={nextImage}
@@ -992,9 +996,9 @@ setProduct(item);
 
               {/* DOTS */}
 
-              {images.length > 1 && (
+              {galleryItems.length > 1 && (
                 <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">
-                  {images.map((_, index) => (
+                  {galleryItems.map((_, index) => (
                     <button
                       key={index}
                       type="button"
@@ -1019,9 +1023,9 @@ setProduct(item);
             {visibleThumbnails.length > 0 && (
               <div className="mt-3 flex gap-2 overflow-x-auto pb-1 sm:gap-3">
                 {visibleThumbnails.map(
-                  (img, index) => (
+                  (item, index) => (
                     <button
-                      key={`${img}-thumb-${index}`}
+                      key={`${item.url}-thumb-${index}`}
                       type="button"
                       onClick={() =>
                         setActiveImage(index)
@@ -1032,13 +1036,13 @@ setProduct(item);
                           : "border border-slate-200"
                       }`}
                     >
-                      <img
-                        src={img}
-                        alt={`${displayName || ""} thumbnail ${
-                          index + 1
-                        }`}
-                        className="h-full w-full object-contain p-1"
-                      />
+                      {item.type === "video" ? (
+                        <span className="flex h-full w-full items-center justify-center bg-slate-900 text-xl text-white" aria-label="Video thumbnail">▶</span>
+                      ) : (
+                        <img src={item.url}
+                          alt={`${displayName || ""} thumbnail ${index + 1}`}
+                          className="h-full w-full object-contain p-1" />
+                      )}
                     </button>
                   )
                 )}
@@ -1217,19 +1221,41 @@ setProduct(item);
                             onClick={() => {
                               if (disabled) return;
 
-                              setSelectedColor((prev) =>
-                                prev.some(
-                                  (item) =>
-                                    item.trim().toLowerCase() ===
-                                    color.trim().toLowerCase()
-                                )
-                                  ? prev.filter(
-                                      (item) =>
-                                        item.trim().toLowerCase() !==
-                                        color.trim().toLowerCase()
-                                    )
-                                  : [...prev, color]
+                              const alreadySelected = selectedColor.some(
+                                (item) =>
+                                  item.trim().toLowerCase() ===
+                                  color.trim().toLowerCase()
                               );
+
+                              if (alreadySelected) {
+                                setSelectedColor((prev) =>
+                                  prev.filter(
+                                    (item) =>
+                                      item.trim().toLowerCase() !==
+                                      color.trim().toLowerCase()
+                                  )
+                                );
+
+                                setSelectedSizesByColor((current) => {
+                                  const next = { ...current };
+                                  delete next[color];
+                                  return next;
+                                });
+
+                                setSizeQuantitiesSelected((current) => {
+                                  const next = { ...current };
+                                  Object.keys(next)
+                                    .filter((key) => key.startsWith(`${color}::`))
+                                    .forEach((key) => delete next[key]);
+                                  return next;
+                                });
+                              } else {
+                                setSelectedColor((prev) => [...prev, color]);
+                                setSelectedSizesByColor((current) => ({
+                                  ...current,
+                                  [color]: current[color] ?? [],
+                                }));
+                              }
                             }}
                             className={`rounded-md px-3 py-1.5 text-xs transition ${
                               isSelected
@@ -1249,110 +1275,20 @@ setProduct(item);
                   </div>
                 )}
 
-              {product.sizes &&
-                product.sizes.length > 0 && (
-                  <div>
-                    <p className="mb-1.5 text-xs font-medium text-slate-600">
-                      {t("Size", "Ukubwa")}
-                    </p>
-
-                    <div className="flex flex-wrap gap-1.5">
-                      {product.sizes.map((size) => {
-                        const isSelected =
-                          selectedSize.some(
-                            (item) =>
-                              item.trim().toLowerCase() ===
-                              size.trim().toLowerCase()
-                          );
-
-                        return (
-                          <button
-                            key={size}
-                            type="button"
-                            onClick={() => {
-                              setSelectedSize((prev) => {
-                                const exists =
-                                  prev.some(
-                                    (item) =>
-                                      item.trim().toLowerCase() ===
-                                      size.trim().toLowerCase()
-                                  );
-
-                                if (exists) {
-                                  setSizeQuantitiesSelected(
-                                    (current) => {
-                                      const next = {
-                                        ...current,
-                                      };
-
-                                      Object.keys(next)
-                                        .filter((key) =>
-                                          key.endsWith(
-                                            `::${size}`
-                                          )
-                                        )
-                                        .forEach(
-                                          (key) =>
-                                            delete next[key]
-                                        );
-
-                                      return next;
-                                    }
-                                  );
-
-                                  return prev.filter(
-                                    (item) =>
-                                      item.trim().toLowerCase() !==
-                                      size.trim().toLowerCase()
-                                  );
-                                }
-
-                                setSizeQuantitiesSelected(
-                                  (current) => {
-                                    const next = {
-                                      ...current,
-                                    };
-
-                                    selectedColor.forEach(
-                                      (color) => {
-                                        const key =
-                                          `${color}::${size}`;
-
-                                        if (
-                                          !next[key]
-                                        ) {
-                                          next[key] = 1;
-                                        }
-                                      }
-                                    );
-
-                                    return next;
-                                  }
-                                );
-
-                                return [
-                                  ...prev,
-                                  size,
-                                ];
-                              });
-                            }}
-                            className={`rounded-md px-3 py-1.5 text-xs transition ${
-                              isSelected
-                                ? "border border-[#E30613] bg-red-50 text-[#E30613]"
-                                : "border border-slate-200 bg-white text-slate-600 hover:border-red-200"
-                            }`}
-                          >
-                            {size}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
+              {selectedColor.length > 0 && (product.sizes?.length ?? 0) > 0 && (
+                <div className="w-full">
+                  <p className="mb-2 text-xs font-medium text-slate-600">
+                    {t("Choose sizes for each color below", "Chagua size kwa kila rangi hapa chini")}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {t("Select a color first, then choose sizes separately for each color.", "Chagua rangi kwanza, kisha chagua size zake tofauti kwa kila rangi.")}
+                  </p>
+                </div>
+              )}
 
               {selectedColor.length > 0 &&
-                selectedSize.length > 0 && (
-                  <div className="w-full">
+                (product.sizes?.length ?? 0) > 0 && (
+                  <div className="w-full min-w-0">
                     <p className="mb-2 text-xs font-medium text-slate-600">
                       {t(
                         "Selected Combinations",
@@ -1360,122 +1296,249 @@ setProduct(item);
                       )}
                     </p>
 
-                    <div className="space-y-2">
-                      {selectedColorSizeLines.map(
-                        (item) => (
-                          <div
-                            key={item.quantityKey}
-                            className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50/50 px-3 py-2.5"
-                          >
-                            <div className="min-w-0 w-full">
-                              <div className="text-xs font-semibold text-slate-800">
-                                {item.color} — {item.size}
+                    <div className="w-full min-w-0 overflow-x-auto pb-2">
+                      <div className="grid w-full min-w-[340px] grid-cols-2 items-start gap-2 sm:min-w-0 sm:gap-3 lg:grid-cols-2">
+                        {selectedColor.map((color) => {
+                          const colorLines =
+                            selectedColorSizeLines.filter(
+                              (item) => item.color === color
+                            );
+
+                          return (
+                            <div
+                              key={color}
+                              className="w-full min-w-0 overflow-hidden rounded-lg border border-slate-200 bg-white"
+                            >
+                              <div className="border-b border-slate-200 bg-slate-50 px-3 py-3">
+                                <p className="text-sm font-bold text-slate-800">
+                                  {color}
+                                </p>
+                                <p className="mt-0.5 text-[11px] text-slate-500">
+                                  {colorLines.length}{" "}
+                                  {t("size combinations", "mchanganyiko ya size")}
+                                </p>
                               </div>
 
-                              <div className="mt-0.5 text-[11px] text-slate-500">
-                                {formatCurrency(
-                                  item.price,
-                                  currency
-                                )} × {item.quantity} ={" "}
-                                <span className="font-semibold text-[#E30613]">
-                                  {formatCurrency(
-                                    item.subtotal,
-                                    currency
-                                  )}
-                                </span>
+                              <div className="border-b border-slate-100 p-2">
+                                <p className="mb-1.5 text-[11px] font-medium text-slate-600">
+                                  {t("Choose sizes", "Chagua size")}
+                                </p>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {(product.sizes ?? []).map((size) => {
+                                    const sizesForColor =
+                                      selectedSizesByColor[color] ?? [];
+                                    const isSizeSelected = sizesForColor.some(
+                                      (item) =>
+                                        item.trim().toLowerCase() ===
+                                        size.trim().toLowerCase()
+                                    );
+
+                                    return (
+                                      <button
+                                        key={`${color}-${size}`}
+                                        type="button"
+                                        onClick={() => {
+                                          if (isSizeSelected) {
+                                            setSelectedSizesByColor((current) => ({
+                                              ...current,
+                                              [color]: (current[color] ?? []).filter(
+                                                (item) =>
+                                                  item.trim().toLowerCase() !==
+                                                  size.trim().toLowerCase()
+                                              ),
+                                            }));
+
+                                            setSizeQuantitiesSelected((current) => {
+                                              const next = { ...current };
+                                              delete next[`${color}::${size}`];
+                                              return next;
+                                            });
+                                          } else {
+                                            setSelectedSizesByColor((current) => ({
+                                              ...current,
+                                              [color]: [...(current[color] ?? []), size],
+                                            }));
+
+                                            setSizeQuantitiesSelected((current) => ({
+                                              ...current,
+                                              [`${color}::${size}`]:
+                                                current[`${color}::${size}`] || 1,
+                                            }));
+                                          }
+                                        }}
+                                        className={`rounded-md px-2.5 py-1.5 text-xs transition ${
+                                          isSizeSelected
+                                            ? "border border-[#E30613] bg-red-50 text-[#E30613]"
+                                            : "border border-slate-200 bg-white text-slate-600 hover:border-red-200"
+                                        }`}
+                                      >
+                                        {size}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+
+                              <div className="space-y-2 p-2">
+                                {colorLines.length === 0 ? (
+                                  <p className="px-1 py-3 text-xs text-slate-400">
+                                    {t("Choose one or more sizes above.", "Chagua size moja au zaidi hapo juu.")}
+                                  </p>
+                                ) : colorLines.map((item) => (
+                                  <div
+                                    key={item.quantityKey}
+                                    className="rounded-md border border-slate-100 bg-slate-50/60 p-2.5"
+                                  >
+                                    <div className="mb-2 flex items-start justify-between gap-2">
+                                      <span className="rounded bg-white px-2 py-1 text-xs font-semibold text-slate-700">
+                                        {item.size}
+                                      </span>
+
+                                      <span className="text-right text-xs font-semibold text-slate-800">
+                                        {formatCurrency(
+                                          item.price,
+                                          currency
+                                        )}
+                                        <span className="block text-[10px] font-normal text-slate-500">
+                                          {t("per unit", "kwa kipande")}
+                                        </span>
+                                      </span>
+                                    </div>
+
+                                    <div className="mb-2 flex items-center justify-between gap-2">
+                                      <span className="text-[11px] text-slate-500">
+                                        {t("Quantity", "Idadi")}
+                                      </span>
+
+                                      <div className="flex items-center overflow-hidden rounded-md border border-slate-200 bg-white">
+                                        <button
+                                          type="button"
+                                          aria-label={`Decrease ${item.color} ${item.size} quantity`}
+                                          onClick={() =>
+                                            setSizeQuantitiesSelected(
+                                              (current) => ({
+                                                ...current,
+                                                [item.quantityKey]: Math.max(
+                                                  1,
+                                                  item.quantity - 1
+                                                ),
+                                              })
+                                            )
+                                          }
+                                          className="h-8 w-8 text-sm text-slate-600 hover:bg-slate-100"
+                                        >
+                                          −
+                                        </button>
+
+                                        <input
+                                          type="number"
+                                          min={1}
+                                          max={
+                                            item.stock > 0
+                                              ? item.stock
+                                              : undefined
+                                          }
+                                          value={item.quantity}
+                                          onChange={(e) => {
+                                            const raw = Number(
+                                              e.target.value
+                                            );
+
+                                            const safe = Math.max(
+                                              1,
+                                              Number.isFinite(raw)
+                                                ? Math.floor(raw)
+                                                : 1
+                                            );
+
+                                            const finalQuantity =
+                                              item.stock > 0
+                                                ? Math.min(
+                                                    safe,
+                                                    item.stock
+                                                  )
+                                                : safe;
+
+                                            setSizeQuantitiesSelected(
+                                              (current) => ({
+                                                ...current,
+                                                [item.quantityKey]:
+                                                  finalQuantity,
+                                              })
+                                            );
+                                          }}
+                                          className="h-8 w-12 border-x border-slate-200 bg-white text-center text-xs outline-none focus:bg-red-50"
+                                          aria-label={`${item.color} ${item.size} quantity`}
+                                        />
+
+                                        <button
+                                          type="button"
+                                          aria-label={`Increase ${item.color} ${item.size} quantity`}
+                                          disabled={
+                                            item.stock > 0 &&
+                                            item.quantity >= item.stock
+                                          }
+                                          onClick={() =>
+                                            setSizeQuantitiesSelected(
+                                              (current) => ({
+                                                ...current,
+                                                [item.quantityKey]:
+                                                  item.stock > 0
+                                                    ? Math.min(
+                                                        item.quantity + 1,
+                                                        item.stock
+                                                      )
+                                                    : item.quantity + 1,
+                                              })
+                                            )
+                                          }
+                                          className="h-8 w-8 text-sm text-slate-600 hover:bg-slate-100 disabled:cursor-not-allowed disabled:text-slate-300"
+                                        >
+                                          +
+                                        </button>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex items-center justify-between gap-2 border-t border-slate-200 pt-2">
+                                      <span className="text-[11px] text-slate-500">
+                                        {t("Subtotal", "Jumla ndogo")}
+                                      </span>
+
+                                      <span className="text-xs font-bold text-[#E30613]">
+                                        {formatCurrency(
+                                          item.subtotal,
+                                          currency
+                                        )}
+                                      </span>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+
+                              <div className="border-t border-slate-200 bg-slate-50 px-3 py-2.5">
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className="text-xs font-semibold text-slate-700">
+                                    {t("Color Total", "Jumla ya Rangi")}
+                                  </span>
+
+                                  <span className="text-sm font-bold text-[#E30613]">
+                                    {formatCurrency(
+                                      colorLines.reduce(
+                                        (sum, item) => sum + item.subtotal,
+                                        0
+                                      ),
+                                      currency
+                                    )}
+                                  </span>
+                                </div>
                               </div>
                             </div>
-
-                            <div className="flex items-center overflow-hidden rounded-md border border-slate-200 bg-white">
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  setSizeQuantitiesSelected((current) => ({
-                                    ...current,
-                                    [item.quantityKey]: Math.max(
-                                      1,
-                                      item.quantity - 1
-                                    ),
-                                  }))
-                                }
-                                className="h-8 w-8 text-sm text-slate-600 hover:bg-slate-50"
-                              >
-                                −
-                              </button>
-
-                              <input
-                                type="number"
-                                min={1}
-                                max={
-                                  item.stock > 0
-                                    ? item.stock
-                                    : undefined
-                                }
-                                value={item.quantity}
-                                onChange={(e) => {
-                                  const raw =
-                                    Number(
-                                      e.target.value
-                                    );
-
-                                  const safe =
-                                    Math.max(
-                                      1,
-                                      Number.isFinite(raw)
-                                        ? Math.floor(raw)
-                                        : 1
-                                    );
-
-                                  const finalQuantity =
-                                    item.stock > 0
-                                      ? Math.min(
-                                          safe,
-                                          item.stock
-                                        )
-                                      : safe;
-
-                                  setSizeQuantitiesSelected(
-                                    (current) => ({
-                                      ...current,
-                                      [item.quantityKey]:
-                                        finalQuantity,
-                                    })
-                                  );
-                                }}
-                                className="h-8 w-12 border-x border-slate-200 bg-white text-center text-xs outline-none focus:bg-red-50"
-                                aria-label={`${item.color} ${item.size} quantity`}
-                              />
-
-                              <button
-                                type="button"
-                                disabled={
-                                  item.stock > 0 &&
-                                  item.quantity >=
-                                    item.stock
-                                }
-                                onClick={() =>
-                                  setSizeQuantitiesSelected((current) => ({
-                                    ...current,
-                                    [item.quantityKey]:
-                                      item.stock > 0
-                                        ? Math.min(
-                                            item.quantity + 1,
-                                            item.stock
-                                          )
-                                        : item.quantity + 1,
-                                  }))
-                                }
-                                className="h-8 w-8 text-sm text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-300"
-                              >
-                                +
-                              </button>
-                            </div>
-                          </div>
-                        )
-                      )}
+                          );
+                        })}
+                      </div>
                     </div>
 
-                    <div className="mt-3 flex items-center justify-between rounded-lg bg-red-50 px-3 py-2.5">
+                    <div className="mt-2 flex items-center justify-between gap-3 rounded-lg bg-red-50 px-3 py-3">
                       <span className="text-xs font-semibold text-slate-700">
                         {t(
                           "Selected Total",
@@ -1493,7 +1556,7 @@ setProduct(item);
                   </div>
                 )}
 
-              {selectedSize.length === 0 && (
+              {selectedColorSizeLines.length === 0 && (
                 <div>
                   <p className="mb-1.5 text-xs font-medium text-slate-600">
                     {t("Quantity", "Idadi")}

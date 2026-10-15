@@ -59,6 +59,7 @@ export type Product = {
   description_sw?: string;
   image?: string;
   images?: string[];
+  videos?: string[];
   cost_price?: number;
   colors?: string[];
   colors_sw?: string[];
@@ -103,6 +104,7 @@ function mapProduct(p: any): Product {
     description_sw: p.description_sw || "",
     image: p.image || "",
     images: Array.isArray(p.images) ? p.images : [],
+    videos: Array.isArray(p.videos) ? p.videos : [],
     cost_price: Number(p.cost_price || 0),
     colors: Array.isArray(p.colors) ? p.colors : [],
     colors_sw: Array.isArray(p.colors_sw) ? p.colors_sw : [],
@@ -358,6 +360,7 @@ export async function saveProduct(product: Omit<Product, "id">) {
     description_sw: product.description_sw || "",
     image: product.image || "",
     images: product.images || [],
+    videos: product.videos || [],
     colors: normalizeProductColors(product.colors),
     sizes: product.sizes || [],
     size_prices: product.sizePrices || {},
@@ -442,6 +445,10 @@ export async function updateProduct(
 
   if (product.images !== undefined) {
     dbProduct.images = product.images;
+  }
+
+  if (product.videos !== undefined) {
+    dbProduct.videos = product.videos;
   }
 
   if (product.colors !== undefined) {

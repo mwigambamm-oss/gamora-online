@@ -432,23 +432,31 @@ const selectedColorSizeLines = selectedColor.flatMap((color) =>
           : [];
 
   const images = variantImages;
+  const productVideos = (product?.videos || []).slice(0, 2);
   const galleryItems = [
+    ...(productVideos.length ? [{ type: "video" as const, url: productVideos[0] }] : []),
     ...images.map((url) => ({ type: "image" as const, url })),
-    ...(product?.videos || []).map((url) => ({ type: "video" as const, url })),
+    ...(productVideos.length > 1 ? [{ type: "video" as const, url: productVideos[1] }] : []),
   ];
 
   /*
-   * AUTO SLIDE
+   * AUTOMATIC GALLERY:
+   * Videos play first/last; images advance automatically.
    */
   useEffect(() => {
-    if (galleryItems.length <= 1 || galleryItems.some((item) => item.type === "video")) return;
-    const timer = setInterval(() => {
+    if (galleryItems.length <= 1) return;
+
+    const currentItem = galleryItems[activeImage];
+    if (currentItem?.type === "video") return;
+
+    const timer = window.setTimeout(() => {
       setActiveImage((current) =>
         current >= galleryItems.length - 1 ? 0 : current + 1
       );
     }, 4000);
-    return () => clearInterval(timer);
-  }, [product?.id, galleryItems.length]);
+
+    return () => window.clearTimeout(timer);
+  }, [product?.id, galleryItems.length, activeImage, selectedColor.join("|")]);
 
   /*
    * RESET IMAGE WHEN PRODUCT CHANGES
@@ -772,9 +780,9 @@ const selectedColorSizeLines = selectedColor.flatMap((color) =>
   }
 
   /*
-   * ONLY SHOW 6 THUMBNAILS
+   * SHOW ALL GALLERY THUMBNAILS
    */
-  const visibleThumbnails = galleryItems.slice(0, 6);
+  const visibleThumbnails = galleryItems;
 
   /*
    * DISCOUNT
@@ -955,9 +963,20 @@ const selectedColorSizeLines = selectedColor.flatMap((color) =>
                     className="flex h-full w-full min-w-full flex-shrink-0 items-center justify-center bg-white"
                   >
                     {item.type === "video" ? (
-                      <video src={item.url} controls playsInline preload="metadata"
+                      <video
+                        key={`${item.url}-${index}-${activeImage}`}
+                        src={item.url}
+                        controls
+                        autoPlay
+                        muted
+                        playsInline
+                        preload="auto"
+                        onEnded={() => setActiveImage((current) =>
+                          current >= galleryItems.length - 1 ? 0 : current + 1
+                        )}
                         className="h-full w-full bg-black object-contain"
-                        aria-label={`${displayName || "Product"} video ${index + 1}`} />
+                        aria-label={`${displayName || "Product"} video ${index + 1}`}
+                      />
                     ) : (
                       <img src={item.url} alt={`${displayName || ""} ${index + 1}`}
                         className="h-full w-full object-contain object-center bg-white transition-transform duration-300 group-hover:scale-[1.02]" />

@@ -1688,20 +1688,18 @@ const selectedColorSizeLines = selectedColor.flatMap((color) =>
                       {t("Key Features", "Vipengele Muhimu")}
                     </h3>
 
-                    <div className="mt-3 rounded-lg border border-slate-100 bg-slate-50/50 px-4 py-3">
-                      <ul className="space-y-2.5">
-                        {displayKeyFeatures.map((feature, index) => (
-                          <li
-                            key={`${feature}-${index}`}
-                            className="flex items-start gap-2.5 text-xs leading-5 text-slate-600 sm:text-sm"
-                          >
-                            <span className="mt-1.5 flex h-1.5 w-1.5 shrink-0 rounded-full bg-[#E30613]" />
-                            <span className="min-w-0">
-                              {feature}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
+                    <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                      {displayKeyFeatures.map((feature, index) => (
+                        <div
+                          key={`${feature}-${index}`}
+                          className="flex min-w-0 items-start gap-2 rounded-lg border border-red-100/70 bg-red-50/25 px-3 py-2.5 text-xs leading-5 text-slate-600 sm:text-sm"
+                        >
+                          <span className="mt-1.5 flex h-1.5 w-1.5 shrink-0 rounded-full bg-[#E30613]" />
+                          <span className="min-w-0 break-words [overflow-wrap:anywhere]">
+                            {feature}
+                          </span>
+                        </div>
+                      ))}
                     </div>
                   </section>
                 )}
@@ -1721,7 +1719,7 @@ const selectedColorSizeLines = selectedColor.flatMap((color) =>
                       {t("Specifications", "Specifications")}
                     </h3>
 
-                    <div className="mt-3 overflow-hidden rounded-lg border border-red-100/70 bg-red-50/25">
+                    <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
                       {Object.entries(displaySpecifications).map(
                         ([key, value], index) => {
                           const isSameValue =
@@ -1731,23 +1729,21 @@ const selectedColorSizeLines = selectedColor.flatMap((color) =>
                           return (
                             <div
                               key={`${key}-${index}`}
-                              className="grid grid-cols-[minmax(100px,0.8fr)_minmax(0,1.2fr)] gap-3 border-b border-red-100/60 px-3 py-2.5 last:border-b-0 sm:grid-cols-[minmax(140px,0.8fr)_minmax(0,1.2fr)] sm:px-4"
+                              className="flex min-w-0 flex-col justify-center rounded-lg border border-red-100/70 bg-red-50/25 px-3 py-2.5"
                             >
                               {isSameValue ? (
-                                <>
-                                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-red-50 text-xs font-bold text-[#E30613]">
-                                    ✓
-                                  </span>
-                                  <span className="text-slate-600">
+                                <span className="flex min-w-0 items-start gap-1.5 text-sm text-slate-600">
+                                  <span className="mt-0.5 shrink-0 font-bold text-[#E30613]">✓</span>
+                                  <span className="min-w-0 break-words [overflow-wrap:anywhere]">
                                     {String(value)}
                                   </span>
-                                </>
+                                </span>
                               ) : (
                                 <>
-                                  <span className="font-semibold text-slate-700">
+                                  <span className="break-words text-xs font-semibold text-slate-700 [overflow-wrap:anywhere]">
                                     {key}
                                   </span>
-                                  <span className="text-slate-600">
+                                  <span className="mt-1 break-words text-sm text-slate-600 [overflow-wrap:anywhere]">
                                     {String(value)}
                                   </span>
                                 </>

@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { updateProduct } from "@/lib/products";
 
@@ -69,11 +69,19 @@ export default function NewAdminPage() {
   const [adminEmail, setAdminEmail] = useState("");
   const [active, setActive] = useState("Dashboard");
   const [activeLoaded, setActiveLoaded] = useState(false);
+  const lastLoggedSectionRef = useRef<string | null>(null);
+  const [focusProductId, setFocusProductId] = useState<string | null>(null);
 
   useEffect(() => {
     const savedTab = localStorage.getItem("gamora_admin_active_tab");
+    const params = new URLSearchParams(window.location.search);
+    const requestedSection = params.get("section");
+    const requestedProductId = params.get("productId");
 
-    if (savedTab) {
+    if (requestedSection === "Products" && requestedProductId) {
+      setActive("Products");
+      setFocusProductId(requestedProductId);
+    } else if (savedTab) {
       setActive(savedTab);
     }
 
@@ -84,6 +92,40 @@ export default function NewAdminPage() {
     if (!activeLoaded) return;
 
     localStorage.setItem("gamora_admin_active_tab", active);
+
+    // Record each admin section opened, including the initially restored tab.
+    if (lastLoggedSectionRef.current === active) return;
+    lastLoggedSectionRef.current = active;
+
+    void (async () => {
+      try {
+        const response = await fetch("/api/admin-new/audit-logs", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            action: `Opened section: ${active}`,
+            table_name: "admin_navigation",
+            record_id: active,
+            new_values: {
+              section: active,
+              path: window.location.pathname,
+            },
+          }),
+        });
+
+        if (!response.ok) {
+          const result = await response.json().catch(() => ({}));
+          console.error(
+            "Failed to record admin navigation:",
+            result.error || response.status
+          );
+        }
+      } catch (error) {
+        console.error("Failed to send admin navigation audit event:", error);
+      }
+    })();
   }, [active, activeLoaded]);
 const [period, setPeriod] = useState("Today");
 const [fromDate, setFromDate] = useState("");
@@ -365,7 +407,7 @@ return (
             {active === "Orders" ? (
               <OrdersModule />
             ) : active === "Products" ? (
-              <ProductsModule />
+              <ProductsModule focusProductId={focusProductId} />
             ) : active === "Categories" ? (
               <CategoriesModule />
             ) : active === "Inventory" ? (

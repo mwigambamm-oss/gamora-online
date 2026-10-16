@@ -34,7 +34,11 @@ const DEFAULT_CATEGORIES = [
   "Food & Beverages",
   "Pet Supplies",
 ];
-export default function ProductsModule() {
+export default function ProductsModule({
+  focusProductId,
+}: {
+  focusProductId?: string | number | null;
+} = {}) {
   const emptyForm = {
     name: "",
     price: "",
@@ -63,6 +67,7 @@ export default function ProductsModule() {
 
   const [editingId, setEditingId] = useState<number | null>(null);
   const restoreProductIdRef = useRef<number | null>(null);
+  const focusedProductRef = useRef<number | null>(null);
 
   const [showForm, setShowForm] = useState(false);
 
@@ -291,18 +296,48 @@ export default function ProductsModule() {
     "Other",
   ];
 
-  async function loadProducts() {
-    const data = await getProducts({
-      limit: 40,
-      offset: 0,
-      admin: true,
-    });
+  async function loadProducts(targetId?: number) {
+    const pageSize = 40;
+    let offset = 0;
+    let allProducts: Product[] = [];
+    let targetFound: Product | undefined;
 
-    setProducts(data);
-    setHasMoreProducts(data.length === 40);
+    while (true) {
+      const batch = await getProducts({
+        limit: pageSize,
+        offset,
+        admin: true,
+      });
 
-    const productCategories = data
-      .map((p) => p.category)
+      allProducts = [...allProducts, ...batch];
+
+      if (targetId !== undefined) {
+        targetFound = allProducts.find(
+          (product) => Number(product.id) === targetId
+        );
+      }
+
+      if (
+        (targetId !== undefined && targetFound) ||
+        batch.length < pageSize
+      ) {
+        break;
+      }
+
+      offset += batch.length;
+
+      if (batch.length === 0) {
+        break;
+      }
+    }
+
+    setProducts(allProducts);
+    setHasMoreProducts(
+      allProducts.length > 0 && allProducts.length % pageSize === 0
+    );
+
+    const productCategories = allProducts
+      .map((product) => product.category)
       .filter(Boolean);
 
     setCategories((current) =>
@@ -314,6 +349,13 @@ export default function ProductsModule() {
         ])
       )
     );
+
+    if (targetId !== undefined) {
+      setSelectedCategory("All Products");
+      if (targetFound) {
+        setSearch(targetFound.name || "");
+      }
+    }
 
     const restoreId = restoreProductIdRef.current;
 
@@ -331,19 +373,17 @@ export default function ProductsModule() {
             block: "center",
           });
 
-          element.classList.add(
-            "ring-2",
-            "ring-green-600"
-          );
+          element.classList.add("ring-2", "ring-green-600");
 
           window.setTimeout(() => {
-            element.classList.remove(
-              "ring-2",
-              "ring-green-600"
-            );
+            element.classList.remove("ring-2", "ring-green-600");
           }, 2000);
         }
       });
+    }
+
+    if (targetId !== undefined && !targetFound) {
+      console.warn(`Admin product ${targetId} was not found in the product list.`);
     }
   }
 
@@ -371,8 +411,53 @@ export default function ProductsModule() {
   }
 
   useEffect(() => {
-    loadProducts();
-  }, []);
+    const parsedId = Number(focusProductId);
+    const targetId =
+      focusProductId !== undefined &&
+      focusProductId !== null &&
+      String(focusProductId).trim() !== "" &&
+      Number.isSafeInteger(parsedId) &&
+      parsedId > 0
+        ? parsedId
+        : undefined;
+
+    void loadProducts(targetId);
+  }, [focusProductId]);
+
+  useEffect(() => {
+    const parsedId = Number(focusProductId);
+
+    if (
+      focusProductId === undefined ||
+      focusProductId === null ||
+      !Number.isSafeInteger(parsedId) ||
+      parsedId <= 0 ||
+      focusedProductRef.current === parsedId
+    ) {
+      return;
+    }
+
+    const productExists = products.some(
+      (product) => Number(product.id) === parsedId
+    );
+
+    if (!productExists) return;
+
+    const timer = window.setTimeout(() => {
+      const element = document.getElementById(`admin-product-${parsedId}`);
+      if (!element) return;
+
+      focusedProductRef.current = parsedId;
+      element.scrollIntoView({ behavior: "smooth", block: "center" });
+      element.classList.add("ring-2", "ring-green-600");
+
+      window.setTimeout(() => {
+        element.classList.remove("ring-2", "ring-green-600");
+      }, 3500);
+    }, 150);
+
+    return () => window.clearTimeout(timer);
+  }, [products, focusProductId, search, selectedCategory]);
 
 
   function handleChange(

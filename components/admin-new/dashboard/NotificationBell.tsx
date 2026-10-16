@@ -109,9 +109,23 @@ export default function NotificationBell({
         onClick={handleBellClick}
         aria-label="Open notifications"
         aria-expanded={open}
-        className="relative rounded-xl border border-[#CBD5E1] bg-[#E2E8F0] px-4 py-3 shadow-sm transition hover:bg-[#CBD5E1]"
+        className="relative inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[#E2E8F0] bg-white text-[#475569] shadow-sm transition hover:bg-[#F8FAFC] hover:text-[#E30613]"
       >
-        🔔
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
+          <path d="M10 21h4" />
+        </svg>
 
         {total > 0 && (
           <span className="absolute -right-1 -top-1 rounded-full bg-[#E30613] px-2 py-0.5 text-xs font-black text-white">

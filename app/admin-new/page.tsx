@@ -69,6 +69,10 @@ export default function NewAdminPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [adminEmail, setAdminEmail] = useState("");
+  const [adminPhotoUrl, setAdminPhotoUrl] = useState("/admin-picture.jpeg");
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const [photoMessage, setPhotoMessage] = useState("");
+  const photoInputRef = useRef<HTMLInputElement>(null);
   const [active, setActive] = useState("Dashboard");
   const [activeLoaded, setActiveLoaded] = useState(false);
   const lastLoggedSectionRef = useRef<string | null>(null);
@@ -132,6 +136,77 @@ export default function NewAdminPage() {
 const [period, setPeriod] = useState("Today");
 const [fromDate, setFromDate] = useState("");
 const [toDate, setToDate] = useState("");
+
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadAdminPhoto() {
+      try {
+        const response = await fetch("/api/admin-new/profile-photo", {
+          cache: "no-store",
+        });
+        if (!response.ok) return;
+
+        const result = await response.json();
+        if (!cancelled && result.url) {
+          setAdminPhotoUrl(result.url);
+        }
+      } catch (error) {
+        console.error("Could not load admin profile photo:", error);
+      }
+    }
+
+    void loadAdminPhoto();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  async function handleAdminPhotoChange(
+    event: React.ChangeEvent<HTMLInputElement>
+  ) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      setPhotoMessage("Chagua picha ya JPG, PNG au WebP.");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setPhotoMessage("Picha isizidi MB 5.");
+      return;
+    }
+
+    setPhotoUploading(true);
+    setPhotoMessage("");
+
+    try {
+      const formData = new FormData();
+      formData.append("photo", file);
+
+      const response = await fetch("/api/admin-new/profile-photo", {
+        method: "POST",
+        body: formData,
+      });
+      const result = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(result.error || "Imeshindwa kuhifadhi picha.");
+      }
+
+      setAdminPhotoUrl(result.url);
+      setPhotoMessage("Picha imehifadhiwa kikamilifu.");
+    } catch (error) {
+      setPhotoMessage(
+        error instanceof Error ? error.message : "Imeshindwa kuhifadhi picha."
+      );
+    } finally {
+      setPhotoUploading(false);
+    }
+  }
 
   useEffect(() => {
     async function loadAdmin() {
@@ -381,12 +456,44 @@ return (
                   </div>
                 </div>
 
-                <div className="h-20 w-20 overflow-hidden rounded-full border-2 border-[#0F766E] bg-[#E2E8F0]">
-                  <img
-                    src="/admin-picture.jpeg"
-                    alt="Administrator"
-                    className="h-full w-full object-contain"
+                <div className="flex flex-col items-center gap-1">
+                  <div className="h-20 w-20 overflow-hidden rounded-full border-2 border-[#0F766E] bg-[#E2E8F0]">
+                    <img
+                      src={adminPhotoUrl}
+                      alt="Administrator"
+                      onError={() => {
+                        if (adminPhotoUrl !== "/admin-picture.jpeg") {
+                          setAdminPhotoUrl("/admin-picture.jpeg");
+                        }
+                      }}
+                      className="h-full w-full object-cover object-center"
+                    />
+                  </div>
+
+                  <input
+                    ref={photoInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="hidden"
+                    onChange={handleAdminPhotoChange}
                   />
+
+                  <button
+                    type="button"
+                    disabled={photoUploading}
+                    onClick={() => photoInputRef.current?.click()}
+                    aria-label="Badili picha ya admin"
+                    title="Badili picha"
+                    className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-[#0F766E] text-xl font-semibold leading-none text-white shadow-sm hover:bg-[#0D6B63] disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {photoUploading ? "…" : "+"}
+                  </button>
+
+                  {photoMessage && (
+                    <p role="status" className="max-w-40 text-center text-[10px] text-slate-600">
+                      {photoMessage}
+                    </p>
+                  )}
                 </div>
 
                 {data && (

@@ -13,6 +13,7 @@ const NotificationsModule = dynamic(() => import("@/components/admin-new/Notific
 const ReviewsModule = dynamic(() => import("@/components/admin-new/ReviewsModule"));
 const ReportsModule = dynamic(() => import("@/components/admin-new/ReportsModule"));
 const AccountingModule = dynamic(() => import("@/components/admin-new/AccountingModule"));
+const TaxManagementModule = dynamic(() => import("@/components/admin-new/TaxManagementModule"));
 const PaymentsModule = dynamic(() => import("@/components/admin-new/PaymentsModule"));
 const CustomersModule = dynamic(() => import("@/components/admin-new/CustomersModule"));
 const InventoryModule = dynamic(() => import("@/components/admin-new/InventoryModule"));
@@ -56,6 +57,7 @@ const menu = [
   "Messages",
   "Payments",
   "Accounting",
+  "Tax Management",
   "Reports",
   "Notifications",
   "Admin Users",
@@ -418,6 +420,8 @@ return (
               <MessagesModule />
             ) : active === "Payments" ? (
               <PaymentsModule />
+            ) : active === "Tax Management" ? (
+              <TaxManagementModule />
             ) : active === "Accounting" ? (
               <AccountingModule />
             ) : active === "Reports" ? (

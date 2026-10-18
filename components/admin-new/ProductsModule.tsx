@@ -297,44 +297,21 @@ export default function ProductsModule({
   ];
 
   async function loadProducts(targetId?: number) {
-    const pageSize = 40;
-    let offset = 0;
-    let allProducts: Product[] = [];
-    let targetFound: Product | undefined;
+    const pageSize = 30;
+    const batch = await getProducts({
+      limit: pageSize,
+      offset: 0,
+      admin: true,
+    });
 
-    while (true) {
-      const batch = await getProducts({
-        limit: pageSize,
-        offset,
-        admin: true,
-      });
-
-      allProducts = [...allProducts, ...batch];
-
-      if (targetId !== undefined) {
-        targetFound = allProducts.find(
-          (product) => Number(product.id) === targetId
-        );
-      }
-
-      if (
-        (targetId !== undefined && targetFound) ||
-        batch.length < pageSize
-      ) {
-        break;
-      }
-
-      offset += batch.length;
-
-      if (batch.length === 0) {
-        break;
-      }
-    }
+    const allProducts: Product[] = batch;
+    const targetFound =
+      targetId !== undefined
+        ? allProducts.find((product) => Number(product.id) === targetId)
+        : undefined;
 
     setProducts(allProducts);
-    setHasMoreProducts(
-      allProducts.length > 0 && allProducts.length % pageSize === 0
-    );
+    setHasMoreProducts(allProducts.length === pageSize);
 
     const productCategories = allProducts
       .map((product) => product.category)
@@ -394,15 +371,22 @@ export default function ProductsModule({
     setLoadingMore(true);
 
     try {
+      const pageSize = 30;
       const data = await getProducts({
-        limit: 40,
+        limit: pageSize,
         offset: products.length,
         admin: true,
       });
 
-      setProducts((current) => [...current, ...data]);
+      setProducts((current) => {
+        const existingIds = new Set(current.map((product) => product.id));
+        const newProducts = data.filter(
+          (product) => !existingIds.has(product.id)
+        );
+        return [...current, ...newProducts];
+      });
 
-      if (data.length < 40) {
+      if (data.length < pageSize) {
         setHasMoreProducts(false);
       }
     } finally {

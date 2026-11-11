@@ -1,15 +1,24 @@
-import OpenAI from "openai";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+import OpenAI from "openai";
 
 export async function translateToSwahili(text: string): Promise<string> {
   if (!text?.trim()) return "";
 
-  const response = await openai.responses.create({
-    model: "gpt-5-mini",
-    input: `Translate the following ecommerce product content from English to natural Tanzanian Swahili.
+  const apiKey = process.env.OPENAI_API_KEY;
+
+  if (!apiKey) {
+    console.error("OPENAI_API_KEY is missing.");
+    throw new Error("Translation service is not configured.");
+  }
+
+  try {
+    const openai = new OpenAI({
+      apiKey,
+    });
+
+    const response = await openai.responses.create({
+      model: "gpt-5-mini",
+      input: `Translate the following ecommerce product content from English to natural Tanzanian Swahili.
 
 Rules:
 - Keep product names, model numbers, brand names and technical specifications unchanged where appropriate.
@@ -19,11 +28,14 @@ Rules:
 
 Text:
 ${text}`,
-  });
+    });
 
-  return response.output_text.trim();
+    return response.output_text?.trim() || text;
+  } catch (error) {
+    console.error("Translation error:", error);
+    throw error;
+  }
 }
-
 
 export async function translateSpecificationsToSwahili(
   specifications: Record<string, string>

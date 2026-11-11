@@ -399,99 +399,57 @@ export async function updateProduct(
 ) {
   const dbProduct: Record<string, any> = {};
 
-  if (product.name !== undefined) {
-    dbProduct.name = product.name;
+  if (product.name !== undefined) dbProduct.name = product.name;
+  if (product.name_sw !== undefined) dbProduct.name_sw = product.name_sw;
+  if (product.price !== undefined) dbProduct.price = Number(product.price);
+  if (product.oldPrice !== undefined) dbProduct.old_price = Number(product.oldPrice);
+  if (product.category !== undefined) dbProduct.category = product.category;
+  if (product.category_sw !== undefined) dbProduct.category_sw = product.category_sw;
+  if (product.stock !== undefined) dbProduct.stock = Number(product.stock);
+  if (product.cost_price !== undefined) dbProduct.cost_price = Number(product.cost_price);
+  if (product.description !== undefined) dbProduct.description = product.description;
+  if (product.description_sw !== undefined) dbProduct.description_sw = product.description_sw;
+  if (product.image !== undefined) dbProduct.image = product.image;
+  if (product.images !== undefined) dbProduct.images = product.images;
+  if (product.videos !== undefined) dbProduct.videos = product.videos;
+  if (product.colors !== undefined) dbProduct.colors = normalizeProductColors(product.colors);
+  if (product.colors_sw !== undefined) dbProduct.colors_sw = product.colors_sw;
+  if (product.sizes !== undefined) dbProduct.sizes = product.sizes;
+  if (product.sizes_sw !== undefined) dbProduct.sizes_sw = product.sizes_sw;
+  if (product.sizePrices !== undefined) dbProduct.size_prices = product.sizePrices;
+  if (product.sizeQuantities !== undefined) dbProduct.size_quantities = product.sizeQuantities;
+  if (product.storageOptions !== undefined) dbProduct.storage_options = product.storageOptions;
+  if (product.image_color_map !== undefined) dbProduct.image_color_map = product.image_color_map;
+  if (product.specifications !== undefined) dbProduct.specifications = product.specifications;
+  if (product.specifications_sw !== undefined) dbProduct.specifications_sw = product.specifications_sw;
+  if (product.discount !== undefined) dbProduct.discount = Number(product.discount);
+
+  if (Object.keys(dbProduct).length === 0) {
+    throw new Error("No product changes were provided.");
   }
 
-  if (product.name_sw !== undefined) {
-    dbProduct.name_sw = product.name_sw;
+  const response = await fetch("/api/admin-new/products", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    credentials: "same-origin",
+    body: JSON.stringify({
+      id,
+      product: dbProduct,
+    }),
+  });
+
+  const result = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    console.error("Failed to update product:", result.error);
+    throw new Error(result.error || "Failed to update product.");
   }
 
-  if (product.price !== undefined) {
-    dbProduct.price = Number(product.price);
+  if (!result.data) {
+    throw new Error("The server did not return the updated product.");
   }
 
-  if (product.oldPrice !== undefined) {
-    dbProduct.old_price = Number(product.oldPrice);
-  }
-
-  if (product.category !== undefined) {
-    dbProduct.category = product.category;
-  }
-
-  if (product.category_sw !== undefined) {
-    dbProduct.category_sw = product.category_sw;
-  }
-
-  if (product.stock !== undefined) {
-    dbProduct.stock = Number(product.stock);
-  }
-
-  if (product.cost_price !== undefined) {
-    dbProduct.cost_price = Number(product.cost_price);
-  }
-
-  if (product.description !== undefined) {
-    dbProduct.description = product.description;
-  }
-
-  if (product.description_sw !== undefined) {
-    dbProduct.description_sw = product.description_sw;
-  }
-
-  if (product.image !== undefined) {
-    dbProduct.image = product.image;
-  }
-
-  if (product.images !== undefined) {
-    dbProduct.images = product.images;
-  }
-
-  if (product.videos !== undefined) {
-    dbProduct.videos = product.videos;
-  }
-
-  if (product.colors !== undefined) {
-    dbProduct.colors = product.colors;
-  }
-
-  if (product.sizes !== undefined) {
-    dbProduct.sizes = product.sizes;
-  }
-
-  if (product.sizePrices !== undefined) {
-    dbProduct.size_prices = product.sizePrices || {};
-  }
-
-  if (product.image_color_map !== undefined) {
-    dbProduct.image_color_map = product.image_color_map || {};
-  }
-
-  if (product.specifications !== undefined) {
-    dbProduct.specifications = product.specifications || {};
-  }
-
-  if (product.specifications_sw !== undefined) {
-    dbProduct.specifications_sw = product.specifications_sw || {};
-  }
-
-  if (product.discount !== undefined) {
-    dbProduct.discount = Number(product.discount);
-  }
-
-  const { data, error } = await supabase
-    .from("products")
-    .update(dbProduct)
-    .eq("id", id)
-    .select("*")
-    .single();
-
-  if (error) {
-    console.error("Failed to update product:", error);
-    throw error;
-  }
-
-  return mapProduct(data);
+  return mapProduct(result.data);
 }
 
 export async function deleteProduct(id: number) {

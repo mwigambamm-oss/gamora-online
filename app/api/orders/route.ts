@@ -97,6 +97,8 @@ async function changeStock(
   items: OrderItem[],
   changed: { id: number; quantity: number }[]
 ) {
+  const quantities = new Map<number, number>();
+
   for (const item of items) {
     const productId = Number(item.id);
     const quantity = Number(item.quantity);
@@ -110,17 +112,21 @@ async function changeStock(
       throw new Error(`Invalid product or quantity for ${item.name}`);
     }
 
+    quantities.set(
+      productId,
+      (quantities.get(productId) || 0) + quantity
+    );
+  }
+
+  for (const [productId, quantity] of quantities) {
     const { data: product, error } = await db
       .from("products")
-      .select("id,name,price,cost_price,stock,approval_status")
+      .select("id,name,stock,approval_status")
       .eq("id", productId)
       .maybeSingle();
 
     if (error) throw error;
-
-    if (!product) {
-      throw new Error(`Product not found: ${item.name}`);
-    }
+    if (!product) throw new Error(`Product not found: ${productId}`);
 
     if (product.approval_status !== "approved") {
       throw new Error(`${product.name} is not approved for sale.`);
@@ -150,10 +156,7 @@ async function changeStock(
       );
     }
 
-    changed.push({
-      id: productId,
-      quantity,
-    });
+    changed.push({ id: productId, quantity });
   }
 }
 
@@ -196,7 +199,6 @@ function isInsideDarEsSalaam(
 export async function POST(request: Request) {
   let orderLockId = "";
   const changedStock: { id: number; quantity: number }[] = [];
-
   let db: ReturnType<typeof getAdminDatabase> | null = null;
 
   try {
@@ -256,7 +258,7 @@ export async function POST(request: Request) {
     const { data: existingOrder, error: duplicateError } = await db
       .from("orders")
       .select("id,order_number")
-      .eq("order_number", id)
+      .eq("order_number", orderLockId)
       .maybeSingle();
 
     if (duplicateError) throw duplicateError;
@@ -273,8 +275,7 @@ export async function POST(request: Request) {
 
     const initialStatus = status || "Pending";
     const isPickup = deliveryMethod === "pickup";
-
-    const safeSubtotal = Number(subtotal || 0);
+    const safeSubtotal = Number(subtotal ?? 0);
 
     if (!Number.isFinite(safeSubtotal) || safeSubtotal < 0) {
       return NextResponse.json(
@@ -311,10 +312,10 @@ export async function POST(request: Request) {
       !isInsideDarEsSalaam(latitude, longitude);
 
     const safeDeliveryFee =
-      isPickup || outsideDar ? 0 : Number(deliveryFee || 0);
+      isPickup || outsideDar ? 0 : Number(deliveryFee ?? 0);
 
     const safeDistanceKm =
-      isPickup || outsideDar ? 0 : Number(distanceKm || 0);
+      isPickup || outsideDar ? 0 : Number(distanceKm ?? 0);
 
     if (
       !Number.isFinite(safeDeliveryFee) ||
@@ -339,17 +340,15 @@ export async function POST(request: Request) {
       );
     }
 
-    // Reduce stock only after checking approved products and availability.
     if (initialStatus !== "Cancelled") {
       await changeStock(db, orderItems, changedStock);
     }
 
-    // Save the order using the server-side database client.
-    const { data, error } = await db
+    // Database generates the identity ID automatically.
+    const { data: order, error: orderError } = await db
       .from("orders")
       .insert({
-        id: Date.now(),
-        order_number: id,
+        order_number: orderLockId,
         customer_name: customer?.name || "",
         customer_phone: customer?.phone || "",
         customer_email: customer?.email || "",
@@ -370,12 +369,8 @@ export async function POST(request: Request) {
       .select()
       .single();
 
-    if (error) {
-      await rollbackStock(db, changedStock);
-      throw error;
-    }
+    if (orderError) throw orderError;
 
-    // Load product costs for the order item records.
     const productIds = [
       ...new Set(orderItems.map((item) => Number(item.id))),
     ];
@@ -385,39 +380,38 @@ export async function POST(request: Request) {
       .select("id,cost_price")
       .in("id", productIds);
 
-    if (productCostsError) {
-      await db.from("orders").delete().eq("id", data.id);
-      await rollbackStock(db, changedStock);
-      throw productCostsError;
-    }
+    if (productCostsError) throw productCostsError;
 
     const costMap = new Map<number, number>();
 
-    for (const cost of productCosts || []) {
-      costMap.set(Number(cost.id), Number(cost.cost_price || 0));
+    for (const product of productCosts || []) {
+      costMap.set(
+        Number(product.id),
+        Number(product.cost_price || 0)
+      );
     }
 
     const orderItemsRows = orderItems.map((item) => {
-      const quantity = Number(item.quantity || 1);
-      const price = Number(item.price || 0);
+      const quantity = Number(item.quantity);
+      const price = Number(item.price);
       const productId = Number(item.id);
-      const costPrice = costMap.get(productId) || 0;
       const itemSubtotal = price * quantity;
 
       return {
-        order_id: Number(data.id),
-        order_number: data.order_number,
+        order_id: Number(order.id),
+        order_number: order.order_number,
         product_id: productId,
         product_name: item.name,
         price,
         quantity,
         total: itemSubtotal,
         selling_price_at_sale: price,
-        cost_price_at_sale: costPrice,
+        cost_price_at_sale: costMap.get(productId) || 0,
         discount: 0,
         tax: 0,
         subtotal: itemSubtotal,
-        created_at: new Date().toISOString(),
+        selected_color: item.selectedColor || null,
+        selected_size: item.selectedSize || null,
       };
     });
 
@@ -425,23 +419,18 @@ export async function POST(request: Request) {
       .from("order_items")
       .insert(orderItemsRows);
 
-    if (orderItemsError) {
-      await db.from("orders").delete().eq("id", data.id);
-      await rollbackStock(db, changedStock);
-      throw orderItemsError;
-    }
+    if (orderItemsError) throw orderItemsError;
 
-    console.log("ORDER ITEMS SAVED:", orderItemsRows);
+    console.log("ORDER CREATED:", order.order_number);
 
-    // Telegram notification
     try {
       const { orderRobotNotification } = await import("@/lib/robot");
 
       await orderRobotNotification({
-        order_number: data.order_number,
-        customer_name: data.customer_name,
-        customer_phone: data.customer_phone,
-        customer_address: data.customer_address,
+        order_number: order.order_number,
+        customer_name: order.customer_name,
+        customer_phone: order.customer_phone,
+        customer_address: order.customer_address,
         location: location || null,
         distance_km: Number(distanceKm || 0),
         delivery_method: deliveryMethod || "delivery",
@@ -449,22 +438,33 @@ export async function POST(request: Request) {
           ...item,
           image: item.image || "",
         })),
-        subtotal: Number(data.subtotal || 0),
-        delivery_fee: Number(data.delivery_fee || 0),
-        total: Number(data.total || 0),
-        status: data.status || "Pending",
+        subtotal: Number(order.subtotal || 0),
+        delivery_fee: Number(order.delivery_fee || 0),
+        total: Number(order.total || 0),
+        status: order.status || "Pending",
       });
     } catch (telegramError) {
       console.error("Telegram notification failed:", telegramError);
     }
 
-    return NextResponse.json(data, { status: 201 });
+    return NextResponse.json(order, { status: 201 });
   } catch (error) {
-    if (db && changedStock.length) {
-      await rollbackStock(db, changedStock);
-    }
-
+    // If order creation failed after the order row was saved,
+    // remove only that incomplete order and restore stock.
     console.error("Create order error:", error);
+
+    if (db) {
+      if (orderLockId) {
+        await db
+          .from("orders")
+          .delete()
+          .eq("order_number", orderLockId);
+      }
+
+      if (changedStock.length) {
+        await rollbackStock(db, changedStock);
+      }
+    }
 
     return NextResponse.json(
       {
@@ -484,7 +484,6 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    // Only the authenticated Admin may delete an order.
     const authorized = await isAuthorizedAdmin();
 
     if (!authorized) {
@@ -495,7 +494,6 @@ export async function DELETE(request: Request) {
     }
 
     const db = getAdminDatabase();
-
     const body = await request.json().catch(() => ({}));
 
     const id = String(
@@ -546,12 +544,21 @@ export async function DELETE(request: Request) {
     const items = Array.isArray(order.items) ? order.items : [];
 
     if (stockStatuses.includes(order.status || "Pending")) {
+      const quantities = new Map<number, number>();
+
       for (const item of items) {
         const productId = Number(item?.id);
         const quantity = Number(item?.quantity || 0);
 
-        if (!productId || quantity <= 0) continue;
+        if (productId > 0 && quantity > 0) {
+          quantities.set(
+            productId,
+            (quantities.get(productId) || 0) + quantity
+          );
+        }
+      }
 
+      for (const [productId, quantity] of quantities) {
         const { data: product, error: productError } = await db
           .from("products")
           .select("stock")

@@ -1,73 +1,91 @@
+
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+function escapeHtml(value: string) {
+  return value.replace(/[&<>"']/g, (character) => {
+    const entities: Record<string, string> = {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;",
+    };
 
-export async function POST(req: Request){
-
-try{
-
-const {email, reply} = await req.json();
-
-if(!email || !reply){
-return NextResponse.json(
-{error:"Missing fields"},
-{status:400}
-);
+    return entities[character];
+  });
 }
 
+export async function POST(req: Request) {
+  try {
+    const { email, reply } = await req.json();
 
-const result = await resend.emails.send({
+    if (
+      typeof email !== "string" ||
+      typeof reply !== "string" ||
+      !email.trim() ||
+      !reply.trim()
+    ) {
+      return NextResponse.json(
+        { error: "Missing or invalid fields" },
+        { status: 400 }
+      );
+    }
 
-from: process.env.RESEND_FROM_EMAIL!,
+    const apiKey = process.env.RESEND_API_KEY;
+    const fromEmail = process.env.RESEND_FROM_EMAIL;
 
-to: email,
+    if (!apiKey || !fromEmail) {
+      console.error("Resend environment variables are missing.");
 
-replyTo: email,
+      return NextResponse.json(
+        { error: "Email service is not configured." },
+        { status: 503 }
+      );
+    }
 
-subject:"Reply from GAMORA ONLINE",
+    const resend = new Resend(apiKey);
 
-html:`
-<div style="font-family:Arial">
+    const safeReply = escapeHtml(reply.trim()).replace(/\r?\n/g, "<br/>");
 
-<h2>GAMORA ONLINE</h2>
+    const { data, error } = await resend.emails.send({
+      from: fromEmail,
+      to: email.trim(),
+      subject: "Reply from GAMORA ONLINE",
+      html: `
+        <div style="font-family:Arial,sans-serif">
+          <h2>GAMORA ONLINE</h2>
+          <p>${safeReply}</p>
+          <br/>
+          <hr/>
+          <p style="color:#777;font-size:12px">
+            Reply from GAMORA ONLINE Customer Support
+          </p>
+        </div>
+      `,
+    });
 
-<p>${reply}</p>
+    if (error) {
+      console.error("RESEND ERROR:", error);
 
-<br/>
+      return NextResponse.json(
+        { error: "Failed to send email." },
+        { status: 502 }
+      );
+    }
 
-<hr/>
+    console.log("RESEND SUCCESS:", data);
 
-<p style="color:#777;font-size:12px">
-Reply from GAMORA ONLINE Customer Support
-</p>
+    return NextResponse.json({
+      success: true,
+      result: data,
+    });
+  } catch (error) {
+    console.error("RESEND ERROR:", error);
 
-</div>
-`
-
-});
-
-
-console.log("RESEND RESULT:", result);
-
-
-return NextResponse.json({
-success:true,
-result
-});
-
-
-}catch(error:any){
-
-console.error("RESEND ERROR:", error);
-
-return NextResponse.json(
-{
-error:error.message || "Server error"
-},
-{status:500}
-);
-
-}
-
+    return NextResponse.json(
+      { error: "Server error while sending email." },
+      { status: 500 }
+    );
+  }
 }

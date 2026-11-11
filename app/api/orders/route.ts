@@ -705,3 +705,39 @@ export async function DELETE(request: Request) {
     );
   }
 }
+
+export async function GET() {
+  try {
+    const authorized = await isAuthorizedAdmin();
+
+    if (!authorized) {
+      return NextResponse.json(
+        { error: "Unauthorized. Admin access is required." },
+        { status: 403 }
+      );
+    }
+
+    const db = getAdminDatabase();
+
+    const { data, error } = await db
+      .from("orders")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    return NextResponse.json(data || []);
+  } catch (error) {
+    console.error("GET ORDERS ERROR:", error);
+
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to load orders.",
+      },
+      { status: 500 }
+    );
+  }
+}

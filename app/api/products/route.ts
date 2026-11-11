@@ -1,12 +1,11 @@
+
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
 export async function GET() {
   try {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key =
-      process.env.SUPABASE_SERVICE_ROLE_KEY ||
-      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+    const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
     if (!url || !key) {
       return NextResponse.json(
@@ -20,13 +19,14 @@ export async function GET() {
     const { data, error } = await supabase
       .from("products")
       .select("*")
+      .eq("approval_status", "approved")
       .order("id", { ascending: false });
 
     if (error) {
       console.error("Products API error:", error);
 
       return NextResponse.json(
-        { error: error.message },
+        { error: "Failed to load products" },
         { status: 500 }
       );
     }

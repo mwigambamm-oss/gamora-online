@@ -1,59 +1,108 @@
+
 import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 import { supabase } from "@/lib/supabase";
+
+function getAdminDatabase() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!url || !serviceKey) {
+    throw new Error("Supabase server environment variables are missing.");
+  }
+
+  return createClient(url, serviceKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
+}
+
+async function isAuthorizedAdmin() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+
+  if (!url || !publishableKey) return false;
+
+  const cookieStore = await cookies();
+
+  const authClient = createServerClient(url, publishableKey, {
+    cookies: {
+      getAll() {
+        return cookieStore.getAll();
+      },
+      setAll(cookiesToSet) {
+        try {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            cookieStore.set(name, value, options);
+          });
+        } catch {
+          // Cookie updates may not be available in this request context.
+        }
+      },
+    },
+  });
+
+  const { data, error } = await authClient.auth.getUser();
+
+  if (error || !data.user) return false;
+
+  return (
+    data.user.email?.toLowerCase() ===
+    "officialgamoraonline@gmail.com"
+  );
+}
 
 export async function PATCH(request: Request) {
   try {
-    const body = await request.json();
+    const authorized = await isAuthorizedAdmin();
 
-    const orderNumber = String(
-      body.order_number || ""
-    ).trim();
-
-    const status = String(
-      body.status || ""
-    ).trim();
-
-    if (!orderNumber || !status) {
+    if (!authorized) {
       return NextResponse.json(
-        {
-          error: "Missing order number or status",
-        },
-        {
-          status: 400,
-        }
+        { error: "Unauthorized. Admin access is required." },
+        { status: 403 }
       );
     }
 
-    const { data, error } = await supabase
+    const body = await request.json();
+
+    const orderNumber = String(
+      body.order_number || body.id || ""
+    ).trim();
+
+    const status = String(body.status || "").trim();
+
+    if (!orderNumber || !status) {
+      return NextResponse.json(
+        { error: "Missing order number or status." },
+        { status: 400 }
+      );
+    }
+
+    const db = getAdminDatabase();
+
+    const { data, error } = await db
       .from("orders")
-      .update({
-        status,
-      })
+      .update({ status })
       .eq("order_number", orderNumber)
       .select()
       .single();
 
     if (error) {
-      console.error(
-        "Status update error:",
-        error
-      );
+      console.error("Status update error:", error);
 
       return NextResponse.json(
-        {
-          error: error.message,
-        },
-        {
-          status: 500,
-        }
+        { error: error.message },
+        { status: 500 }
       );
     }
 
     // Automatically record delivery cost when an order is delivered.
-    // The customer-paid delivery_fee remains Delivery Income.
-    // This creates the matching Transport / Delivery expense automatically.
-    if (status.toLowerCase() === "delivered") {
-      try {
+    try {
+      if (status.toLowerCase() === "delivered") {
         const deliveryFee = Number(data?.delivery_fee || 0);
 
         if (deliveryFee > 0) {
@@ -67,10 +116,7 @@ export async function PATCH(request: Request) {
               .maybeSingle();
 
           if (expenseCheckError) {
-            console.error(
-              "Delivery expense check failed:",
-              expenseCheckError
-            );
+            console.error("Delivery expense check failed:", expenseCheckError);
           } else if (!existingExpense) {
             const { error: expenseError } = await supabase
               .from("expenses")
@@ -83,58 +129,37 @@ export async function PATCH(request: Request) {
               });
 
             if (expenseError) {
-              console.error(
-                "Automatic delivery expense creation failed:",
-                expenseError
-              );
-            } else {
-              console.log(
-                `Automatic delivery expense created: ${orderNumber} - TZS ${deliveryFee}`
-              );
+              console.error("Automatic delivery expense creation failed:", expenseError);
             }
-          } else {
-            console.log(
-              `Delivery expense already exists for ${orderNumber}; skipping duplicate.`
-            );
           }
         }
-      } catch (deliveryExpenseError) {
-        console.error(
-          "Automatic delivery expense processing failed:",
-          deliveryExpenseError
-        );
       }
+    } catch (deliveryExpenseError) {
+      console.error("Automatic delivery expense processing failed:", deliveryExpenseError);
     }
 
     try {
-      const {
-        syncTelegramOrderStatus,
-      } = await import("@/lib/robot");
-
-      await syncTelegramOrderStatus(
-        orderNumber,
-        status
-      );
+      const { syncTelegramOrderStatus } = await import("@/lib/robot");
+      await syncTelegramOrderStatus(orderNumber, status);
     } catch (telegramError) {
-      console.error(
-        "Telegram status sync failed:",
-        telegramError
-      );
+      console.error("Telegram status sync failed:", telegramError);
     }
 
     return NextResponse.json({
       success: true,
       order: data,
     });
+  } catch (error) {
+    console.error("PATCH ORDER STATUS ERROR:", error);
 
-  } catch (error: any) {
     return NextResponse.json(
       {
-        error: error.message,
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to update order status.",
       },
-      {
-        status: 500,
-      }
+      { status: 500 }
     );
   }
 }

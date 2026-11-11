@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import { supabase } from "@/lib/supabase";
+import { timingSafeEqual } from "node:crypto";
 
 function getAdminDatabase() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -19,6 +19,19 @@ function getAdminDatabase() {
       persistSession: false,
     },
   });
+}
+
+function verifyTelegramSecret(suppliedSecret: string | null) {
+  const savedSecret = process.env.TELEGRAM_STATUS_SYNC_SECRET;
+
+  if (!savedSecret || !suppliedSecret) return false;
+
+  const saved = Buffer.from(savedSecret);
+  const supplied = Buffer.from(suppliedSecret);
+
+  if (saved.length !== supplied.length) return false;
+
+  return timingSafeEqual(saved, supplied);
 }
 
 async function isAuthorizedAdmin() {
@@ -58,13 +71,19 @@ async function isAuthorizedAdmin() {
 
 export async function PATCH(request: Request) {
   try {
-    const authorized = await isAuthorizedAdmin();
+    const isTelegram = verifyTelegramSecret(
+      request.headers.get("x-telegram-sync-secret")
+    );
 
-    if (!authorized) {
-      return NextResponse.json(
-        { error: "Unauthorized. Admin access is required." },
-        { status: 403 }
-      );
+    if (!isTelegram) {
+      const authorized = await isAuthorizedAdmin();
+
+      if (!authorized) {
+        return NextResponse.json(
+          { error: "Unauthorized. Admin access is required." },
+          { status: 403 }
+        );
+      }
     }
 
     const body = await request.json();
@@ -100,14 +119,14 @@ export async function PATCH(request: Request) {
       );
     }
 
-    // Automatically record delivery cost when an order is delivered.
+    // Record delivery expense once when an order is delivered.
     try {
       if (status.toLowerCase() === "delivered") {
         const deliveryFee = Number(data?.delivery_fee || 0);
 
         if (deliveryFee > 0) {
           const { data: existingExpense, error: expenseCheckError } =
-            await supabase
+            await db
               .from("expenses")
               .select("id")
               .eq("category", "Transport / Delivery")
@@ -116,9 +135,12 @@ export async function PATCH(request: Request) {
               .maybeSingle();
 
           if (expenseCheckError) {
-            console.error("Delivery expense check failed:", expenseCheckError);
+            console.error(
+              "Delivery expense check failed:",
+              expenseCheckError
+            );
           } else if (!existingExpense) {
-            const { error: expenseError } = await supabase
+            const { error: expenseError } = await db
               .from("expenses")
               .insert({
                 title: `Delivery - ${orderNumber}`,
@@ -129,20 +151,29 @@ export async function PATCH(request: Request) {
               });
 
             if (expenseError) {
-              console.error("Automatic delivery expense creation failed:", expenseError);
+              console.error(
+                "Automatic delivery expense creation failed:",
+                expenseError
+              );
             }
           }
         }
       }
     } catch (deliveryExpenseError) {
-      console.error("Automatic delivery expense processing failed:", deliveryExpenseError);
+      console.error(
+        "Automatic delivery expense processing failed:",
+        deliveryExpenseError
+      );
     }
 
-    try {
-      const { syncTelegramOrderStatus } = await import("@/lib/robot");
-      await syncTelegramOrderStatus(orderNumber, status);
-    } catch (telegramError) {
-      console.error("Telegram status sync failed:", telegramError);
+    // Do not echo Telegram-originated updates back to Telegram.
+    if (!isTelegram) {
+      try {
+        const { syncTelegramOrderStatus } = await import("@/lib/robot");
+        await syncTelegramOrderStatus(orderNumber, status);
+      } catch (telegramError) {
+        console.error("Telegram status sync failed:", telegramError);
+      }
     }
 
     return NextResponse.json({

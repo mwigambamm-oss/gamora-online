@@ -1,5 +1,8 @@
+
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@supabase/supabase-js";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
 const processingOrders = new Set<string>();
 
@@ -37,20 +40,79 @@ type OrderBody = {
   createdAt?: string;
 };
 
-async function changeStock(items: OrderItem[]) {
-  const changed: { id: number; quantity: number }[] = [];
+function getAdminDatabase() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
+  if (!url || !serviceKey) {
+    throw new Error("Supabase server environment variables are missing.");
+  }
+
+  return createClient(url, serviceKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
+}
+
+async function isAuthorizedAdmin() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const publishableKey =
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+
+  if (!url || !publishableKey) return false;
+
+  const cookieStore = await cookies();
+
+  const authClient = createServerClient(url, publishableKey, {
+    cookies: {
+      getAll() {
+        return cookieStore.getAll();
+      },
+      setAll(cookiesToSet) {
+        try {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            cookieStore.set(name, value, options);
+          });
+        } catch {
+          // Cookie updates may not be available in this request context.
+        }
+      },
+    },
+  });
+
+  const { data, error } = await authClient.auth.getUser();
+
+  if (error || !data.user) return false;
+
+  return (
+    data.user.email?.toLowerCase() ===
+    "officialgamoraonline@gmail.com"
+  );
+}
+
+async function changeStock(
+  db: ReturnType<typeof getAdminDatabase>,
+  items: OrderItem[],
+  changed: { id: number; quantity: number }[]
+) {
   for (const item of items) {
     const productId = Number(item.id);
     const quantity = Number(item.quantity);
 
-    if (!productId || quantity <= 0) {
+    if (
+      !Number.isInteger(productId) ||
+      productId <= 0 ||
+      !Number.isInteger(quantity) ||
+      quantity <= 0
+    ) {
       throw new Error(`Invalid product or quantity for ${item.name}`);
     }
 
-    const { data: product, error } = await supabase
+    const { data: product, error } = await db
       .from("products")
-      .select("id,name,price,cost_price,stock")
+      .select("id,name,price,cost_price,stock,approval_status")
       .eq("id", productId)
       .maybeSingle();
 
@@ -58,6 +120,10 @@ async function changeStock(items: OrderItem[]) {
 
     if (!product) {
       throw new Error(`Product not found: ${item.name}`);
+    }
+
+    if (product.approval_status !== "approved") {
+      throw new Error(`${product.name} is not approved for sale.`);
     }
 
     const stock = Number(product.stock || 0);
@@ -68,43 +134,51 @@ async function changeStock(items: OrderItem[]) {
       );
     }
 
-    const { error: updateError } = await supabase
+    const { data: updatedProduct, error: updateError } = await db
       .from("products")
       .update({ stock: stock - quantity })
-      .eq("id", productId);
+      .eq("id", productId)
+      .eq("stock", stock)
+      .select("id")
+      .maybeSingle();
 
     if (updateError) throw updateError;
+
+    if (!updatedProduct) {
+      throw new Error(
+        `Stock changed while processing ${product.name}. Please try again.`
+      );
+    }
 
     changed.push({
       id: productId,
       quantity,
     });
   }
-
-  return changed;
 }
 
 async function rollbackStock(
+  db: ReturnType<typeof getAdminDatabase>,
   items: { id: number; quantity: number }[]
 ) {
-  for (const item of items) {
-    const { data: product } = await supabase
+  for (const item of [...items].reverse()) {
+    const { data: product, error } = await db
       .from("products")
       .select("stock")
       .eq("id", item.id)
       .maybeSingle();
 
-    if (!product) continue;
+    if (error || !product) continue;
 
-    await supabase
+    await db
       .from("products")
       .update({
-        stock:
-          Number(product.stock || 0) +
-          Number(item.quantity),
+        stock: Number(product.stock || 0) + item.quantity,
       })
       .eq("id", item.id);
   }
+
+  items.length = 0;
 }
 
 function isInsideDarEsSalaam(
@@ -121,9 +195,13 @@ function isInsideDarEsSalaam(
 
 export async function POST(request: Request) {
   let orderLockId = "";
-  let changedStock: { id: number; quantity: number }[] = [];
+  const changedStock: { id: number; quantity: number }[] = [];
+
+  let db: ReturnType<typeof getAdminDatabase> | null = null;
 
   try {
+    db = getAdminDatabase();
+
     const body = (await request.json()) as OrderBody;
 
     const {
@@ -145,41 +223,41 @@ export async function POST(request: Request) {
 
     if (!orderItems.length) {
       return NextResponse.json(
-        {
-          error: "Order has no products.",
-        },
+        { error: "Order has no products." },
         { status: 400 }
       );
     }
 
     if (!id) {
       return NextResponse.json(
-        {
-          error: "Order number is required.",
-        },
+        { error: "Order number is required." },
         { status: 400 }
       );
     }
 
-    orderLockId = String(id);
+    orderLockId = String(id).trim();
+
+    if (!orderLockId || orderLockId.length > 100) {
+      return NextResponse.json(
+        { error: "Invalid order number." },
+        { status: 400 }
+      );
+    }
 
     if (processingOrders.has(orderLockId)) {
       return NextResponse.json(
-        {
-          error: "This order is already being processed.",
-        },
+        { error: "This order is already being processed." },
         { status: 409 }
       );
     }
 
     processingOrders.add(orderLockId);
 
-    const { data: existingOrder, error: duplicateError } =
-      await supabase
-        .from("orders")
-        .select("id,order_number")
-        .eq("order_number", id)
-        .maybeSingle();
+    const { data: existingOrder, error: duplicateError } = await db
+      .from("orders")
+      .select("id,order_number")
+      .eq("order_number", id)
+      .maybeSingle();
 
     if (duplicateError) throw duplicateError;
 
@@ -198,15 +276,18 @@ export async function POST(request: Request) {
 
     const safeSubtotal = Number(subtotal || 0);
 
+    if (!Number.isFinite(safeSubtotal) || safeSubtotal < 0) {
+      return NextResponse.json(
+        { error: "Invalid order subtotal." },
+        { status: 400 }
+      );
+    }
+
     const latitude =
-      location?.latitude != null
-        ? Number(location.latitude)
-        : null;
+      location?.latitude != null ? Number(location.latitude) : null;
 
     const longitude =
-      location?.longitude != null
-        ? Number(location.longitude)
-        : null;
+      location?.longitude != null ? Number(location.longitude) : null;
 
     if (
       !isPickup &&
@@ -218,10 +299,7 @@ export async function POST(request: Request) {
       )
     ) {
       return NextResponse.json(
-        {
-          error:
-            "Delivery location is required.",
-        },
+        { error: "Delivery location is required." },
         { status: 400 }
       );
     }
@@ -230,306 +308,163 @@ export async function POST(request: Request) {
       !isPickup &&
       latitude !== null &&
       longitude !== null &&
-      !isInsideDarEsSalaam(
-        latitude,
-        longitude
-      );
+      !isInsideDarEsSalaam(latitude, longitude);
 
     const safeDeliveryFee =
-      isPickup || outsideDar
-        ? 0
-        : Number(deliveryFee || 0);
+      isPickup || outsideDar ? 0 : Number(deliveryFee || 0);
 
     const safeDistanceKm =
-      isPickup || outsideDar
-        ? 0
-        : Number(distanceKm || 0);
+      isPickup || outsideDar ? 0 : Number(distanceKm || 0);
+
+    if (
+      !Number.isFinite(safeDeliveryFee) ||
+      safeDeliveryFee < 0 ||
+      !Number.isFinite(safeDistanceKm) ||
+      safeDistanceKm < 0
+    ) {
+      return NextResponse.json(
+        { error: "Invalid delivery information." },
+        { status: 400 }
+      );
+    }
 
     const safeTotal = isPickup
       ? safeSubtotal
-      : Number(
-          total ??
-            safeSubtotal +
-              safeDeliveryFee
-        );
+      : Number(total ?? safeSubtotal + safeDeliveryFee);
 
-    /*
-     * REDUCE STOCK
-     */
-    if (initialStatus !== "Cancelled") {
-      changedStock = await changeStock(orderItems);
+    if (!Number.isFinite(safeTotal) || safeTotal < 0) {
+      return NextResponse.json(
+        { error: "Invalid order total." },
+        { status: 400 }
+      );
     }
 
-    /*
-     * SAVE ORDER
-     */
-    const { data, error } = await supabase
+    // Reduce stock only after checking approved products and availability.
+    if (initialStatus !== "Cancelled") {
+      await changeStock(db, orderItems, changedStock);
+    }
+
+    // Save the order using the server-side database client.
+    const { data, error } = await db
       .from("orders")
       .insert({
         id: Date.now(),
         order_number: id,
-
-        customer_name:
-          customer?.name || "",
-
-        customer_phone:
-          customer?.phone || "",
-
-        customer_email:
-          customer?.email || "",
-
-        customer_notes:
-          customer?.notes || "",
-
-        customer_address:
-          customer?.address || "",
-
-        delivery_method:
-          isPickup
-            ? "pickup"
-            : "delivery",
-
-        latitude:
-          latitude,
-
-        longitude:
-          longitude,
-
-        distance_km:
-          isPickup
-            ? null
-            : safeDistanceKm,
-
-        delivery_fee:
-          safeDeliveryFee,
-
+        customer_name: customer?.name || "",
+        customer_phone: customer?.phone || "",
+        customer_email: customer?.email || "",
+        customer_notes: customer?.notes || "",
+        customer_address: customer?.address || "",
+        delivery_method: isPickup ? "pickup" : "delivery",
+        latitude,
+        longitude,
+        distance_km: isPickup ? null : safeDistanceKm,
+        delivery_fee: safeDeliveryFee,
         items: orderItems,
-
-        subtotal:
-          safeSubtotal,
-
-        discount_total:
-          Number(discountTotal || 0),
-
-        total:
-          safeTotal,
-
-        status:
-          initialStatus,
-
-        created_at:
-          createdAt ||
-          new Date().toISOString(),
+        subtotal: safeSubtotal,
+        discount_total: Number(discountTotal || 0),
+        total: safeTotal,
+        status: initialStatus,
+        created_at: createdAt || new Date().toISOString(),
       })
       .select()
       .single();
 
     if (error) {
-      if (changedStock.length) {
-        await rollbackStock(changedStock);
-      }
-
-      console.error(
-        "FAILED TO SAVE ORDER:",
-        error
-      );
-
-      return NextResponse.json(
-        {
-          error:
-            error.message ||
-            "Supabase insert failed",
-
-          code:
-            error.code || null,
-
-          details:
-            error.details || null,
-
-          hint:
-            error.hint || null,
-        },
-        { status: 500 }
-      );
+      await rollbackStock(db, changedStock);
+      throw error;
     }
 
-    /*
-     * SAVE ORDER ITEMS
-     *
-     * Existing order_items table requires:
-     * order_id
-     * product_name
-     * price
-     * quantity
-     * total
-     *
-     * It also contains the business-control columns.
-     */
-    const productIds = orderItems.map((item) => Number(item.id));
+    // Load product costs for the order item records.
+    const productIds = [
+      ...new Set(orderItems.map((item) => Number(item.id))),
+    ];
 
-    const { data: productCosts, error: productCostsError } =
-  await supabase
-    .from("products")
-    .select("id,cost_price")
-    .in("id", productIds);
+    const { data: productCosts, error: productCostsError } = await db
+      .from("products")
+      .select("id,cost_price")
+      .in("id", productIds);
 
     if (productCostsError) {
-      console.error(
-        "PRODUCT COSTS LOAD FAILED:",
-        productCostsError
-      );
-
-      return NextResponse.json(
-        {
-          error: "Order saved, but product costs could not be loaded.",
-          details: productCostsError.message,
-          code: productCostsError.code || null,
-          hint: productCostsError.hint || null,
-        },
-        { status: 500 }
-      );
+      await db.from("orders").delete().eq("id", data.id);
+      await rollbackStock(db, changedStock);
+      throw productCostsError;
     }
 
     const costMap = new Map<number, number>();
 
-for (const cost of productCosts || []) {
-  costMap.set(
-    Number(cost.id),
-    Number(cost.cost_price || 0)
-  );
-}
+    for (const cost of productCosts || []) {
+      costMap.set(Number(cost.id), Number(cost.cost_price || 0));
+    }
 
     const orderItemsRows = orderItems.map((item) => {
       const quantity = Number(item.quantity || 1);
       const price = Number(item.price || 0);
       const productId = Number(item.id);
-
       const costPrice = costMap.get(productId) || 0;
-
-      const subtotal = price * quantity;
+      const itemSubtotal = price * quantity;
 
       return {
         order_id: Number(data.id),
         order_number: data.order_number,
-
         product_id: productId,
         product_name: item.name,
-
         price,
         quantity,
-        total: subtotal,
-
+        total: itemSubtotal,
         selling_price_at_sale: price,
         cost_price_at_sale: costPrice,
-
         discount: 0,
         tax: 0,
-        subtotal,
-
+        subtotal: itemSubtotal,
         created_at: new Date().toISOString(),
       };
     });
 
-    const { error: orderItemsError } = await supabase
+    const { error: orderItemsError } = await db
       .from("order_items")
       .insert(orderItemsRows);
 
     if (orderItemsError) {
-      console.error(
-        "ORDER ITEMS SAVE FAILED:",
-        orderItemsError
-      );
-
-      return NextResponse.json(
-        {
-          error: "Order saved, but order items could not be saved.",
-          details: orderItemsError.message,
-          code: orderItemsError.code || null,
-          hint: orderItemsError.hint || null,
-        },
-        { status: 500 }
-      );
+      await db.from("orders").delete().eq("id", data.id);
+      await rollbackStock(db, changedStock);
+      throw orderItemsError;
     }
 
-    console.log(
-      "ORDER ITEMS SAVED:",
-      orderItemsRows
-    );
-    /*
-     * TELEGRAM NOTIFICATION
-     */
+    console.log("ORDER ITEMS SAVED:", orderItemsRows);
+
+    // Telegram notification
     try {
-      const {
-        orderRobotNotification,
-      } = await import(
-        "@/lib/robot"
-      );
+      const { orderRobotNotification } = await import("@/lib/robot");
 
       await orderRobotNotification({
-        order_number:
-          data.order_number,
-
-        customer_name:
-          data.customer_name,
-
-        customer_phone:
-          data.customer_phone,
-
-        customer_address:
-          data.customer_address,
-
-        location:
-          location || null,
-
-        distance_km:
-          Number(distanceKm || 0),
-
-        delivery_method:
-          deliveryMethod || "delivery",
-
-        items:
-          orderItems.map((item) => ({
-            ...item,
-            image:
-              item.image ||
-              "",
-          })),
-
-        subtotal:
-          Number(
-            data.subtotal || 0
-          ),
-
-        delivery_fee:
-          Number(
-            data.delivery_fee || 0
-          ),
-
-        total:
-          Number(
-            data.total || 0
-          ),
-
-        status:
-          data.status ||
-          "Pending",
+        order_number: data.order_number,
+        customer_name: data.customer_name,
+        customer_phone: data.customer_phone,
+        customer_address: data.customer_address,
+        location: location || null,
+        distance_km: Number(distanceKm || 0),
+        delivery_method: deliveryMethod || "delivery",
+        items: orderItems.map((item) => ({
+          ...item,
+          image: item.image || "",
+        })),
+        subtotal: Number(data.subtotal || 0),
+        delivery_fee: Number(data.delivery_fee || 0),
+        total: Number(data.total || 0),
+        status: data.status || "Pending",
       });
     } catch (telegramError) {
-      console.error(
-        "Telegram notification failed:",
-        telegramError
-      );
+      console.error("Telegram notification failed:", telegramError);
     }
 
-    return NextResponse.json(
-      data,
-      { status: 201 }
-    );
+    return NextResponse.json(data, { status: 201 });
   } catch (error) {
-    console.error(
-      "Create order error:",
-      error
-    );
+    if (db && changedStock.length) {
+      await rollbackStock(db, changedStock);
+    }
+
+    console.error("Create order error:", error);
 
     return NextResponse.json(
       {
@@ -542,21 +477,29 @@ for (const cost of productCosts || []) {
     );
   } finally {
     if (orderLockId) {
-      processingOrders.delete(
-        orderLockId
-      );
+      processingOrders.delete(orderLockId);
     }
   }
 }
 
 export async function DELETE(request: Request) {
   try {
+    // Only the authenticated Admin may delete an order.
+    const authorized = await isAuthorizedAdmin();
+
+    if (!authorized) {
+      return NextResponse.json(
+        { error: "Unauthorized. Admin access is required." },
+        { status: 403 }
+      );
+    }
+
+    const db = getAdminDatabase();
+
     const body = await request.json().catch(() => ({}));
 
     const id = String(
-      body?.order_number ||
-      body?.id ||
-      ""
+      body?.order_number || body?.id || ""
     ).trim();
 
     if (!id) {
@@ -568,7 +511,7 @@ export async function DELETE(request: Request) {
 
     const isNumericId = /^\d+$/.test(id);
 
-    let orderQuery = supabase
+    let orderQuery = db
       .from("orders")
       .select("id,order_number,status,items");
 
@@ -577,30 +520,13 @@ export async function DELETE(request: Request) {
         `order_number.eq.${id},id.eq.${id}`
       );
     } else {
-      orderQuery = orderQuery.eq(
-        "order_number",
-        id
-      );
+      orderQuery = orderQuery.eq("order_number", id);
     }
 
     const { data: order, error: findError } =
       await orderQuery.maybeSingle();
 
-    if (findError) {
-      console.error(
-        "Failed to find order:",
-        findError
-      );
-
-      return NextResponse.json(
-        {
-          error:
-            findError.message ||
-            "Failed to find order.",
-        },
-        { status: 500 }
-      );
-    }
+    if (findError) throw findError;
 
     if (!order) {
       return NextResponse.json(
@@ -617,9 +543,7 @@ export async function DELETE(request: Request) {
       "Delivered",
     ];
 
-    const items = Array.isArray(order.items)
-      ? order.items
-      : [];
+    const items = Array.isArray(order.items) ? order.items : [];
 
     if (stockStatuses.includes(order.status || "Pending")) {
       for (const item of items) {
@@ -628,81 +552,46 @@ export async function DELETE(request: Request) {
 
         if (!productId || quantity <= 0) continue;
 
-        const { data: product } =
-          await supabase
-            .from("products")
-            .select("stock")
-            .eq("id", productId)
-            .maybeSingle();
+        const { data: product, error: productError } = await db
+          .from("products")
+          .select("stock")
+          .eq("id", productId)
+          .maybeSingle();
 
+        if (productError) throw productError;
         if (!product) continue;
 
-        const { error: stockError } =
-          await supabase
-            .from("products")
-            .update({
-              stock:
-                Number(product.stock || 0) +
-                quantity,
-            })
-            .eq("id", productId);
+        const { error: stockError } = await db
+          .from("products")
+          .update({
+            stock: Number(product.stock || 0) + quantity,
+          })
+          .eq("id", productId);
 
-        if (stockError) {
-          console.error(
-            "Failed to restore stock:",
-            stockError
-          );
-
-          return NextResponse.json(
-            {
-              error:
-                stockError.message ||
-                "Failed to restore product stock.",
-            },
-            { status: 500 }
-          );
-        }
+        if (stockError) throw stockError;
       }
     }
 
-    const { error: deleteError } =
-      await supabase
-        .from("orders")
-        .delete()
-        .eq("id", order.id);
+    const { error: deleteError } = await db
+      .from("orders")
+      .delete()
+      .eq("id", order.id);
 
-    if (deleteError) {
-      console.error(
-        "Failed to delete order:",
-        deleteError
-      );
-
-      return NextResponse.json(
-        {
-          error:
-            deleteError.message ||
-            "Failed to delete order.",
-        },
-        { status: 500 }
-      );
-    }
+    if (deleteError) throw deleteError;
 
     return NextResponse.json({
       success: true,
       deleted: id,
     });
-
-  } catch (error: any) {
-    console.error(
-      "DELETE ORDER ERROR:",
-      error
-    );
+  } catch (error) {
+    console.error("DELETE ORDER ERROR:", error);
 
     return NextResponse.json(
       {
         error:
-          error?.message ||
-          "Failed to delete order.",
+          error instanceof Error
+            ? error.message
+            : "Failed to delete order.",
       },
       { status: 500 }
     );

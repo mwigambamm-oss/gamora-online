@@ -45,7 +45,9 @@ function getAdminDatabase() {
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!url || !serviceKey) {
-    throw new Error("Supabase server environment variables are missing.");
+    throw new Error(
+      "Supabase server environment variables are missing."
+    );
   }
 
   return createClient(url, serviceKey, {
@@ -102,14 +104,19 @@ async function changeStock(
   for (const item of items) {
     const productId = Number(item.id);
     const quantity = Number(item.quantity);
+    const price = Number(item.price);
 
     if (
       !Number.isInteger(productId) ||
       productId <= 0 ||
       !Number.isInteger(quantity) ||
-      quantity <= 0
+      quantity <= 0 ||
+      !Number.isFinite(price) ||
+      price < 0
     ) {
-      throw new Error(`Invalid product or quantity for ${item.name}`);
+      throw new Error(
+        `Invalid product, price or quantity for ${item.name || "product"}.`
+      );
     }
 
     quantities.set(
@@ -126,10 +133,15 @@ async function changeStock(
       .maybeSingle();
 
     if (error) throw error;
-    if (!product) throw new Error(`Product not found: ${productId}`);
+
+    if (!product) {
+      throw new Error(`Product not found: ${productId}`);
+    }
 
     if (product.approval_status !== "approved") {
-      throw new Error(`${product.name} is not approved for sale.`);
+      throw new Error(
+        `${product.name} is not approved for sale.`
+      );
     }
 
     const stock = Number(product.stock || 0);
@@ -156,7 +168,10 @@ async function changeStock(
       );
     }
 
-    changed.push({ id: productId, quantity });
+    changed.push({
+      id: productId,
+      quantity,
+    });
   }
 }
 
@@ -171,14 +186,27 @@ async function rollbackStock(
       .eq("id", item.id)
       .maybeSingle();
 
-    if (error || !product) continue;
+    if (error || !product) {
+      console.error(
+        "Stock rollback lookup failed:",
+        error
+      );
+      continue;
+    }
 
-    await db
+    const { error: rollbackError } = await db
       .from("products")
       .update({
         stock: Number(product.stock || 0) + item.quantity,
       })
       .eq("id", item.id);
+
+    if (rollbackError) {
+      console.error(
+        "Stock rollback failed:",
+        rollbackError
+      );
+    }
   }
 
   items.length = 0;
@@ -198,7 +226,14 @@ function isInsideDarEsSalaam(
 
 export async function POST(request: Request) {
   let orderLockId = "";
-  const changedStock: { id: number; quantity: number }[] = [];
+  let ownsOrderLock = false;
+  let createdOrderId: number | null = null;
+
+  const changedStock: {
+    id: number;
+    quantity: number;
+  }[] = [];
+
   let db: ReturnType<typeof getAdminDatabase> | null = null;
 
   try {
@@ -248,13 +283,17 @@ export async function POST(request: Request) {
 
     if (processingOrders.has(orderLockId)) {
       return NextResponse.json(
-        { error: "This order is already being processed." },
+        {
+          error: "This order is already being processed.",
+        },
         { status: 409 }
       );
     }
 
     processingOrders.add(orderLockId);
+    ownsOrderLock = true;
 
+    // Check whether this order number already exists.
     const { data: existingOrder, error: duplicateError } = await db
       .from("orders")
       .select("id,order_number")
@@ -277,7 +316,10 @@ export async function POST(request: Request) {
     const isPickup = deliveryMethod === "pickup";
     const safeSubtotal = Number(subtotal ?? 0);
 
-    if (!Number.isFinite(safeSubtotal) || safeSubtotal < 0) {
+    if (
+      !Number.isFinite(safeSubtotal) ||
+      safeSubtotal < 0
+    ) {
       return NextResponse.json(
         { error: "Invalid order subtotal." },
         { status: 400 }
@@ -285,10 +327,14 @@ export async function POST(request: Request) {
     }
 
     const latitude =
-      location?.latitude != null ? Number(location.latitude) : null;
+      location?.latitude != null
+        ? Number(location.latitude)
+        : null;
 
     const longitude =
-      location?.longitude != null ? Number(location.longitude) : null;
+      location?.longitude != null
+        ? Number(location.longitude)
+        : null;
 
     if (
       !isPickup &&
@@ -312,10 +358,14 @@ export async function POST(request: Request) {
       !isInsideDarEsSalaam(latitude, longitude);
 
     const safeDeliveryFee =
-      isPickup || outsideDar ? 0 : Number(deliveryFee ?? 0);
+      isPickup || outsideDar
+        ? 0
+        : Number(deliveryFee ?? 0);
 
     const safeDistanceKm =
-      isPickup || outsideDar ? 0 : Number(distanceKm ?? 0);
+      isPickup || outsideDar
+        ? 0
+        : Number(distanceKm ?? 0);
 
     if (
       !Number.isFinite(safeDeliveryFee) ||
@@ -340,11 +390,12 @@ export async function POST(request: Request) {
       );
     }
 
+    // Reduce stock before saving the order.
     if (initialStatus !== "Cancelled") {
       await changeStock(db, orderItems, changedStock);
     }
 
-    // Database generates the identity ID automatically.
+    // Let Supabase generate the orders identity ID.
     const { data: order, error: orderError } = await db
       .from("orders")
       .insert({
@@ -371,14 +422,25 @@ export async function POST(request: Request) {
 
     if (orderError) throw orderError;
 
+    if (!order?.id) {
+      throw new Error(
+        "Order was saved but the database did not return its ID."
+      );
+    }
+
+    // Remember the exact row created by this request.
+    createdOrderId = Number(order.id);
+
+    // Read product costs for the order item records.
     const productIds = [
       ...new Set(orderItems.map((item) => Number(item.id))),
     ];
 
-    const { data: productCosts, error: productCostsError } = await db
-      .from("products")
-      .select("id,cost_price")
-      .in("id", productIds);
+    const { data: productCosts, error: productCostsError } =
+      await db
+        .from("products")
+        .select("id,cost_price")
+        .in("id", productIds);
 
     if (productCostsError) throw productCostsError;
 
@@ -423,6 +485,7 @@ export async function POST(request: Request) {
 
     console.log("ORDER CREATED:", order.order_number);
 
+    // Telegram notification must not cancel a successful order.
     try {
       const { orderRobotNotification } = await import("@/lib/robot");
 
@@ -444,39 +507,67 @@ export async function POST(request: Request) {
         status: order.status || "Pending",
       });
     } catch (telegramError) {
-      console.error("Telegram notification failed:", telegramError);
+      console.error(
+        "Telegram notification failed:",
+        telegramError
+      );
     }
 
     return NextResponse.json(order, { status: 201 });
+
   } catch (error) {
-    // If order creation failed after the order row was saved,
-    // remove only that incomplete order and restore stock.
-    console.error("Create order error:", error);
+    console.error("CREATE ORDER ERROR:", error);
 
     if (db) {
-      if (orderLockId) {
-        await db
+      // Delete only the exact order created by this request.
+      if (createdOrderId !== null) {
+        const { error: cleanupError } = await db
           .from("orders")
           .delete()
-          .eq("order_number", orderLockId);
+          .eq("id", createdOrderId);
+
+        if (cleanupError) {
+          console.error(
+            "Incomplete order cleanup failed:",
+            cleanupError
+          );
+        }
       }
 
+      // Restore stock changed by this request.
       if (changedStock.length) {
         await rollbackStock(db, changedStock);
       }
     }
 
+    const dbError = error as {
+      message?: string;
+      details?: string;
+      hint?: string;
+      code?: string;
+    };
+
     return NextResponse.json(
       {
         error:
-          error instanceof Error
-            ? error.message
-            : "Failed to create order",
+          dbError?.message ||
+          (typeof error === "string"
+            ? error
+            : "Failed to create order"),
+        details: dbError?.details || null,
+        hint: dbError?.hint || null,
+        code: dbError?.code || null,
+        stage:
+          createdOrderId === null
+            ? "saving_order"
+            : "saving_order_items",
       },
       { status: 500 }
     );
+
   } finally {
-    if (orderLockId) {
+    // Release only the lock owned by this request.
+    if (ownsOrderLock && orderLockId) {
       processingOrders.delete(orderLockId);
     }
   }
@@ -488,7 +579,9 @@ export async function DELETE(request: Request) {
 
     if (!authorized) {
       return NextResponse.json(
-        { error: "Unauthorized. Admin access is required." },
+        {
+          error: "Unauthorized. Admin access is required.",
+        },
         { status: 403 }
       );
     }
@@ -541,7 +634,9 @@ export async function DELETE(request: Request) {
       "Delivered",
     ];
 
-    const items = Array.isArray(order.items) ? order.items : [];
+    const items = Array.isArray(order.items)
+      ? order.items
+      : [];
 
     if (stockStatuses.includes(order.status || "Pending")) {
       const quantities = new Map<number, number>();
@@ -550,7 +645,12 @@ export async function DELETE(request: Request) {
         const productId = Number(item?.id);
         const quantity = Number(item?.quantity || 0);
 
-        if (productId > 0 && quantity > 0) {
+        if (
+          Number.isInteger(productId) &&
+          productId > 0 &&
+          Number.isInteger(quantity) &&
+          quantity > 0
+        ) {
           quantities.set(
             productId,
             (quantities.get(productId) || 0) + quantity
@@ -590,6 +690,7 @@ export async function DELETE(request: Request) {
       success: true,
       deleted: id,
     });
+
   } catch (error) {
     console.error("DELETE ORDER ERROR:", error);
 

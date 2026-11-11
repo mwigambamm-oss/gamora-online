@@ -47,60 +47,39 @@ export type Order = {
 };
 
 export async function getOrders(): Promise<Order[]> {
-  const { data, error } = await supabase
-    .from("orders")
-    .select("*")
-    .order("created_at", {
-      ascending: false,
-    });
+  const response = await fetch("/api/orders", {
+    method: "GET",
+    cache: "no-store",
+    credentials: "same-origin",
+  });
 
-  if (error) {
-    console.error(
-      "Failed to load orders:",
-      error
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      result?.error || "Failed to load orders."
     );
-
-    throw error;
   }
 
-  return (data || []).map((order) => ({
-    id: String(
-      order.order_number || order.id
-    ),
+  return (Array.isArray(result) ? result : []).map((order) => ({
+    id: String(order.order_number || order.id),
 
     customer: {
-      name:
-        order.customer_name || "",
-
-      phone:
-        order.customer_phone || "",
-
-      email:
-        order.customer_email || "",
-
-      address:
-        order.customer_address || "",
-
-      notes:
-        order.customer_notes || "",
+      name: order.customer_name || "",
+      phone: order.customer_phone || "",
+      email: order.customer_email || "",
+      address: order.customer_address || "",
+      notes: order.customer_notes || "",
     },
 
     deliveryMethod:
-      order.delivery_method === "pickup"
-        ? "pickup"
-        : "delivery",
+      order.delivery_method === "pickup" ? "pickup" : "delivery",
 
     location:
-      order.latitude !== null &&
-      order.longitude !== null
+      order.latitude !== null && order.longitude !== null
         ? {
-            latitude: Number(
-              order.latitude
-            ),
-
-            longitude: Number(
-              order.longitude
-            ),
+            latitude: Number(order.latitude),
+            longitude: Number(order.longitude),
           }
         : null,
 
@@ -109,25 +88,17 @@ export async function getOrders(): Promise<Order[]> {
         ? Number(order.distance_km)
         : null,
 
-    deliveryFee:
-      Number(order.delivery_fee || 0),
+    deliveryFee: Number(order.delivery_fee || 0),
 
-    items:
-      Array.isArray(order.items)
-        ? order.items
-        : [],
+    items: Array.isArray(order.items) ? order.items : [],
 
-    subtotal:
-      Number(order.subtotal || 0),
+    subtotal: Number(order.subtotal || 0),
 
-    total:
-      Number(order.total || 0),
+    total: Number(order.total || 0),
 
-    status:
-      order.status || "Pending",
+    status: order.status || "Pending",
 
-    createdAt:
-      order.created_at,
+    createdAt: order.created_at,
   }));
 }
 

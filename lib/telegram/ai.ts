@@ -1,14 +1,21 @@
+
 import OpenAI from "openai";
 import type { TelegramProductResult } from "./catalog-search";
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
 
 export async function generateCustomerReply(
   customerMessage: string,
   products: TelegramProductResult[]
 ): Promise<string> {
+  const apiKey = process.env.OPENAI_API_KEY;
+
+  if (!apiKey) {
+    console.error("OPENAI_API_KEY is not configured.");
+
+    return "Samahani, huduma ya msaidizi haipatikani kwa sasa. Tafadhali jaribu tena baadaye.";
+  }
+
+  const openai = new OpenAI({ apiKey });
+
   const catalog = products.map((product) => ({
     id: product.id,
     name: product.name,
@@ -30,9 +37,10 @@ export async function generateCustomerReply(
     image: product.image,
   }));
 
-  const response = await openai.responses.create({
-    model: "gpt-5.6",
-    instructions: `
+  try {
+    const response = await openai.responses.create({
+      model: "gpt-5.6",
+      instructions: `
 You are Gamora Online's customer service assistant.
 
 Your job is to help customers find products and answer questions using ONLY
@@ -60,9 +68,14 @@ IMPORTANT RULES:
 CATALOG DATA:
 ${JSON.stringify(catalog)}
 `,
-    input: customerMessage,
-  });
+      input: customerMessage,
+    });
 
-  return response.output_text?.trim() ||
-    "Samahani, sijaweza kupata jibu kwa sasa. Tafadhali jaribu tena.";
+    return response.output_text?.trim() ||
+      "Samahani, sijaweza kupata jibu kwa sasa. Tafadhali jaribu tena.";
+  } catch (error) {
+    console.error("Telegram AI error:", error);
+
+    return "Samahani, sijaweza kupata jibu kwa sasa. Tafadhali jaribu tena.";
+  }
 }

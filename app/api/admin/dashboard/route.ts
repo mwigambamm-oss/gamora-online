@@ -1,6 +1,57 @@
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@supabase/supabase-js";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 import { calculateAccounting } from "@/lib/accounting/calculations";
+
+function getAdminDatabase() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!url || !serviceKey) {
+    throw new Error("db server environment variables are missing.");
+  }
+
+  return createClient(url, serviceKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
+}
+
+async function isAuthorizedAdmin() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+
+  if (!url || !publishableKey) return false;
+
+  const cookieStore = await cookies();
+
+  const authClient = createServerClient(url, publishableKey, {
+    cookies: {
+      getAll() {
+        return cookieStore.getAll();
+      },
+           setAll(cookiesToSet) {
+        try {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            cookieStore.set(name, value, options)
+          );
+        } catch {}
+      },
+    },
+  });
+
+  const { data, error } = await authClient.auth.getUser();
+
+  if (error || !data.user) return false;
+
+  return (
+    data.user.email?.toLowerCase() ===
+    "officialgamoraonline@gmail.com"
+  );
+}
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -88,6 +139,17 @@ export async function GET(request: Request) {
   }
 
   try {
+    if (!(await isAuthorizedAdmin())) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Unauthorized. Admin access is required.",
+        },
+        { status: 403 }
+      );
+    }
+
+    const db = getAdminDatabase();
     const dashboardStart = performance.now();
 
     /*
@@ -101,7 +163,7 @@ export async function GET(request: Request) {
       productsResult,
       expensesResult,
     ] = await Promise.all([
-      supabase
+      db
         .from("orders")
         .select(
           "id,order_number,status,subtotal,delivery_fee,total,created_at"
@@ -118,7 +180,7 @@ export async function GET(request: Request) {
           ascending: false,
         }),
 
-      supabase
+    db
         .from("payments")
         .select(
           "id,order_number,amount,payment_status,payment_method,created_at"
@@ -135,13 +197,13 @@ export async function GET(request: Request) {
           ascending: false,
         }),
 
-      supabase
+      db
         .from("products")
         .select(
           "id,name,stock,price,cost_price"
         ),
 
-      supabase
+    db
         .from("expenses")
         .select("amount,category,expense_date")
         .gte(
@@ -198,7 +260,7 @@ export async function GET(request: Request) {
     let orderPayments: any[] = [];
 
     if (orderIds.length > 0) {
-      const orderItemsResult = await supabase
+      const orderItemsResult = await db
         .from("order_items")
         .select(
           "order_id,product_id,product_name,quantity,cost_price_at_sale,price"
@@ -213,7 +275,7 @@ export async function GET(request: Request) {
     }
 
     if (orderNumbers.length > 0) {
-      const orderPaymentsResult = await supabase
+      const orderPaymentsResult = await db
         .from("payments")
         .select(
           "id,order_number,amount,payment_status,payment_method,created_at"

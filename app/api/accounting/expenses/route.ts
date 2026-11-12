@@ -148,21 +148,20 @@ export async function POST(request: Request) {
       success: true,
       expense: data,
     });
-  } catch (error) {
+    } catch (error: any) {
     console.error("Expenses POST error:", error);
 
     return NextResponse.json(
       {
         success: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Failed to save expense.",
+        error: error?.message || "Unknown database error",
+        code: error?.code || null,
+        details: error?.details || null,
+        hint: error?.hint || null,
       },
       { status: 500 }
     );
   }
-}
 
 export async function PUT(request: Request) {
   try {

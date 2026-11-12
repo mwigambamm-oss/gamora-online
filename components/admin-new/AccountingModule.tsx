@@ -449,8 +449,12 @@ export default function AccountingModule() {
   };
 
   useEffect(() => {
-    loadExpenses();
-  }, []);
+  loadExpenses();
+}, []);
+
+useEffect(() => {
+  loadPayments();
+}, []);
 
   const [period, setPeriod] = useState("This Month");
 
